@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version +s
+## V0.2.0 — 2026-10-05 21:24 UTC
 ### Build 20261005211638 (branch apply-governance-to-itself)
 #### #4 — Add the pull request template
 - .github/pull_request_template.md: added; pre-fills the pull request description with a place for the changelog entries, the tested-build and sync line, and a reminder to reword closing keywords.
