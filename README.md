@@ -30,8 +30,14 @@ The tools need Python 3 and nothing else.
 
 ## Status
 
-The guides describe the state of the standard after its 2.1.0 release in the project it was developed in
-(the reference implementation of its hooks and workflow). This repository does not yet apply the standard to
-itself: the hooks, the versioning workflow and the board are not set up here.
+This repository does not yet apply the standard to itself completely: the hooks and the versioning workflow are
+not set up here. The guides describe the standard as it will be once they are.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what has changed.
+
+## Licence
+
+Two licences, by the kind of file. The guides and other documentation are under
+[CC BY 4.0](LICENSE-CC-BY-4.0.txt). The code (`tools/`, `tests/`, and the workflows, scripts and hooks) is under
+the [MIT licence](LICENSE-MIT.txt). [`LICENSE`](LICENSE) lists which paths fall under which.
+Copyright (c) 2026 The Shadow on the Moon, Inc.

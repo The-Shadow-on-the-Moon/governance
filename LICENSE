@@ -1,0 +1,11 @@
+Copyright (c) 2026 The Shadow on the Moon, Inc.
+
+This repository is under two licences, by the kind of file.
+
+Documentation: Creative Commons Attribution 4.0 International (CC BY 4.0).
+Full text in LICENSE-CC-BY-4.0.txt. It covers everything not listed under
+the MIT licence below, including guides/, doc/, README.md, CHANGELOG.md,
+AGENTS.md and the pull request template.
+
+Code: MIT License. Full text in LICENSE-MIT.txt. It covers tools/, tests/,
+.github/workflows/, .github/scripts/ and .githooks/.

@@ -21,3 +21,12 @@ The guides are kept in the repository, and this page only points to them.
 
 The separate files in `guides/` are the source of truth, and the combined file is rebuilt from them with
 `python tools/combine.py`. See the repository's readme.
+
+## Licence
+
+The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tests/`, and the workflows, scripts and hooks) is under the MIT licence. See the [licence file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/LICENSE) for which paths fall under which. Copyright (c) 2026 The Shadow on the Moon, Inc.
+
+## Roles and board
+
+- [Roles and access](Roles-and-Access)
+- [Board views](Board-Views)
