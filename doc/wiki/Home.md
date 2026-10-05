@@ -28,5 +28,6 @@ The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tes
 
 ## Roles and board
 
+- [Automation](Automation)
 - [Roles and access](Roles-and-Access)
 - [Board views](Board-Views)
