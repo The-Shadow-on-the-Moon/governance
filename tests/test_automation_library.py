@@ -130,6 +130,16 @@ class ChangelogTests(unittest.TestCase):
         with self.assertRaises(changelog.ChangelogError):
             changelog.stamp_wip_build(text, "20261006101113", "my-branch")
 
+    def test_windows_line_endings_are_read_and_kept(self):
+        crlf = SAMPLE.replace("\n", "\r\n")
+        sections = changelog.parse(crlf)
+        self.assertEqual(changelog.open_section(sections).ticket_numbers(), [12])
+        stamped = changelog.stamp_wip_build(crlf, "20261006101112", "b")
+        self.assertIn("### Build 20261006101112 (branch b)\r\n", stamped)
+        renamed = changelog.rename_open_heading(crlf, Version(0, 3, 0), "2026-10-06 10:00")
+        self.assertIn("## V0.3.0 \u2014 2026-10-06 10:00 UTC\r\n", renamed)
+        self.assertEqual(renamed.count("\r\n"), crlf.count("\r\n"))
+
     def test_text_after_wip_version_is_an_error(self):
         with self.assertRaises(changelog.ChangelogError):
             changelog.parse(SAMPLE.replace("## WIP-Version +s", "## WIP-Version +x"))

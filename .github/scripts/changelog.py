@@ -77,7 +77,8 @@ def parse(text):
     """The sections of the changelog, top to bottom."""
     lines = text.split("\n")
     sections, build, block = [], None, None
-    for index, line in enumerate(lines):
+    for index, raw in enumerate(lines):
+        line = raw.rstrip("\r")  # a changelog with Windows line endings is read the same way
         if line.startswith("## "):
             section = _section(line, index)
             if sections:
@@ -155,16 +156,20 @@ def rename_open_heading(text, version, heading_time):
     if wip is None:
         raise ChangelogError("no open WIP-Version heading")
     lines = text.split("\n")
-    lines[wip.line] = f"## {version} — {heading_time} UTC"
+    lines[wip.line] = f"## {version} — {heading_time} UTC" + _ending(lines[wip.line])
     return "\n".join(lines)
 
 
 def stamp_wip_build(text, stamp, branch):
     """Return the text with the ### WIP-Build placeholder replaced by a stamped build heading."""
     lines = text.split("\n")
-    hits = [i for i, line in enumerate(lines) if line == _WIP_BUILD]
+    hits = [i for i, line in enumerate(lines) if line.rstrip("\r") == _WIP_BUILD]
     if len(hits) != 1:
         raise ChangelogError(f"expected one WIP-Build placeholder, found {len(hits)}")
-    lines[hits[0]] = f"### Build {stamp} (branch {branch})"
+    lines[hits[0]] = f"### Build {stamp} (branch {branch})" + _ending(lines[hits[0]])
     return "\n".join(lines)
+
+
+def _ending(line):
+    return "\r" if line.endswith("\r") else ""
 

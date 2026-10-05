@@ -26,9 +26,13 @@ ZEROS = "0" * 40
 
 
 def git(*args, cwd=None, input=None):
-    """Run git and return (exit code, standard output)."""
-    result = subprocess.run(["git", *args], cwd=cwd, input=input, capture_output=True, text=True, encoding="utf-8")
-    return result.returncode, result.stdout
+    """Run git and return (exit code, standard output).
+
+    Bytes in and out, so that line endings pass through untouched (text mode would turn LF into CRLF on Windows).
+    """
+    data = input.encode("utf-8") if input is not None else None
+    result = subprocess.run(["git", *args], cwd=cwd, input=data, capture_output=True)
+    return result.returncode, result.stdout.decode("utf-8")
 
 
 def staged_changelog(cwd):
@@ -42,7 +46,7 @@ def head_changelog(cwd):
 
 
 def has_placeholder(text):
-    return PLACEHOLDER in text.split("\n")
+    return PLACEHOLDER in [line.rstrip("\r") for line in text.split("\n")]
 
 
 def stamp_staged(cwd, now):

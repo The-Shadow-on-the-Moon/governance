@@ -124,6 +124,12 @@ class StampTests(Repo):
         with open(os.path.join(self.dir, "CHANGELOG.md"), encoding="utf-8") as handle:
             self.assertEqual(handle.read(), staged)
 
+    def test_line_endings_stay_lf(self):
+        self.edit(WIP_ONE)
+        hooks.stamp_staged(self.dir, NOW)
+        raw = subprocess.run(["git", "show", ":CHANGELOG.md"], cwd=self.dir, capture_output=True).stdout
+        self.assertNotIn(b"\r", raw)
+
     def test_only_what_is_staged_is_stamped(self):
         self.edit(WIP_ONE)
         write(os.path.join(self.dir, "CHANGELOG.md"), WIP_ONE + "\nan unstaged edit\n")

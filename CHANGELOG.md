@@ -1,6 +1,13 @@
 # Changelog
 
 ## WIP-Version +s
+### Build 20261005232622 (branch apply-governance-to-itself)
+#### #14 — Add the local hooks and their activation command
+- .githooks/hooks.py: fixed; the stamped changelog was committed with Windows line endings (found when the hooks ran on the first real commit). Git is now run with bytes in and out, so line endings pass through untouched.
+- tests/test_hooks.py: added a test that the staged changelog keeps LF line endings.
+#### #12 — Add the automation's shared library (changelog parser, version rules, GitHub client) with tests
+- .github/scripts/changelog.py: fixed; a changelog with Windows line endings is now read, stamped and renamed without changing its line endings (the first commit on this branch has such a changelog).
+- tests/test_automation_library.py: added a test for it (30 tests).
 ### Build 20261005232139 (branch apply-governance-to-itself)
 #### #12 — Add the automation's shared library (changelog parser, version rules, GitHub client) with tests
 - .github/scripts/versions.py: added; the version format, the bump rules (from ticket Types or a marker, mod by default, major never automatic, first version V0.1.0), Version#, and UTC build stamps and heading times.
