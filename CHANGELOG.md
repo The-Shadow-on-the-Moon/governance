@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.1.0 — 2026-10-05 18:22 UTC
 ### Build 20261005181657 (branch initial-structure)
 #### #1 — Initial structure of the project
 - guides/: added the README, guides 01 to 10 and appendices A to D, moved here from the project they were developed in, and the combined copy Developer-Guides-Complete.md.
