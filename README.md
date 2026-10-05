@@ -11,7 +11,9 @@ that work with them, and it is meant to apply unchanged to any project.
 |---|---|
 | [`guides/`](guides/README.md) | The guides (01 to 10), the appendices (A to D) and a combined copy for reading in one place. Start with [`guides/README.md`](guides/README.md). |
 | [`tools/`](tools/) | `combine.py` rebuilds the combined copy from the separate files. `xref_check.py` checks that every cross-reference between the guides points at a section that exists. |
-| [`tests/`](tests/) | Tests for the tools. They also fail if the combined copy is out of date or a cross-reference is broken. |
+| [`tests/`](tests/) | Tests for the tools and for the automation. They also fail if the combined copy is out of date, a cross-reference is broken, or an automation file differs from the manifest. |
+| [`.githooks/`](.githooks/) | The local hooks: they stamp the build, draft the commit message and warn. |
+| [`.github/`](.github/) | The versioning workflow and its scripts (`scripts/`), the manifest of the automation files, the wiki-sync workflow and the pull request template. |
 | [`doc/wiki/`](doc/wiki/Home.md) | The wiki pages, copied to the repository's wiki by a workflow. |
 
 ## Working on the guides
@@ -28,10 +30,31 @@ python -m unittest discover -s tests
 
 The tools need Python 3 and nothing else.
 
+## The automation
+
+The hooks, the versioning workflow and the check script are described on the
+[wiki](doc/wiki/Automation.md). The automation files are covered by a manifest: after editing one, rewrite the
+manifest and run the tests.
+
+```
+python .github/scripts/check_manifest.py --update --standard <version>
+python .github/scripts/check_manifest.py       # all files should be unchanged
+```
+
+## Setup
+
+After cloning, activate the local hooks once (they stamp the build, draft the commit message and warn):
+
+```
+git config core.hooksPath .githooks
+```
+
+Check with `git config core.hooksPath`, which should print `.githooks`.
+
 ## Status
 
-This repository does not yet apply the standard to itself completely: the hooks and the versioning workflow are
-not set up here. The guides describe the standard as it will be once they are.
+This repository applies the standard to itself. Still open: making the up-to-date check mandatory in branch
+protection, and proving the setup with a real run of the workflow. Both are tracked in tickets.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what has changed.
 

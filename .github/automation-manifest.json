@@ -1,0 +1,28 @@
+{
+  "files": {
+    ".githooks/hooks.py": "59ac024edf876aecc1121903a7eb60955e4092cbb4af7358e782a0dfc25b0722",
+    ".githooks/pre-commit": "f86667331650708ee35eafa3d3488f94980d81eb8c5400508a3d4af4c23329b0",
+    ".githooks/pre-push": "d412bf26d76779df894f7186892e31d653b026bde10610418d78494f7eff86dc",
+    ".githooks/prepare-commit-msg": "cb514c67decc934a0351ee40cc757ec82e135cce10fa8c3199d3de23c0a6b1de",
+    ".github/pull_request_template.md": "09170f1cd14e9ed26a7b0a598af1f45d4c5644b8ed2b447be3ab4700fe4743f6",
+    ".github/scripts/advisory.py": "49895b9a92dc8241e8291151c0bb31baa21808e726caa4453172edde832e3446",
+    ".github/scripts/alerts.py": "88da4e30db902f2d54e29cc0e7e0d7bc9ccfee61610883578046a8f231c9d8fe",
+    ".github/scripts/bypass.py": "e146fbc7e7aa278c9388b0ca87ee6473085fd7ea9125a78ed02459ae42fbb1a8",
+    ".github/scripts/changelog.py": "8244d809a4e88c0b01d4f9f9cbcf7e83b8856073707e065be8a3d8bb77431312",
+    ".github/scripts/check_manifest.py": "9c357db8c05f249a7cefb2abd75da9b3e0d5aa86c39d82ac10f82ea41c82626e",
+    ".github/scripts/checks.py": "7f8dd58ce4c80ba0d0b97d5ae011c388daa814b07ec4efd34f266283e0399151",
+    ".github/scripts/finalize.py": "08781e6db0494abe7ad8b46ff8ae8007540c7ab91994659c0e6d71999ec80d37",
+    ".github/scripts/github_api.py": "bb50c16285b54888eb41a01e6bf320f61d16b2a2fbf11e2d8f30c1845acbe001",
+    ".github/scripts/preflight.py": "9e2fe22780803885e8b95dc65275e5c201d8f89340cf31c1aea4b20c64deaa64",
+    ".github/scripts/versions.py": "5a2072e8c657a8a16fc9beaaf51e4152b7a4b5fa247551eb46c69348e2b5f2ee",
+    ".github/workflows/versioning.yml": "d646c8966c4b581c5ee0ae15b68d2601b7d602b691a667ca72ab95efe5ec8b37",
+    "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
+    "tests/test_checks.py": "0129fdd6425bfdffa54202c0c76793591eac8a9c8db90f1a3b219384b74d72ef",
+    "tests/test_finalize.py": "70549dd3decb1bbc988bb254850b0ad31cbb41d35b51f6abe9ac8994ef595c21",
+    "tests/test_hooks.py": "612e63bfd9ba3ca203c2b72c2ad852b0541940fec9c64140ee5a87bb3802c2ed",
+    "tests/test_manifest.py": "c7885dbd402e2610299b12a5f503149aba55d3cb6c054b6f959a9705bf7c0693",
+    "tests/test_preflight.py": "11fad420cd2f53ecc118127eccea08eba2018e7c82a45f9d1bcedd0e149e1c81",
+    "tests/test_workflow.py": "7eb80b11626e0d0d14df3fe47708324b8450912c4a4bbab2b4f4a341951fd746"
+  },
+  "standard": "V0.3.0"
+}

@@ -1,0 +1,96 @@
+name: Versioning
+
+# On a pull request: the advisory check.
+# On a push to main: the preflight, then bypass detection, the finalize step and the stale-version check.
+# On request: the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only report what the finalize step would do'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  advisory:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the pull request
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Advisory check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PULL_REQUEST: ${{ github.event.pull_request.number }}
+        run: |
+          git fetch origin main
+          python3 .github/scripts/advisory.py
+
+  main:
+    # The automation's own commits start with "Finalize" or "Flag bypass"; skipping them avoids a loop.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' &&
+       !startsWith(github.event.head_commit.message, 'Finalize ') &&
+       !startsWith(github.event.head_commit.message, 'Flag bypass'))
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-main
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # The project token belongs to an administrator, so the automation's commits can go to main.
+          token: ${{ secrets.PROJECT_TOKEN || github.token }}
+
+      - name: Set the commit author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Detect a bypass
+        if: github.event_name == 'push'
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+          PUSHER: ${{ github.actor }}
+        run: python3 .github/scripts/bypass.py
+
+      - name: Finalize the version
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/finalize.py --dry-run
+          else
+            python3 .github/scripts/finalize.py
+          fi
+
+      - name: Check for stale planned versions
+        if: github.event_name == 'push' || inputs.dry_run == false
+        run: python3 .github/scripts/bypass.py stale
