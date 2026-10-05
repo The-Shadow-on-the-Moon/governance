@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version +s
+## V0.3.0 — 2026-10-05 23:32 UTC
 ### Build 20261005232622 (branch apply-governance-to-itself)
 #### #14 — Add the local hooks and their activation command
 - .githooks/hooks.py: fixed; the stamped changelog was committed with Windows line endings (found when the hooks ran on the first real commit). Git is now run with bytes in and out, so line endings pass through untouched.
