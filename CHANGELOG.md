@@ -1,5 +1,15 @@
 # Changelog
 
+## WIP-Version
+### Build 20261006004523 (branch apply-governance-to-itself)
+#### #28 — Add the Implemented Delivery value for tickets with no file change
+- guides/appendix-c-ticket-fields-reference.md: added the Delivery value *Implemented* (set by a person, with the Version it belongs to, on a ticket with no file change), the rules for how finalize attaches such tickets and how a release treats them, and that a person's Version stays on them; Delivery is now "where the delivered work is".
+- guides/01-concepts-and-vocabulary.md, 03-project-structure.md, 05-working-and-committing.md, 06-syncing-and-merging.md, 07-issues-and-the-board-in-practice.md, 08-releases-hotfixes-and-retiring-branches.md, 09-working-with-an-ai-assistant.md, 10-new-project-bootstrap.md: updated to match (the field table and rules, the Version ticket rules, the settings row of the update checklist, what the automation does and the step for work with no file change, target versions, releases, what an assistant may set, and the board's Delivery values).
+- guides/Developer-Guides-Complete.md: rebuilt.
+- .github/scripts/preflight.py: the board check now also requires the Delivery value *Implemented*.
+- doc/wiki/Automation.md: added a section on tickets with no file change.
+- .github/automation-manifest.json: rewritten for the changed script (standard V0.4.0).
+
 ## V0.3.1 — 2026-10-06 00:04 UTC
 ### Build 20261006000318 (branch apply-governance-to-itself)
 #### #24 — Fix the preflight's write-access check for the workflow's token, and finalize V0.3.0 by hand

@@ -304,7 +304,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Waiting** | Is it waiting for someone's input? | one | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | one | the automation raises *Watch*, *Caution* and *AtRisk*; a person sets *Fine* or *Acknowledged* |
 | **Resolution** | How did it end? | one | a person |
-| **Delivery** | Where is the code? | one | the automation (apart from an optional personal marker) |
+| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker and *Implemented*, which a person sets) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | text, text, number | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
@@ -426,15 +426,20 @@ are worth keeping: they answer later questions such as "did we already decide no
 
 **Delivery.**
 
-- **Rule:** Delivery says where a ticket's code is: *Committed* (an optional personal marker, set by hand),
-  *Pushed*, *Merged*, *Released*, or *Dropped*. Apart from *Committed* it is set by the automation, and
+- **Rule:** Delivery says where a ticket's delivered work is: *Committed* (an optional personal marker, set by
+  hand), *Pushed*, *Merged*, *Implemented* (the work is in effect and involved no file change, set by a
+  person), *Released*, or *Dropped*. Apart from *Committed* and *Implemented* it is set by the automation, and
   people only correct a mistake.
-- **Rule:** Delivery depends only on the code, never on Progress or Resolution. It can move back: new
-  work pushed on a ticket that is already *Merged*, *Released* or *Dropped* returns it to *Pushed*.
+- **Rule:** *Implemented* is for a ticket that changed no file (a setting, a secret, a check that was run). A
+  person sets it, together with Version, when the work is in effect. A ticket with changelog entries never
+  needs it, because the automation sets *Merged*.
+- **Rule:** Delivery depends only on the work, never on Progress or Resolution. It can move back: new work
+  pushed on a ticket that is already *Merged*, *Implemented*, *Released* or *Dropped* returns it to *Pushed*.
 
 *Why.* Where the code is, is a fact the automation can see, and mixing it with anyone's judgment would
 make it unreliable. A ticket whose code has shipped but is not yet verified is *Merged* or *Released* and
-*Review* at the same time, and both are true.
+*Review* at the same time, and both are true. *Implemented* is the one value a person sets, because
+nothing in the repository shows that a secret was stored or a setting changed.
 
 **Planning fields.**
 
@@ -467,6 +472,7 @@ ticket planned for a later version that ships earlier fixes itself.
 | A ticket leaves *Completed* or *Abandoned* | The person clears Resolution; the automation clears the End date. |
 | Origin is *Backfilled* | REF names the placeholder it replaced. |
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
+| A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names the version it belongs to. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
 | A work ticket breaks one of these rules | The automation raises *Caution* in Attention, with a comment. |
@@ -504,6 +510,12 @@ of them are complete. A Version ticket does no work and is never verified.
 - **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (which
   ticket gave it, or the marker that forced it), the pull request, and the tickets with their Type.
   Build holds the last build of the version.
+- **Rule:** at every finalize, and on a manual run, the automation also attaches the tickets with Delivery
+  *Implemented* that are not yet sub-issues of any Version ticket, by their Version: a blank Version gets
+  the version being finalized, an already finalized version is kept and the ticket is attached to that
+  version's ticket, and a later version makes the ticket wait. Such a ticket keeps Delivery *Implemented*
+  and gets no Build. A comment on the Version ticket says which tickets were added, because its description
+  is written once.
 - **Rule:** a hotfix version goes straight from planned or created to *Released* when the hotfix is
   finished, because a hotfix is never merged into `main`.
 - **Rule:** when a version is finalized, any planned Version ticket with a lower number can no longer
@@ -909,7 +921,8 @@ it is a judgment (is the work done, is it verified, how urgent is it), a person 
 | *Completed* and *Done* | sets, after verifying | sets, after verifying | | |
 | *Abandoned*, *Suspended* and the abandon reasons | proposes | decides | | |
 | Version (the target) | | sets | | overwrites it with the real version |
-| Delivery, Build, Version#, Start and End dates | | | | sets |
+| Delivery (except *Committed* and *Implemented*), Build, Version#, Start and End dates | | | | sets |
+| Delivery *Implemented*, with its Version | sets | may change | | attaches the ticket to its Version ticket |
 
 *Completed* and *Done* may be set by the developer or the project owner, whoever verified the result. The
 developer may also set the optional *Committed* marker in Delivery.

@@ -133,7 +133,7 @@ the other guides define.
 | **Waiting** | A flag that an open ticket is waiting for someone's input. | fields reference |
 | **Attention** | A field saying whether a ticket's state has been looked at and is sound: blank, *Fine*, *Acknowledged*, *Watch*, *Caution* or *AtRisk*. The automation raises the last three, and a person closes the flag with *Fine* or *Acknowledged*. | project structure, section 4.3 |
 | **Resolution** | How a ticket ended: *Done*, or a reason for abandoning it. | fields reference |
-| **Delivery** | Where the ticket's code is: *Committed*, *Pushed*, *Merged*, *Released* or *Dropped*. | fields reference |
+| **Delivery** | Where the ticket's delivered work is: *Committed*, *Pushed*, *Merged*, *Implemented*, *Released* or *Dropped*. | fields reference |
 | **Priority, Size, Risk** | How urgent, how big in effort, and how likely to go wrong. | fields reference |
 | **Version, Build, Version#** | The version and build a ticket belongs to, and a number used only to sort versions. | fields reference |
 | **Start date, End date** | The dates the automation noticed the work start and end. | fields reference |

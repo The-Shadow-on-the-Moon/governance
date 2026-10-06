@@ -149,23 +149,27 @@ that links any related ticket. Cleared when the ticket becomes open again.
 
 ## Delivery
 
-Where the ticket's code is: a fact about the code, independent of Progress and Resolution.
+Where the ticket's delivered work is: a fact about the work, independent of Progress and Resolution.
 
 | Value | Meaning | Set by |
 |---|---|---|
-| *(blank)* | No code for this ticket exists on the hosting service. | n/a |
+| *(blank)* | No code for this ticket exists on the hosting service, and its work is not yet in effect. | n/a |
 | **Committed** | Optional personal marker: the work is committed locally and not yet pushed. | the developer, by hand only |
 | **Pushed** | Code for the ticket is on a branch on the hosting service, not yet merged. | the automation, when a push contains a changelog entry for the ticket |
 | **Merged** | The work is on `main`, in a finalized version. | the automation, at finalize |
+| **Implemented** | The work is in effect and involved no file change (a setting, a secret, a check that was run). | a person, with the Version it belongs to; the automation then attaches the ticket to that version's ticket |
 | **Released** | The version containing it has been declared a release. | the automation, when a release is cut |
 | **Dropped** | The code or version was planned or pushed but will never be delivered. | the automation when a branch is abandoned; a person for a planned version |
 
 Rules: *Committed* is never required and is overwritten by *Pushed* at the next push; nobody else can see a
 local commit, so the team cannot rely on it. Delivery can move back: new work pushed on a ticket that is
-*Merged*, *Released* or *Dropped* returns it to *Pushed*. Hotfix tickets skip *Merged* and go straight to
+*Merged*, *Implemented*, *Released* or *Dropped* returns it to *Pushed*. Hotfix tickets skip *Merged* and go straight to
 *Released* when the hotfix is finished. When a release is cut, every ticket merged up to and including that
-version becomes *Released*, whatever its Progress or Resolution, unless newer work has moved its Delivery back to *Pushed*. A suspended branch is not dropped: its code
-is kept, so *Pushed* stays. A ticket that produces no code or file change never gets a Delivery value.
+version becomes *Released* (a ticket merged or implemented), whatever its Progress or Resolution, unless newer work has moved its Delivery back to *Pushed*. A suspended branch is not dropped: its code
+is kept, so *Pushed* stays. A ticket that produces no file change stays blank until its work is in effect. Then a person
+sets *Implemented* and its Version. At every finalize, and on a manual run, the automation attaches
+*Implemented* tickets that no Version ticket has yet: a blank Version gets the version being finalized, a
+finalized version is kept, and a later version waits. It never sets *Merged* or a Build on such a ticket.
 
 ## Priority
 
@@ -213,7 +217,7 @@ Informational only: it drives no rule or automation.
 
 | Field | Holds | Set by |
 |---|---|---|
-| **Version** (text) | The version a ticket is aimed at and, once it ships, the version it really shipped in (`V2.1.0`, or `V2.1.0-HF1` for a hotfix). | a person may set it ahead of time; the automation overwrites it with the real version (for a backfilled ticket, the version where its placeholder appears) |
+| **Version** (text) | The version a ticket is aimed at and, once it ships, the version it really shipped in (`V2.1.0`, or `V2.1.0-HF1` for a hotfix). | a person may set it ahead of time; the automation overwrites it with the real version (for a backfilled ticket, the version where its placeholder appears). On an *Implemented* ticket the person's value stays |
 | **Build** (text) | The latest build of the ticket: the most recent build stamp among the build blocks that mention it. | the automation |
 | **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation |
 

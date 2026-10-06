@@ -130,7 +130,7 @@ bypass is a decision the person has to own, because the Alert it creates is in t
 |---|---|
 | Progress up to *Review* | may set it, for the person it acts for. Sets *Review* when the work is done. |
 | *Completed*, Resolution *Done*, closing a ticket | never. A person verifies (section 1). It may add a comment with its findings, when asked. |
-| Delivery, Build, Version#, the dates | never by hand. The automation sets them. |
+| Delivery, Build, Version#, the dates | never by hand. The automation sets them. The one exception is Delivery *Implemented*, with the Version it belongs to, on a ticket with no file change: it may set that for the person it acts for, when the work is in effect. |
 | Size on a ticket it creates | always sets one. |
 | Size on someone else's ticket | says so if it looks wrong, and does not change it. |
 | Priority | proposes it. The project owner role sets it. |
@@ -284,7 +284,8 @@ A one-page summary of the guide. It adds no new rules.
 **Tickets and the board** (section 4)
 
 - [ ] *Review* was set when the work was done. *Completed*, *Done* and closing were left to a person, and
-      Delivery, Build, Version# and the dates were left to the automation.
+      Delivery (apart from *Implemented* on a ticket with no file change), Build, Version# and the dates
+      were left to the automation.
 - [ ] Tickets and documents were written to only when asked. A ticket the assistant created has a Size,
       the Priority is proposed, and the assignee is the person it acts for. A Size that looks wrong on
       someone else's ticket was reported, not changed.

@@ -246,7 +246,7 @@ fields reference*.
 | Waiting | single select | Needs input |
 | Attention | single select | Fine (green), Acknowledged (purple), Watch (yellow), Caution (orange), AtRisk (red) |
 | Resolution | single select | Done, Duplicate, Invalid, WontFix, Superseded, Obsolete |
-| Delivery | single select | Committed, Pushed, Merged, Released, Dropped |
+| Delivery | single select | Committed, Pushed, Merged, Implemented, Released, Dropped |
 | Priority | single select | Critical, Urgent, High, Normal, Low, Wishlist |
 | Size | single select | XS, S, M, L, XL |
 | Risk | single select | 1 Very low, 2 Low, 3 Medium, 4 High, 5 Very high |

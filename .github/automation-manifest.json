@@ -13,7 +13,7 @@
     ".github/scripts/checks.py": "7f8dd58ce4c80ba0d0b97d5ae011c388daa814b07ec4efd34f266283e0399151",
     ".github/scripts/finalize.py": "3db5705ad50e6ef0089f75ec633312da8ba7d336e8e3fa4645f0fe471ff563c7",
     ".github/scripts/github_api.py": "bb50c16285b54888eb41a01e6bf320f61d16b2a2fbf11e2d8f30c1845acbe001",
-    ".github/scripts/preflight.py": "28b95fcde43aea4eeaba7b7bdf21136400c08876d9986f24ec7e94e10b747c98",
+    ".github/scripts/preflight.py": "1cc7dd7c2e106c59d8d3a21cc82d0befb617dcd0a36475b3fd92356b9c268be2",
     ".github/scripts/versions.py": "5a2072e8c657a8a16fc9beaaf51e4152b7a4b5fa247551eb46c69348e2b5f2ee",
     ".github/workflows/versioning.yml": "d646c8966c4b581c5ee0ae15b68d2601b7d602b691a667ca72ab95efe5ec8b37",
     "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
@@ -24,5 +24,5 @@
     "tests/test_preflight.py": "beed2a3da343d2c1ee522c6c8f80a625a845f2bb79cf24a4605389afb101e03e",
     "tests/test_workflow.py": "7eb80b11626e0d0d14df3fe47708324b8450912c4a4bbab2b4f4a341951fd746"
   },
-  "standard": "V0.3.1"
+  "standard": "V0.4.0"
 }

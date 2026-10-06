@@ -244,6 +244,7 @@ After a merge to `main`, the automation:
   a ticket verified before the merge stays *Completed*;
 - creates the Version ticket, or reuses a planned one, with a generated description, the last build and
   the tickets as sub-issues, and closes it;
+- attaches the tickets with Delivery *Implemented* that no Version ticket has yet (section 5.2, item 6);
 - raises an Alert if it detects a bypass or finds stale planned versions.
 
 ### 5.2 What to check
@@ -256,6 +257,10 @@ After a merge to `main`, the automation:
 5. **If the board was not updated,** the version is still finalized. The board step is skipped when the
    project token is missing or the hosting service reports an error. Re-run the finalize step, which is safe to
    repeat and skips what is already done, or correct the fields by hand.
+6. **If you did work with no file change** (a setting, a secret, a check that was run), set its Delivery
+   to *Implemented* and its Version to the version it belongs to. The next finalize attaches it to that
+   version's ticket. To attach it at once, for example for a version that is already finalized, run the
+   workflow by hand with the dry run off.
 
 ### 5.3 What next
 
