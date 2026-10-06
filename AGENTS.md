@@ -12,6 +12,9 @@ This project
 - Automation files (hooks, `.github/scripts/`, the versioning workflow, the pull request template and the
   automation's tests) are listed in `.github/automation-manifest.json`. After a change to one, run
   `python .github/scripts/check_manifest.py --update --standard <version>`, then the tests.
+- A release, a hotfix finish and a branch retirement are done only by the workflow's manual runs (see the wiki page
+  on the automation), never by hand with git, and only when the administrator or developer asks: run the dry run
+  first and say what it would do.
 - Flag comments (they start with `<!-- attention:`) and commits whose message starts with `Finalize `,
   `Flag bypass` or `Fill in a build heading` are written by the automation, which recognises them: do not edit
   or reuse them.

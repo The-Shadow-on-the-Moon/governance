@@ -1,6 +1,10 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006032529 (branch apply-governance-to-itself)
+#### #44 — Document and prove merge C2
+- README.md: the automation section lists the steps a person starts by hand (release, hotfix finish, branch retire), and the status says that anything still open is tracked in a ticket.
+- AGENTS.md: a release, a hotfix finish and a branch retirement are done only by the workflow's manual runs, only when asked, with a dry run first.
 ### Build 20261006031532 (branch apply-governance-to-itself)
 #### #43 — Add the manual inputs for release, hotfix and retire to the workflow
 - .github/workflows/versioning.yml: fixed; the new checkout step name had a colon followed by a space, which made the file invalid YAML (GitHub reported a workflow file issue and could not start the workflow). The name is reworded.
