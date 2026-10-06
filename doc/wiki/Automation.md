@@ -72,6 +72,10 @@ All in `.github/scripts/`, with a test file for each in `tests/`. Each can be ru
 
 In the Actions tab, run the *Versioning* workflow (from `main`, or from a branch to try a change) with mode `finalize` (repeat or dry-run a finalize) or `daily` (the daily checks), and the dry run on or off. A dry run only reports.
 
+## The release step
+
+Declaring a finalized version a release is a deliberate step, started by hand (the developer verifies the version first and records the result). `release.py` tags the commit where the version was finalized, not the tip of `main`, as `released/V<major>.<sub>.<mod>`; sets the Version ticket to Delivery *Released* with a comment giving the date and the tag; and sets to *Released* every ticket that is *Merged* or *Implemented* with a version at or below the released one. A ticket with newer work pushed keeps *Pushed*. It refuses a version that is not finalized, one that already has a release tag, and one without a finalized Version ticket. A mistaken release tag may be deleted and the step run again, after putting the Version ticket and its tickets back to *Merged*.
+
 ## Checking the files
 
 `python .github/scripts/check_manifest.py` reports each automation file as unchanged, edited locally or missing. With `--against <newer manifest>` it also reports files from an older version and files new in the standard. `--update --standard <version>` rewrites the manifest after a deliberate change.

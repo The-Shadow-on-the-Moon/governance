@@ -1,5 +1,13 @@
 # Changelog
 
+## WIP-Version
+### Build 20261006030117 (branch apply-governance-to-itself)
+#### #40 — Add the release step (tag, Version ticket and tickets Released, including Implemented)
+- .github/scripts/release.py: added; given a finalized version (by default the latest) it tags the commit where that version's heading first appears (where it was finalized, not the tip of main) as `released/V<major>.<sub>.<mod>`, sets the Version ticket to Delivery Released and comments with the date and the tag, and sets to Released every ticket whose Delivery is Merged or Implemented and whose version is at or below the released one (a ticket with newer work, Delivery Pushed, keeps it; Version and Alert tickets, and other deliveries, are left alone). It refuses a version that is not finalized, one that already has a release tag, and one with no finalized Version ticket. `--dry-run` only reports; `VERSION` in the environment picks the version.
+- tests/test_release.py: added; 12 tests (each rule, the refusals, an earlier version, dry run, no board, paging, and the finalize commit in a real repository).
+- doc/wiki/Automation.md: described the release step.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+
 ## V0.5.0 — 2026-10-06 02:52 UTC
 ### Build 20261006025104 (branch apply-governance-to-itself)
 #### #39 — Document and prove merge C1
