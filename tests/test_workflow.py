@@ -48,6 +48,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertLess(main.index("finalize.py"), main.index("bypass.py stale"))
         self.assertLess(main.index("bypass.py stale"), main.index("dates.py"))
         self.assertLess(main.index("dates.py"), main.index("watch.py"))
+        self.assertLess(main.index("watch.py"), main.index("field_rules.py"))
 
     def test_uses_the_project_token_and_skips_its_own_commits(self):
         text = workflow()

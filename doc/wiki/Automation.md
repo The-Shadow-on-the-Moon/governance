@@ -19,7 +19,7 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 | When | What runs |
 |---|---|
 | A pull request | The advisory check: fails and comments once when the branch is behind `main`, and lists merges with a manual conflict resolution. |
-| A push to `main` | The preflight, then bypass detection (an Alert and an `AUTO-REF` entry), then the finalize step, then the check for stale planned Version tickets, then the date sweep, then the Watch flags. |
+| A push to `main` | The preflight, then bypass detection (an Alert and an `AUTO-REF` entry), then the finalize step, then the check for stale planned Version tickets, then the date sweep, then the Watch flags, then the Caution flags for field rules. |
 | A push to another branch | The preflight; then the fallback for skipped hooks (a pushed changelog that still has `### WIP-Build` gets its build heading filled in with the commit's time and hash, a note in the first entry, and a commit on the branch); then the push step: for each ticket in the changelog entries the push added, Delivery becomes *Pushed* and Build the ticket's latest build, *ToDo* and *OnDeck* tickets become *InProgress*, and a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and already had work pushed or delivered gets a *Caution* flag with a comment naming the build (not on its first push, and not again while a *Caution* or *AtRisk* is open). |
 | On request | The preflight and the finalize step, as a dry run unless told otherwise. Safe to repeat. |
 
@@ -34,6 +34,10 @@ Start date and End date are the days the automation noticed a ticket start and e
 ## The Watch flags
 
 A ticket left alone gets Attention *Watch* with one comment: no activity at *Review* for a week, at *OnDeck* or *InProgress* for a month, at *Suspended* for six months, or waiting for input for two weeks. Activity is a comment, a change on the board, or a new build; the automation's own flag comments do not count. A flag is set only on a ticket that is blank, *Fine* or *Acknowledged*, and never lowers a level. It is raised once per situation, meaning the stage together with the latest build, remembered in a hidden marker in the comment: after a person closes the flag it comes back only when the stage changes or new work arrives. One limit follows from that: a ticket that moves away and back to the same stage with no new build counts as the same situation. Version and Alert tickets have no flags.
+
+## The Caution flags for field rules
+
+The rules that span fields are checked on every ticket: *Completed* has Resolution *Done*; *Abandoned* has one of the abandon reasons; an open ticket has no Resolution and no End date; Waiting is only on open tickets; a Backfilled ticket has its REF; the issue is closed only at *Completed* or *Abandoned*. A broken rule raises *Caution* with one comment naming it, but only when neither the issue nor the board item has changed for five minutes (fixing one takes several edits). It is raised once for a set of broken rules, remembered in a hidden marker in the comment: after a person closes the flag it comes back only when a rule not named before is broken. One limit follows: a rule put right and later broken again, with the flag closed in between, is not seen as new. Version and Alert tickets have no flags.
 
 ## Tickets with no file change
 

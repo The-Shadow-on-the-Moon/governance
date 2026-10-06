@@ -1,6 +1,13 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006023919 (branch apply-governance-to-itself)
+#### #37 — Add the Caution flags for broken field rules
+- .github/scripts/field_rules.py: added; checks the rules that span fields on every ticket on the board and raises Attention *Caution*, with one comment naming what is broken, for: Completed without Resolution Done; Abandoned without one of the abandon reasons; an open ticket with a Resolution or an End date; Waiting on a Completed or Abandoned ticket; a Backfilled ticket with no REF; an issue open at Completed or Abandoned, or closed at any other stage. Only when neither the issue nor the board item has changed for five minutes; only on a ticket that is blank, Fine, Acknowledged or Watch (never lowering a level); once per set of broken rules (kept in a hidden marker in the comment): after a person closed the flag it comes back only when a rule not named before is broken. Version and Alert tickets are skipped; reads every page of the board; `--dry-run` only reports.
+- .github/workflows/versioning.yml: the `main` job runs it after the Watch sweep (a dry run for a manual dry run).
+- tests/test_field_rules.py: added; 19 tests (each rule, the quiet period, open and closed flags, the same and different rules, skipped types, paging, dry run); tests/test_workflow.py: the step order.
+- doc/wiki/Automation.md: described the flags.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
 ### Build 20261006023458 (branch apply-governance-to-itself)
 #### #36 — Add the Watch flags for stale tickets
 - .github/scripts/watch.py: added; raises Attention *Watch*, with one comment, when a ticket has had no activity at Review for a week, at OnDeck or InProgress for a month, at Suspended for six months, or has been waiting for input for two weeks. Activity is a comment, a board change, or a new build; the automation's own flag comments do not count. It flags only a ticket that is blank, Fine or Acknowledged (never lowering a level), skips Version and Alert tickets, and raises it once per situation (the Progress with the latest build, kept in a hidden marker in the comment): a flag a person closed is raised again only when the stage changes or new work arrives. Reads every page of the board; `--dry-run` only reports.

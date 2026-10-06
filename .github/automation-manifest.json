@@ -9,9 +9,10 @@
     ".github/scripts/alerts.py": "88da4e30db902f2d54e29cc0e7e0d7bc9ccfee61610883578046a8f231c9d8fe",
     ".github/scripts/bypass.py": "a857079d57f35867d7e6f25716e002a3346d5923c818f2e36dc958a4ec2daa92",
     ".github/scripts/changelog.py": "120d520c107ca142554e99dc7a46dd1511ae79399b40423c08fb80a4b569ae9f",
-    ".github/scripts/check_manifest.py": "c15ec6b2a544482488b61b6c7c89f8bd4bc48ef65423ed990623cd28a3612096",
+    ".github/scripts/check_manifest.py": "0755f8697828e8bd22144cf33fc367bacc8f024e99cf7d0fa8b0d514c03d2c23",
     ".github/scripts/checks.py": "7f8dd58ce4c80ba0d0b97d5ae011c388daa814b07ec4efd34f266283e0399151",
     ".github/scripts/dates.py": "33a14ef1aac35f9c034dd4826403a81421929737f81641c2639a08cc1137f91f",
+    ".github/scripts/field_rules.py": "5984f38bd9c1ab37f3080d67356cef9c68256ec3de5277d80b6c12e19f2871dc",
     ".github/scripts/finalize.py": "34351ba3c35376efd293ee6f4730dc528ff18dbe5dd256a549cc9de65a9a0255",
     ".github/scripts/github_api.py": "b1643503d048e3a00b379fbe5918e85e367386b47702e74c1152a376568f5409",
     ".github/scripts/implemented.py": "4dfea0d5a5c2806799233679548b3d9a4700b86b411e4f63626830032f26981e",
@@ -20,10 +21,11 @@
     ".github/scripts/skipped_hooks.py": "da621d5ad001748b082c35a2321d81e3b222fdd76f4d4886a13240cd4eb93210",
     ".github/scripts/versions.py": "5a2072e8c657a8a16fc9beaaf51e4152b7a4b5fa247551eb46c69348e2b5f2ee",
     ".github/scripts/watch.py": "e06c0b8b1385c4239a1385857750b53f26cfa96d48fe09ed6a3d2a61973364de",
-    ".github/workflows/versioning.yml": "8ab87131e07e5d75d2c6da178d0704536ba631d3c2e94fb5acd5380ae5cde98b",
+    ".github/workflows/versioning.yml": "fe746940113a8bd86ce3a9172b69fc905506bed5e9e773f45dd91bf0b50b00b4",
     "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
     "tests/test_checks.py": "0129fdd6425bfdffa54202c0c76793591eac8a9c8db90f1a3b219384b74d72ef",
     "tests/test_dates.py": "0f810f7082f3b18bfa0bbdc20ca8be28505dc964b8df565ed6a549f25797b7b4",
+    "tests/test_field_rules.py": "27131dee1e5ea5f47348e0c405b944f800c4760215fd998b5c3bba3caeb99b5c",
     "tests/test_finalize.py": "4cc4476a08b216bdb8346e482151a6b6ebdcf0dfa0485bdeed9bb3f007989f44",
     "tests/test_hooks.py": "612e63bfd9ba3ca203c2b72c2ad852b0541940fec9c64140ee5a87bb3802c2ed",
     "tests/test_implemented.py": "9ffb8b56156598631ef219166d895da60f4c2c19662a037403b7e17efe9d8b84",
@@ -32,7 +34,7 @@
     "tests/test_push_step.py": "b34470e88675e23a30d350ea093da04cb96e41caf5ff9b013c7f5ff04cc00c04",
     "tests/test_skipped_hooks.py": "286251211eaccd9d668f389676068dc2895f53c39424ab4404cc944ecd64b9fe",
     "tests/test_watch.py": "afbbf5bc4f57f9236cfa254c02606357cc9b269fa6397fe016306fc54fcba77a",
-    "tests/test_workflow.py": "327c36cbc36cbde5f0009663ebbe76dad39e22ba7d85adf20cab9476d56663ac"
+    "tests/test_workflow.py": "1fb05d6f26df7c02a84164889e243605210fb5eac13eeb39b82179ea31b70cc1"
   },
   "standard": "V0.5.0"
 }

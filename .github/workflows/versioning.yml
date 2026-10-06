@@ -2,7 +2,7 @@ name: Versioning
 
 # On a pull request: the advisory check.
 # On a push to another branch: the preflight, the fallback for skipped hooks, then the push step (Delivery, Progress, Build, Attention).
-# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the date sweep and the Watch flags.
+# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the date sweep, the Watch flags and the Caution flags for field rules.
 # On request: the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
 
 on:
@@ -151,4 +151,14 @@ jobs:
             python3 .github/scripts/watch.py --dry-run
           else
             python3 .github/scripts/watch.py
+          fi
+
+      - name: Flag broken field rules
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/field_rules.py --dry-run
+          else
+            python3 .github/scripts/field_rules.py
           fi
