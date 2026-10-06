@@ -1,5 +1,10 @@
 # Changelog
 
+## WIP-Version
+### Build 20261007100000 (branch dummy-retire-wf)
+#### #63 — DUMMY test for #43: a ticket on a branch to retire
+- DUMMY entry: nothing real changed.
+
 ## V0.5.0 — 2026-10-06 02:52 UTC
 ### Build 20261006025104 (branch apply-governance-to-itself)
 #### #39 — Document and prove merge C1
