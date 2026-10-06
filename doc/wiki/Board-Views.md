@@ -2,6 +2,10 @@
 
 The saved views of the [Governance board](https://github.com/orgs/The-Shadow-on-the-Moon/projects/7), from the standard's guide on tickets and the board (sections 2.2 and 7.1). The API cannot create views, so the administrator creates them in the web interface (the board's view tabs, then the filter box). Keep this page in step with the board.
 
+## Test tickets
+
+Throwaway tickets and Version tickets made to test the automation carry the label `dummy`, and every working view below ends with `-label:dummy` so they never show among real work. The label is described in the standard's ticket fields reference. An optional view `label:dummy` lists only them.
+
 ## Daily views
 
 | View | Filter | Shows |

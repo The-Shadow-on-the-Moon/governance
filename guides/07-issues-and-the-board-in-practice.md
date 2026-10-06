@@ -77,6 +77,9 @@ A few saved views make this quick:
 - **Review:** tickets at *Review*.
 - **Waiting:** tickets marked *Needs input*.
 
+Every working view leaves out test tickets by ending its filter with `-label:dummy` (see *Ticket fields
+reference*). A view of only the test tickets, `label:dummy`, is optional.
+
 Setting them up is part of configuring the board, which is the administrator's job.
 
 ### 2.3 Rules
@@ -336,7 +339,7 @@ automation's Attention flag already catches stale tickets, long waits and broken
    - Waiting is only on open tickets.
    - A backfilled ticket has its REF.
    - The issue is closed only at *Completed* or *Abandoned*.
-5. **Labels:** the Area list is fixed. Remove strays and duplicates.
+5. **Labels:** the Area list and `dummy` are fixed. Remove strays and duplicates.
 6. **Planned Version tickets:** closed if dropped, and none left behind for versions already passed.
 7. **Branches:** merged branches not yet retired (a week or two up to about a month), and parked branches
    about a month old (suspend or abandon them).

@@ -38,12 +38,14 @@ situations on a page each.
 | **B Cheat sheet: if this then that** | Common situations, what to do, and where to read more. |
 | **C Ticket fields reference** | Every ticket field with its values, meanings and who sets them. |
 | **D Ticket examples** | Example tickets for each Type, as full forms. |
+| **E Ticket model** | The design of a ticket as a whole: the questions it answers, why each has its own field, and its life from creation to release. |
 
 ## Where to start
 
 - **New to a project:** 01, then 03, then 04, and keep appendix A at hand.
 - **Starting a task:** 04, then 05.
 - **Landing work:** 06.
+- **Understanding the ticket model:** appendix E, then appendix C for the values.
 - **Looking after the board:** 07, with appendix C.
 - **Releasing or fixing a release:** 08.
 - **Working with an assistant, or instructing one:** 09.

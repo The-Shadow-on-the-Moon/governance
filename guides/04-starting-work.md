@@ -236,7 +236,7 @@ The steps:
    first bullet if there is only a `REF`.
 4. **Push the branch.** The remote automation sets Delivery to *Pushed* on the tickets in your changelog
    entries, and moves a ticket still at *ToDo* or *OnDeck* to *InProgress*. If one of them is *Completed*, *Abandoned*, *Review* or *Suspended* and earlier work on it was
-   already pushed or delivered, it also raises *Caution* in Attention, with a comment, because new work has
+   already pushed or delivered (recognised by its recorded Build, so a Delivery set by hand does not count), it also raises *Caution* in Attention, with a comment, because new work has
    arrived on it. The first push of a ticket raises nothing, even if the ticket is already at *Review* (see
    the guide on project structure, section 4.3).
 5. **Check the ticket.** Delivery shows *Pushed*. The Start date appears after the automation's next

@@ -1,5 +1,21 @@
 # Changelog
 
+## WIP-Version +s
+### Build 20261006214642 (branch apply-governance-to-itself)
+#### #65 — Raise the new-work Caution only when an earlier Build is recorded
+- .github/scripts/push_step.py: fixed; the new-work Caution trusted Delivery alone, so a Delivery written by hand just before the push step ran (or the same push handled twice) made a Review ticket's first push look like new work. It now needs a recorded Build, a 14-digit stamp, older than the build being pushed; Delivery Implemented, which has no Build, still counts as earlier work.
+- tests/test_push_step.py: existing cases get an earlier Build; added a hand-set Delivery with no Build, a Build equal to or newer than the pushed one, a Build that is not a stamp, and an Implemented ticket with no Build.
+- guides/03-project-structure.md, guides/04-starting-work.md, guides/appendix-c-ticket-fields-reference.md, guides/appendix-e-ticket-model.md, doc/wiki/Automation.md: say that earlier work is recognised by the recorded Build.
+#### #66 — Dummy versions and tickets cause confusion
+- guides/appendix-c-ticket-fields-reference.md: described the `dummy` label (a marker for throwaway tickets and Version tickets made to test the automation, not an Area; working views exclude it with `-label:dummy`).
+- guides/10-new-project-bootstrap.md, guides/07-issues-and-the-board-in-practice.md: the label list is the 14 Area labels plus `dummy`; the saved views leave test tickets out.
+- doc/wiki/Board-Views.md, AGENTS.md: the test-ticket convention and the view filter.
+- repository labels: created `dummy` and put it on the 15 DUMMY tickets and the two DUMMY Version tickets (#46 to #52, #54 to #63).
+#### #67 — Ticket Model Design
+- guides/appendix-e-ticket-model.md: added; the design of a ticket as a whole (the questions and fields, why each is separate, the life of a work ticket, the Version and Alert tickets, how the model drives the automation), written from the current implementation and the earlier design notes.
+- doc/wiki/Ticket-Model.md, doc/wiki/Home.md: added a wiki page that summarises the model and links to the appendix.
+- guides/README.md, guides/01-concepts-and-vocabulary.md, guides/03-project-structure.md, guides/appendix-c-ticket-fields-reference.md, README.md, HANDOFF-governance.md: refer to the new appendix.
+- tools/combine.py, tests/test_tools.py: the combined file and its test now include appendix E; the combined file is rebuilt.
 ## V0.6.0 — 2026-10-06 03:35 UTC
 ### Build 20261006032529 (branch apply-governance-to-itself)
 #### #44 — Document and prove merge C2

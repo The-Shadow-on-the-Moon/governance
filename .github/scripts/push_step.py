@@ -4,12 +4,16 @@ For each ticket in the changelog entries that the push added, it sets Delivery t
 the ticket's latest build, moves a ticket still at ToDo or OnDeck to InProgress, and raises Caution in
 Attention, with one comment naming the build, when the ticket is Completed, Abandoned, Review or
 Suspended and its earlier work was already pushed or delivered (new work has arrived on a finished
-ticket). The first push of a ticket never raises it. It never moves a ticket out of those states.
+ticket). Earlier work is recognised by a Build recorded on the board that is older than the build being
+pushed, or by Delivery Implemented (which has no Build). A ticket whose Delivery was merely set by hand has
+no such Build, so its push counts as a first push and never raises it. It never moves a ticket out of those
+states.
 See the guide on starting work (section 5) and project structure (section 4.3).
 
 `--dry-run` only reports what it would do.
 """
 import os
+import re
 import sys
 
 import changelog
@@ -20,6 +24,7 @@ from github_api import Client, GitHubError
 
 FINISHED = ("Completed", "Abandoned", "Review", "Suspended")
 DELIVERED = ("Pushed", "Merged", "Implemented", "Released", "Dropped")  # earlier work already reached the host
+STAMP = re.compile(r"\d{14}")
 OPEN_FLAGS = ("Caution", "AtRisk")  # a flag at this level or higher is already raised
 
 
@@ -51,6 +56,20 @@ def new_ticket_builds(root, before, after, base="origin/main"):
     return found
 
 
+def has_earlier_work(delivery, recorded_build, stamp):
+    """Whether the ticket had work before the build being pushed.
+
+    Delivery alone is not trusted, because a person can set it by hand (or a write can land before the push
+    step runs): a delivered ticket needs a recorded Build older than this one. Implemented is the exception,
+    since such a ticket has no file change and gets no Build. A Build that is not a stamp counts as none.
+    """
+    if delivery not in DELIVERED:
+        return False
+    if delivery == "Implemented":
+        return True
+    return bool(STAMP.fullmatch(recorded_build or "")) and recorded_build < stamp
+
+
 def handle_push(root, repo_client, project_client, board, before, after, dry_run=False):
     """Apply the push step to the tickets of this push. Returns the Runner."""
     run = finalize.Runner(dry_run)
@@ -70,12 +89,13 @@ def handle_push(root, repo_client, project_client, board, before, after, dry_run
             status = finalize._value(item, "status", "name")
             attention = finalize._value(item, "attention", "name")
             delivery = finalize._value(item, "delivery", "name")
-            # New work on top of delivered work, not the first push of a ticket (which may already be at Review).
-            flag = status in FINISHED and delivery in DELIVERED and attention not in OPEN_FLAGS
+            recorded_build = finalize._value(item, "build", "text")
+            # New work on top of earlier work, not the first push of a ticket (which may already be at Review).
+            flag = status in FINISHED and has_earlier_work(delivery, recorded_build, stamp) and attention not in OPEN_FLAGS
             wanted = []
             if delivery != "Pushed":
                 wanted.append(("Delivery", "Pushed", {"singleSelectOptionId": fields["Delivery"]["options"]["Pushed"]}))
-            if finalize._value(item, "build", "text") != stamp:
+            if recorded_build != stamp:
                 wanted.append(("Build", stamp, {"text": stamp}))
             if status in ("ToDo", "OnDeck"):
                 wanted.append(("Status", "InProgress", {"singleSelectOptionId": fields["Status"]["options"]["InProgress"]}))

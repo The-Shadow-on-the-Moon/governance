@@ -1,7 +1,8 @@
 # Appendix C: Ticket fields reference
 
 Every ticket field with its values, what they mean, who sets them and when. The idea behind each field,
-and the rules that tie the fields together, are in section 4 of *Project structure*.
+and the rules that tie the fields together, are in section 4 of *Project structure*. How the fields work
+together over a ticket's life is in *Appendix E: Ticket model*.
 
 **Where each field lives (GitHub).** Type is the native issue type, Area is a set of labels, and every
 other field is a board field.
@@ -49,6 +50,20 @@ version numbers or any automation. At least one is suggested on a work ticket; n
 
 The list is the same for every project. Adding a value is a change to the standard, not something a
 project does on its own. Set by a person.
+
+## The `dummy` label
+
+Not an Area. A marker for a throwaway ticket or Version ticket made to test the automation (a trial of a
+new step, a test of a rule). It is the only label besides the 14 Area labels.
+
+| Label | Meaning |
+|---|---|
+| `dummy` | A throwaway ticket or version made to test the automation; left out of the board's working views. |
+
+Set by a person when the test ticket is created. A test ticket is titled `DUMMY ...` and is closed as
+*Abandoned*, with Resolution *Invalid*, when the test is over. The working views of the board exclude the
+label (`-label:dummy`), so test tickets never appear among real work. It never affects version numbers or
+any automation, and it is not part of Area.
 
 ## Origin and REF
 
@@ -114,7 +129,7 @@ These are the causes it uses today, with the level each starts at:
 
 | Level | Raised when |
 |---|---|
-| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and whose earlier work was already pushed or delivered (never for its first push), or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state). |
+| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and whose earlier work was already pushed or delivered, recognised by a recorded Build older than the one being pushed (or by Delivery *Implemented*; never for its first push), or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state). |
 | **Watch** | A ticket has had no activity at *Review* for a week, at *OnDeck* or *InProgress* for a month, or at *Suspended* for six months, or has been waiting for input for two weeks. |
 
 Activity means a comment, a change to a field, or a new build that mentions the ticket; the automation's

@@ -12,9 +12,10 @@ The guides are kept in the repository, and this page only points to them.
 | Guide | What it covers |
 |---|---|
 | [Start here: the guide index](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/README.md) | The reading order, the ideas that run through the guides, the roles, and what the standard assumes. |
-| [All guides in one file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/Developer-Guides-Complete.md) | The README, guides 01 to 10 and appendices A to D, for reading in one place. |
+| [All guides in one file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/Developer-Guides-Complete.md) | The README, guides 01 to 10 and appendices A to E, for reading in one place. |
 | [Appendix A: the daily flow](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-a-cheat-sheet-daily-flow.md) | The whole flow on one page. |
 | [Appendix B: if this then that](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-b-cheat-sheet-if-then.md) | Common situations, what to do, and where to read more. |
+| [Appendix E: ticket model](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-e-ticket-model.md) | The design of a ticket as a whole, and its life from creation to release. |
 | [Appendix C: ticket fields](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-c-ticket-fields-reference.md) | Every ticket field with its values and who sets them. |
 
 ## Working on the guides
@@ -28,6 +29,7 @@ The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tes
 
 ## Roles and board
 
+- [Ticket model](Ticket-Model)
 - [Automation](Automation)
 - [Roles and access](Roles-and-Access)
 - [Board views](Board-Views)
