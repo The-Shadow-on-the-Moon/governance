@@ -1,8 +1,9 @@
 # Changelog
 
 ## WIP-Version
-### WIP-Build
+### Build 20261006021901 (branch dummy-test-34-throwaway, commit 1d3982b)
 #### REF 20261006030000 — DUMMY test for #34: a commit made with the hooks skipped
+- Note from the automation: this commit (1d3982b, made 2026-10-06 02:19 UTC) was pushed with the build placeholder still in the changelog, so the local hooks were skipped. The build heading was filled in here, and the commit message was not drafted from these entries.
 - DUMMY entry: nothing real changed.
 
 ## V0.4.0 — 2026-10-06 00:47 UTC
