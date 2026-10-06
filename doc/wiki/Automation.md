@@ -70,7 +70,17 @@ All in `.github/scripts/`, with a test file for each in `tests/`. Each can be ru
 
 ## Starting a run by hand
 
-In the Actions tab, run the *Versioning* workflow (from `main`, or from a branch to try a change) with mode `finalize` (repeat or dry-run a finalize) or `daily` (the daily checks), and the dry run on or off. A dry run only reports.
+In the Actions tab, run the *Versioning* workflow with a mode and the dry run on or off (it is on by default; a dry run only reports):
+
+| Mode | Start it from | Inputs |
+|---|---|---|
+| `finalize` | `main` (or a branch, to try a change) | none: repeat or dry-run a finalize |
+| `daily` | `main` | none: the daily checks |
+| `release` | `main` | `version`: a finalized version, or empty for the latest |
+| `hotfix` | the hotfix branch itself | `version`: the hotfix version, for example `V1.25.0-HF1` |
+| `retire` | `main` | `branch`, `outcome` (archived, suspended or abandoned), `confirm` (the branch name again) and an optional `comment` for the tag |
+
+The same from the command line: `gh workflow run versioning.yml --ref <branch> -f mode=release -f dry_run=false`.
 
 ## The release step
 

@@ -6,6 +6,8 @@ name: Versioning
 # Every day (06:17 UTC) and on request with mode "daily": the preflight, the Implemented tickets, the date sweep and the flags.
 #   The daily run never commits to a branch.
 # On request with mode "finalize": the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
+# On request with mode "release", "hotfix" or "retire": the preflight and that step, as a dry run unless told otherwise.
+#   A hotfix is finished from its own branch (start the workflow from that branch).
 
 on:
   pull_request:
@@ -18,16 +20,43 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'What to run: the finalize step, or the daily checks'
+        description: 'What to run (release, hotfix and retire need the inputs below)'
         type: choice
         options:
           - finalize
           - daily
+          - release
+          - hotfix
+          - retire
         default: finalize
       dry_run:
         description: 'Only report what the steps would do'
         type: boolean
         default: true
+      version:
+        description: 'release: the finalized version (empty for the latest); hotfix: the hotfix version, for example V1.25.0-HF1'
+        type: string
+        required: false
+      branch:
+        description: 'retire: the branch to retire (a hotfix is finished from the hotfix branch itself: run from it)'
+        type: string
+        required: false
+      outcome:
+        description: 'retire: what became of the branch'
+        type: choice
+        options:
+          - archived
+          - suspended
+          - abandoned
+        default: archived
+      confirm:
+        description: 'retire: the branch name typed again'
+        type: string
+        required: false
+      comment:
+        description: 'retire: an optional short comment for the tag, in kebab-case'
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -223,4 +252,101 @@ jobs:
             python3 .github/scripts/field_rules.py --dry-run
           else
             python3 .github/scripts/field_rules.py
+          fi
+
+  release:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'release'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-release
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Release the version
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/release.py --dry-run
+          else
+            python3 .github/scripts/release.py
+          fi
+
+  hotfix:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'hotfix' && github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-hotfix-${{ github.ref_name }}
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      VERSION: ${{ inputs.version }}
+      BRANCH: ${{ github.ref_name }}
+    steps:
+      - name: Checkout the hotfix branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set the commit author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Finish the hotfix
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/hotfix.py --dry-run
+          else
+            python3 .github/scripts/hotfix.py
+          fi
+
+  retire:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'retire'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-retire
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      BRANCH: ${{ inputs.branch }}
+      OUTCOME: ${{ inputs.outcome }}
+      CONFIRM: ${{ inputs.confirm }}
+      COMMENT: ${{ inputs.comment }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Retire the branch
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/retire.py --dry-run
+          else
+            python3 .github/scripts/retire.py
           fi

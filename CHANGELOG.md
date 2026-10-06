@@ -1,6 +1,11 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006031406 (branch apply-governance-to-itself)
+#### #43 — Add the manual inputs for release, hotfix and retire to the workflow
+- .github/workflows/versioning.yml: the manual start now has the modes `release`, `hotfix` and `retire` besides `finalize` and `daily`, with the inputs `version`, `branch`, `outcome`, `confirm` and `comment` (the dry run stays on by default). Three new jobs run the preflight and then the step: `release` (checks out main; `version` empty means the latest), `hotfix` (checks out the branch the workflow was started from, with its tags, sets the commit author, and takes the hotfix version from `version`; it only runs for a branch) and `retire` (checks out main; takes `branch`, `outcome`, `confirm` and `comment`). None of the others touches git.
+- tests/test_workflow.py: the modes, the inputs reaching the scripts, which branch each job runs on, that only the hotfix job commits, and that the default stays a dry run of finalize; the daily job's checks now look only at that job.
+- doc/wiki/Automation.md: how to start the three steps by hand.
 ### Build 20261006031245 (branch apply-governance-to-itself)
 #### #42 — Add the retire step (tag, delete branch, Dropped on abandon)
 - .github/scripts/retire.py: added; given a branch, an outcome (archived, suspended or abandoned) and the branch name typed again as a confirmation, it tags the branch's last commit `<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]` (the UTC date of that commit, an optional kebab-case comment) and only then deletes the remote branch; for an abandoned branch it sets the Delivery of the tickets in the branch's changelog entries to Dropped. It refuses main, a wrong confirmation, a tag name that exists, an archived branch whose last commit is not on main, and a suspended or abandoned branch with an open pull request; a finished hotfix branch (its tip carries a hotfix release tag) is deleted without a retirement tag. `--dry-run` only reports.
