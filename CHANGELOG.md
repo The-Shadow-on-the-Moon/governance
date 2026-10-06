@@ -1,23 +1,9 @@
 # Changelog
 
 ## WIP-Version
-### Build 20261006015801 (branch apply-governance-to-itself)
-#### #29 — Make finalize attach Implemented tickets
-- .github/scripts/implemented.py: added; at every finalize and manual run, finds the board tickets with Delivery *Implemented* that are not sub-issues of any ticket and attaches each to a Version ticket by its Version (blank: the version being finalized and the field is filled in; an already finalized version: kept, attached to that version's closed ticket; a later or unreadable version: left alone), sets Version#, leaves Delivery and Build alone, and comments once per Version ticket on which tickets were added. Reads every page of the board.
-- .github/scripts/finalize.py: runs that sweep after the Version ticket is recorded (and when a version is re-checked), with the existing dry run; the Version ticket lookup now shares the sweep's code.
-- tests/test_implemented.py: added; 12 tests for each case of the sweep, the comments, the paging and the call from finalize.
-- tests/test_finalize.py: the fake board answers the sweep's query.
-- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
-- doc/wiki/Automation.md: described the sweep.
-- .github/automation-manifest.json: rewritten for the changed and new files (standard V0.5.0).
-#### #33 — Add the push step: Delivery Pushed, InProgress, and a Caution when new work reaches a finished ticket
-- .github/scripts/push_step.py: added; on a push to a branch, for each ticket in the open version's changelog entries that the push added (a sync that brings in finalized versions from main is ignored; a new branch is compared with main), sets Delivery to Pushed and Build to the ticket's latest build, moves ToDo and OnDeck to InProgress, and raises Caution with one comment naming the build when the ticket is Completed, Abandoned, Review or Suspended and its earlier work was already pushed or delivered (never on a ticket's first push, since a ticket moved to Review before its first push has no earlier work; not again while a Caution or AtRisk is open, never moving the ticket out of its state). Adds a ticket missing from the board; `--dry-run` only reports.
-- .github/scripts/finalize.py: the ticket query also reads Attention.
-- .github/workflows/versioning.yml: runs on pushes to every branch; a new `branch` job runs the preflight and the push step (not for main, not for a deleted branch), and the `main` job now only runs for main.
-- guides/03-project-structure.md, 04-starting-work.md, 06-syncing-and-merging.md, appendix-c-ticket-fields-reference.md, Developer-Guides-Complete.md: the Caution for new work now says it needs earlier pushed or delivered work, and that a ticket's first push never raises it (the push step as first written would have flagged every ticket moved to Review before its first push).
-- tests/test_push_step.py: added; 18 tests on real temporary repositories and fake clients (each state, an open flag, a closed flag, a new branch, a later push, a sync, a ticket not on the board, dry run).
-- tests/test_workflow.py: tests for the new job and the main-only condition.
-- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+### Build 20261006030000 (branch dummy-test-33-throwaway)
+#### #49 — DUMMY test for #33: new work on a Review ticket
+- first dummy entry.
 
 ## V0.4.0 — 2026-10-06 00:47 UTC
 ### Build 20261006004523 (branch apply-governance-to-itself)
