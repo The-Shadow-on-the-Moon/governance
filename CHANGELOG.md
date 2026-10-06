@@ -1,6 +1,10 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006031446 (branch apply-governance-to-itself)
+#### #43 — Add the manual inputs for release, hotfix and retire to the workflow
+- .github/workflows/versioning.yml: fixed; the `release` and `retire` jobs checked out `main`, so a manual start from a branch ran main's scripts and could not try a change. They now check out the ref the run was started from (start them from `main`, or from a branch to try a change).
+- tests/test_workflow.py, doc/wiki/Automation.md: updated to match.
 ### Build 20261006031406 (branch apply-governance-to-itself)
 #### #43 — Add the manual inputs for release, hotfix and retire to the workflow
 - .github/workflows/versioning.yml: the manual start now has the modes `release`, `hotfix` and `retire` besides `finalize` and `daily`, with the inputs `version`, `branch`, `outcome`, `confirm` and `comment` (the dry run stays on by default). Three new jobs run the preflight and then the step: `release` (checks out main; `version` empty means the latest), `hotfix` (checks out the branch the workflow was started from, with its tags, sets the commit author, and takes the hotfix version from `version`; it only runs for a branch) and `retire` (checks out main; takes `branch`, `outcome`, `confirm` and `comment`). None of the others touches git.

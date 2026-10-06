@@ -266,10 +266,9 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run }}
       VERSION: ${{ inputs.version }}
     steps:
-      - name: Checkout main
+      - name: Checkout (the ref the run was started from: main, or a branch to try a change)
         uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
 
       - name: Preflight
@@ -334,10 +333,9 @@ jobs:
       CONFIRM: ${{ inputs.confirm }}
       COMMENT: ${{ inputs.comment }}
     steps:
-      - name: Checkout main
+      - name: Checkout (the ref the run was started from: main, or a branch to try a change)
         uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
 
       - name: Preflight

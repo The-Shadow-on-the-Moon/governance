@@ -129,10 +129,10 @@ class WorkflowTests(unittest.TestCase):
                      "COMMENT: ${{ inputs.comment }}"):
             self.assertIn(name, retire)
 
-    def test_release_and_retire_run_on_main_and_the_hotfix_on_its_branch_with_tags(self):
+    def test_release_and_retire_use_the_ref_they_were_started_from_and_the_hotfix_its_branch_with_tags(self):
         release, hotfix, retire = self.jobs()
-        self.assertIn("ref: main", release)
-        self.assertIn("ref: main", retire)
+        for job in (release, retire):
+            self.assertNotIn("ref:", job.split("steps:")[1])  # the default checkout: the ref of the manual start
         self.assertIn("ref: ${{ github.ref_name }}", hotfix)
         self.assertIn("fetch-tags: true", hotfix)
         for job in (release, hotfix, retire):

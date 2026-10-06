@@ -76,9 +76,9 @@ In the Actions tab, run the *Versioning* workflow with a mode and the dry run on
 |---|---|---|
 | `finalize` | `main` (or a branch, to try a change) | none: repeat or dry-run a finalize |
 | `daily` | `main` | none: the daily checks |
-| `release` | `main` | `version`: a finalized version, or empty for the latest |
+| `release` | `main` (or a branch, to try a change) | `version`: a finalized version, or empty for the latest |
 | `hotfix` | the hotfix branch itself | `version`: the hotfix version, for example `V1.25.0-HF1` |
-| `retire` | `main` | `branch`, `outcome` (archived, suspended or abandoned), `confirm` (the branch name again) and an optional `comment` for the tag |
+| `retire` | `main` (or a branch, to try a change) | `branch`, `outcome` (archived, suspended or abandoned), `confirm` (the branch name again) and an optional `comment` for the tag |
 
 The same from the command line: `gh workflow run versioning.yml --ref <branch> -f mode=release -f dry_run=false`.
 
