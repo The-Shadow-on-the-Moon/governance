@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version +s
+## V0.7.0 — 2026-10-06 21:50 UTC
 ### Build 20261006214642 (branch apply-governance-to-itself)
 #### #65 — Raise the new-work Caution only when an earlier Build is recorded
 - .github/scripts/push_step.py: fixed; the new-work Caution trusted Delivery alone, so a Delivery written by hand just before the push step ran (or the same push handled twice) made a Review ticket's first push look like new work. It now needs a recorded Build, a 14-digit stamp, older than the build being pushed; Delivery Implemented, which has no Build, still counts as earlier work.
