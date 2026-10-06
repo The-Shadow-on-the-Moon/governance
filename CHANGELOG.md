@@ -1,5 +1,16 @@
 # Changelog
 
+## WIP-Version
+### Build 20261006000318 (branch apply-governance-to-itself)
+#### #24 — Fix the preflight's write-access check for the workflow's token, and finalize V0.3.0 by hand
+- .github/scripts/preflight.py: fixed; the repository check no longer fails on the workflow's own token, which GitHub does not report push rights for. It confirms the repository is reachable with that token and write access through the project token, and fails naming the case when neither token (or no project token) can confirm it.
+- .github/scripts/finalize.py, .github/scripts/bypass.py: fixed; the automation's commits are pushed with `git push origin HEAD`, so a clone with no upstream branch works.
+- .github/scripts/finalize.py: fixed; checking a finalized version again now gives the real bump (for example "sub, from V0.2.0 to V0.3.0") in the Version ticket instead of "recorded earlier".
+- tests/test_preflight.py, tests/test_finalize.py: added tests for each of the above.
+- CHANGELOG.md: the `V0.3.0` heading was renamed by hand (commit `90a3497`), because the first run of the workflow stopped at the preflight; the ticket records the correction.
+- doc/wiki/Automation.md: described how the preflight confirms write access.
+- .github/automation-manifest.json: rewritten for the changed automation files (standard V0.3.1).
+
 ## V0.3.0 — 2026-10-05 23:32 UTC
 ### Build 20261005232622 (branch apply-governance-to-itself)
 #### #14 — Add the local hooks and their activation command

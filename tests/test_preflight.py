@@ -28,7 +28,7 @@ class FakeRepoClient:
     token = "t"
 
     def __init__(self, info=None, error=None):
-        self.info, self.error = info or {"permissions": {"push": True}}, error
+        self.info, self.error = ({"permissions": {"push": True}} if info is None else info), error
 
     def request(self, method, path, body=None):
         if self.error:
@@ -39,8 +39,9 @@ class FakeRepoClient:
 class FakeProjectClient:
     repo = "owner/repo"
 
-    def __init__(self, token="p", boards=None, variable=None, fields=None, viewer_error=None, store_error=None, expiry=None):
-        self.token, self.expiry = token, expiry
+    def __init__(self, token="p", boards=None, variable=None, fields=None, viewer_error=None, store_error=None, expiry=None,
+                 push=True, request_error=None):
+        self.token, self.expiry, self.push, self.request_error = token, expiry, push, request_error
         self.boards = [{"id": "P7", "number": 7, "title": "Governance"}] if boards is None else boards
         self.variable, self.fields = variable, fields if fields is not None else board_fields()
         self.viewer_error, self.store_error = viewer_error, store_error
@@ -54,6 +55,11 @@ class FakeProjectClient:
         if "projectsV2" in query:
             return {"repository": {"projectsV2": {"nodes": self.boards}}}
         return {"node": {"fields": {"nodes": self.fields}}}
+
+    def request(self, method, path, body=None):
+        if self.request_error:
+            raise self.request_error
+        return {"permissions": {"push": self.push}}
 
     def token_expiry(self):
         return self.expiry
@@ -110,9 +116,27 @@ class PreflightTests(unittest.TestCase):
         self.assertFalse(report.ok)
         self.assertIn("cannot reach owner/repo", report.checks[0].message)
 
-    def test_repository_without_write_access(self):
-        report = preflight.run(FakeRepoClient({"permissions": {"push": False}}), FakeProjectClient())
-        self.assertIn("write access is needed", report.checks[0].message)
+    def test_the_workflow_token_does_not_report_write_access_but_the_project_token_does(self):
+        # The case of the first real run: GitHub reports no push right for the workflow's own token.
+        for info in ({"permissions": {"push": False}}, {}):
+            report = preflight.run(FakeRepoClient(info), FakeProjectClient())
+            self.assertTrue(report.ok, report.render())
+            self.assertIn("confirmed through the project token", report.checks[0].message)
+
+    def test_no_token_reports_write_access(self):
+        report = preflight.run(FakeRepoClient({"permissions": {"push": False}}), FakeProjectClient(push=False))
+        self.assertFalse(report.checks[0].ok)
+        self.assertIn("neither the workflow token nor the project token", report.checks[0].message)
+
+    def test_write_access_cannot_be_confirmed_without_a_project_token(self):
+        report = preflight.run(FakeRepoClient({}), FakeProjectClient(token=""))
+        self.assertFalse(report.checks[0].ok)
+        self.assertIn("no project token to confirm it", report.checks[0].message)
+
+    def test_an_error_from_the_project_token_is_not_write_access(self):
+        project = FakeProjectClient(request_error=GitHubError(401, "Bad credentials"))
+        report = preflight.run(FakeRepoClient({}), project)
+        self.assertFalse(report.checks[0].ok)
 
     def test_missing_token_skips_the_board_checks(self):
         report = preflight.run(FakeRepoClient(), FakeProjectClient(token=""))
