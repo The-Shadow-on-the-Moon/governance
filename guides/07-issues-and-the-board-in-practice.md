@@ -278,6 +278,9 @@ coming back.
 - When the version ships, the automation overwrites the field with the version that really shipped. A
   ticket aimed at a later version that ships earlier corrects itself.
 - A ticket with no target version is fine. It gets its version when it ships.
+- A ticket with no file change has nothing for the automation to find in the changelog. When its work is in
+  effect, the person sets its Delivery to *Implemented* and its Version to the version it belongs to. The
+  automation attaches it to that version's ticket and does not change the field.
 
 ### 6.2 Planned Version tickets
 

@@ -175,7 +175,7 @@ condition is given.
 | **Documentation** (readme, wiki, records, comments) | ☐ Changelog bullet<br>☐ Ticket<br>☐ Wiki `Home` and links *(if a page is added, renamed or removed)*<br>☐ Date in the file name *(if it is a record)* |
 | **Build, tooling, config files** | ☐ Changelog bullet<br>☐ Build locally<br>☐ Ticket<br>☐ Tests *(if scripts have logic)*<br>☐ Readme *(if setup or build changed)*<br>☐ Readme and wiki variable list *(if people must apply new settings)* |
 | **Hooks, automation, process rules** | ☐ Changelog bullet<br>☐ Tests for the scripts<br>☐ Build locally<br>☐ Ticket<br>☐ Every page that states a changed rule *(if a rule changed)*<br>☐ Readme setup text *(if hook setup changed)*<br>☐ Guides and board setup *(if what the automation reads or writes changed)* |
-| **Settings** (repository or board, no file changes) | ☐ Ticket records it, not the changelog<br>☐ The page that states the rule *(if a documented rule changed)* |
+| **Settings** (repository or board, no file changes) | ☐ Ticket records it, not the changelog<br>☐ Delivery *Implemented* and Version, when the work is in effect<br>☐ The page that states the rule *(if a documented rule changed)* |
 
 The wiki's known-issues page lists only the critical or very important limitations, as a summary. The
 ticket is the source of truth and holds every detail. "Ticket" means keeping the ticket current: Progress, comments, and the Size and Risk if they turned out

@@ -25,7 +25,7 @@ REQUIRED_FIELDS = {
     "Waiting": (SELECT, ["Needs input"]),
     "Attention": (SELECT, ["Fine", "Acknowledged", "Watch", "Caution", "AtRisk"]),
     "Resolution": (SELECT, ["Done", "Duplicate", "Invalid", "WontFix", "Superseded", "Obsolete"]),
-    "Delivery": (SELECT, ["Committed", "Pushed", "Merged", "Released", "Dropped"]),
+    "Delivery": (SELECT, ["Committed", "Pushed", "Merged", "Implemented", "Released", "Dropped"]),
     "Priority": (SELECT, ["Critical"]),
     "Size": (SELECT, []),
     "Risk": (SELECT, []),

@@ -31,7 +31,8 @@ The steps:
 3. **Run the release step** with that version. By default it is the latest on `main`.
 4. **Check the result.** The tag `released/V<major>.<sub>.<mod>` exists on the commit where that version was
    finalized. The Version ticket shows Delivery *Released* and a comment with the date and the tag. Every
-   ticket merged up to that version shows *Released*, unless newer work on it has been pushed since.
+   ticket merged or implemented up to that version shows *Released*, unless newer work on it has been
+   pushed since.
 5. **Tell the project owner** that the release was made.
 
 ### 1.1 Rules
@@ -42,8 +43,8 @@ The steps:
   naming the build (see the guide on working and committing, section 4). The regression checks are an
   ordinary Task: its result file is committed like any change and lands in a later version, and the
   result names the version and build that were tested.
-- **Rule:** a release marks as *Released* only the tickets whose Delivery is *Merged*. A ticket with newer
-  work pushed keeps *Pushed*.
+- **Rule:** a release marks as *Released* only the tickets whose Delivery is *Merged* or *Implemented* and
+  whose version is at or below the released one. A ticket with newer work pushed keeps *Pushed*.
 - **Recommendation:** have the version's tickets completed before releasing it.
 - **Rule:** the tag goes on the commit where the version was finalized, not simply on the current tip of
   `main`.

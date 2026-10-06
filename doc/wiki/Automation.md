@@ -26,6 +26,10 @@ The preflight checks that the repository is reachable (the workflow's own token 
 
 The finalize step decides the bump from the tickets' Types or the marker, renames the open `WIP-Version` heading in a commit of its own, sets Delivery, Version, Build and Version# on each ticket, and creates and closes the Version ticket with the tickets as sub-issues. If the board cannot be updated, the version is still finalized.
 
+## Tickets with no file change
+
+A ticket that changed no file (a setting, a secret, a check that was run) has nothing in the changelog for the automation to find. When its work is in effect, a person sets its Delivery to *Implemented* and its Version to the version it belongs to. The guides say the finalize step then attaches it to that version's ticket; until that is built, a person attaches it as a sub-issue by hand. Releases will treat *Implemented* tickets like merged ones.
+
 ## Checking the files
 
 `python .github/scripts/check_manifest.py` reports each automation file as unchanged, edited locally or missing. With `--against <newer manifest>` it also reports files from an older version and files new in the standard. `--update --standard <version>` rewrites the manifest after a deliberate change.
