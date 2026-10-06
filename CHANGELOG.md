@@ -1,6 +1,14 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006021728 (branch apply-governance-to-itself)
+#### #34 — Add the fallback for skipped hooks: fill in the build heading with the commit and add a note
+- .github/scripts/skipped_hooks.py: added; on a push to a branch, when the pushed changelog still has `### WIP-Build` (a commit made without the hooks), fills the heading in with the commit's own UTC time and the start of its hash (`### Build <stamp> (branch <name>, commit <hash>)`), adds a note to the first entry under it saying the hooks were skipped and the message was not drafted from the entries, commits that on the branch and pushes it. A placeholder that was already in the branch before the push is left alone; a push that cannot be fast-forwarded is reported; `--dry-run` only reports.
+- .github/scripts/changelog.py: reads the new heading form (`Build.commit`), `stamp_wip_build` takes an optional commit, and `add_note` adds a bullet under a build's first entry.
+- .github/workflows/versioning.yml: the `branch` job sets the commit author and runs the fallback before the push step, which then reads the repaired changelog.
+- guides/03-project-structure.md, guides/Developer-Guides-Complete.md: the changelog structure shows the heading form the automation writes.
+- tests/test_skipped_hooks.py: added; 10 tests on real temporary repositories with a bare remote; tests/test_workflow.py: the order of the branch job's steps.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
 ### Build 20261006015801 (branch apply-governance-to-itself)
 #### #29 — Make finalize attach Implemented tickets
 - .github/scripts/implemented.py: added; at every finalize and manual run, finds the board tickets with Delivery *Implemented* that are not sub-issues of any ticket and attaches each to a Version ticket by its Version (blank: the version being finalized and the field is filled in; an already finalized version: kept, attached to that version's closed ticket; a later or unreadable version: left alone), sets Version#, leaves Delivery and Build alone, and comments once per Version ticket on which tickets were added. Reads every page of the board.

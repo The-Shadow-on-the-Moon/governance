@@ -8,16 +8,17 @@
     ".github/scripts/advisory.py": "49895b9a92dc8241e8291151c0bb31baa21808e726caa4453172edde832e3446",
     ".github/scripts/alerts.py": "88da4e30db902f2d54e29cc0e7e0d7bc9ccfee61610883578046a8f231c9d8fe",
     ".github/scripts/bypass.py": "a857079d57f35867d7e6f25716e002a3346d5923c818f2e36dc958a4ec2daa92",
-    ".github/scripts/changelog.py": "8244d809a4e88c0b01d4f9f9cbcf7e83b8856073707e065be8a3d8bb77431312",
-    ".github/scripts/check_manifest.py": "168b31ec09eeaa872a966625708eed1c1f275e95da226f02525ca11c8524db90",
+    ".github/scripts/changelog.py": "120d520c107ca142554e99dc7a46dd1511ae79399b40423c08fb80a4b569ae9f",
+    ".github/scripts/check_manifest.py": "a4929b67bba21832f91786c8d55a8b40cb5c0c4437b9c7b648ee70b2da57e669",
     ".github/scripts/checks.py": "7f8dd58ce4c80ba0d0b97d5ae011c388daa814b07ec4efd34f266283e0399151",
     ".github/scripts/finalize.py": "34351ba3c35376efd293ee6f4730dc528ff18dbe5dd256a549cc9de65a9a0255",
     ".github/scripts/github_api.py": "bb50c16285b54888eb41a01e6bf320f61d16b2a2fbf11e2d8f30c1845acbe001",
     ".github/scripts/implemented.py": "4dfea0d5a5c2806799233679548b3d9a4700b86b411e4f63626830032f26981e",
     ".github/scripts/preflight.py": "1cc7dd7c2e106c59d8d3a21cc82d0befb617dcd0a36475b3fd92356b9c268be2",
     ".github/scripts/push_step.py": "470a226be7ce8051de3b31fe9f20656b0ed5fb807c56013294438def355bf088",
+    ".github/scripts/skipped_hooks.py": "da621d5ad001748b082c35a2321d81e3b222fdd76f4d4886a13240cd4eb93210",
     ".github/scripts/versions.py": "5a2072e8c657a8a16fc9beaaf51e4152b7a4b5fa247551eb46c69348e2b5f2ee",
-    ".github/workflows/versioning.yml": "8067ca8fa6fe170225bc02f0eec31f19b0f89823f1a60b90b98253fb93f38e46",
+    ".github/workflows/versioning.yml": "bac8acf2911139afbeea0423278820891117df3c60c6c22f885c5196e9800de4",
     "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
     "tests/test_checks.py": "0129fdd6425bfdffa54202c0c76793591eac8a9c8db90f1a3b219384b74d72ef",
     "tests/test_finalize.py": "4cc4476a08b216bdb8346e482151a6b6ebdcf0dfa0485bdeed9bb3f007989f44",
@@ -26,7 +27,8 @@
     "tests/test_manifest.py": "c7885dbd402e2610299b12a5f503149aba55d3cb6c054b6f959a9705bf7c0693",
     "tests/test_preflight.py": "beed2a3da343d2c1ee522c6c8f80a625a845f2bb79cf24a4605389afb101e03e",
     "tests/test_push_step.py": "b34470e88675e23a30d350ea093da04cb96e41caf5ff9b013c7f5ff04cc00c04",
-    "tests/test_workflow.py": "c9a41538f4d96dbab3e440b8992c0dc607426cf33a922e29ff4fa77c1aaae1aa"
+    "tests/test_skipped_hooks.py": "286251211eaccd9d668f389676068dc2895f53c39424ab4404cc944ecd64b9fe",
+    "tests/test_workflow.py": "cab11bfb7de296b569550409360cbaa96fae20537a6bb13c29ccdbe36357b750"
   },
   "standard": "V0.5.0"
 }

@@ -716,6 +716,7 @@ section describes what the file contains and how it is structured.
 ## WIP-Version                         the open version, on a branch (a marker may follow: +V, +s, +m)
 ### WIP-Build                          placeholder for the commit being made
 ### Build 20261005143045 (branch <name>)  stamped at commit time, one per commit that logs a change
+### Build 20261005143045 (branch <name>, commit 1a2b3c4)   filled in by the automation when the hooks were skipped
 #### #201 — <ticket title>             one block per ticket
 - what changed
 #### REF 20261005180000 — <reason>     a change with no ticket yet
@@ -727,6 +728,7 @@ section describes what the file contains and how it is structured.
 |---|---|
 | `## WIP-Version` | The version being worked on. It has no number until it merges. |
 | `### Build <timestamp> (branch <name>)` | One commit's worth of changes. The local hook stamps it with the UTC time of the commit. |
+| `### Build <timestamp> (branch <name>, commit <hash>)` | The same, filled in by the automation for a commit made without the hooks. It carries the commit's UTC time and the start of its hash, and a note in the first entry says why it looks different. |
 | `#### #123 — title` | The changes belonging to one ticket. |
 | `#### REF <token> — reason` | Changes made without a ticket yet: a placeholder to be backfilled. |
 | `#### AUTO-REF … (tracked as #N)` | An entry the automation wrote, pointing at an Alert. |

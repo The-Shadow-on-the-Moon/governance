@@ -1,7 +1,7 @@
 name: Versioning
 
 # On a pull request: the advisory check.
-# On a push to another branch: the preflight, then the push step (Delivery, Progress, Build, Attention).
+# On a push to another branch: the preflight, the fallback for skipped hooks, then the push step (Delivery, Progress, Build, Attention).
 # On a push to main: the preflight, then bypass detection, the finalize step and the stale-version check.
 # On request: the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
 
@@ -58,14 +58,25 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
+      - name: Set the commit author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Preflight
         run: python3 .github/scripts/preflight.py
+
+      - name: Fill in a build heading left by skipped hooks
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: python3 .github/scripts/skipped_hooks.py
 
       - name: Push step
         env:
           BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.sha }}
-        run: python3 .github/scripts/push_step.py
+        run: AFTER_SHA=$(git rev-parse HEAD) python3 .github/scripts/push_step.py
 
   main:
     # The automation's own commits start with "Finalize" or "Flag bypass"; skipping them avoids a loop.

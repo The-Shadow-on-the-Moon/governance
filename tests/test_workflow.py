@@ -62,7 +62,9 @@ class WorkflowTests(unittest.TestCase):
     def test_branch_pushes_run_the_push_step_after_the_preflight(self):
         text = workflow()
         branch = text[text.index("  branch:"):text.index("  main:")]
-        self.assertLess(branch.index("preflight.py"), branch.index("push_step.py"))
+        self.assertLess(branch.index("preflight.py"), branch.index("skipped_hooks.py"))
+        self.assertLess(branch.index("skipped_hooks.py"), branch.index("push_step.py"))
+        self.assertIn("AFTER_SHA=$(git rev-parse HEAD)", branch)  # the push step reads the repaired changelog
         self.assertIn("github.ref != 'refs/heads/main'", branch)
         self.assertIn("!github.event.deleted", branch)
         self.assertIn("- '**'", text)
