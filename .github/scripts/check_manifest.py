@@ -37,6 +37,7 @@ PATTERNS = [
     "tests/test_watch.py",
     "tests/test_field_rules.py",
     "tests/test_release.py",
+    "tests/test_hotfix.py",
     "tests/test_manifest.py",
 ]
 

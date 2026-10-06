@@ -76,6 +76,10 @@ In the Actions tab, run the *Versioning* workflow (from `main`, or from a branch
 
 Declaring a finalized version a release is a deliberate step, started by hand (the developer verifies the version first and records the result). `release.py` tags the commit where the version was finalized, not the tip of `main`, as `released/V<major>.<sub>.<mod>`; sets the Version ticket to Delivery *Released* with a comment giving the date and the tag; and sets to *Released* every ticket that is *Merged* or *Implemented* with a version at or below the released one. A ticket with newer work pushed keeps *Pushed*. It refuses a version that is not finalized, one that already has a release tag, and one without a finalized Version ticket. A mistaken release tag may be deleted and the step run again, after putting the Version ticket and its tickets back to *Merged*.
 
+## The hotfix-finalize step
+
+A hotfix starts from a release tag, never from `main`, and is never merged, so its version is stated explicitly (`V1.25.0-HF1`, a single digit from 1 to 9 per release). Run on the hotfix branch (named `hotfix-v<major>-<sub>-<mod>-<description>`), `hotfix.py` renames the open `WIP-Version` heading to that version in a commit of its own on the branch, tags that commit `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets straight to *Released*. It refuses a marker on the heading, a branch that does not contain the release tag (or the previous hotfix's tag), and a version that already has its tag. Afterwards the branch is deleted without a retirement tag, and the fix reaches `main` separately through an ordinary branch and pull request.
+
 ## Checking the files
 
 `python .github/scripts/check_manifest.py` reports each automation file as unchanged, edited locally or missing. With `--against <newer manifest>` it also reports files from an older version and files new in the standard. `--update --standard <version>` rewrites the manifest after a deliberate change.
