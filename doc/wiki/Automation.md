@@ -22,7 +22,7 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 | A push to `main` | The preflight, then bypass detection (an Alert and an `AUTO-REF` entry), then the finalize step, then the check for stale planned Version tickets. |
 | On request | The preflight and the finalize step, as a dry run unless told otherwise. Safe to repeat. |
 
-The preflight checks that the repository is reachable, that `PROJECT_TOKEN` works (and warns two weeks before it expires), which board belongs to the repository (its number is kept in the repository variable `BOARD_NUMBER`) and that the board has every field and value the automation needs.
+The preflight checks that the repository is reachable (the workflow's own token does not report its rights, so write access is confirmed through the project token), that `PROJECT_TOKEN` works (and warns two weeks before it expires), which board belongs to the repository (its number is kept in the repository variable `BOARD_NUMBER`) and that the board has every field and value the automation needs.
 
 The finalize step decides the bump from the tickets' Types or the marker, renames the open `WIP-Version` heading in a commit of its own, sets Delivery, Version, Build and Version# on each ticket, and creates and closes the Version ticket with the tickets as sub-issues. If the board cannot be updated, the version is still finalized.
 

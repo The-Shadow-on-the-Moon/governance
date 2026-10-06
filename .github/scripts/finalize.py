@@ -164,7 +164,17 @@ def commit_heading(root, version, push):
     git("commit", "-m", f"Finalize {version}\n\nRenames the open WIP-Version heading to {version}, "
         "as the versioning automation does when a branch is merged.")
     if push:
-        git("push")
+        git("push", "origin", "HEAD")  # not a bare push: a clone may have no upstream set
+
+
+def recorded_bump(sections):
+    """The bump of the topmost finalized version, read from the version before it (its marker is gone)."""
+    finals = [s for s in sections if s.kind == "final"]
+    if len(finals) < 2:
+        return "none, because it is the first version"
+    new, old = finals[0].version, finals[1].version
+    kind = "major" if new.major > old.major else "sub" if new.sub > old.sub else "mod"
+    return f"{kind}, from {old} to {new}"
 
 
 def finalize(root, repo_client, project_client=None, board=None, now=None, pull_request=None, dry_run=False, push=True):
@@ -189,7 +199,7 @@ def finalize(root, repo_client, project_client=None, board=None, now=None, pull_
         target, version, when = previous, previous.version, previous.time
         tickets = target.ticket_numbers()
         types = {n: repo_client.issue_type(n) for n in tickets}
-        bump = "recorded earlier"
+        bump = recorded_bump(sections)
         run.log.append(f"no open WIP-Version heading: re-checking {version}")
     if wip is not None:
         def rename():

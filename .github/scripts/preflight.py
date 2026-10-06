@@ -87,15 +87,26 @@ class Report:
         return "\n".join(lines)
 
 
-def check_repository(repo_client, report):
+def check_repository(repo_client, report, project_client=None):
     name = "repository access"
     try:
         info = repo_client.request("GET", f"/repos/{repo_client.repo}")
     except GitHubError as error:
         return report.add(name, False, f"cannot reach {repo_client.repo}: {error}")
-    if not (info.get("permissions") or {}).get("push"):
-        return report.add(name, False, "the token cannot push to the repository (write access is needed)")
-    return report.add(name, True, f"{repo_client.repo} is reachable with write access")
+    if (info.get("permissions") or {}).get("push"):
+        return report.add(name, True, f"{repo_client.repo} is reachable with write access")
+    # The workflow's own token does not report its rights (the workflow declares them instead),
+    # but the project token belongs to an administrator and does.
+    if project_client is not None and project_client.token:
+        try:
+            other = project_client.request("GET", f"/repos/{project_client.repo}")
+        except GitHubError:
+            other = {}
+        if (other.get("permissions") or {}).get("push"):
+            return report.add(name, True, f"{repo_client.repo} is reachable; write access is confirmed through the project "
+                                          "token (the workflow token declares its own rights)")
+        return report.add(name, False, "neither the workflow token nor the project token reports write access to the repository")
+    return report.add(name, False, "the workflow token does not report write access and there is no project token to confirm it")
 
 
 def check_token(project_client, report):
@@ -180,7 +191,7 @@ def check_fields(project_client, board, report):
 def run(repo_client, project_client, store=True):
     """Run every check in order and return the report. Dependent checks are skipped on failure."""
     report = Report()
-    check_repository(repo_client, report)
+    check_repository(repo_client, report, project_client)
     if check_token(project_client, report):
         board = find_board(project_client, report, store)
         if board and check_fields(project_client, board, report):

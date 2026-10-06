@@ -41,7 +41,7 @@ def commit_entry(root, alert_number, push):
     git("commit", "-m", f"Flag bypass (Alert #{alert_number})\n\nAdds the AUTO-REF changelog entry for Alert #{alert_number}, "
         "as the versioning automation does when it detects a bypass.")
     if push:
-        git("push")
+        git("push", "origin", "HEAD")  # not a bare push: a clone may have no upstream set
 
 
 def handle_push(root, repo_client, project_client, board, before, after, pusher, now=None, dry_run=False, push=True):

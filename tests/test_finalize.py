@@ -246,6 +246,25 @@ class FinalizeTests(Repo):
             finalize.finalize(self.dir, repo, FakeProject(), board(), NOW)
         self.assertEqual(repo.calls, [])
 
+    def test_the_push_works_without_an_upstream_branch(self):
+        self.write(CHANGELOG.format(marker=""))
+        self.git("branch", "--unset-upstream")
+        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
+        remote_head = subprocess.run(["git", "log", "-1", "--format=%s", "main"], cwd=self.remote, capture_output=True, text=True).stdout
+        self.assertEqual(remote_head, "Finalize V0.3.0\n")
+
+    def test_checking_a_finalized_version_again_gives_the_real_bump(self):
+        self.write(CHANGELOG.format(marker=""))
+        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
+        repo = FakeRepo(self.TYPES)
+        finalize.finalize(self.dir, repo, FakeProject(), board(), NOW)
+        self.assertIn("Bump: sub, from V0.2.0 to V0.3.0.", repo.of("create")[0][2])
+
+    def test_recorded_bump_of_the_first_version(self):
+        import changelog
+        sections = changelog.parse("# Changelog\n\n## V0.1.0 — 2026-10-05 18:22 UTC\n")
+        self.assertEqual(finalize.recorded_bump(sections), "none, because it is the first version")
+
     def test_no_push_leaves_the_commit_local(self):
         self.write(CHANGELOG.format(marker=""))
         finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW, push=False)
