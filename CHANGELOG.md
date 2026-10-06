@@ -1,6 +1,10 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006031532 (branch apply-governance-to-itself)
+#### #43 — Add the manual inputs for release, hotfix and retire to the workflow
+- .github/workflows/versioning.yml: fixed; the new checkout step name had a colon followed by a space, which made the file invalid YAML (GitHub reported a workflow file issue and could not start the workflow). The name is reworded.
+- tests/test_workflow.py: added a test that no unquoted step name contains a colon followed by a space.
 ### Build 20261006031446 (branch apply-governance-to-itself)
 #### #43 — Add the manual inputs for release, hotfix and retire to the workflow
 - .github/workflows/versioning.yml: fixed; the `release` and `retire` jobs checked out `main`, so a manual start from a branch ran main's scripts and could not try a change. They now check out the ref the run was started from (start them from `main`, or from a branch to try a change).

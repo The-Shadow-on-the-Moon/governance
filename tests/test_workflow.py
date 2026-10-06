@@ -21,6 +21,15 @@ def workflow():
 class WorkflowTests(unittest.TestCase):
     """Structure checks. The workflow itself is proven by a real run (see the level-1 proof)."""
 
+    def test_no_step_name_has_a_colon_followed_by_a_space(self):
+        # An unquoted "key: value" inside a name makes the whole file invalid YAML (GitHub reports a workflow file issue).
+        for number, line in enumerate(workflow().split("\n"), 1):
+            stripped = line.strip()
+            if stripped.startswith("- name:") or stripped.startswith("name:"):
+                value = stripped.split("name:", 1)[1].strip()
+                if not value.startswith(("'", '"')):
+                    self.assertNotIn(": ", value, f"line {number}")
+
     def test_no_tabs(self):
         for number, line in enumerate(workflow().split("\n"), 1):
             self.assertNotIn("\t", line, f"tab on line {number}")

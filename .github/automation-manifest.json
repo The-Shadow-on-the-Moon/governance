@@ -24,7 +24,7 @@
     ".github/scripts/skipped_hooks.py": "da621d5ad001748b082c35a2321d81e3b222fdd76f4d4886a13240cd4eb93210",
     ".github/scripts/versions.py": "5a2072e8c657a8a16fc9beaaf51e4152b7a4b5fa247551eb46c69348e2b5f2ee",
     ".github/scripts/watch.py": "e06c0b8b1385c4239a1385857750b53f26cfa96d48fe09ed6a3d2a61973364de",
-    ".github/workflows/versioning.yml": "9ea08e0965c8d167d4388a892729b6eeed2a1a2c58b0124fa9abdd88df0e7b4b",
+    ".github/workflows/versioning.yml": "71a78acf06f8c90c345fc5c42ba5ee4d7fe211cbf9841b67e2fa4a76e0e31d20",
     "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
     "tests/test_checks.py": "0129fdd6425bfdffa54202c0c76793591eac8a9c8db90f1a3b219384b74d72ef",
     "tests/test_dates.py": "0f810f7082f3b18bfa0bbdc20ca8be28505dc964b8df565ed6a549f25797b7b4",
@@ -40,7 +40,7 @@
     "tests/test_retire.py": "a92a7e0ff5d6558655b9af7dce043ca46f4cf0f55681d7e1449f8727e8621440",
     "tests/test_skipped_hooks.py": "286251211eaccd9d668f389676068dc2895f53c39424ab4404cc944ecd64b9fe",
     "tests/test_watch.py": "afbbf5bc4f57f9236cfa254c02606357cc9b269fa6397fe016306fc54fcba77a",
-    "tests/test_workflow.py": "59b79df309e74a591bf93c24326c07e57ddf34a7069b3705ae1d06733a86b299"
+    "tests/test_workflow.py": "43662f8f26212d3fa290c58bb07ba674e263a1d982a503b74c5e59b78d3bb901"
   },
   "standard": "V0.6.0"
 }
