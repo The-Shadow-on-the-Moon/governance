@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.3.1 — 2026-10-06 00:04 UTC
 ### Build 20261006000318 (branch apply-governance-to-itself)
 #### #24 — Fix the preflight's write-access check for the workflow's token, and finalize V0.3.0 by hand
 - .github/scripts/preflight.py: fixed; the repository check no longer fails on the workflow's own token, which GitHub does not report push rights for. It confirms the repository is reachable with that token and write access through the project token, and fails naming the case when neither token (or no project token) can confirm it.
