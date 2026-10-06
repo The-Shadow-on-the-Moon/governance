@@ -387,8 +387,11 @@ state and lose where the ticket was.
   handled elsewhere: in another ticket, or on this one, moved back to *ToDo*, *OnDeck*, *InProgress* or
   *Suspended*. A comment says what was decided and, for *Acknowledged*, where it is handled.
 - **Rule:** these are the causes the automation uses today, with the level each starts at:
-  - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended*, or
-    a rule in section 4.4 is broken (for example *Completed* without Resolution *Done*).
+  - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
+    whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
+    *Released* or *Dropped*), or a rule in section 4.4 is broken (for example *Completed* without
+    Resolution *Done*). The first push of a ticket never raises it: a ticket moved to *Review* before its
+    first push has no earlier work.
   - *Watch:* a ticket looks out of date: no activity at *Review* for a week, at *OnDeck* or
     *InProgress* for a month, or at *Suspended* for six months, or a ticket that has been waiting for
     input for two weeks. Activity means a comment, a change to a field, or a new build that mentions the

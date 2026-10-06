@@ -88,6 +88,8 @@ class FakeProject:
     def graphql(self, query, variables=None):
         if self.fail:
             raise GitHubError(502, "Bad gateway")
+        if "pageInfo" in query:  # the sweep of Implemented tickets: none waiting
+            return {"node": {"items": {"pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": []}}}
         number = variables["num"]
         item = self.items.get(number, {"status": "ToDo"})
         node = None

@@ -1,6 +1,7 @@
 name: Versioning
 
 # On a pull request: the advisory check.
+# On a push to another branch: the preflight, then the push step (Delivery, Progress, Build, Attention).
 # On a push to main: the preflight, then bypass detection, the finalize step and the stale-version check.
 # On request: the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
 
@@ -9,7 +10,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
-      - main
+      - '**'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -41,11 +42,37 @@ jobs:
           git fetch origin main
           python3 .github/scripts/advisory.py
 
+  branch:
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main' && !github.event.deleted
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-branch-${{ github.ref }}
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+    steps:
+      - name: Checkout the branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Push step
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: python3 .github/scripts/push_step.py
+
   main:
     # The automation's own commits start with "Finalize" or "Flag bypass"; skipping them avoids a loop.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
        !startsWith(github.event.head_commit.message, 'Finalize ') &&
        !startsWith(github.event.head_commit.message, 'Flag bypass'))
     runs-on: ubuntu-latest

@@ -20,6 +20,7 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 |---|---|
 | A pull request | The advisory check: fails and comments once when the branch is behind `main`, and lists merges with a manual conflict resolution. |
 | A push to `main` | The preflight, then bypass detection (an Alert and an `AUTO-REF` entry), then the finalize step, then the check for stale planned Version tickets. |
+| A push to another branch | The preflight, then the push step: for each ticket in the changelog entries the push added, Delivery becomes *Pushed* and Build the ticket's latest build, *ToDo* and *OnDeck* tickets become *InProgress*, and a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and already had work pushed or delivered gets a *Caution* flag with a comment naming the build (not on its first push, and not again while a *Caution* or *AtRisk* is open). |
 | On request | The preflight and the finalize step, as a dry run unless told otherwise. Safe to repeat. |
 
 The preflight checks that the repository is reachable (the workflow's own token does not report its rights, so write access is confirmed through the project token), that `PROJECT_TOKEN` works (and warns two weeks before it expires), which board belongs to the repository (its number is kept in the repository variable `BOARD_NUMBER`) and that the board has every field and value the automation needs.
@@ -28,7 +29,7 @@ The finalize step decides the bump from the tickets' Types or the marker, rename
 
 ## Tickets with no file change
 
-A ticket that changed no file (a setting, a secret, a check that was run) has nothing in the changelog for the automation to find. When its work is in effect, a person sets its Delivery to *Implemented* and its Version to the version it belongs to. The guides say the finalize step then attaches it to that version's ticket; until that is built, a person attaches it as a sub-issue by hand. Releases will treat *Implemented* tickets like merged ones.
+A ticket that changed no file (a setting, a secret, a check that was run) has nothing in the changelog for the automation to find. When its work is in effect, a person sets its Delivery to *Implemented* and its Version to the version it belongs to. At every finalize, and on a manual run of the workflow (dry run off), the automation attaches each *Implemented* ticket that is not yet a sub-issue of any Version ticket: a blank Version gets the version being finalized, an already finalized Version is kept and the ticket goes to that version's ticket, and a later Version waits. The ticket keeps Delivery *Implemented* and gets no Build, and a comment on the Version ticket says which tickets were added. Releases will treat *Implemented* tickets like merged ones.
 
 ## Checking the files
 

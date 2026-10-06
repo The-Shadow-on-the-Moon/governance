@@ -27,7 +27,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_triggers(self):
         text = workflow()
-        for trigger in ("pull_request:", "push:", "workflow_dispatch:", "- main"):
+        for trigger in ("pull_request:", "push:", "workflow_dispatch:", "- '**'"):
             self.assertIn(trigger, text)
 
     def test_declares_its_own_permissions(self):
@@ -58,6 +58,19 @@ class WorkflowTests(unittest.TestCase):
         import inspect
         self.assertIn('f"Finalize {version}', inspect.getsource(finalize.commit_heading))
         self.assertIn('f"Flag bypass (Alert', inspect.getsource(bypass.commit_entry))
+
+    def test_branch_pushes_run_the_push_step_after_the_preflight(self):
+        text = workflow()
+        branch = text[text.index("  branch:"):text.index("  main:")]
+        self.assertLess(branch.index("preflight.py"), branch.index("push_step.py"))
+        self.assertIn("github.ref != 'refs/heads/main'", branch)
+        self.assertIn("!github.event.deleted", branch)
+        self.assertIn("- '**'", text)
+
+    def test_the_main_job_only_runs_for_main(self):
+        text = workflow()
+        main = text[text.index("  main:"):]
+        self.assertIn("github.ref == 'refs/heads/main'", main)
 
     def test_manual_runs_are_dry_runs_by_default(self):
         self.assertRegex(workflow(), r"dry_run:\n(?:.*\n)*?\s+default: true")
