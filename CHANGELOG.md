@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.6.0 — 2026-10-06 03:35 UTC
 ### Build 20261006032529 (branch apply-governance-to-itself)
 #### #44 — Document and prove merge C2
 - README.md: the automation section lists the steps a person starts by hand (release, hotfix finish, branch retire), and the status says that anything still open is tracked in a ticket.
