@@ -56,8 +56,8 @@ def bump_reason(types_by_ticket, marker, first):
     return "mod, from the ticket Types (no Feature or Enhancement)"
 
 
-def version_description(version, when, bump, pull_request, last_build, tickets):
-    source = f"pull request #{pull_request}" if pull_request else "the merge to main"
+def version_description(version, when, bump, pull_request, last_build, tickets, source=None):
+    source = source or (f"pull request #{pull_request}" if pull_request else "the merge to main")
     lines = [f"Finalized {when} UTC from {source}. Bump: {bump}. Last build: {last_build or 'none'}.", "", "Tickets:"]
     lines += [f"- #{number} {title} ({kind})" for number, title, kind in tickets]
     return "\n".join(lines) + "\n"
@@ -96,7 +96,7 @@ def _value(item, key, attribute):
     return found.get(attribute) if found else None
 
 
-def update_ticket(run, project_client, board, number, version, build):
+def update_ticket(run, project_client, board, number, version, build, delivery="Merged"):
     issue, item = board_item(project_client, board, number)
     if item is None:
         item_id = run.do(f"#{number}: add to the board", project_client.add_to_project, board.id, issue["id"])
@@ -105,8 +105,8 @@ def update_ticket(run, project_client, board, number, version, build):
     wanted = []
     if _value(item, "status", "name") in ("ToDo", "OnDeck"):
         wanted.append(("Status", "InProgress", {"singleSelectOptionId": fields["Status"]["options"]["InProgress"]}))
-    if _value(item, "delivery", "name") != "Merged":
-        wanted.append(("Delivery", "Merged", {"singleSelectOptionId": fields["Delivery"]["options"]["Merged"]}))
+    if _value(item, "delivery", "name") != delivery:
+        wanted.append(("Delivery", delivery, {"singleSelectOptionId": fields["Delivery"]["options"][delivery]}))
     if _value(item, "version", "text") != str(version):
         wanted.append(("Version", str(version), {"text": str(version)}))
     if build and _value(item, "build", "text") != build:
@@ -122,9 +122,10 @@ def find_version_ticket(repo_client, title):
     return implemented.version_ticket(repo_client, Version.parse("V" + title.split(" ", 1)[1]))
 
 
-def record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, tickets):
+def record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, tickets, delivery="Merged",
+                          source=None):
     title = f"Version {str(version)[1:]}"
-    body = version_description(version, when, bump, pull_request, last_build, tickets)
+    body = version_description(version, when, bump, pull_request, last_build, tickets, source)
     existing = find_version_ticket(repo_client, title)
     if existing and existing["state"] == "closed":
         run.do(f"{title}: already recorded as #{existing['number']}")
@@ -141,7 +142,7 @@ def record_version_ticket(run, repo_client, project_client, board, version, when
     if board and project_client:
         try:
             item_id = run.do(f"{title}: add to the board", project_client.add_to_project, board.id, node_id)
-            for name, text, value in (("Delivery", "Merged", {"singleSelectOptionId": board.fields["Delivery"]["options"]["Merged"]}),
+            for name, text, value in (("Delivery", delivery, {"singleSelectOptionId": board.fields["Delivery"]["options"][delivery]}),
                                       ("Version", str(version), {"text": str(version)}),
                                       ("Build", last_build, {"text": last_build}),
                                       ("Version#", str(version.number()), {"number": float(version.number())})):

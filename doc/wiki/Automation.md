@@ -70,7 +70,29 @@ All in `.github/scripts/`, with a test file for each in `tests/`. Each can be ru
 
 ## Starting a run by hand
 
-In the Actions tab, run the *Versioning* workflow (from `main`, or from a branch to try a change) with mode `finalize` (repeat or dry-run a finalize) or `daily` (the daily checks), and the dry run on or off. A dry run only reports.
+In the Actions tab, run the *Versioning* workflow with a mode and the dry run on or off (it is on by default; a dry run only reports):
+
+| Mode | Start it from | Inputs |
+|---|---|---|
+| `finalize` | `main` (or a branch, to try a change) | none: repeat or dry-run a finalize |
+| `daily` | `main` | none: the daily checks |
+| `release` | `main` (or a branch, to try a change) | `version`: a finalized version, or empty for the latest |
+| `hotfix` | the hotfix branch itself | `version`: the hotfix version, for example `V1.25.0-HF1` |
+| `retire` | `main` (or a branch, to try a change) | `branch`, `outcome` (archived, suspended or abandoned), `confirm` (the branch name again) and an optional `comment` for the tag |
+
+The same from the command line: `gh workflow run versioning.yml --ref <branch> -f mode=release -f dry_run=false`.
+
+## The release step
+
+Declaring a finalized version a release is a deliberate step, started by hand (the developer verifies the version first and records the result). `release.py` tags the commit where the version was finalized, not the tip of `main`, as `released/V<major>.<sub>.<mod>`; sets the Version ticket to Delivery *Released* with a comment giving the date and the tag; and sets to *Released* every ticket that is *Merged* or *Implemented* with a version at or below the released one. A ticket with newer work pushed keeps *Pushed*. It refuses a version that is not finalized, one that already has a release tag, and one without a finalized Version ticket. A mistaken release tag may be deleted and the step run again, after putting the Version ticket and its tickets back to *Merged*.
+
+## The hotfix-finalize step
+
+A hotfix starts from a release tag, never from `main`, and is never merged, so its version is stated explicitly (`V1.25.0-HF1`, a single digit from 1 to 9 per release). Run on the hotfix branch (named `hotfix-v<major>-<sub>-<mod>-<description>`), `hotfix.py` renames the open `WIP-Version` heading to that version in a commit of its own on the branch, tags that commit `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets straight to *Released*. It refuses a marker on the heading, a branch that does not contain the release tag (or the previous hotfix's tag), and a version that already has its tag. Afterwards the branch is deleted without a retirement tag, and the fix reaches `main` separately through an ordinary branch and pull request.
+
+## The retire step
+
+Retiring a branch means tagging it and then deleting it. `retire.py` takes the branch, the outcome (*archived*, *suspended* or *abandoned*) and the branch name typed again as a confirmation. It tags the branch's last commit `<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]` (the UTC date of that commit; the comment is optional and in kebab-case) and only then deletes the remote branch. It refuses `main`, a tag name that already exists, an *archived* branch that is not fully merged into `main`, and a *suspended* or *abandoned* branch that still has an open pull request (close it with a comment first). For an *abandoned* branch it sets the Delivery of the tickets in the branch's changelog entries to *Dropped*; moving tickets to *Suspended* or *Abandoned* stays a person's step. A finished hotfix branch is deleted without a retirement tag, because its release tag keeps its history.
 
 ## Checking the files
 

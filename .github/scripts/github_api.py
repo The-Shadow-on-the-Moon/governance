@@ -102,6 +102,10 @@ class Client:
     def create_tag(self, name, sha):
         return self.request("POST", self.repo_path("/git/refs"), {"ref": f"refs/tags/{name}", "sha": sha})
 
+    def delete_ref(self, ref):
+        """Delete a branch or tag by its full name, for example `heads/old-work` or `tags/released/V9.9.9`."""
+        return self.request("DELETE", self.repo_path(f"/git/refs/{ref}"))
+
     # Repository variables
     def set_variable(self, name, value):
         try:

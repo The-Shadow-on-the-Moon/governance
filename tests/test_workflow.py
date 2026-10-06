@@ -21,6 +21,15 @@ def workflow():
 class WorkflowTests(unittest.TestCase):
     """Structure checks. The workflow itself is proven by a real run (see the level-1 proof)."""
 
+    def test_no_step_name_has_a_colon_followed_by_a_space(self):
+        # An unquoted "key: value" inside a name makes the whole file invalid YAML (GitHub reports a workflow file issue).
+        for number, line in enumerate(workflow().split("\n"), 1):
+            stripped = line.strip()
+            if stripped.startswith("- name:") or stripped.startswith("name:"):
+                value = stripped.split("name:", 1)[1].strip()
+                if not value.startswith(("'", '"')):
+                    self.assertNotIn(": ", value, f"line {number}")
+
     def test_no_tabs(self):
         for number, line in enumerate(workflow().split("\n"), 1):
             self.assertNotIn("\t", line, f"tab on line {number}")
@@ -83,13 +92,13 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("mode:", text)
         self.assertIn("- finalize", text)
         self.assertIn("- daily", text)
-        daily = text[text.index("  daily:"):]
+        daily = text[text.index("  daily:"):text.index("  release:")]
         self.assertIn("github.event_name == 'schedule'", daily)
         self.assertIn("inputs.mode == 'daily'", daily)
 
     def test_the_daily_job_runs_the_checks_in_order_and_never_commits(self):
         text = workflow()
-        daily = text[text.index("  daily:"):]
+        daily = text[text.index("  daily:"):text.index("  release:")]
         order = ["preflight.py", "implemented.py", "dates.py", "watch.py", "field_rules.py"]
         positions = [daily.index(name) for name in order]
         self.assertEqual(positions, sorted(positions))
@@ -101,6 +110,53 @@ class WorkflowTests(unittest.TestCase):
         text = workflow()
         main = text[text.index("  main:"):text.index("  daily:")]
         self.assertIn("inputs.mode == 'finalize'", main)
+
+    def jobs(self):
+        text = workflow()
+        return (text[text.index("  release:"):text.index("  hotfix:")],
+                text[text.index("  hotfix:"):text.index("  retire:")],
+                text[text.index("  retire:"):])
+
+    def test_release_hotfix_and_retire_are_modes_of_a_manual_start(self):
+        text = workflow()
+        for mode in ("release", "hotfix", "retire"):
+            self.assertIn(f"          - {mode}", text)
+        release, hotfix, retire = self.jobs()
+        for job, mode in ((release, "release"), (hotfix, "hotfix"), (retire, "retire")):
+            self.assertIn(f"github.event_name == 'workflow_dispatch' && inputs.mode == '{mode}'", job)
+            self.assertLess(job.index("preflight.py"), job.index(f"{mode}.py"))
+            self.assertIn("--dry-run", job)
+            self.assertIn("DRY_RUN: ${{ inputs.dry_run }}", job)
+
+    def test_the_inputs_of_the_three_steps_reach_their_scripts(self):
+        release, hotfix, retire = self.jobs()
+        self.assertIn("VERSION: ${{ inputs.version }}", release)
+        self.assertIn("VERSION: ${{ inputs.version }}", hotfix)
+        self.assertIn("BRANCH: ${{ github.ref_name }}", hotfix)  # a hotfix is finished from its own branch
+        self.assertIn("github.ref_type == 'branch'", hotfix)
+        for name in ("BRANCH: ${{ inputs.branch }}", "OUTCOME: ${{ inputs.outcome }}", "CONFIRM: ${{ inputs.confirm }}",
+                     "COMMENT: ${{ inputs.comment }}"):
+            self.assertIn(name, retire)
+
+    def test_release_and_retire_use_the_ref_they_were_started_from_and_the_hotfix_its_branch_with_tags(self):
+        release, hotfix, retire = self.jobs()
+        for job in (release, retire):
+            self.assertNotIn("ref:", job.split("steps:")[1])  # the default checkout: the ref of the manual start
+        self.assertIn("ref: ${{ github.ref_name }}", hotfix)
+        self.assertIn("fetch-tags: true", hotfix)
+        for job in (release, hotfix, retire):
+            self.assertIn("fetch-depth: 0", job)
+
+    def test_only_the_hotfix_job_makes_a_commit_and_the_others_never_push_with_git(self):
+        release, hotfix, retire = self.jobs()
+        self.assertIn("git config user.name", hotfix)
+        for job in (release, retire):
+            self.assertNotIn("git config", job)
+            self.assertNotIn("git push", job)
+
+    def test_the_default_manual_start_is_still_a_dry_run_of_finalize(self):
+        text = workflow()
+        self.assertRegex(text, r"mode:\n(?:.*\n)*?\s+default: finalize")
 
     def test_manual_runs_are_dry_runs_by_default(self):
         self.assertRegex(workflow(), r"dry_run:\n(?:.*\n)*?\s+default: true")

@@ -34,7 +34,8 @@ The tools need Python 3 and nothing else.
 
 The hooks, the versioning workflow (the advisory check on pull requests, the push step and the fallback for
 skipped hooks on branches, the finalize step and bypass detection on `main`, and a daily run for dates, stale
-tickets and broken field rules) and the check script are described on the [wiki](doc/wiki/Automation.md). The
+tickets and broken field rules), the steps a person starts by hand from the Actions tab (release, hotfix finish,
+branch retire) and the check script are described on the [wiki](doc/wiki/Automation.md). The
 automation files are covered by a manifest: after editing one, rewrite the manifest and run the tests.
 
 ```
@@ -54,9 +55,8 @@ Check with `git config core.hooksPath`, which should print `.githooks`.
 
 ## Status
 
-This repository applies the standard to itself, including its automation. Still to come, each in a ticket:
-the release, hotfix-finalize and branch-retire steps. The daily schedule starts running once the workflow is on
-`main`.
+This repository applies the standard to itself, including all of its automation. Anything still open is
+tracked in a ticket. The daily schedule runs from `main`.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what has changed.
 

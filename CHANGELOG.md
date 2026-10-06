@@ -1,5 +1,44 @@
 # Changelog
 
+## WIP-Version
+### Build 20261006032529 (branch apply-governance-to-itself)
+#### #44 — Document and prove merge C2
+- README.md: the automation section lists the steps a person starts by hand (release, hotfix finish, branch retire), and the status says that anything still open is tracked in a ticket.
+- AGENTS.md: a release, a hotfix finish and a branch retirement are done only by the workflow's manual runs, only when asked, with a dry run first.
+### Build 20261006031532 (branch apply-governance-to-itself)
+#### #43 — Add the manual inputs for release, hotfix and retire to the workflow
+- .github/workflows/versioning.yml: fixed; the new checkout step name had a colon followed by a space, which made the file invalid YAML (GitHub reported a workflow file issue and could not start the workflow). The name is reworded.
+- tests/test_workflow.py: added a test that no unquoted step name contains a colon followed by a space.
+### Build 20261006031446 (branch apply-governance-to-itself)
+#### #43 — Add the manual inputs for release, hotfix and retire to the workflow
+- .github/workflows/versioning.yml: fixed; the `release` and `retire` jobs checked out `main`, so a manual start from a branch ran main's scripts and could not try a change. They now check out the ref the run was started from (start them from `main`, or from a branch to try a change).
+- tests/test_workflow.py, doc/wiki/Automation.md: updated to match.
+### Build 20261006031406 (branch apply-governance-to-itself)
+#### #43 — Add the manual inputs for release, hotfix and retire to the workflow
+- .github/workflows/versioning.yml: the manual start now has the modes `release`, `hotfix` and `retire` besides `finalize` and `daily`, with the inputs `version`, `branch`, `outcome`, `confirm` and `comment` (the dry run stays on by default). Three new jobs run the preflight and then the step: `release` (checks out main; `version` empty means the latest), `hotfix` (checks out the branch the workflow was started from, with its tags, sets the commit author, and takes the hotfix version from `version`; it only runs for a branch) and `retire` (checks out main; takes `branch`, `outcome`, `confirm` and `comment`). None of the others touches git.
+- tests/test_workflow.py: the modes, the inputs reaching the scripts, which branch each job runs on, that only the hotfix job commits, and that the default stays a dry run of finalize; the daily job's checks now look only at that job.
+- doc/wiki/Automation.md: how to start the three steps by hand.
+### Build 20261006031245 (branch apply-governance-to-itself)
+#### #42 — Add the retire step (tag, delete branch, Dropped on abandon)
+- .github/scripts/retire.py: added; given a branch, an outcome (archived, suspended or abandoned) and the branch name typed again as a confirmation, it tags the branch's last commit `<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]` (the UTC date of that commit, an optional kebab-case comment) and only then deletes the remote branch; for an abandoned branch it sets the Delivery of the tickets in the branch's changelog entries to Dropped. It refuses main, a wrong confirmation, a tag name that exists, an archived branch whose last commit is not on main, and a suspended or abandoned branch with an open pull request; a finished hotfix branch (its tip carries a hotfix release tag) is deleted without a retirement tag. `--dry-run` only reports.
+- .github/scripts/github_api.py: added `delete_ref`.
+- tests/test_retire.py: added; 18 tests on real temporary repositories with a bare remote (each outcome, the UTC date, tag before delete, the Dropped tickets, a finished hotfix, each refusal, dry run).
+- doc/wiki/Automation.md: described the retire step.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+### Build 20261006030809 (branch apply-governance-to-itself)
+#### #41 — Add the hotfix-finalize step
+- .github/scripts/hotfix.py: added; run on a hotfix branch with the version (for example V1.25.0-HF1, via `VERSION` and `BRANCH` in the environment), it renames the open WIP-Version heading to that version in a commit of its own on the branch and pushes it, tags that commit `released/V1.25.0-HF1`, creates and closes the Version ticket (Delivery Released), and sets the tickets' Delivery straight to Released with the hotfix version, Version# and Build (never Merged). It refuses a hotfix number outside 1 to 9, a branch not named `hotfix-v<major>-<sub>-<mod>-<description>` for the release, a marker on the heading, an open version with no ticket entry, a version already finalized or already tagged, a base tag (the release, or the previous hotfix) missing from the clone, and a branch that does not contain it. `--dry-run` only reports.
+- .github/scripts/finalize.py: the ticket and Version ticket updates take the Delivery value to set (Merged by default) and the Version ticket description can name its source, so the hotfix step reuses them.
+- tests/test_hotfix.py: added; 12 tests on real temporary repositories with a bare remote (the whole finish, Released and not Merged, a second hotfix from the first, each refusal, dry run, no board).
+- doc/wiki/Automation.md: described the hotfix-finalize step.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+### Build 20261006030117 (branch apply-governance-to-itself)
+#### #40 — Add the release step (tag, Version ticket and tickets Released, including Implemented)
+- .github/scripts/release.py: added; given a finalized version (by default the latest) it tags the commit where that version's heading first appears (where it was finalized, not the tip of main) as `released/V<major>.<sub>.<mod>`, sets the Version ticket to Delivery Released and comments with the date and the tag, and sets to Released every ticket whose Delivery is Merged or Implemented and whose version is at or below the released one (a ticket with newer work, Delivery Pushed, keeps it; Version and Alert tickets, and other deliveries, are left alone). It refuses a version that is not finalized, one that already has a release tag, and one with no finalized Version ticket. `--dry-run` only reports; `VERSION` in the environment picks the version.
+- tests/test_release.py: added; 12 tests (each rule, the refusals, an earlier version, dry run, no board, paging, and the finalize commit in a real repository).
+- doc/wiki/Automation.md: described the release step.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+
 ## V0.5.0 — 2026-10-06 02:52 UTC
 ### Build 20261006025104 (branch apply-governance-to-itself)
 #### #39 — Document and prove merge C1
