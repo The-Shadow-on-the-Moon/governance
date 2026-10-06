@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.4.0 — 2026-10-06 00:47 UTC
 ### Build 20261006004523 (branch apply-governance-to-itself)
 #### #28 — Add the Implemented Delivery value for tickets with no file change
 - guides/appendix-c-ticket-fields-reference.md: added the Delivery value *Implemented* (set by a person, with the Version it belongs to, on a ticket with no file change), the rules for how finalize attaches such tickets and how a release treats them, and that a person's Version stays on them; Delivery is now "where the delivered work is".
