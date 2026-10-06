@@ -77,6 +77,31 @@ class WorkflowTests(unittest.TestCase):
         main = text[text.index("  main:"):]
         self.assertIn("github.ref == 'refs/heads/main'", main)
 
+    def test_the_daily_job_is_scheduled_and_can_be_started_by_hand(self):
+        text = workflow()
+        self.assertRegex(text, r"schedule:\n    - cron: '\d+ \d+ \* \* \*'")
+        self.assertIn("mode:", text)
+        self.assertIn("- finalize", text)
+        self.assertIn("- daily", text)
+        daily = text[text.index("  daily:"):]
+        self.assertIn("github.event_name == 'schedule'", daily)
+        self.assertIn("inputs.mode == 'daily'", daily)
+
+    def test_the_daily_job_runs_the_checks_in_order_and_never_commits(self):
+        text = workflow()
+        daily = text[text.index("  daily:"):]
+        order = ["preflight.py", "implemented.py", "dates.py", "watch.py", "field_rules.py"]
+        positions = [daily.index(name) for name in order]
+        self.assertEqual(positions, sorted(positions))
+        for forbidden in ("git push", "git commit", "finalize.py", "bypass.py"):
+            self.assertNotIn(forbidden, daily)
+        self.assertIn("--dry-run", daily)
+
+    def test_the_finalize_job_only_runs_for_its_own_mode(self):
+        text = workflow()
+        main = text[text.index("  main:"):text.index("  daily:")]
+        self.assertIn("inputs.mode == 'finalize'", main)
+
     def test_manual_runs_are_dry_runs_by_default(self):
         self.assertRegex(workflow(), r"dry_run:\n(?:.*\n)*?\s+default: true")
 

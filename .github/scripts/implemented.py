@@ -17,19 +17,21 @@ from versions import Version
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
          "pageInfo{hasNextPage endCursor} nodes{id content{... on Issue{number title parent{number}}} "
          "delivery:fieldValueByName(name:\"Delivery\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
+         "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}} "
          "number:fieldValueByName(name:\"Version#\"){... on ProjectV2ItemFieldNumberValue{number}}}}}}}")
 
 
 def unattached(project_client, board):
-    """The Implemented tickets on the board that are not sub-issues of any ticket."""
+    """The Implemented tickets on the board that are not sub-issues of any ticket (an Abandoned ticket never shipped)."""
     found, after = [], None
     while True:
         page = project_client.graphql(ITEMS, {"id": board.id, "after": after})["node"]["items"]
         for node in page["nodes"]:
             content = node.get("content") or {}
             delivery = (node.get("delivery") or {}).get("name")
-            if delivery == "Implemented" and content.get("number") and not content.get("parent"):
+            status = (node.get("status") or {}).get("name")
+            if delivery == "Implemented" and content.get("number") and not content.get("parent") and status != "Abandoned":
                 found.append({"item": node["id"], "number": content["number"], "title": content["title"],
                               "version": (node.get("version") or {}).get("text") or "",
                               "version_number": (node.get("number") or {}).get("number")})
@@ -88,3 +90,61 @@ def sweep(run, repo_client, project_client, board, finalized, current, now):
         run.do(f"Version ticket #{parent}: comment on the Implemented tickets added",
                repo_client.comment, parent, f"Added by the automation on {when} UTC (Delivery Implemented, no file change): {listing}.")
     return added
+
+
+def daily_sweep(root, repo_client, project_client, board, now, dry_run=False):
+    """The scheduled run: attach waiting Implemented tickets without touching the changelog or main.
+
+    The tickets are judged against the finalized versions in the changelog, and a blank Version gets the
+    latest one, which is the version the work shipped with.
+    """
+    import changelog
+    import finalize
+    run = finalize.Runner(dry_run)
+    with open(root + "/CHANGELOG.md", encoding="utf-8") as handle:
+        finals = [s for s in changelog.parse(handle.read()) if s.kind == "final"]
+    if not finals:
+        run.log.append("no finalized version yet: nothing to attach to")
+        return run
+    latest = finals[0].version
+    found = version_ticket(repo_client, latest)
+    if found is None:
+        run.log.append(f"no Version ticket for {latest}: nothing attached")
+        return run
+    sweep(run, repo_client, project_client, board, {s.version for s in finals}, (latest, found["number"]), now)
+    return run
+
+
+def main(argv=None):
+    import os
+    import sys
+    import preflight
+    import versions
+    from github_api import Client, GitHubError
+    sys.stdout.reconfigure(encoding="utf-8")
+    args = argv if argv is not None else sys.argv[1:]
+    repo = os.environ.get("GITHUB_REPOSITORY", "")
+    if not repo:
+        print("GITHUB_REPOSITORY is not set")
+        return 1
+    repo_client = Client(os.environ.get("GITHUB_TOKEN", ""), repo)
+    project_client = Client(os.environ.get("PROJECT_TOKEN", ""), repo)
+    report = preflight.run(repo_client, project_client, store=False)
+    print(report.render())
+    if report.board is None:
+        print("Implemented sweep skipped: no board (the preflight did not identify one)")
+        return 0
+    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+    try:
+        run = daily_sweep(root, repo_client, project_client, report.board, versions.utc_now(), "--dry-run" in args)
+    except GitHubError as error:
+        print(f"Implemented sweep stopped: {error}")
+        return 0
+    for line in run.log or ["no Implemented tickets waiting"]:
+        print(("would: " if run.dry_run else "did: ") + line)
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())

@@ -15,9 +15,10 @@ NOW = datetime(2026, 10, 6, 10, 0, 0, tzinfo=timezone.utc)
 V = Version.parse
 
 
-def node(number, delivery="Implemented", version="", parent=None, version_number=None, title=None):
+def node(number, delivery="Implemented", version="", parent=None, version_number=None, title=None, status=None):
     return {"id": f"I{number}", "content": {"number": number, "title": title or f"Ticket {number}", "parent": {"number": parent} if parent else None},
             "delivery": {"name": delivery} if delivery else None,
+            "status": {"name": status} if status else None,
             "version": {"text": version} if version else None,
             "number": {"number": version_number} if version_number is not None else None}
 
@@ -100,6 +101,10 @@ class SweepTests(unittest.TestCase):
         self.assertEqual((repo.subs, project.sets), ([], []))
         self.assertIn("waits for V0.5.0", run.log[0])
 
+    def test_an_abandoned_ticket_is_never_attached(self):
+        _, repo, project, _ = sweep([node(50, status="Abandoned"), node(51, status="Review")])
+        self.assertEqual(repo.subs, [(30, 51)])
+
     def test_already_attached_and_other_deliveries_are_left_alone(self):
         _, repo, project, _ = sweep([node(50, parent=27), node(51, delivery="Merged"), node(52, delivery=None)])
         self.assertEqual((repo.subs, project.sets, repo.comments), ([], [], []))
@@ -137,6 +142,42 @@ class SweepTests(unittest.TestCase):
         found = implemented.unattached(project, board())
         self.assertEqual([t["number"] for t in found], [500])
         self.assertEqual(project.queries, 3)
+
+
+class DailySweepTests(unittest.TestCase):
+    def folder_with(self, text):
+        import tempfile
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        with open(os.path.join(folder.name, "CHANGELOG.md"), "w", encoding="utf-8", newline="") as handle:
+            handle.write(text)
+        return folder.name
+
+    LOG = ("# Changelog\n\n## V0.4.0 — 2026-10-06 00:47 UTC\n### Build 20261006004523 (branch b)\n"
+           "#### #28 — W\n- d.\n\n## V0.3.1 — 2026-10-06 00:04 UTC\n")
+
+    def test_it_attaches_by_the_finalized_versions_without_touching_anything_else(self):
+        repo = FakeRepo(OLD_TICKETS + [{"title": "Version 0.4.0", "state": "closed", "number": 30}])
+        project = FakeProject([node(50), node(51, version="V0.3.1"), node(52, version="V0.9.0")])
+        run = implemented.daily_sweep(self.folder_with(self.LOG), repo, project, board(), NOW)
+        self.assertEqual(sorted(repo.subs), [(27, 51), (30, 50)])
+        self.assertTrue(any("waits for V0.9.0" in line for line in run.log))
+
+    def test_dry_run(self):
+        repo = FakeRepo(OLD_TICKETS + [{"title": "Version 0.4.0", "state": "closed", "number": 30}])
+        run = implemented.daily_sweep(self.folder_with(self.LOG), repo, FakeProject([node(50)]), board(), NOW, dry_run=True)
+        self.assertEqual((repo.subs, repo.comments), ([], []))
+        self.assertTrue(run.log)
+
+    def test_no_finalized_version_yet(self):
+        run = implemented.daily_sweep(self.folder_with("# Changelog\n"), FakeRepo([]), FakeProject([node(50)]), board(), NOW)
+        self.assertEqual(run.log, ["no finalized version yet: nothing to attach to"])
+
+    def test_the_latest_version_has_no_ticket(self):
+        repo = FakeRepo(OLD_TICKETS)
+        run = implemented.daily_sweep(self.folder_with(self.LOG), repo, FakeProject([node(50)]), board(), NOW)
+        self.assertEqual(repo.subs, [])
+        self.assertIn("no Version ticket for V0.4.0", run.log[0])
 
 
 class FinalizeIntegrationTests(unittest.TestCase):

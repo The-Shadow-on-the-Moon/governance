@@ -1,6 +1,12 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006024537 (branch apply-governance-to-itself)
+#### #38 — Add the daily schedule to the workflow
+- .github/workflows/versioning.yml: added a `daily` job, run every day at 06:17 UTC and on request with the new input `mode` set to `daily` (the other mode, `finalize`, is the existing manual finalize run, so a manual start runs exactly one of them): the preflight, the attaching of Implemented tickets, the date sweep, the Watch flags and the Caution flags for field rules, each a dry run for a manual dry run. It never commits or pushes, so it cannot loop and writes nothing to a branch; the `main` job now runs on a manual start only for mode `finalize`. The dry-run input text now says it covers the steps.
+- .github/scripts/implemented.py: added `daily_sweep` and a command line entry (`--dry-run`): judges the Implemented tickets by the finalized versions in the changelog, and gives a blank Version the latest one; it does nothing if there is no finalized version or no Version ticket for the latest. An Abandoned ticket is never attached (it never shipped).
+- tests/test_workflow.py: the schedule, the input, the job's steps and order, and that it has no git commands; tests/test_implemented.py: the daily sweep and the Abandoned case.
+- doc/wiki/Automation.md: described the daily run.
 ### Build 20261006023919 (branch apply-governance-to-itself)
 #### #37 — Add the Caution flags for broken field rules
 - .github/scripts/field_rules.py: added; checks the rules that span fields on every ticket on the board and raises Attention *Caution*, with one comment naming what is broken, for: Completed without Resolution Done; Abandoned without one of the abandon reasons; an open ticket with a Resolution or an End date; Waiting on a Completed or Abandoned ticket; a Backfilled ticket with no REF; an issue open at Completed or Abandoned, or closed at any other stage. Only when neither the issue nor the board item has changed for five minutes; only on a ticket that is blank, Fine, Acknowledged or Watch (never lowering a level); once per set of broken rules (kept in a hidden marker in the comment): after a person closed the flag it comes back only when a rule not named before is broken. Version and Alert tickets are skipped; reads every page of the board; `--dry-run` only reports.
