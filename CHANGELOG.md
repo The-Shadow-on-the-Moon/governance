@@ -1,6 +1,13 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006031245 (branch apply-governance-to-itself)
+#### #42 — Add the retire step (tag, delete branch, Dropped on abandon)
+- .github/scripts/retire.py: added; given a branch, an outcome (archived, suspended or abandoned) and the branch name typed again as a confirmation, it tags the branch's last commit `<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]` (the UTC date of that commit, an optional kebab-case comment) and only then deletes the remote branch; for an abandoned branch it sets the Delivery of the tickets in the branch's changelog entries to Dropped. It refuses main, a wrong confirmation, a tag name that exists, an archived branch whose last commit is not on main, and a suspended or abandoned branch with an open pull request; a finished hotfix branch (its tip carries a hotfix release tag) is deleted without a retirement tag. `--dry-run` only reports.
+- .github/scripts/github_api.py: added `delete_ref`.
+- tests/test_retire.py: added; 18 tests on real temporary repositories with a bare remote (each outcome, the UTC date, tag before delete, the Dropped tickets, a finished hotfix, each refusal, dry run).
+- doc/wiki/Automation.md: described the retire step.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
 ### Build 20261006030809 (branch apply-governance-to-itself)
 #### #41 — Add the hotfix-finalize step
 - .github/scripts/hotfix.py: added; run on a hotfix branch with the version (for example V1.25.0-HF1, via `VERSION` and `BRANCH` in the environment), it renames the open WIP-Version heading to that version in a commit of its own on the branch and pushes it, tags that commit `released/V1.25.0-HF1`, creates and closes the Version ticket (Delivery Released), and sets the tickets' Delivery straight to Released with the hotfix version, Version# and Build (never Merged). It refuses a hotfix number outside 1 to 9, a branch not named `hotfix-v<major>-<sub>-<mod>-<description>` for the release, a marker on the heading, an open version with no ticket entry, a version already finalized or already tagged, a base tag (the release, or the previous hotfix) missing from the clone, and a branch that does not contain it. `--dry-run` only reports.

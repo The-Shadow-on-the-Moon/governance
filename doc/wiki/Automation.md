@@ -80,6 +80,10 @@ Declaring a finalized version a release is a deliberate step, started by hand (t
 
 A hotfix starts from a release tag, never from `main`, and is never merged, so its version is stated explicitly (`V1.25.0-HF1`, a single digit from 1 to 9 per release). Run on the hotfix branch (named `hotfix-v<major>-<sub>-<mod>-<description>`), `hotfix.py` renames the open `WIP-Version` heading to that version in a commit of its own on the branch, tags that commit `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets straight to *Released*. It refuses a marker on the heading, a branch that does not contain the release tag (or the previous hotfix's tag), and a version that already has its tag. Afterwards the branch is deleted without a retirement tag, and the fix reaches `main` separately through an ordinary branch and pull request.
 
+## The retire step
+
+Retiring a branch means tagging it and then deleting it. `retire.py` takes the branch, the outcome (*archived*, *suspended* or *abandoned*) and the branch name typed again as a confirmation. It tags the branch's last commit `<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]` (the UTC date of that commit; the comment is optional and in kebab-case) and only then deletes the remote branch. It refuses `main`, a tag name that already exists, an *archived* branch that is not fully merged into `main`, and a *suspended* or *abandoned* branch that still has an open pull request (close it with a comment first). For an *abandoned* branch it sets the Delivery of the tickets in the branch's changelog entries to *Dropped*; moving tickets to *Suspended* or *Abandoned* stays a person's step. A finished hotfix branch is deleted without a retirement tag, because its release tag keeps its history.
+
 ## Checking the files
 
 `python .github/scripts/check_manifest.py` reports each automation file as unchanged, edited locally or missing. With `--against <newer manifest>` it also reports files from an older version and files new in the standard. `--update --standard <version>` rewrites the manifest after a deliberate change.
