@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.5.0 — 2026-10-06 02:52 UTC
 ### Build 20261006025104 (branch apply-governance-to-itself)
 #### #39 — Document and prove merge C1
 - doc/wiki/Automation.md: added how to read a flag (the hidden markers, how to close one), a table of the scripts, how to start a run by hand, and fixed the date sweep text (it now runs daily).
