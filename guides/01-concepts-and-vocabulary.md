@@ -115,8 +115,8 @@ with where it is explained. Nothing here is new: it collects what the other guid
 
 ## 4. Tickets and the board's words
 
-"Fields reference" below means the *Ticket fields reference* appendix. Nothing here is new: it collects what
-the other guides define.
+"Fields reference" below means the *Ticket fields reference* appendix; the *Ticket model* appendix gives the
+design of a ticket as a whole. Nothing here is new: it collects what the other guides define.
 
 | Term | What it means | See |
 |---|---|---|

@@ -19,6 +19,8 @@ MAIN = """# Changelog
 - done.
 """
 
+EARLIER = "20261006080000"  # a build older than the ones pushed in these tests
+
 ONE = """# Changelog
 
 ## WIP-Version
@@ -157,7 +159,7 @@ class HandlePushTests(GitRepo):
 
     def test_new_work_on_a_finished_ticket_raises_caution_once(self):
         for status in ("Completed", "Abandoned", "Review", "Suspended"):
-            _, repo, _, sets = self.push({201: {"status": status, "delivery": "Merged"}}, text=ONE + status)
+            _, repo, _, sets = self.push({201: {"status": status, "delivery": "Merged", "build": EARLIER}}, text=ONE + status)
             self.assertEqual(sets[("I201", "F-Attention")], {"singleSelectOptionId": "Attention-Caution"})
             self.assertNotIn(("I201", "F-Status"), sets)  # never moved out of its state
             self.assertEqual(sets[("I201", "F-Delivery")], {"singleSelectOptionId": "Delivery-Pushed"})
@@ -174,23 +176,48 @@ class HandlePushTests(GitRepo):
 
     def test_every_delivered_value_counts_as_earlier_work(self):
         for delivery in ("Pushed", "Merged", "Implemented", "Released", "Dropped"):
-            _, repo, _, sets = self.push({201: {"status": "Review", "delivery": delivery}}, text=ONE + delivery)
+            _, repo, _, sets = self.push({201: {"status": "Review", "delivery": delivery, "build": EARLIER}}, text=ONE + delivery)
             self.assertIn(("I201", "F-Attention"), sets, delivery)
+
+    def test_a_delivery_set_by_hand_with_no_build_is_a_first_push(self):
+        # The case behind the false Caution: Delivery Pushed written by hand just before the push step ran.
+        for delivery in ("Pushed", "Merged", "Released", "Dropped"):
+            _, repo, _, sets = self.push({201: {"status": "Review", "delivery": delivery}}, text=ONE + delivery)
+            self.assertNotIn(("I201", "F-Attention"), sets, delivery)
+            self.assertEqual(repo.comments, [])
+
+    def test_a_build_that_is_not_older_raises_nothing(self):
+        # Equal: the same push handled twice. Newer: an older-stamped build pushed later.
+        for build in ("20261006090000", "20261006100000"):
+            _, repo, _, sets = self.push({201: {"status": "Review", "delivery": "Pushed", "build": build}}, text=ONE + build)
+            self.assertNotIn(("I201", "F-Attention"), sets, build)
+            self.assertEqual(repo.comments, [])
+
+    def test_a_build_that_is_not_a_stamp_counts_as_none(self):
+        for build in ("hand-set", "2026-10-06", "2026100608000"):
+            _, repo, _, sets = self.push({201: {"status": "Review", "delivery": "Pushed", "build": build}}, text=ONE + build)
+            self.assertNotIn(("I201", "F-Attention"), sets, build)
+
+    def test_an_implemented_ticket_counts_as_earlier_work_without_a_build(self):
+        for status in ("Completed", "Review"):
+            _, repo, _, sets = self.push({201: {"status": status, "delivery": "Implemented"}}, text=ONE + status)
+            self.assertEqual(sets[("I201", "F-Attention")], {"singleSelectOptionId": "Attention-Caution"})
+            self.assertEqual(len(repo.comments), 1)
 
     def test_an_open_flag_is_not_raised_again(self):
         for flag in ("Caution", "AtRisk"):
-            _, repo, _, sets = self.push({201: {"status": "Review", "attention": flag, "delivery": "Pushed", "build": "20261006090000"}})
+            _, repo, _, sets = self.push({201: {"status": "Review", "attention": flag, "delivery": "Pushed", "build": EARLIER}})
             self.assertNotIn(("I201", "F-Attention"), sets)
             self.assertEqual(repo.comments, [])
 
     def test_a_closed_flag_is_raised_again_for_new_work(self):
         for value in ("Fine", "Acknowledged", "Watch"):
-            _, repo, _, sets = self.push({201: {"status": "Review", "attention": value, "delivery": "Pushed"}})
+            _, repo, _, sets = self.push({201: {"status": "Review", "attention": value, "delivery": "Pushed", "build": EARLIER}})
             self.assertIn(("I201", "F-Attention"), sets)
             self.assertEqual(len(repo.comments), 1)
 
     def test_several_tickets_and_a_ref(self):
-        _, repo, project, sets = self.push({201: {"status": "ToDo"}, 205: {"status": "Completed", "delivery": "Merged"}}, text=TWO)
+        _, repo, project, sets = self.push({201: {"status": "ToDo"}, 205: {"status": "Completed", "delivery": "Merged", "build": EARLIER}}, text=TWO)
         self.assertEqual(sets[("I201", "F-Build")], {"text": "20261006100000"})
         self.assertIn(("I205", "F-Attention"), sets)
         self.assertEqual([c[0] for c in repo.comments], [205])

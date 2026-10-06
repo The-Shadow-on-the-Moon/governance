@@ -18,8 +18,8 @@ This project
 - Flag comments (they start with `<!-- attention:`) and commits whose message starts with `Finalize `,
   `Flag bypass` or `Fill in a build heading` are written by the automation, which recognises them: do not edit
   or reuse them.
-- Tests of the automation use throwaway tickets and branches, titled DUMMY, closed as Invalid (Abandoned),
-  with their branches tagged before they are deleted.
+- Tests of the automation use throwaway tickets and branches, titled DUMMY and labelled `dummy`, closed as
+  Invalid (Abandoned), with their branches tagged before they are deleted.
 - Roles: Damian Bucovsky holds the administrator, project owner and developer roles. Pablo holds the
   developer role, with write access. More in [`doc/wiki/Roles-and-Access.md`](doc/wiki/Roles-and-Access.md).
 - Durable authorizations: none.

@@ -209,13 +209,14 @@ They are set up once, by the administrator, for the organization.
 
 - **Rule:** the labels are exactly the 14 Area labels: `requirements`, `research`, `design`,
   `implementation`, `assembly`, `testing`, `analysis`, `debugging`, `documentation`, `tool`, `process`,
-  `config`, `content` and `build`. There are no other labels.
+  `config`, `content` and `build`, plus the marker label `dummy` for throwaway tickets made to test the
+  automation (see the *Ticket fields reference*). There are no other labels.
 - **Rule:** each label carries its meaning from the *Ticket fields reference* as its description, so the
   meaning shows wherever the label is used.
 - **Rule:** the labels a new repository starts with that are not on this list (for example `bug`,
   `enhancement`, `duplicate`, `invalid`, `question`, `wontfix`, `good first issue`, `help wanted` and
   `accessibility`; the set changes over time) are deleted. `documentation` stays, because it is on the list.
-  After deleting, check that exactly the 14 remain.
+  After deleting, check that exactly the 14 Area labels and `dummy` remain.
 - **Recommendation:** create the labels with a script, so that every project gets the same list.
 
 **Why.**
@@ -223,7 +224,8 @@ They are set up once, by the administrator, for the organization.
 - The Type, Resolution, Waiting and Origin fields replace what those default labels were used for, so
   keeping them would record the same fact twice.
 - A fixed list is the same in every project, so filtering and reporting by Area works across all of them.
-- Allowing only the Area labels keeps the list from growing into a second, unmanaged classification.
+- Allowing only the Area labels, and `dummy` as the one marker, keeps the list from growing into a second,
+  unmanaged classification.
 
 > **In GitHub.** Issue types are under the organization's settings, in the planning section. Labels are
 > under the repository's issues, in the labels page, and can be created in bulk with the command line.
@@ -383,8 +385,8 @@ A one-page summary of the guide. It adds no new rules.
 **Issue types and labels** (section 5)
 
 - [ ] The eight issue types exist with their descriptions.
-- [ ] The 14 Area labels exist with their descriptions, and the default labels not on the list are
-      deleted.
+- [ ] The 14 Area labels and `dummy` exist with their descriptions, and the default labels not on the list
+      are deleted.
 
 **The board** (section 6)
 

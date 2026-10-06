@@ -31,7 +31,7 @@ class CombineTests(unittest.TestCase):
         for num, _ in combine.GUIDES:
             self.assertIn("## Guide {}:".format(num), document)
 
-        for letter in "ABCD":
+        for letter in "ABCDE":
             self.assertIn("## Appendix {}:".format(letter), document)
 
     def test_combined_file_is_up_to_date(self):

@@ -18,7 +18,7 @@
     ".github/scripts/hotfix.py": "74c09c39d699fec097d4c1cb7d68ab10f371256b53d7f3f1d18f282e340c8658",
     ".github/scripts/implemented.py": "cd9cbd855cc4e9385ecfe2ab68485f7443dc6156813aa811ffebf5f823ecd577",
     ".github/scripts/preflight.py": "1cc7dd7c2e106c59d8d3a21cc82d0befb617dcd0a36475b3fd92356b9c268be2",
-    ".github/scripts/push_step.py": "933122c953d1e84a557070bcaf47b07b36a98073476ad70d51b9d14cc267963c",
+    ".github/scripts/push_step.py": "847bf285594a2891b749dbd91baf9235f7d89282e77f321e7eb4a704c0744317",
     ".github/scripts/release.py": "299294db7cf3378f7554b3dce8ad9a1ac226d1909fdcadeb0b474453dee05b16",
     ".github/scripts/retire.py": "043c22bd91b5cef84a7db4ba08f3b6370e0e97670a237582c6be236c9256e848",
     ".github/scripts/skipped_hooks.py": "da621d5ad001748b082c35a2321d81e3b222fdd76f4d4886a13240cd4eb93210",
@@ -35,12 +35,12 @@
     "tests/test_implemented.py": "a08c55cbd27eb2b5dce1aa5371c6050ba3a7eca174f756b694048b81d099d7d4",
     "tests/test_manifest.py": "c7885dbd402e2610299b12a5f503149aba55d3cb6c054b6f959a9705bf7c0693",
     "tests/test_preflight.py": "beed2a3da343d2c1ee522c6c8f80a625a845f2bb79cf24a4605389afb101e03e",
-    "tests/test_push_step.py": "b34470e88675e23a30d350ea093da04cb96e41caf5ff9b013c7f5ff04cc00c04",
+    "tests/test_push_step.py": "aaeb385f664d138486113f4821dd859283242cace7df3e2a0d1a6a1706e7a183",
     "tests/test_release.py": "58c436cb8b756910834b7e43068009be95efc1e1629d561f78263be78e9385ce",
     "tests/test_retire.py": "a92a7e0ff5d6558655b9af7dce043ca46f4cf0f55681d7e1449f8727e8621440",
     "tests/test_skipped_hooks.py": "286251211eaccd9d668f389676068dc2895f53c39424ab4404cc944ecd64b9fe",
     "tests/test_watch.py": "afbbf5bc4f57f9236cfa254c02606357cc9b269fa6397fe016306fc54fcba77a",
     "tests/test_workflow.py": "43662f8f26212d3fa290c58bb07ba674e263a1d982a503b74c5e59b78d3bb901"
   },
-  "standard": "V0.6.0"
+  "standard": "V0.7.0"
 }

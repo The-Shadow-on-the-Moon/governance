@@ -3,7 +3,8 @@
 This guide explains the pieces a project is made of, what each one means, how they connect and how they
 are created. It is the reference the procedural guides (starting work, committing, merging, issues and
 the board) point back to. The values of every ticket field are in the *Ticket fields reference*
-appendix.
+appendix, and the design of a ticket as a whole, with its life from creation to release, is in the
+*Ticket model* appendix.
 
 **How to read it.** Each topic states what something is and why it exists. Statements are marked:
 
@@ -285,7 +286,7 @@ More examples, covering every Type, are in appendix D (*Ticket examples*).
 
 A ticket's details are held in fields. This section explains the idea behind each one and the rules that
 tie them together. The values of every field, with their meanings, are in the *Ticket fields reference*
-appendix.
+appendix. The *Ticket model* appendix shows how the fields work together over a ticket's life.
 
 ### 4.1 One question per field
 
@@ -390,8 +391,10 @@ state and lose where the ticket was.
   - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
     whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
     *Released* or *Dropped*), or a rule in section 4.4 is broken (for example *Completed* without
-    Resolution *Done*). The first push of a ticket never raises it: a ticket moved to *Review* before its
-    first push has no earlier work.
+    Resolution *Done*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
+    one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
+    Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
+    never raises it: a ticket moved to *Review* before its first push has no earlier work.
   - *Watch:* a ticket looks out of date: no activity at *Review* for a week, at *OnDeck* or
     *InProgress* for a month, or at *Suspended* for six months, or a ticket that has been waiting for
     input for two weeks. Activity means a comment, a change to a field, or a new build that mentions the

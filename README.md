@@ -9,7 +9,7 @@ that work with them, and it is meant to apply unchanged to any project.
 
 | Folder | What it holds |
 |---|---|
-| [`guides/`](guides/README.md) | The guides (01 to 10), the appendices (A to D) and a combined copy for reading in one place. Start with [`guides/README.md`](guides/README.md). |
+| [`guides/`](guides/README.md) | The guides (01 to 10), the appendices (A to E) and a combined copy for reading in one place. Start with [`guides/README.md`](guides/README.md). |
 | [`tools/`](tools/) | `combine.py` rebuilds the combined copy from the separate files. `xref_check.py` checks that every cross-reference between the guides points at a section that exists. |
 | [`tests/`](tests/) | Tests for the tools and for the automation. They also fail if the combined copy is out of date, a cross-reference is broken, or an automation file differs from the manifest. |
 | [`.githooks/`](.githooks/) | The local hooks: they stamp the build, draft the commit message and warn. |
