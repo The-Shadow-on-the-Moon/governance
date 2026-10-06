@@ -34,7 +34,7 @@ The checks that depend on time rather than on a push run from a `daily` job, sta
 
 ## The date sweep
 
-Start date and End date are the days the automation noticed a ticket start and end (UTC). The sweep looks at every ticket on the board: Start date is set the first time a ticket is seen at *InProgress* or beyond (anything but *ToDo* and *OnDeck*), End date the first time it is seen *Completed* or *Abandoned*, each only when blank and never overwritten; End date is cleared when a ticket is seen open again and set again when it next ends. Version and Alert tickets have no dates. It runs after each finalize and (when the schedule exists) daily; a person may still correct a date by hand.
+Start date and End date are the days the automation noticed a ticket start and end (UTC). The sweep looks at every ticket on the board: Start date is set the first time a ticket is seen at *InProgress* or beyond (anything but *ToDo* and *OnDeck*), End date the first time it is seen *Completed* or *Abandoned*, each only when blank and never overwritten; End date is cleared when a ticket is seen open again and set again when it next ends. Version and Alert tickets have no dates. It runs after each finalize and every day; a person may still correct a date by hand.
 
 ## The Watch flags
 
@@ -47,6 +47,30 @@ The rules that span fields are checked on every ticket: *Completed* has Resoluti
 ## Tickets with no file change
 
 A ticket that changed no file (a setting, a secret, a check that was run) has nothing in the changelog for the automation to find. When its work is in effect, a person sets its Delivery to *Implemented* and its Version to the version it belongs to. At every finalize, and on a manual run of the workflow (dry run off), the automation attaches each *Implemented* ticket that is not yet a sub-issue of any Version ticket: a blank Version gets the version being finalized, an already finalized Version is kept and the ticket goes to that version's ticket, and a later Version waits. The ticket keeps Delivery *Implemented* and gets no Build, and a comment on the Version ticket says which tickets were added. Releases will treat *Implemented* tickets like merged ones.
+
+## Reading a flag
+
+Every flag the automation raises is one comment that starts with a hidden marker (`<!-- attention:watch ... -->` or `<!-- attention:caution ... -->`). The marker is how the automation recognises its own flag comments (they do not count as activity) and remembers which situation or which broken rules it already flagged, so do not edit or delete these comments. To close a flag, decide what is true, act, and set Attention to *Fine* (nothing is wrong, or it was put right) or *Acknowledged* (something has to be done and it is handled elsewhere), with a comment saying which.
+
+## The scripts
+
+All in `.github/scripts/`, with a test file for each in `tests/`. Each can be run by hand with `--dry-run` (it needs `GITHUB_REPOSITORY`, `GITHUB_TOKEN` and `PROJECT_TOKEN` in the environment) except where noted.
+
+| Script | What it does |
+|---|---|
+| `preflight.py` | The first step of every run: repository, token, board and its fields. |
+| `finalize.py` | The finalize step, and the sweep of *Implemented* tickets that goes with it. |
+| `bypass.py` | Bypass detection after a push to `main`, and the stale-version check (`stale`). |
+| `advisory.py` | The advisory check on a pull request. |
+| `push_step.py`, `skipped_hooks.py` | The push step and the fallback for skipped hooks. |
+| `implemented.py` | Attaching *Implemented* tickets (the daily entry). |
+| `dates.py`, `watch.py`, `field_rules.py` | The date sweep, the Watch flags and the Caution flags for field rules. |
+| `check_manifest.py` | The manifest check and its rewrite (no tokens needed). |
+| `changelog.py`, `versions.py`, `github_api.py`, `checks.py`, `alerts.py` | The shared library: changelog parsing, version rules, the GitHub client, git analysis, Alert tickets. |
+
+## Starting a run by hand
+
+In the Actions tab, run the *Versioning* workflow (from `main`, or from a branch to try a change) with mode `finalize` (repeat or dry-run a finalize) or `daily` (the daily checks), and the dry run on or off. A dry run only reports.
 
 ## Checking the files
 

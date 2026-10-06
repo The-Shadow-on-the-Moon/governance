@@ -1,6 +1,11 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006025104 (branch apply-governance-to-itself)
+#### #39 — Document and prove merge C1
+- doc/wiki/Automation.md: added how to read a flag (the hidden markers, how to close one), a table of the scripts, how to start a run by hand, and fixed the date sweep text (it now runs daily).
+- README.md: the automation section lists what the workflow does on each kind of push and the daily run, and the status says what is still to come (the release, hotfix and retire steps).
+- AGENTS.md: the automation's flag comments and commit messages are not to be edited or reused; tests of the automation use throwaway tickets and branches titled DUMMY, closed as Invalid and with their branches tagged before deletion.
 ### Build 20261006024537 (branch apply-governance-to-itself)
 #### #38 — Add the daily schedule to the workflow
 - .github/workflows/versioning.yml: added a `daily` job, run every day at 06:17 UTC and on request with the new input `mode` set to `daily` (the other mode, `finalize`, is the existing manual finalize run, so a manual start runs exactly one of them): the preflight, the attaching of Implemented tickets, the date sweep, the Watch flags and the Caution flags for field rules, each a dry run for a manual dry run. It never commits or pushes, so it cannot loop and writes nothing to a branch; the `main` job now runs on a manual start only for mode `finalize`. The dry-run input text now says it covers the steps.
