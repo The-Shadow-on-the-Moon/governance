@@ -1,6 +1,19 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261006023458 (branch apply-governance-to-itself)
+#### #36 — Add the Watch flags for stale tickets
+- .github/scripts/watch.py: added; raises Attention *Watch*, with one comment, when a ticket has had no activity at Review for a week, at OnDeck or InProgress for a month, at Suspended for six months, or has been waiting for input for two weeks. Activity is a comment, a board change, or a new build; the automation's own flag comments do not count. It flags only a ticket that is blank, Fine or Acknowledged (never lowering a level), skips Version and Alert tickets, and raises it once per situation (the Progress with the latest build, kept in a hidden marker in the comment): a flag a person closed is raised again only when the stage changes or new work arrives. Reads every page of the board; `--dry-run` only reports.
+- .github/scripts/push_step.py: its Caution comment now starts with the same hidden marker, so flag comments are recognised and do not count as activity.
+- .github/workflows/versioning.yml: the `main` job runs the Watch sweep after the date sweep (a dry run for a manual dry run); the daily schedule is its own ticket.
+- tests/test_watch.py: added; 17 tests (each limit, waiting, activity, open and closed flags, the same stage, a changed stage, new work, skipped types, paging, dry run); tests/test_workflow.py: the step order.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+#### #35 — Add the daily sweep for Start and End dates
+- .github/scripts/dates.py: added; looks at every ticket on the board and sets Start date the first time it is seen at InProgress or beyond (anything but ToDo and OnDeck) and End date the first time it is seen Completed or Abandoned, only when blank and never overwriting; clears End date when a ticket is seen open again, so it is set again at the next end; Version and Alert tickets and draft items are skipped; reads every page of the board; dates are UTC; `--dry-run` only reports.
+- .github/scripts/github_api.py: added `clear_project_field`.
+- .github/workflows/versioning.yml: the `main` job runs the sweep after the stale-version check (a dry run for a manual dry run); the daily schedule comes with its own ticket.
+- tests/test_dates.py: added; 12 tests (each status, existing dates kept, clearing and setting again, skipped types, paging, dry run); tests/test_workflow.py: the step order.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
 ### Build 20261006021728 (branch apply-governance-to-itself)
 #### #34 — Add the fallback for skipped hooks: fill in the build heading with the commit and add a note
 - .github/scripts/skipped_hooks.py: added; on a push to a branch, when the pushed changelog still has `### WIP-Build` (a commit made without the hooks), fills the heading in with the commit's own UTC time and the start of its hash (`### Build <stamp> (branch <name>, commit <hash>)`), adds a note to the first entry under it saying the hooks were skipped and the message was not drafted from the entries, commits that on the branch and pushes it. A placeholder that was already in the branch before the push is left alone; a push that cannot be fast-forwarded is reported; `--dry-run` only reports.

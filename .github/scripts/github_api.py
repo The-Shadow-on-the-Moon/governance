@@ -130,3 +130,8 @@ class Client:
         query = ("mutation($p:ID!,$i:ID!,$f:ID!,$v:ProjectV2FieldValue!){updateProjectV2ItemFieldValue("
                  "input:{projectId:$p,itemId:$i,fieldId:$f,value:$v}){projectV2Item{id}}}")
         return self.graphql(query, {"p": project_id, "i": item_id, "f": field_id, "v": value})
+
+    def clear_project_field(self, project_id, item_id, field_id):
+        query = ("mutation($p:ID!,$i:ID!,$f:ID!){clearProjectV2ItemFieldValue("
+                 "input:{projectId:$p,itemId:$i,fieldId:$f}){projectV2Item{id}}}")
+        return self.graphql(query, {"p": project_id, "i": item_id, "f": field_id})
