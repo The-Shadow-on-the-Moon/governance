@@ -32,9 +32,10 @@ The tools need Python 3 and nothing else.
 
 ## The automation
 
-The hooks, the versioning workflow and the check script are described on the
-[wiki](doc/wiki/Automation.md). The automation files are covered by a manifest: after editing one, rewrite the
-manifest and run the tests.
+The hooks, the versioning workflow (the advisory check on pull requests, the push step and the fallback for
+skipped hooks on branches, the finalize step and bypass detection on `main`, and a daily run for dates, stale
+tickets and broken field rules) and the check script are described on the [wiki](doc/wiki/Automation.md). The
+automation files are covered by a manifest: after editing one, rewrite the manifest and run the tests.
 
 ```
 python .github/scripts/check_manifest.py --update --standard <version>
@@ -53,8 +54,9 @@ Check with `git config core.hooksPath`, which should print `.githooks`.
 
 ## Status
 
-This repository applies the standard to itself. Still open: making the up-to-date check mandatory in branch
-protection, and proving the setup with a real run of the workflow. Both are tracked in tickets.
+This repository applies the standard to itself, including its automation. Still to come, each in a ticket:
+the release, hotfix-finalize and branch-retire steps. The daily schedule starts running once the workflow is on
+`main`.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what has changed.
 

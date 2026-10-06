@@ -55,7 +55,7 @@ them on the branch. This is only one way it can happen; there are others.
   comment on that ticket. With no ticket, use a `REF`. If the branch has no open `WIP-Version` heading at
   that moment (it was merged before), add the heading and a build block in the same commit.
 - **Rule:** if `main` moves again after your sync, sync again.
-- **Note:** if the ticket is already at *Review* (or *Completed*) when you sync again and log an adjustment, the
+- **Note:** if the ticket has already been pushed and is at *Review* (or *Completed*) when you sync again and log an adjustment, the
   automation sees new work on it and raises *Caution*. That is expected: confirm it was only the sync, and
   set *Fine* (see the guide on issues and the board in practice, section 2.4).
 - **Recommendation:** in the entry, say what conflicted and how you resolved it. If it is easy to see what

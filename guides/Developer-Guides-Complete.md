@@ -1374,8 +1374,11 @@ state and lose where the ticket was.
   handled elsewhere: in another ticket, or on this one, moved back to *ToDo*, *OnDeck*, *InProgress* or
   *Suspended*. A comment says what was decided and, for *Acknowledged*, where it is handled.
 - **Rule:** these are the causes the automation uses today, with the level each starts at:
-  - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended*, or
-    a rule in section 4.4 is broken (for example *Completed* without Resolution *Done*).
+  - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
+    whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
+    *Released* or *Dropped*), or a rule in section 4.4 is broken (for example *Completed* without
+    Resolution *Done*). The first push of a ticket never raises it: a ticket moved to *Review* before its
+    first push has no earlier work.
   - *Watch:* a ticket looks out of date: no activity at *Review* for a week, at *OnDeck* or
     *InProgress* for a month, or at *Suspended* for six months, or a ticket that has been waiting for
     input for two weeks. Activity means a comment, a change to a field, or a new build that mentions the
@@ -1700,6 +1703,7 @@ section describes what the file contains and how it is structured.
 ## WIP-Version                         the open version, on a branch (a marker may follow: +V, +s, +m)
 ### WIP-Build                          placeholder for the commit being made
 ### Build 20261005143045 (branch <name>)  stamped at commit time, one per commit that logs a change
+### Build 20261005143045 (branch <name>, commit 1a2b3c4)   filled in by the automation when the hooks were skipped
 #### #201 — <ticket title>             one block per ticket
 - what changed
 #### REF 20261005180000 — <reason>     a change with no ticket yet
@@ -1711,6 +1715,7 @@ section describes what the file contains and how it is structured.
 |---|---|
 | `## WIP-Version` | The version being worked on. It has no number until it merges. |
 | `### Build <timestamp> (branch <name>)` | One commit's worth of changes. The local hook stamps it with the UTC time of the commit. |
+| `### Build <timestamp> (branch <name>, commit <hash>)` | The same, filled in by the automation for a commit made without the hooks. It carries the commit's UTC time and the start of its hash, and a note in the first entry says why it looks different. |
 | `#### #123 — title` | The changes belonging to one ticket. |
 | `#### REF <token> — reason` | Changes made without a ticket yet: a placeholder to be backfilled. |
 | `#### AUTO-REF … (tracked as #N)` | An entry the automation wrote, pointing at an Alert. |
@@ -2219,9 +2224,10 @@ The steps:
    reads right: the ticket's title as the summary for one ticket, "Multiple tickets" for several, or the
    first bullet if there is only a `REF`.
 4. **Push the branch.** The remote automation sets Delivery to *Pushed* on the tickets in your changelog
-   entries, and moves a ticket still at *ToDo* or *OnDeck* to *InProgress*. If one of them is *Completed*, *Abandoned*, *Review* or *Suspended*, it also raises *Caution* in
-   Attention, with a comment, because new work has arrived on it (see the guide on project structure,
-   section 4.3).
+   entries, and moves a ticket still at *ToDo* or *OnDeck* to *InProgress*. If one of them is *Completed*, *Abandoned*, *Review* or *Suspended* and earlier work on it was
+   already pushed or delivered, it also raises *Caution* in Attention, with a comment, because new work has
+   arrived on it. The first push of a ticket raises nothing, even if the ticket is already at *Review* (see
+   the guide on project structure, section 4.3).
 5. **Check the ticket.** Delivery shows *Pushed*. The Start date appears after the automation's next
    sweep.
 
@@ -2797,7 +2803,7 @@ them on the branch. This is only one way it can happen; there are others.
   comment on that ticket. With no ticket, use a `REF`. If the branch has no open `WIP-Version` heading at
   that moment (it was merged before), add the heading and a build block in the same commit.
 - **Rule:** if `main` moves again after your sync, sync again.
-- **Note:** if the ticket is already at *Review* (or *Completed*) when you sync again and log an adjustment, the
+- **Note:** if the ticket has already been pushed and is at *Review* (or *Completed*) when you sync again and log an adjustment, the
   automation sees new work on it and raises *Caution*. That is expected: confirm it was only the sync, and
   set *Fine* (see the guide on issues and the board in practice, section 2.4).
 - **Recommendation:** in the entry, say what conflicted and how you resolved it. If it is easy to see what
@@ -4737,7 +4743,7 @@ These are the causes it uses today, with the level each starts at:
 
 | Level | Raised when |
 |---|---|
-| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended*, or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state). |
+| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and whose earlier work was already pushed or delivered (never for its first push), or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state). |
 | **Watch** | A ticket has had no activity at *Review* for a week, at *OnDeck* or *InProgress* for a month, or at *Suspended* for six months, or has been waiting for input for two weeks. |
 
 Activity means a comment, a change to a field, or a new build that mentions the ticket; the automation's

@@ -13,8 +13,10 @@ import subprocess
 import sys
 
 import changelog
+import implemented
 import preflight
 import versions
+from versions import Version
 from github_api import Client, GitHubError
 
 CHANGELOG = "CHANGELOG.md"
@@ -25,6 +27,7 @@ ITEM_QUERY = ("query($o:String!,$n:String!,$num:Int!){repository(owner:$o,name:$
               "delivery:fieldValueByName(name:\"Delivery\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
               "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}} "
               "build:fieldValueByName(name:\"Build\"){... on ProjectV2ItemFieldTextValue{text}} "
+              "attention:fieldValueByName(name:\"Attention\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
               "number:fieldValueByName(name:\"Version#\"){... on ProjectV2ItemFieldNumberValue{number}}"
               "}}}}}")
 
@@ -115,14 +118,8 @@ def update_ticket(run, project_client, board, number, version, build):
 
 
 def find_version_ticket(repo_client, title):
-    for page in range(1, 11):
-        issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=all&type=Version&per_page=100&page={page}"))
-        for issue in issues:
-            if issue["title"] == title:
-                return issue
-        if len(issues) < 100:
-            return None
-    return None
+    """The Version ticket with exactly this title, or None."""
+    return implemented.version_ticket(repo_client, Version.parse("V" + title.split(" ", 1)[1]))
 
 
 def record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, tickets):
@@ -219,7 +216,13 @@ def finalize(root, repo_client, project_client=None, board=None, now=None, pull_
                 update_ticket(run, project_client, board, number, version, builds.get(number))
             except GitHubError as error:
                 run.log.append(f"#{number}: board update skipped: {error}")
-    record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, listing)
+    ticket = record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, listing)
+    if board is not None and project_client is not None:
+        try:
+            finalized = {s.version for s in sections if s.kind == "final"} | {version}
+            implemented.sweep(run, repo_client, project_client, board, finalized, (version, ticket), now)
+        except GitHubError as error:
+            run.log.append(f"Implemented tickets: sweep skipped: {error}")
     return run
 
 

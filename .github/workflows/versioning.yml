@@ -1,19 +1,31 @@
 name: Versioning
 
 # On a pull request: the advisory check.
-# On a push to main: the preflight, then bypass detection, the finalize step and the stale-version check.
-# On request: the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
+# On a push to another branch: the preflight, the fallback for skipped hooks, then the push step (Delivery, Progress, Build, Attention).
+# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the date sweep, the Watch flags and the Caution flags for field rules.
+# Every day (06:17 UTC) and on request with mode "daily": the preflight, the Implemented tickets, the date sweep and the flags.
+#   The daily run never commits to a branch.
+# On request with mode "finalize": the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
-      - main
+      - '**'
+  schedule:
+    - cron: '17 6 * * *'
   workflow_dispatch:
     inputs:
+      mode:
+        description: 'What to run: the finalize step, or the daily checks'
+        type: choice
+        options:
+          - finalize
+          - daily
+        default: finalize
       dry_run:
-        description: 'Only report what the finalize step would do'
+        description: 'Only report what the steps would do'
         type: boolean
         default: true
 
@@ -41,11 +53,48 @@ jobs:
           git fetch origin main
           python3 .github/scripts/advisory.py
 
+  branch:
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main' && !github.event.deleted
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-branch-${{ github.ref }}
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+    steps:
+      - name: Checkout the branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set the commit author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Fill in a build heading left by skipped hooks
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: python3 .github/scripts/skipped_hooks.py
+
+      - name: Push step
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: AFTER_SHA=$(git rev-parse HEAD) python3 .github/scripts/push_step.py
+
   main:
     # The automation's own commits start with "Finalize" or "Flag bypass"; skipping them avoids a loop.
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'finalize') ||
       (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
        !startsWith(github.event.head_commit.message, 'Finalize ') &&
        !startsWith(github.event.head_commit.message, 'Flag bypass'))
     runs-on: ubuntu-latest
@@ -94,3 +143,84 @@ jobs:
       - name: Check for stale planned versions
         if: github.event_name == 'push' || inputs.dry_run == false
         run: python3 .github/scripts/bypass.py stale
+
+      - name: Sweep the dates
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/dates.py --dry-run
+          else
+            python3 .github/scripts/dates.py
+          fi
+
+      - name: Flag stale tickets
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/watch.py --dry-run
+          else
+            python3 .github/scripts/watch.py
+          fi
+
+      - name: Flag broken field rules
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/field_rules.py --dry-run
+          else
+            python3 .github/scripts/field_rules.py
+          fi
+
+  daily:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'daily')
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-daily
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Attach Implemented tickets to their versions
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/implemented.py --dry-run
+          else
+            python3 .github/scripts/implemented.py
+          fi
+
+      - name: Sweep the dates
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/dates.py --dry-run
+          else
+            python3 .github/scripts/dates.py
+          fi
+
+      - name: Flag stale tickets
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/watch.py --dry-run
+          else
+            python3 .github/scripts/watch.py
+          fi
+
+      - name: Flag broken field rules
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/field_rules.py --dry-run
+          else
+            python3 .github/scripts/field_rules.py
+          fi

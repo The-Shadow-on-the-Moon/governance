@@ -1,5 +1,63 @@
 # Changelog
 
+## WIP-Version
+### Build 20261006025104 (branch apply-governance-to-itself)
+#### #39 — Document and prove merge C1
+- doc/wiki/Automation.md: added how to read a flag (the hidden markers, how to close one), a table of the scripts, how to start a run by hand, and fixed the date sweep text (it now runs daily).
+- README.md: the automation section lists what the workflow does on each kind of push and the daily run, and the status says what is still to come (the release, hotfix and retire steps).
+- AGENTS.md: the automation's flag comments and commit messages are not to be edited or reused; tests of the automation use throwaway tickets and branches titled DUMMY, closed as Invalid and with their branches tagged before deletion.
+### Build 20261006024537 (branch apply-governance-to-itself)
+#### #38 — Add the daily schedule to the workflow
+- .github/workflows/versioning.yml: added a `daily` job, run every day at 06:17 UTC and on request with the new input `mode` set to `daily` (the other mode, `finalize`, is the existing manual finalize run, so a manual start runs exactly one of them): the preflight, the attaching of Implemented tickets, the date sweep, the Watch flags and the Caution flags for field rules, each a dry run for a manual dry run. It never commits or pushes, so it cannot loop and writes nothing to a branch; the `main` job now runs on a manual start only for mode `finalize`. The dry-run input text now says it covers the steps.
+- .github/scripts/implemented.py: added `daily_sweep` and a command line entry (`--dry-run`): judges the Implemented tickets by the finalized versions in the changelog, and gives a blank Version the latest one; it does nothing if there is no finalized version or no Version ticket for the latest. An Abandoned ticket is never attached (it never shipped).
+- tests/test_workflow.py: the schedule, the input, the job's steps and order, and that it has no git commands; tests/test_implemented.py: the daily sweep and the Abandoned case.
+- doc/wiki/Automation.md: described the daily run.
+### Build 20261006023919 (branch apply-governance-to-itself)
+#### #37 — Add the Caution flags for broken field rules
+- .github/scripts/field_rules.py: added; checks the rules that span fields on every ticket on the board and raises Attention *Caution*, with one comment naming what is broken, for: Completed without Resolution Done; Abandoned without one of the abandon reasons; an open ticket with a Resolution or an End date; Waiting on a Completed or Abandoned ticket; a Backfilled ticket with no REF; an issue open at Completed or Abandoned, or closed at any other stage. Only when neither the issue nor the board item has changed for five minutes; only on a ticket that is blank, Fine, Acknowledged or Watch (never lowering a level); once per set of broken rules (kept in a hidden marker in the comment): after a person closed the flag it comes back only when a rule not named before is broken. Version and Alert tickets are skipped; reads every page of the board; `--dry-run` only reports.
+- .github/workflows/versioning.yml: the `main` job runs it after the Watch sweep (a dry run for a manual dry run).
+- tests/test_field_rules.py: added; 19 tests (each rule, the quiet period, open and closed flags, the same and different rules, skipped types, paging, dry run); tests/test_workflow.py: the step order.
+- doc/wiki/Automation.md: described the flags.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+### Build 20261006023458 (branch apply-governance-to-itself)
+#### #36 — Add the Watch flags for stale tickets
+- .github/scripts/watch.py: added; raises Attention *Watch*, with one comment, when a ticket has had no activity at Review for a week, at OnDeck or InProgress for a month, at Suspended for six months, or has been waiting for input for two weeks. Activity is a comment, a board change, or a new build; the automation's own flag comments do not count. It flags only a ticket that is blank, Fine or Acknowledged (never lowering a level), skips Version and Alert tickets, and raises it once per situation (the Progress with the latest build, kept in a hidden marker in the comment): a flag a person closed is raised again only when the stage changes or new work arrives. Reads every page of the board; `--dry-run` only reports.
+- .github/scripts/push_step.py: its Caution comment now starts with the same hidden marker, so flag comments are recognised and do not count as activity.
+- .github/workflows/versioning.yml: the `main` job runs the Watch sweep after the date sweep (a dry run for a manual dry run); the daily schedule is its own ticket.
+- tests/test_watch.py: added; 17 tests (each limit, waiting, activity, open and closed flags, the same stage, a changed stage, new work, skipped types, paging, dry run); tests/test_workflow.py: the step order.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+#### #35 — Add the daily sweep for Start and End dates
+- .github/scripts/dates.py: added; looks at every ticket on the board and sets Start date the first time it is seen at InProgress or beyond (anything but ToDo and OnDeck) and End date the first time it is seen Completed or Abandoned, only when blank and never overwriting; clears End date when a ticket is seen open again, so it is set again at the next end; Version and Alert tickets and draft items are skipped; reads every page of the board; dates are UTC; `--dry-run` only reports.
+- .github/scripts/github_api.py: added `clear_project_field`.
+- .github/workflows/versioning.yml: the `main` job runs the sweep after the stale-version check (a dry run for a manual dry run); the daily schedule comes with its own ticket.
+- tests/test_dates.py: added; 12 tests (each status, existing dates kept, clearing and setting again, skipped types, paging, dry run); tests/test_workflow.py: the step order.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+### Build 20261006021728 (branch apply-governance-to-itself)
+#### #34 — Add the fallback for skipped hooks: fill in the build heading with the commit and add a note
+- .github/scripts/skipped_hooks.py: added; on a push to a branch, when the pushed changelog still has `### WIP-Build` (a commit made without the hooks), fills the heading in with the commit's own UTC time and the start of its hash (`### Build <stamp> (branch <name>, commit <hash>)`), adds a note to the first entry under it saying the hooks were skipped and the message was not drafted from the entries, commits that on the branch and pushes it. A placeholder that was already in the branch before the push is left alone; a push that cannot be fast-forwarded is reported; `--dry-run` only reports.
+- .github/scripts/changelog.py: reads the new heading form (`Build.commit`), `stamp_wip_build` takes an optional commit, and `add_note` adds a bullet under a build's first entry.
+- .github/workflows/versioning.yml: the `branch` job sets the commit author and runs the fallback before the push step, which then reads the repaired changelog.
+- guides/03-project-structure.md, guides/Developer-Guides-Complete.md: the changelog structure shows the heading form the automation writes.
+- tests/test_skipped_hooks.py: added; 10 tests on real temporary repositories with a bare remote; tests/test_workflow.py: the order of the branch job's steps.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+### Build 20261006015801 (branch apply-governance-to-itself)
+#### #29 — Make finalize attach Implemented tickets
+- .github/scripts/implemented.py: added; at every finalize and manual run, finds the board tickets with Delivery *Implemented* that are not sub-issues of any ticket and attaches each to a Version ticket by its Version (blank: the version being finalized and the field is filled in; an already finalized version: kept, attached to that version's closed ticket; a later or unreadable version: left alone), sets Version#, leaves Delivery and Build alone, and comments once per Version ticket on which tickets were added. Reads every page of the board.
+- .github/scripts/finalize.py: runs that sweep after the Version ticket is recorded (and when a version is re-checked), with the existing dry run; the Version ticket lookup now shares the sweep's code.
+- tests/test_implemented.py: added; 12 tests for each case of the sweep, the comments, the paging and the call from finalize.
+- tests/test_finalize.py: the fake board answers the sweep's query.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+- doc/wiki/Automation.md: described the sweep.
+- .github/automation-manifest.json: rewritten for the changed and new files (standard V0.5.0).
+#### #33 — Add the push step: Delivery Pushed, InProgress, and a Caution when new work reaches a finished ticket
+- .github/scripts/push_step.py: added; on a push to a branch, for each ticket in the open version's changelog entries that the push added (a sync that brings in finalized versions from main is ignored; a new branch is compared with main), sets Delivery to Pushed and Build to the ticket's latest build, moves ToDo and OnDeck to InProgress, and raises Caution with one comment naming the build when the ticket is Completed, Abandoned, Review or Suspended and its earlier work was already pushed or delivered (never on a ticket's first push, since a ticket moved to Review before its first push has no earlier work; not again while a Caution or AtRisk is open, never moving the ticket out of its state). Adds a ticket missing from the board; `--dry-run` only reports.
+- .github/scripts/finalize.py: the ticket query also reads Attention.
+- .github/workflows/versioning.yml: runs on pushes to every branch; a new `branch` job runs the preflight and the push step (not for main, not for a deleted branch), and the `main` job now only runs for main.
+- guides/03-project-structure.md, 04-starting-work.md, 06-syncing-and-merging.md, appendix-c-ticket-fields-reference.md, Developer-Guides-Complete.md: the Caution for new work now says it needs earlier pushed or delivered work, and that a ticket's first push never raises it (the push step as first written would have flagged every ticket moved to Review before its first push).
+- tests/test_push_step.py: added; 18 tests on real temporary repositories and fake clients (each state, an open flag, a closed flag, a new branch, a later push, a sync, a ticket not on the board, dry run).
+- tests/test_workflow.py: tests for the new job and the main-only condition.
+- .github/scripts/check_manifest.py: the manifest now also covers the new test file.
+
 ## V0.4.0 — 2026-10-06 00:47 UTC
 ### Build 20261006004523 (branch apply-governance-to-itself)
 #### #28 — Add the Implemented Delivery value for tickets with no file change

@@ -27,7 +27,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_triggers(self):
         text = workflow()
-        for trigger in ("pull_request:", "push:", "workflow_dispatch:", "- main"):
+        for trigger in ("pull_request:", "push:", "workflow_dispatch:", "- '**'"):
             self.assertIn(trigger, text)
 
     def test_declares_its_own_permissions(self):
@@ -46,6 +46,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertLess(main.index("preflight.py"), main.index("bypass.py"))
         self.assertLess(main.index("bypass.py"), main.index("finalize.py"))
         self.assertLess(main.index("finalize.py"), main.index("bypass.py stale"))
+        self.assertLess(main.index("bypass.py stale"), main.index("dates.py"))
+        self.assertLess(main.index("dates.py"), main.index("watch.py"))
+        self.assertLess(main.index("watch.py"), main.index("field_rules.py"))
 
     def test_uses_the_project_token_and_skips_its_own_commits(self):
         text = workflow()
@@ -58,6 +61,46 @@ class WorkflowTests(unittest.TestCase):
         import inspect
         self.assertIn('f"Finalize {version}', inspect.getsource(finalize.commit_heading))
         self.assertIn('f"Flag bypass (Alert', inspect.getsource(bypass.commit_entry))
+
+    def test_branch_pushes_run_the_push_step_after_the_preflight(self):
+        text = workflow()
+        branch = text[text.index("  branch:"):text.index("  main:")]
+        self.assertLess(branch.index("preflight.py"), branch.index("skipped_hooks.py"))
+        self.assertLess(branch.index("skipped_hooks.py"), branch.index("push_step.py"))
+        self.assertIn("AFTER_SHA=$(git rev-parse HEAD)", branch)  # the push step reads the repaired changelog
+        self.assertIn("github.ref != 'refs/heads/main'", branch)
+        self.assertIn("!github.event.deleted", branch)
+        self.assertIn("- '**'", text)
+
+    def test_the_main_job_only_runs_for_main(self):
+        text = workflow()
+        main = text[text.index("  main:"):]
+        self.assertIn("github.ref == 'refs/heads/main'", main)
+
+    def test_the_daily_job_is_scheduled_and_can_be_started_by_hand(self):
+        text = workflow()
+        self.assertRegex(text, r"schedule:\n    - cron: '\d+ \d+ \* \* \*'")
+        self.assertIn("mode:", text)
+        self.assertIn("- finalize", text)
+        self.assertIn("- daily", text)
+        daily = text[text.index("  daily:"):]
+        self.assertIn("github.event_name == 'schedule'", daily)
+        self.assertIn("inputs.mode == 'daily'", daily)
+
+    def test_the_daily_job_runs_the_checks_in_order_and_never_commits(self):
+        text = workflow()
+        daily = text[text.index("  daily:"):]
+        order = ["preflight.py", "implemented.py", "dates.py", "watch.py", "field_rules.py"]
+        positions = [daily.index(name) for name in order]
+        self.assertEqual(positions, sorted(positions))
+        for forbidden in ("git push", "git commit", "finalize.py", "bypass.py"):
+            self.assertNotIn(forbidden, daily)
+        self.assertIn("--dry-run", daily)
+
+    def test_the_finalize_job_only_runs_for_its_own_mode(self):
+        text = workflow()
+        main = text[text.index("  main:"):text.index("  daily:")]
+        self.assertIn("inputs.mode == 'finalize'", main)
 
     def test_manual_runs_are_dry_runs_by_default(self):
         self.assertRegex(workflow(), r"dry_run:\n(?:.*\n)*?\s+default: true")

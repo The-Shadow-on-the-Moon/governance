@@ -17,7 +17,7 @@ from versions import Version
 
 _WIP = re.compile(r"^## WIP-Version(?: (\+[Vsm]))?$")
 _FINAL = re.compile(r"^## (V\d+\.\d+\.\d+(?:-HF\d+)?) — (\d{4}-\d\d-\d\d \d\d:\d\d) UTC$")
-_BUILD = re.compile(r"^### Build (\d{14}) \(branch (\S+)\)$")
+_BUILD = re.compile(r"^### Build (\d{14}) \(branch ([^\s,)]+)(?:, commit ([0-9a-f]{7,40}))?\)$")
 _WIP_BUILD = "### WIP-Build"
 _TICKET = re.compile(r"^#### #(\d+) — (.+)$")
 _REF = re.compile(r"^#### REF (\d{14}) — (.+)$")
@@ -44,6 +44,7 @@ class Build:
     branch: str
     line: int
     blocks: list = field(default_factory=list)
+    commit: str = ""  # set when the automation filled in the heading of a commit made without the hooks
 
 
 @dataclass
@@ -123,7 +124,7 @@ def _build(line, index):
     match = _BUILD.match(line)
     if not match:
         raise ChangelogError(f"line {index + 1}: unrecognized build heading: {line!r}")
-    return Build(match.group(1), match.group(2), index)
+    return Build(match.group(1), match.group(2), index, commit=match.group(3) or "")
 
 
 def _block(line, index):
@@ -160,16 +161,32 @@ def rename_open_heading(text, version, heading_time):
     return "\n".join(lines)
 
 
-def stamp_wip_build(text, stamp, branch):
-    """Return the text with the ### WIP-Build placeholder replaced by a stamped build heading."""
+def stamp_wip_build(text, stamp, branch, commit=None):
+    """Return the text with the ### WIP-Build placeholder replaced by a stamped build heading.
+
+    The automation passes `commit` when it fills the heading in for a commit made without the hooks.
+    """
     lines = text.split("\n")
     hits = [i for i, line in enumerate(lines) if line.rstrip("\r") == _WIP_BUILD]
     if len(hits) != 1:
         raise ChangelogError(f"expected one WIP-Build placeholder, found {len(hits)}")
-    lines[hits[0]] = f"### Build {stamp} (branch {branch})" + _ending(lines[hits[0]])
+    where = f"branch {branch}" + (f", commit {commit}" if commit else "")
+    lines[hits[0]] = f"### Build {stamp} ({where})" + _ending(lines[hits[0]])
     return "\n".join(lines)
 
 
 def _ending(line):
     return "\r" if line.endswith("\r") else ""
 
+
+
+def add_note(text, stamp, note):
+    """Return the text with a bullet added under the first entry of the build with this stamp."""
+    for section in parse(text):
+        for build in section.builds:
+            if build.stamp == stamp and build.blocks:
+                lines = text.split("\n")
+                at = build.blocks[0].line
+                lines.insert(at + 1, f"- {note}" + _ending(lines[at]))
+                return "\n".join(lines)
+    raise ChangelogError(f"no entry under build {stamp} to add a note to")
