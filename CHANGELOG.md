@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version +s
+## V0.8.0 — 2026-10-07 14:40 UTC
 ### Build 20261007143643 (branch project-views)
 #### #77 — Update the guides and the wiki for the new views
 - CHANGELOG.md: the open version is marked `+s` (a sub bump), because the version adds the views script, the Version# step and the pull request step.
