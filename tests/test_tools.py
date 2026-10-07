@@ -95,7 +95,7 @@ class BoardViewsPageTests(unittest.TestCase):
         for parts in (("doc", "wiki", "Board-Views.md"), ("guides", "07-issues-and-the-board-in-practice.md"),
                       ("guides", "10-new-project-bootstrap.md")):
             self.assertNotIn("cannot create views", self.read(*parts), parts)
-            self.assertNotIn("web interface", self.read(*parts), parts)
+            self.assertNotIn("creates them in the web interface", self.read(*parts), parts)
 
 
 if __name__ == "__main__":

@@ -9,7 +9,11 @@ The definition file (`.github/views.json`) lists the views in the order of their
 `name`, a `layout` (`table`, `board` or `roadmap`) and optionally a `filter`, `group_by` (a field name),
 `vertical_group_by` (the board columns), `sort_by` (a list of [field name, "asc" or "desc"]) and
 `visible_fields` (field names). Every filter automatically ends with ` AND -label:dummy`, so test tickets
-never show in a working view (see the ticket fields reference).
+never show in a view (see the ticket fields reference), unless the entry has `"include_test_tickets": true`
+(the view that lists every ticket). A sort by Created, Updated or Closed can be written in `sort_by`, but the
+API cannot set it when a view is created, so the script leaves it out, does not compare it, and says to set
+it by hand in the web interface. An entry may also list `manual_steps`: settings the API cannot reach (for
+example turning off "Show hierarchy"), which the script prints as a reminder whenever it creates the view.
 
     python .github/scripts/views.py                         report what would change (a dry run)
     python .github/scripts/views.py --apply                 do it
@@ -32,19 +36,21 @@ from github_api import Client, GitHubError
 
 DEFINITION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "views.json")
 LAYOUTS = {"table": "TABLE_LAYOUT", "board": "BOARD_LAYOUT", "roadmap": "ROADMAP_LAYOUT"}
-KEYS = {"name", "layout", "filter", "group_by", "vertical_group_by", "sort_by", "visible_fields"}
+KEYS = {"name", "layout", "filter", "group_by", "vertical_group_by", "sort_by", "visible_fields", "include_test_tickets", "manual_steps"}
 TEST_TICKETS = "-label:dummy"
 UNREADABLE = ("Type",)  # GraphQL does not report this field among a view's visible fields, so it is not compared
-NOT_SORTABLE = ("Created", "Updated", "Closed")  # the API rejects these as a sort field when a view is created
+MANUAL_SORT = ("Created", "Updated", "Closed")  # the API rejects these as a sort field when a view is created
 
 
 class ViewsError(RuntimeError):
     pass
 
 
-def effective_filter(text):
-    """The filter a view really gets: the written one, then the exclusion of the test tickets."""
+def effective_filter(text, include_test_tickets=False):
+    """The filter a view really gets: the written one, then the exclusion of the test tickets (unless they are wanted)."""
     text = (text or "").strip()
+    if include_test_tickets:
+        return text
     if not text:
         return TEST_TICKETS
     if " OR " in text and not (text.startswith("(") and text.endswith(")")):
@@ -75,6 +81,11 @@ def load_definition(path=DEFINITION):
             raise ViewsError(f"{label}: unknown key(s) {', '.join(sorted(extra))}")
         if entry.get("layout") not in LAYOUTS:
             raise ViewsError(f"{label}: the layout must be one of {', '.join(LAYOUTS)}")
+        if "include_test_tickets" in entry and not isinstance(entry["include_test_tickets"], bool):
+            raise ViewsError(f"{label}: include_test_tickets must be true or false")
+        steps = entry.get("manual_steps", [])
+        if not (isinstance(steps, list) and all(isinstance(step, str) and step.strip() for step in steps)):
+            raise ViewsError(f"{label}: manual_steps must be a list of sentences")
         for key in ("group_by", "vertical_group_by"):
             if entry.get(key) is not None and not isinstance(entry[key], str):
                 raise ViewsError(f"{label}: {key} must be one field name")
@@ -94,7 +105,8 @@ def load_definition(path=DEFINITION):
 
 def desired_state(entry):
     """The entry in the form that a board view is read back in, with the automatic filter added."""
-    state = {"name": entry["name"], "layout": entry["layout"], "filter": effective_filter(entry.get("filter")),
+    state = {"name": entry["name"], "layout": entry["layout"],
+             "filter": effective_filter(entry.get("filter"), entry.get("include_test_tickets", False)),
              "group_by": entry.get("group_by"), "vertical_group_by": entry.get("vertical_group_by"),
              "sort_by": [list(sort) for sort in entry.get("sort_by", [])]}
     if entry.get("visible_fields") is not None:
@@ -124,7 +136,16 @@ def differences(wanted, current):
 
 
 def _comparable(key, state):
-    return [name for name in state[key] if name not in UNREADABLE] if key == "visible_fields" else state[key]
+    if key == "visible_fields":
+        return [name for name in state[key] if name not in UNREADABLE]
+    if key == "sort_by":
+        return [sort for sort in state[key] if sort[0] not in MANUAL_SORT]  # these can only be set by hand
+    return state[key]
+
+
+def manual_sorts(entry):
+    """The sorts of the entry that the API cannot set (Created, Updated, Closed): they are set by hand."""
+    return [f"{name} {direction}" for name, direction in entry.get("sort_by", []) if name in MANUAL_SORT]
 
 
 def request_body(entry, ids):
@@ -136,14 +157,13 @@ def request_body(entry, ids):
             unknown.append(name)
         return ids.get(name)
 
-    body = {"name": entry["name"], "layout": entry["layout"], "filter": effective_filter(entry.get("filter"))}
+    body = {"name": entry["name"], "layout": entry["layout"],
+            "filter": effective_filter(entry.get("filter"), entry.get("include_test_tickets", False))}
     if entry.get("visible_fields") is not None:
         body["visible_fields"] = [one(name) for name in entry["visible_fields"]]
-    for name, _ in entry.get("sort_by", []):
-        if name in NOT_SORTABLE:
-            raise ViewsError(f"{entry['name']}: the API cannot sort a new view by {name} (it can only be set in the web interface)")
-    if entry.get("sort_by"):
-        body["sort_by"] = [[one(name), direction] for name, direction in entry["sort_by"]]
+    sorts = [[name, direction] for name, direction in entry.get("sort_by", []) if name not in MANUAL_SORT]
+    if sorts:
+        body["sort_by"] = [[one(name), direction] for name, direction in sorts]
     if entry.get("group_by"):
         body["group_by"] = [one(entry["group_by"])]
     if entry.get("vertical_group_by"):
@@ -186,6 +206,10 @@ def sync(project_client, board, definition, only=None, delete_unlisted=False, dr
         cascade = True
         # The new view is created first and the old one deleted after it: GitHub refuses to delete the last view of a board.
         run.do(f"view {entry['name']}: create the {entry['layout']} view with filter `{body['filter']}`", project_client.create_view, board.number, body)
+        for sort in manual_sorts(entry):
+            run.log.append(f"view {entry['name']}: set the sort by {sort} by hand in the web interface (the API cannot)")
+        for step in entry.get("manual_steps", []):
+            run.log.append(f"view {entry['name']}: by hand in the web interface (the API cannot): {step}")
         for view in existing:
             run.do(f"view {entry['name']}: delete the old view #{view['number']} ({', '.join(changed)})", project_client.delete_view, view["id"])
     if only is None:
@@ -211,6 +235,16 @@ def delete_named(project_client, board, name, dry_run=True):
     for view in found:
         run.do(f"view {name}: delete view #{view['number']}", project_client.delete_view, view["id"])
     return run
+
+
+def by_hand(definition):
+    """The lines that remind of what the API cannot set (sorts by a date, and each entry's `manual_steps`)."""
+    lines = []
+    for entry in definition:
+        for sort in manual_sorts(entry):
+            lines.append(f"  {entry['name']}: set the sort to {sort}")
+        lines += [f"  {entry['name']}: {step}" for step in entry.get("manual_steps", [])]
+    return ["Settings to make or check by hand in the web interface (the API cannot, and recreating a view loses them):"] + lines if lines else []
 
 
 def main(argv=None):
@@ -247,7 +281,9 @@ def main(argv=None):
         return 1
     prefix = "would: " if run.dry_run else "did: "
     for line in run.log:
-        print(line if line.endswith("up to date") or "(kept" in line else prefix + line)
+        print(line if line.endswith("up to date") or "(kept" in line or "by hand" in line else prefix + line)
+    for line in by_hand(definition):
+        print(line)
     if run.dry_run:
         print("dry run: nothing was changed; add --apply to do it")
     return 0

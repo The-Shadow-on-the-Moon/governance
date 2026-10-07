@@ -99,6 +99,9 @@ class DefinitionTests(unittest.TestCase):
         self.refused({"views": [{"name": "X", "layout": "roadmap", "visible_fields": ["Title"]}]}, "no visible_fields")
         self.refused({"views": [{"name": "X", "layout": "table", "vertical_group_by": "Status"}]}, "only for a board")
         self.refused({"views": [{"name": "X", "layout": "table", "group_by": ["Status"]}]}, "one field name")
+        self.refused({"views": [{"name": "X", "layout": "table", "include_test_tickets": "yes"}]}, "true or false")
+        self.refused({"views": [{"name": "X", "layout": "table", "manual_steps": "do it"}]}, "manual_steps")
+        self.refused({"views": [{"name": "X", "layout": "table", "manual_steps": [""]}]}, "manual_steps")
 
     def test_a_missing_file_is_refused(self):
         with self.assertRaises(views.ViewsError):
@@ -124,10 +127,17 @@ class BodyTests(unittest.TestCase):
         self.assertIn("Priority", str(caught.exception))
 
 
-    def test_a_sort_by_a_date_the_api_rejects_is_refused_with_a_reason(self):
-        with self.assertRaises(views.ViewsError) as caught:
-            views.request_body({"name": "X", "layout": "table", "sort_by": [["Updated", "desc"]]}, IDS)
-        self.assertIn("cannot sort a new view by Updated", str(caught.exception))
+    def test_a_sort_the_api_cannot_set_is_left_out_of_the_request(self):
+        entry = {"name": "X", "layout": "table", "sort_by": [["Created", "asc"], ["Priority", "asc"]]}
+        self.assertEqual(views.request_body(entry, dict(IDS, Created=9))["sort_by"], [[3, "asc"]])
+        self.assertEqual(views.manual_sorts(entry), ["Created asc"])
+        self.assertEqual(views.request_body({"name": "X", "layout": "table", "sort_by": [["Created", "asc"]]}, IDS).get("sort_by"), None)
+
+    def test_the_test_tickets_are_kept_only_when_the_entry_asks_for_them(self):
+        entry = {"name": "X", "layout": "table", "include_test_tickets": True}
+        self.assertEqual(views.request_body(entry, IDS)["filter"], "")
+        self.assertEqual(views.request_body(dict(entry, filter="is:open"), IDS)["filter"], "is:open")
+        self.assertEqual(views.effective_filter("is:open"), "is:open AND -label:dummy")
 
 
 class ReadingTests(unittest.TestCase):
@@ -155,6 +165,13 @@ class ReadingTests(unittest.TestCase):
         current = views.current_state(node(1, "X", "TABLE_LAYOUT", "-label:dummy", fields=["Title"]))
         self.assertEqual(views.differences(wanted, current), [])
 
+    def test_a_sort_that_can_only_be_set_by_hand_is_not_compared(self):
+        wanted = views.desired_state({"name": "X", "layout": "table", "sort_by": [["Created", "asc"]]})
+        by_hand = views.current_state(node(1, "X", "TABLE_LAYOUT", "-label:dummy", sort=[("Created", "ASC")]))
+        none = views.current_state(node(1, "X", "TABLE_LAYOUT", "-label:dummy"))
+        self.assertEqual(views.differences(wanted, by_hand), [])
+        self.assertEqual(views.differences(wanted, none), [])
+
     def test_visible_fields_are_compared_only_when_the_definition_names_them(self):
         wanted = views.desired_state({"name": "X", "layout": "table"})
         current = views.current_state(node(1, "X", "TABLE_LAYOUT", "-label:dummy", fields=["Title", "Status"]))
@@ -178,6 +195,18 @@ class SyncTests(unittest.TestCase):
         self.assertEqual(project.calls, [])
         self.assertTrue(any("create the table view" in line for line in run.log))
         self.assertTrue(any("delete view #2" in line for line in run.log))
+
+    def test_a_created_view_with_a_hand_set_sort_says_so(self):
+        entry = {"name": "Everything", "layout": "table", "sort_by": [["Created", "asc"]], "include_test_tickets": True}
+        run = self.sync(FakeProject(), [entry])
+        self.assertTrue(any("set the sort by Created asc by hand" in line for line in run.log))
+
+    def test_a_created_view_reminds_of_its_manual_steps(self):
+        entry = {"name": "Everything", "layout": "table", "manual_steps": ["turn off Show hierarchy"]}
+        run = self.sync(FakeProject(), [entry])
+        self.assertTrue(any("by hand in the web interface (the API cannot): turn off Show hierarchy" in line for line in run.log))
+        quiet = self.sync(FakeProject([stored(entry)]), [entry])
+        self.assertFalse(any("by hand" in line for line in quiet.log))
 
     def test_views_that_match_are_left_alone(self):
         project = FakeProject([stored(ALL), stored(BACKLOG)])
@@ -256,6 +285,18 @@ class SyncTests(unittest.TestCase):
         with self.assertRaises(views.ViewsError):
             self.sync(project, [ALL, bad])
         self.assertEqual(project.calls, [])  # All was not created either: every field name is checked first
+
+
+class ByHandTests(unittest.TestCase):
+    def test_the_reminder_lists_sorts_and_steps_of_every_entry(self):
+        lines = views.by_hand([{"name": "All", "layout": "table", "sort_by": [["Created", "asc"]], "manual_steps": ["turn off Show hierarchy"]},
+                               {"name": "Board", "layout": "board"}])
+        self.assertIn("  All: set the sort to Created asc", lines)
+        self.assertIn("  All: turn off Show hierarchy", lines)
+        self.assertEqual(len(lines), 3)
+
+    def test_there_is_no_reminder_when_nothing_is_by_hand(self):
+        self.assertEqual(views.by_hand([ALL]), [])
 
 
 class DeleteTests(unittest.TestCase):

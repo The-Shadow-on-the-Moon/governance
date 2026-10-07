@@ -73,7 +73,8 @@ Items 1 to 4 are the things that need a person, and one view, *Health* (section 
 
 The board has five saved views, in this order:
 
-- **All:** every ticket with all its fields, for finding anything and for audit.
+- **All:** every ticket on the board, test tickets included, with all its fields and in ticket-number order, for
+  finding anything and for audit.
 - **Backlog:** a board of the tickets at *ToDo*, *OnDeck* and *Suspended*, the most urgent first.
 - **Board:** the active work, with the columns *OnDeck*, *InProgress* and *Review* and a row for each Version,
   so you see what each version holds and where each ticket is.
@@ -81,12 +82,15 @@ The board has five saved views, in this order:
   tickets marked *Needs input*, tickets at *Review*, open Alerts, and the field-consistency checks of
   section 7.1 (for example *Completed* without Resolution *Done*, or a ticket whose issue is closed at any
   Progress but *Completed* or *Abandoned*). Start a work session here.
-- **Versions:** the work tickets grouped by Version, with Delivery, Build and Resolution, to see what each
-  version holds and whether it shipped.
+- **Versions:** the work tickets grouped by their Version ticket (the group reads "Version 0.7.0"), with Delivery,
+  Build and Resolution, to see what each version holds and whether it shipped. Tickets only aimed at a version,
+  which have no Version ticket yet, are in a group of their own, ordered by version.
 
-Every view leaves out test tickets by ending its filter with `-label:dummy` (see *Ticket fields reference*).
+Every view except All leaves out test tickets by ending its filter with `-label:dummy` (see *Ticket fields reference*).
 The views are defined in a file, `.github/views.json`, and created by a script, `views.py`, so every project
-has the same ones. To change a view, change the file and run the script. Setting them up is part of
+has the same ones. To change a view, change the file and run the script. Two settings of *All* are made by
+hand when it is created, because the API cannot reach them: the sort *Created, ascending* and *Show hierarchy* off
+(guide on the new-project bootstrap, section 6). Setting them up is part of
 configuring the board, which is the administrator's job.
 
 ### 2.3 Rules

@@ -1,6 +1,15 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261007042123 (branch project-views)
+#### #72 — Create the All view
+- .github/views.json: the `All` view now lists every ticket and hides nothing (no filter, so the test tickets are in it too), has no grouping, and is meant to be in ticket-number order (sort by Created, ascending).
+- .github/scripts/views.py: an entry can say `"include_test_tickets": true` so its filter is not given ` AND -label:dummy`; a sort by Created, Updated or Closed can be written in an entry, but the API cannot set it when a view is created, so the script leaves it out of the request and out of the comparison and says to set it by hand (this replaces the earlier refusal). tests/test_views.py: 38 tests.
+- .github/scripts/views.py, .github/views.json: an entry may list `manual_steps` (settings the API cannot reach); All lists turning off "Show hierarchy" and the script prints a reminder of the manual sorts and steps at the end of every run. tests/test_views.py: 41 tests.
+- doc/wiki/Board-Views.md, guides/07-issues-and-the-board-in-practice.md, guides/appendix-c-ticket-fields-reference.md: describe All as the complete list, why the pull request numbers are missing from it, and the sort and the hierarchy setting to make by hand; guides/10-new-project-bootstrap.md: the same in section 6 and a checklist line.
+#### #76 — Create the Versions view
+- .github/views.json: the Versions view is now grouped by Parent issue (the Version ticket, so a group reads "Version 0.7.0" and the groups follow the order the Version tickets were created in) and sorted by Version#, then Priority. Grouping by Version# had unreadable headers (70000) and grouping by the Version text sorts alphabetically (V0.10.0 before V0.9.0).
+- doc/wiki/Board-Views.md, guides/07-issues-and-the-board-in-practice.md: describe the grouping; tickets only aimed at a version are in the "No parent issue" group (their Version# comes with #80).
 ### Build 20261007033120 (branch project-views)
 #### #70 — Add a script that creates and removes board views from a definition file
 - .github/scripts/views.py: added; reads the board's views, compares them with `.github/views.json` and creates, recreates (create the new view, then delete the old one, because GitHub never deletes the last view of a board; grouping and sorting can only be set at creation) or deletes views: `--only NAME`, `--delete NAME`, `--delete-unlisted`, `--show`, `--definition PATH`; a dry run unless `--apply`; every filter gets ` AND -label:dummy`; field names are resolved to the numeric ids REST needs (GraphQL and REST are both read, because each lacks some fields); every field name is checked before anything changes; once a view changes the ones listed after it are recreated so the tabs keep the file's order; it refuses to delete a board's last view.

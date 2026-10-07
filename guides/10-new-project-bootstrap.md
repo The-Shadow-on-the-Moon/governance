@@ -266,6 +266,11 @@ script can create.
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
 run until it is given `--apply` and needs the project token; run it once the fields exist.
 
+**Two settings of the *All* view are made by hand, once, when the views are created,** because the API cannot
+reach them: sort it by *Created, ascending* (ticket-number order), and turn off *Show hierarchy*, so that tickets
+are not listed inside their Version ticket and the list is flat. The script prints a reminder of them at the end of
+every run, and a view that is created again loses them, so make them again.
+
 ### 6.2 Rules
 
 - **Rule:** the board has exactly these fields with these values. The built-in Status values of a new
@@ -401,6 +406,7 @@ A one-page summary of the guide. It adds no new rules.
       replaced.
 - [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Health, Versions) and `views.py`
       reports them up to date.
+- [ ] On the All view, the sort is *Created, ascending* and *Show hierarchy* is off (both by hand).
 
 **The first version and the roles** (section 7)
 
