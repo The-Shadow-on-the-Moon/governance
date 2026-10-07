@@ -1,5 +1,9 @@
 # Changelog
 
+## WIP-Version
+### WIP-Build
+#### #93 — DUMMY test for #90: git push with the credentials of actions/checkout@v7
+- CHANGELOG.md: a throwaway entry with a build placeholder, committed with the hooks skipped, to see the workflow fill in the build heading and push it.
 ## V0.8.1 — 2026-10-07 15:19 UTC
 ### Build 20261007150026 (branch project-views)
 #### #86 — An Implemented ticket aimed at a version that was passed waits for ever without a flag
