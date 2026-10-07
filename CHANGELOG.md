@@ -1,6 +1,9 @@
 # Changelog
 
-## WIP-Version
+## WIP-Version +s
+### Build 20261007143643 (branch project-views)
+#### #77 — Update the guides and the wiki for the new views
+- CHANGELOG.md: the open version is marked `+s` (a sub bump), because the version adds the views script, the Version# step and the pull request step.
 ### Build 20261007142146 (branch project-views)
 #### #80 — Set Version# for tickets that only have a target Version
 - .github/scripts/version_numbers.py: added; a daily step that sets Version# from Version on every work ticket that has a Version (also one only aimed at a version) when Version# is blank or different (Version# is `Version.number()`); it changes nothing else, skips Version and Alert tickets and reports text that is not a version. A dry run only reports.
