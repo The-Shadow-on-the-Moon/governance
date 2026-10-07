@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.8.2 — 2026-10-07 19:08 UTC
 ### Build 20261007183941 (branch project-views)
 #### #90 — Move actions/checkout to a Node 24 release in the workflows
 - .github/workflows/versioning.yml and .github/workflows/wiki-sync.yml: every `actions/checkout@v4` (seven and two) is now `actions/checkout@v7`. v4 targets Node 20, which GitHub removed from the runners on 2026-09-23, so it ran only because the runner forced it onto Node 24 (the warning on every run). The extras (persist-credentials, SHA pinning, Dependabot) are not part of this change.
