@@ -394,7 +394,9 @@ state and lose where the ticket was.
     Resolution *Done*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
     one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
     Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
-    never raises it: a ticket moved to *Review* before its first push has no earlier work.
+    never raises it: a ticket moved to *Review* before its first push has no earlier work. A *Caution* is also
+    raised on an *Implemented* ticket whose Version is a version that was passed: it is not finalized and a
+    higher version is, so it can never be attached and would wait for ever.
   - *Watch:* a ticket looks out of date: no activity at *Review* for a week, at *OnDeck* or
     *InProgress* for a month, or at *Suspended* for six months, or a ticket that has been waiting for
     input for two weeks. Activity means a comment, a change to a field, or a new build that mentions the

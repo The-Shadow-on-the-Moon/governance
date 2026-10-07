@@ -6,7 +6,10 @@ run, this sweep looks at the Implemented tickets that are not yet sub-issues of 
 
 - a blank Version gets the version being finalized;
 - a Version that is already finalized is kept, and the ticket is attached to that version's ticket;
-- a Version that is not finalized yet makes the ticket wait.
+- a Version that is not finalized yet makes the ticket wait, quietly while a higher version is not finalized
+  either; but when a higher version is already finalized, the aimed number was passed and can no longer
+  happen, so the ticket would wait for ever: it gets Attention Caution and one comment, and a person decides
+  (it is never moved by itself).
 
 The ticket keeps Delivery Implemented and gets no Build. A comment on each Version ticket says which
 tickets were added, because its description is written once. See the guide on project structure
@@ -15,7 +18,8 @@ tickets were added, because its description is written once. See the guide on pr
 from versions import Version
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
-         "pageInfo{hasNextPage endCursor} nodes{id content{... on Issue{number title parent{number}}} "
+         "pageInfo{hasNextPage endCursor} nodes{id content{... on Issue{number title parent{number} comments(last:30){nodes{body}}}} "
+         "attention:fieldValueByName(name:\"Attention\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "delivery:fieldValueByName(name:\"Delivery\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}} "
@@ -33,6 +37,8 @@ def unattached(project_client, board):
             status = (node.get("status") or {}).get("name")
             if delivery == "Implemented" and content.get("number") and not content.get("parent") and status != "Abandoned":
                 found.append({"item": node["id"], "number": content["number"], "title": content["title"],
+                              "attention": (node.get("attention") or {}).get("name"),
+                              "comments": [c.get("body") or "" for c in (content.get("comments") or {}).get("nodes") or []],
                               "version": (node.get("version") or {}).get("text") or "",
                               "version_number": (node.get("number") or {}).get("number")})
         if not page["pageInfo"]["hasNextPage"]:
@@ -53,6 +59,25 @@ def version_ticket(repo_client, version):
     return None
 
 
+def flag_passed(run, repo_client, project_client, board, ticket, aimed, latest):
+    """Raise Caution, once, on an Implemented ticket aimed at a version that was passed (it will never be finalized)."""
+    number, marker = ticket["number"], f"<!-- attention:caution passed={aimed} -->"
+    if ticket["attention"] in ("Caution", "AtRisk"):
+        run.log.append(f"#{number}: waits for {aimed}, which was passed ({latest} is finalized); an Attention flag is already open")
+        return
+    if any(marker in body for body in ticket["comments"]):
+        run.log.append(f"#{number}: waits for {aimed}, which was passed ({latest} is finalized); already flagged")
+        return
+    field = board.fields["Attention"]
+    run.do(f"#{number}: waits for {aimed}, which was passed ({latest} is finalized): set Attention to Caution", project_client.set_project_field,
+           board.id, ticket["item"], field["id"], {"singleSelectOptionId": field["options"]["Caution"]})
+    run.do(f"#{number}: comment on the passed version", repo_client.comment, number,
+           f"{marker}\nAttention: Caution. This ticket is Implemented and aimed at {aimed}, but {latest} is already finalized and {aimed} was "
+           f"never released, so it can no longer happen and the ticket would wait for ever. Set its Version to the version it belongs to "
+           f"(for example {latest}), or clear the Version: a blank Version gets the latest finalized version. The next daily run then "
+           "attaches it to that version's ticket. Then set Attention to Fine, or to Acknowledged if it is handled elsewhere, and say what you decided.")
+
+
 def sweep(run, repo_client, project_client, board, finalized, current, now):
     """Attach the waiting Implemented tickets. `finalized` is the set of finalized Versions and
     `current` is (the version being finalized, the number of its Version ticket)."""
@@ -65,7 +90,11 @@ def sweep(run, repo_client, project_client, board, finalized, current, now):
             run.log.append(f"#{ticket['number']}: Version {ticket['version']!r} is not a version; left alone")
             continue
         if aimed not in finalized:
-            run.log.append(f"#{ticket['number']}: waits for {aimed}, which is not finalized yet")
+            latest = max(finalized, key=lambda v: v.number(), default=None)
+            if latest is not None and latest.number() > aimed.number():
+                flag_passed(run, repo_client, project_client, board, ticket, aimed, latest)
+            else:
+                run.log.append(f"#{ticket['number']}: waits for {aimed}, which is not finalized yet")
             continue
         if aimed == current_version:
             parent = current_ticket

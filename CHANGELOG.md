@@ -1,5 +1,13 @@
 # Changelog
 
+## WIP-Version
+### Build 20261007150026 (branch project-views)
+#### #86 — An Implemented ticket aimed at a version that was passed waits for ever without a flag
+- .github/scripts/implemented.py: an Implemented ticket aimed at a version that is not finalized while a higher version is (the number was passed and can no longer happen) now gets Attention Caution and one comment (marker `<!-- attention:caution passed=V0.7.1 -->`), once per passed version and not when a Caution or AtRisk is already open; it is still never moved or attached by itself. A version above the latest finalized one still waits quietly. tests/test_implemented.py: 6 new tests.
+- guides/07-issues-and-the-board-in-practice.md (section 6.1: leave the Version of an Implemented ticket blank until the version is finalized, and what the flag means), guides/03-project-structure.md and guides/appendix-c-ticket-fields-reference.md (the causes of Caution), doc/wiki/Automation.md.
+#### #85 — The manifest names a version that never existed
+- .github/automation-manifest.json: `standard` is the version these changes ship in (V0.8.1), regenerated after the code and tests of this version; it said V0.7.1, which never existed (the merge produced V0.8.0).
+- AGENTS.md: `--standard` is the version the open version will become; after the finalize it is checked against the changelog and corrected through a ticket if the marker or the Types changed it.
 ## V0.8.0 — 2026-10-07 14:40 UTC
 ### Build 20261007143643 (branch project-views)
 #### #77 — Update the guides and the wiki for the new views

@@ -129,7 +129,7 @@ These are the causes it uses today, with the level each starts at:
 
 | Level | Raised when |
 |---|---|
-| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and whose earlier work was already pushed or delivered, recognised by a recorded Build older than the one being pushed (or by Delivery *Implemented*; never for its first push), or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state). |
+| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and whose earlier work was already pushed or delivered, recognised by a recorded Build older than the one being pushed (or by Delivery *Implemented*; never for its first push), or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state), or an *Implemented* ticket is aimed at a version that was passed (not finalized while a higher version is, so it could never be attached). |
 | **Watch** | A ticket has had no activity at *Review* for a week, at *OnDeck* or *InProgress* for a month, or at *Suspended* for six months, or has been waiting for input for two weeks. |
 
 Activity means a comment, a change to a field, or a new build that mentions the ticket; the automation's

@@ -11,7 +11,9 @@ This project
 - Hooks: activate them once per clone with `git config core.hooksPath .githooks`.
 - Automation files (hooks, `.github/scripts/`, the versioning workflow, the pull request template and the
   automation's tests) are listed in `.github/automation-manifest.json`. After a change to one, run
-  `python .github/scripts/check_manifest.py --update --standard <version>`, then the tests.
+  `python .github/scripts/check_manifest.py --update --standard <version>`, then the tests. `<version>` is the version the
+  open version will become; the marker or the ticket Types can change it at merge, so after the finalize check it against
+  the changelog and correct it through a ticket if it differs.
 - A release, a hotfix finish and a branch retirement are done only by the workflow's manual runs (see the wiki page
   on the automation), never by hand with git, and only when the administrator or developer asks: run the dry run
   first and say what it would do.
