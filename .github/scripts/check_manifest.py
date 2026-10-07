@@ -23,6 +23,7 @@ PATTERNS = [
     ".githooks/*",
     ".github/scripts/*.py",
     ".github/workflows/versioning.yml",
+    ".github/views.json",
     ".github/pull_request_template.md",
     "tests/test_automation_library.py",
     "tests/test_preflight.py",
@@ -34,11 +35,15 @@ PATTERNS = [
     "tests/test_push_step.py",
     "tests/test_skipped_hooks.py",
     "tests/test_dates.py",
+    "tests/test_version_numbers.py",
+    "tests/test_board_pull_requests.py",
+    "tests/test_pull_request_items.py",
     "tests/test_watch.py",
     "tests/test_field_rules.py",
     "tests/test_release.py",
     "tests/test_hotfix.py",
     "tests/test_retire.py",
+    "tests/test_views.py",
     "tests/test_manifest.py",
 ]
 

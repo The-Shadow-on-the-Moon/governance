@@ -1,9 +1,9 @@
 name: Versioning
 
-# On a pull request: the advisory check.
+# On a pull request: the pull request is put on the board (a failure there never fails the run), then the advisory check.
 # On a push to another branch: the preflight, the fallback for skipped hooks, then the push step (Delivery, Progress, Build, Attention).
 # On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the date sweep, the Watch flags and the Caution flags for field rules.
-# Every day (06:17 UTC) and on request with mode "daily": the preflight, the Implemented tickets, the date sweep and the flags.
+# Every day (06:17 UTC) and on request with mode "daily": the preflight, the Implemented tickets, the Version# sweep, the date sweep and the flags.
 #   The daily run never commits to a branch.
 # On request with mode "finalize": the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
 # On request with mode "release", "hotfix" or "retire": the preflight and that step, as a dry run unless told otherwise.
@@ -73,6 +73,15 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+
+      - name: Put the pull request on the board
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PULL_REQUEST: ${{ github.event.pull_request.number }}
+          PULL_REQUEST_NODE_ID: ${{ github.event.pull_request.node_id }}
+        run: python3 .github/scripts/board_pull_requests.py
 
       - name: Advisory check
         env:
@@ -228,6 +237,14 @@ jobs:
             python3 .github/scripts/implemented.py --dry-run
           else
             python3 .github/scripts/implemented.py
+          fi
+
+      - name: Set Version# from Version
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/version_numbers.py --dry-run
+          else
+            python3 .github/scripts/version_numbers.py
           fi
 
       - name: Sweep the dates

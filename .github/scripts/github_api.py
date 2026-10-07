@@ -5,7 +5,7 @@ Token permissions each call needs:
 - issues, sub-issues, comments: issues write (the workflow's own token)
 - tags: contents write (the workflow's own token)
 - repository variables: the project token (repo scope)
-- project fields: the project token (project scope)
+- project fields and views: the project token (project scope)
 """
 import json
 from datetime import datetime, timezone
@@ -139,3 +139,31 @@ class Client:
         query = ("mutation($p:ID!,$i:ID!,$f:ID!){clearProjectV2ItemFieldValue("
                  "input:{projectId:$p,itemId:$i,fieldId:$f}){projectV2Item{id}}}")
         return self.graphql(query, {"p": project_id, "i": item_id, "f": field_id})
+
+    # Project (board) views
+    def project_views(self, project_id):
+        """The board's views as GraphQL returns them: id, number, name, layout, filter, grouping, sorting, visible fields."""
+        query = ("query($id:ID!){node(id:$id){... on ProjectV2{views(first:50){nodes{id number name layout filter "
+                 "groupByFields(first:5){nodes{... on ProjectV2FieldCommon{name}}} "
+                 "verticalGroupByFields(first:5){nodes{... on ProjectV2FieldCommon{name}}} "
+                 "sortByFields(first:5){nodes{field{... on ProjectV2FieldCommon{name}} direction}} "
+                 "visibleFields(first:50){nodes{... on ProjectV2FieldCommon{name}}}}}}}}")
+        return self.graphql(query, {"id": project_id})["node"]["views"]["nodes"]
+
+    def view_field_ids(self, project_id, number):
+        """{field name: numeric id} for creating views. GraphQL lists Created, Updated and Closed and REST lists Type, so both are read."""
+        query = "query($id:ID!){node(id:$id){... on ProjectV2{fields(first:50){nodes{... on ProjectV2FieldCommon{databaseId name}}}}}}"
+        ids = {f["name"]: f["databaseId"] for f in self.graphql(query, {"id": project_id})["node"]["fields"]["nodes"]
+               if f and f.get("name") and f.get("databaseId")}
+        owner = self.repo.split("/")[0]
+        for f in self.request("GET", f"/orgs/{owner}/projectsV2/{number}/fields?per_page=100") or []:
+            ids.setdefault(f["name"], f["id"])
+        return ids
+
+    def create_view(self, number, body):
+        """Create a view (REST). `body`: name, layout, filter and, as numeric field ids, visible_fields, sort_by, group_by, vertical_group_by."""
+        owner = self.repo.split("/")[0]
+        return self.request("POST", f"/orgs/{owner}/projectsV2/{number}/views", body)
+
+    def delete_view(self, view_id):
+        return self.graphql("mutation($v:ID!){deleteProjectV2View(input:{viewId:$v}){clientMutationId}}", {"v": view_id})

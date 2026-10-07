@@ -1,5 +1,55 @@
 # Changelog
 
+## WIP-Version +s
+### Build 20261007143643 (branch project-views)
+#### #77 — Update the guides and the wiki for the new views
+- CHANGELOG.md: the open version is marked `+s` (a sub bump), because the version adds the views script, the Version# step and the pull request step.
+### Build 20261007142146 (branch project-views)
+#### #80 — Set Version# for tickets that only have a target Version
+- .github/scripts/version_numbers.py: added; a daily step that sets Version# from Version on every work ticket that has a Version (also one only aimed at a version) when Version# is blank or different (Version# is `Version.number()`); it changes nothing else, skips Version and Alert tickets and reports text that is not a version. A dry run only reports.
+- .github/workflows/versioning.yml: the daily job runs it after attaching the Implemented tickets and before the date sweep. tests/test_version_numbers.py: 13 tests; tests/test_workflow.py: the order of the daily steps.
+- guides/appendix-c-ticket-fields-reference.md, guides/03-project-structure.md, guides/appendix-e-ticket-model.md, doc/wiki/Automation.md: Version# is also set every day for a ticket that has a Version; manifest covers the new files.
+#### #81 — Recommend aiming tickets with the Version field instead of planned Version tickets
+- guides/07-issues-and-the-board-in-practice.md: section 6.2 says to aim tickets with the Version field and leave the Version tickets to the automation, and that creating one ahead of time is allowed but not recommended (the Versions view orders its groups by the order the Version tickets were created in, so a ticket made early for a later version would sort ahead of a version that ships first; a planned number is also a guess); section 6.3 has the recommendation and the rule now covers a ticket made anyway; the Why and the checklist agree.
+- guides/03-project-structure.md (section 5.2 stage table and recommendation) and guides/appendix-e-ticket-model.md (the stage table and the note): the planned stage is optional and not recommended.
+#### #82 — Add pull requests to the board so the All view has no gaps in the numbers
+- .github/scripts/board_pull_requests.py: added; puts a pull request on the board as an item with no field set (`PULL_REQUEST` and `PULL_REQUEST_NODE_ID`, as the workflow does when one is opened or reopened), or with `--all` every pull request that is not on it yet (a one-time backfill); whether one is already on the board is asked of the pull request itself, because the board's own list of items does not show the pull requests added to it; it never fails a pull request run. tests/test_board_pull_requests.py: 13 tests.
+- .github/workflows/versioning.yml: the pull request job runs it before the advisory check, with continue-on-error, so a failure there never fails the check. tests/test_workflow.py: a test of that step.
+- .github/scripts/views.py, .github/views.json: every view except All now ends with `AND is:issue AND -label:dummy` (the new entry key `include_pull_requests`, set only on All); the five views were created again; tests/test_views.py: 42 tests.
+- tests/test_pull_request_items.py: added; the date, Watch, field-rule, Implemented and Version# sweeps skip a board item that is a pull request or a draft.
+- guides/03-project-structure.md (section 6.2), guides/07-issues-and-the-board-in-practice.md (section 2.2), doc/wiki/Automation.md and doc/wiki/Board-Views.md: describe it; the 8 existing pull requests (#2, #10, #23, #26, #32, #53, #64, #68) were added to the board.
+### Build 20261007042123 (branch project-views)
+#### #72 — Create the All view
+- .github/views.json: the `All` view now lists every ticket and hides nothing (no filter, so the test tickets are in it too), has no grouping, and is meant to be in ticket-number order (sort by Created, ascending).
+- .github/scripts/views.py: an entry can say `"include_test_tickets": true` so its filter is not given ` AND -label:dummy`; a sort by Created, Updated or Closed can be written in an entry, but the API cannot set it when a view is created, so the script leaves it out of the request and out of the comparison and says to set it by hand (this replaces the earlier refusal). tests/test_views.py: 38 tests.
+- .github/scripts/views.py, .github/views.json: an entry may list `manual_steps` (settings the API cannot reach); All lists turning off "Show hierarchy" and the script prints a reminder of the manual sorts and steps at the end of every run. tests/test_views.py: 41 tests.
+- doc/wiki/Board-Views.md, guides/07-issues-and-the-board-in-practice.md, guides/appendix-c-ticket-fields-reference.md: describe All as the complete list, why the pull request numbers are missing from it, and the sort and the hierarchy setting to make by hand; guides/10-new-project-bootstrap.md: the same in section 6 and a checklist line.
+#### #76 — Create the Versions view
+- .github/views.json: the Versions view is now grouped by Parent issue (the Version ticket, so a group reads "Version 0.7.0" and the groups follow the order the Version tickets were created in) and sorted by Version#, then Priority. Grouping by Version# had unreadable headers (70000) and grouping by the Version text sorts alphabetically (V0.10.0 before V0.9.0).
+- doc/wiki/Board-Views.md, guides/07-issues-and-the-board-in-practice.md: describe the grouping; tickets only aimed at a version are in the "No parent issue" group (their Version# comes with #80).
+### Build 20261007033120 (branch project-views)
+#### #70 — Add a script that creates and removes board views from a definition file
+- .github/scripts/views.py: added; reads the board's views, compares them with `.github/views.json` and creates, recreates (create the new view, then delete the old one, because GitHub never deletes the last view of a board; grouping and sorting can only be set at creation) or deletes views: `--only NAME`, `--delete NAME`, `--delete-unlisted`, `--show`, `--definition PATH`; a dry run unless `--apply`; every filter gets ` AND -label:dummy`; field names are resolved to the numeric ids REST needs (GraphQL and REST are both read, because each lacks some fields); every field name is checked before anything changes; once a view changes the ones listed after it are recreated so the tabs keep the file's order; it refuses to delete a board's last view.
+- .github/views.json: added, with an empty list of views (each view has its own ticket).
+- .github/scripts/github_api.py: added `project_views`, `view_field_ids`, `create_view` and `delete_view`.
+- tests/test_views.py: added; 34 tests (filter rule, definition checks, request bodies, reading a view, each sync case, deletion by name, the client calls).
+- .github/scripts/check_manifest.py, doc/wiki/Automation.md: the manifest covers the new files; the script is described. Checked on the real board: a view with an `OR` filter, grouping, board columns, sorting and visible fields was created and read back (a 357-character filter, the whole Health filter, is accepted), then deleted.
+- .github/scripts/views.py: found while applying the first view: the API cannot sort a new view by Created, Updated or Closed (the script refuses with a reason), and GraphQL does not report the Type field among a view's visible fields (it is left out of the comparison, so a view showing it is not seen as changed).
+#### #72 — Create the All view
+- .github/views.json: added the `All` view: a table of every ticket except the test ones, with all the fields, sorted by Version# (latest first) then Priority. The ticket asked for newest-updated first, but the API cannot sort a new view by Updated.
+#### #73 — Create the Backlog view
+- .github/views.json: added the `Backlog` view: a board with the columns ToDo, OnDeck and Suspended (filter `status:ToDo,OnDeck,Suspended`), sorted by Priority (Critical first), showing Priority, Size, Risk, Version, Assignees and Type.
+#### #74 — Create the Board view
+- .github/views.json: added the `Board` view: a board with the columns OnDeck, InProgress and Review and a row per Version (filter `is:open AND -type:Version AND -status:ToDo,Suspended`), sorted by Priority, showing Priority, Size, Assignees, Waiting, Attention and Type.
+#### #75 — Create the Health view
+- .github/views.json: added the `Health` view: one table of everything that needs a person (Attention Watch, Caution or AtRisk, Waiting for input, Review, open Alerts) or whose fields break a rule (Completed with no Resolution, open with a Resolution or an End date, Waiting on a closed ticket, Backfilled with no REF, an open issue at Completed or Abandoned, a closed issue at any other Progress except Version tickets), sorted by Priority, showing Attention, Waiting, Resolution, Delivery, End date, REF, Status, Type and Priority. It replaces the Attention, Waiting, Review, Alerts and consistency views, and adds the check that an issue is closed only at Completed or Abandoned.
+#### #76 — Create the Versions view
+- .github/views.json: added the `Versions` view: a table of the work tickets that have a Version (not the Version tickets), grouped by Version#, sorted by Priority within a group, showing Status, Type, Delivery, Build, Resolution, Version and Priority.
+#### #77 — Update the guides and the wiki for the new views
+- guides/07-issues-and-the-board-in-practice.md: section 2.2 describes the five saved views (All, Backlog, Board, Health, Versions) and that they are created from a file by a script; the Health view is where a work session starts; section 7.1 and 7.2: the Health view lists the field-consistency checks, replacing the recommendation to make them into views; the "In GitHub" notes cover `AND`/`OR` filters and that grouping and sorting are set only at creation; checklist updated.
+- guides/10-new-project-bootstrap.md: the automation includes the views file and script; section 6 lists the five views, the rule that they come from `.github/views.json`, the one default view of a new board, and the checklist line; guide 01 ("View"), guide 03 (the administrator creates the views from a file) and appendix C (every view excludes `dummy`).
+- doc/wiki/Board-Views.md: rewritten from the definition file (the five views with layout, filter, grouping and sorting, what Health catches, notes, the planned Roadmap); the wrong statement that the API cannot create views and the stale filter `has:"end date"` are gone.
+- tests/test_tools.py: added tests that the wiki page lists every view and filter of `.github/views.json` and that no guide or the page says views cannot be scripted.
 ## V0.7.0 — 2026-10-06 21:50 UTC
 ### Build 20261006214642 (branch apply-governance-to-itself)
 #### #65 — Raise the new-work Caution only when an earlier Build is recorded

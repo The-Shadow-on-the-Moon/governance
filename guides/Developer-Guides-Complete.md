@@ -459,7 +459,7 @@ other guides define.
 | **"Update branch" button** | A button on a pull request that merges `main` into the branch on the server. | syncing and merging, section 1 |
 | **Project (board)** | The board of all tickets, with its fields and saved views, linked to the repository. | project structure, section 4 |
 | **Field** | A column of the board: single select, text, number or date. | new-project bootstrap, section 6 |
-| **View** | A saved filter of the board, such as Mine or Alerts. | issues and the board, section 2 |
+| **View** | A saved way of looking at the board, with a filter, grouping and sorting, such as Board or Health. | issues and the board, section 2 |
 | **Actions, workflow** | The hosting service's automation, run on a push, on a pull request or on request. | new-project bootstrap, section 2 |
 | **Secret** | A stored value a workflow can use but nobody can read back, such as the project token. | new-project bootstrap, section 4 |
 | **Repository variable** | A stored non-secret value a workflow can read, such as the board's number. | new-project bootstrap, section 2.3 |
@@ -1456,7 +1456,9 @@ nothing in the repository shows that a secret was stored or a setting changed.
 - **Rule:** Version is a single field for the version a ticket is aimed at and, once it ships, the
   version it really shipped in: a person may set it ahead of time, and the automation overwrites it with
   the real version. Build holds the ticket's latest build (the most recent build stamp among the build blocks that
-  mention it), and Version# is derived from Version only to sort versions.
+  mention it), and Version# is derived from Version only to sort versions. The automation sets it, not only
+  when a version ships but every day for any ticket that has a Version, so a ticket that is only aimed at a
+  version sorts among the others.
 - **Rule:** Start date and End date are the dates the automation noticed the ticket start and end. A
   person may correct one by hand. The automation clears the End date when it sees the ticket open again.
 
@@ -1505,7 +1507,7 @@ of them are complete. A Version ticket does no work and is never verified.
 
 | Stage | What happens | Delivery | Issue |
 |---|---|---|---|
-| **Planned** (optional) | A person creates it ahead of time for a future version. | blank | open |
+| **Planned** (optional, not recommended) | A person creates it ahead of time for a future version. | blank | open |
 | **Finalized** | The automation creates it, or reuses the planned one with the same title, when the version is finalized. | Merged | closed by the automation |
 | **Released** | A release is cut on that version. The automation posts a comment with the date and the tag name. | Released | stays closed |
 | **Planned, then dropped** | The version never happened under that number. A person marks it. | Dropped | closed, with a comment saying what replaced it |
@@ -1524,8 +1526,11 @@ of them are complete. A Version ticket does no work and is never verified.
 - **Rule:** when a version is finalized, any planned Version ticket with a lower number can no longer
   happen under that number. The automation raises one Alert listing them (section 5.3). Hotfix versions
   do not run this check.
-- **Recommendation:** planning ahead by creating a Version ticket is optional. When a planned number turns
-  out wrong, the alert above is how the mismatch is cleaned up.
+- **Recommendation:** do not create Version tickets ahead of time. Aim tickets at a version with their
+  Version field instead (the guide on issues and the board in practice, section 6): the automation creates the
+  Version ticket when the version is finalized, so the Version tickets are in the order the versions shipped,
+  which the *Versions* view relies on. If you do plan one and the number turns out wrong, the alert above is
+  how the mismatch is cleaned up.
 
 *Why.* Delivery already describes a version's life (planned, merged, released, dropped), so a Version
 ticket needs no Progress. One ticket per version gives a single place to see what shipped in it and how
@@ -1651,6 +1656,11 @@ in the guide on branching and merging; this section only defines it and says wha
 
 Ticket fields (Type, Area, Priority and the rest) do not apply to a pull request, and labels on it play no
 part in versioning: the version number comes from the tickets.
+
+A pull request shares its number with the tickets, so the numbers of the pull requests would be missing from the
+board's *All* view. The automation therefore puts each pull request on the board as an item when it is opened,
+and sets no field on it. The other views leave pull requests out (their filters end with `is:issue`), and the
+automation's sweeps skip them, because a pull request is not a ticket.
 
 #### 6.3 Creating and ending one
 
@@ -1952,7 +1962,7 @@ developer may also set the optional *Committed* marker in Delivery.
 | Item | Who does it |
 |---|---|
 | Repository settings, branch protection and its bypass | the administrator |
-| Issue types, labels, and the board's fields and views | the administrator |
+| Issue types, labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
 | The project token and other secrets | the administrator holds and renews them |
 | Installing and updating the automation | the administrator |
 
@@ -3219,20 +3229,32 @@ somebody else did.
 6. **OnDeck.** What is next. Pick one.
 7. **ToDo.** Anything new that has not been triaged goes through section 1.
 
+Items 1 to 4 are the things that need a person, and one view, *Health* (section 2.2), lists them together.
+
 #### 2.2 Saved views
 
-A few saved views make this quick:
+The board has five saved views, in this order:
 
-- **Mine:** tickets assigned to me.
-- **Alerts:** Type *Alert*, not completed.
-- **Attention:** tickets flagged *Watch*, *Caution* or *AtRisk*.
-- **Review:** tickets at *Review*.
-- **Waiting:** tickets marked *Needs input*.
+- **All:** every item on the board, test tickets and pull requests included, with all its fields and in
+  ticket-number order, with no gap in the numbers, for finding anything and for audit.
+- **Backlog:** a board of the tickets at *ToDo*, *OnDeck* and *Suspended*, the most urgent first.
+- **Board:** the active work, with the columns *OnDeck*, *InProgress* and *Review* and a row for each Version,
+  so you see what each version holds and where each ticket is.
+- **Health:** everything that needs a person, or whose fields break a rule: tickets with an open Attention flag,
+  tickets marked *Needs input*, tickets at *Review*, open Alerts, and the field-consistency checks of
+  section 7.1 (for example *Completed* without Resolution *Done*, or a ticket whose issue is closed at any
+  Progress but *Completed* or *Abandoned*). Start a work session here.
+- **Versions:** the work tickets grouped by their Version ticket (the group reads "Version 0.7.0"), with Delivery,
+  Build and Resolution, to see what each version holds and whether it shipped. Tickets only aimed at a version,
+  which have no Version ticket yet, are in a group of their own, ordered by version.
 
-Every working view leaves out test tickets by ending its filter with `-label:dummy` (see *Ticket fields
-reference*). A view of only the test tickets, `label:dummy`, is optional.
-
-Setting them up is part of configuring the board, which is the administrator's job.
+Every view except All leaves out pull requests and test tickets by ending its filter with `is:issue AND -label:dummy`
+(see *Ticket fields reference*; the automation puts each pull request on the board so that All has no gaps).
+The views are defined in a file, `.github/views.json`, and created by a script, `views.py`, so every project
+has the same ones. To change a view, change the file and run the script. Two settings of *All* are made by
+hand when it is created, because the API cannot reach them: the sort *Created, ascending* and *Show hierarchy* off
+(guide on the new-project bootstrap, section 6). Setting them up is part of
+configuring the board, which is the administrator's job.
 
 #### 2.3 Rules
 
@@ -3245,8 +3267,11 @@ Setting them up is part of configuring the board, which is the administrator's j
 planned. An Alert is a warning that a rule was bypassed, and it loses value the longer it sits. A board
 that shows false states makes the next person start from zero.
 
-> **In GitHub.** The saved views are views of the project board, configured with filters such as
-> `assignee:@me`, `type:Alert`, and the status, waiting and attention fields.
+> **In GitHub.** The saved views are views of the project board. A filter can combine fields with `AND`, `OR`
+> and parentheses, for example `status:Review OR (type:Alert AND is:open)`. A view's grouping, its board
+> columns and rows, and its sorting can only be set when the view is created, and the API cannot sort a new
+> view by Created, Updated or Closed, so the script creates a changed view again and then deletes the old
+> one (GitHub never deletes the last view of a board).
 
 #### 2.4 Attention flags
 
@@ -3439,12 +3464,20 @@ coming back.
 
 #### 6.2 Planned Version tickets
 
-- You may create a Version ticket ahead of time, titled exactly `Version 2.5.0`, with Type *Version*,
-  Delivery blank and the issue open. It is a place to record what you plan for that version.
-- Before the version is finalized it is only a plan. Tickets are not attached to it as sub-issues ahead of
-  time; the target Version field on each ticket says which version it is aimed at, and the automation
-  attaches the tickets when it finalizes the version.
-- When a version ships under that number, the automation reuses the planned ticket (it matches by the exact
+- **Aim tickets with their Version field and nothing else.** The automation creates the Version ticket
+  itself when the version is finalized, so the Version tickets exist in the order the versions shipped.
+  Aimed tickets show on the *Board* view (a row for each Version), in the *Backlog*, and in the *Versions*
+  view's group of tickets with no Version ticket yet, ordered by Version#.
+- **Creating a Version ticket ahead of time is allowed but not recommended.** It would be titled exactly
+  `Version 2.5.0`, with Type *Version*, Delivery blank and the issue open, as a place to record what you
+  plan. But the *Versions* view orders its groups by the order the Version tickets were created in: a ticket
+  made early for a later version (say `Version 2.0.0` while the project is at 1.30.0) would sort ahead of a
+  version that ships first (1.31.0, created by the automation when it ships). A planned number is also a guess
+  (the bump is decided at merge), so a planned ticket tends to go stale.
+- Before the version is finalized a planned ticket is only a plan. Tickets are not attached to it as
+  sub-issues ahead of time; the target Version field on each ticket says which version it is aimed at, and
+  the automation attaches the tickets when it finalizes the version.
+- When a version ships under that number, the automation reuses a planned ticket (it matches by the exact
   title). Otherwise it creates one.
 - **If the planned version will not happen** under that number, mark it *Dropped*, close it, and comment
   what replaced it. Move its tickets' target Version to the new one.
@@ -3453,8 +3486,10 @@ coming back.
 #### 6.3 Rules
 
 - **Rule:** target versions and planned Version tickets are set by someone holding the project owner role.
-- **Rule:** a planned Version ticket is titled exactly `Version X.Y.Z`, so that the automation can reuse
-  it.
+- **Recommendation:** aim tickets with the Version field, and do not create Version tickets ahead of time
+  (section 6.2).
+- **Rule:** a planned Version ticket, if you create one, is titled exactly `Version X.Y.Z`, so that the
+  automation can reuse it.
 - **Rule:** tickets are not attached to a Version ticket as sub-issues before it is finalized.
 - **Rule:** a planned version that will not happen is marked *Dropped* and closed with a comment saying
   what replaced it.
@@ -3467,7 +3502,8 @@ coming back.
 bump is decided at merge from the tickets' Types and any marker, so a version planned as 2.5.0 may ship as
 2.4.2 or 3.0.0, and every planned number is something to clean up if it turns out wrong. Keeping the
 tickets unattached until finalize means a plan never has to be undone, and the Version field on each ticket
-already carries the aim.
+already carries the aim. The Version tickets are left to the automation, because the *Versions* view lists them
+in creation order, which is then the order the versions shipped.
 
 
 ---
@@ -3485,7 +3521,8 @@ automation's Attention flag already catches stale tickets, long waits and broken
 2. **Long-suspended tickets:** resume them or abandon them (the automation flags six months).
 3. **Tickets that have waited a long time** (the automation flags two weeks): ask again, or decide
    without the answer.
-4. **Field consistency,** using the cross-field rules (see the guide on project structure, section 4.4):
+4. **Field consistency,** using the cross-field rules (see the guide on project structure, section 4.4). The
+   *Health* view lists the tickets that break them:
    - *Completed* has Resolution *Done*, and *Abandoned* has a reason.
    - Open tickets have no Resolution and no End date.
    - Waiting is only on open tickets.
@@ -3504,16 +3541,16 @@ automation's Attention flag already catches stale tickets, long waits and broken
 - **Rule:** someone holding the project owner role runs the board review, and someone holding the
   administrator role checks the board configuration.
 - **Recommendation:** do the board review regularly.
-- **Recommendation:** make the consistency checks in item 4 into saved board views, for example
-  "Completed without a Resolution", so that the review is a quick look.
+- **Recommendation:** start the review in the *Health* view, which lists the consistency checks of item 4
+  together with the tickets that need a person, so that the review is a quick look.
 
 **Why.** Each rule is applied by a person at the moment they act, and nothing checks the whole board. The
 review is where drift is caught: a ticket left in a state that stopped being true, a field that no longer
 agrees with another, or a branch nobody decided about. A suspension that never ends is an unmade decision,
 and so is a branch parked for months.
 
-> **In GitHub.** The saved views are views of the project board, filtered on the status, resolution,
-> waiting and origin fields, for example "status is Completed and resolution is empty".
+> **In GitHub.** The *Health* view is one filter that joins the checks with `OR`, for example
+> `(status:Completed no:resolution) OR (is:open has:resolution)`.
 
 
 ---
@@ -3533,7 +3570,8 @@ A one-page summary of the guide. It adds no new rules.
 
 **Each work session** (section 2)
 
-- [ ] I took Alerts first, then Attention flags, Waiting, Review, InProgress, OnDeck and ToDo.
+- [ ] I looked at the Health view first, taking Alerts first, then Attention flags, Waiting and Review, and then
+      InProgress, OnDeck and ToDo.
 - [ ] Each open Attention flag on my tickets was decided and closed with *Fine* or *Acknowledged* and a
       comment, and not just dismissed.
 - [ ] I cleared Waiting where the answer arrived.
@@ -3555,8 +3593,9 @@ A one-page summary of the guide. It adds no new rules.
 **Alerts and planning** (sections 5 and 6)
 
 - [ ] An Alert assigned to me is triaged before other work. A false positive is abandoned with *Invalid*.
-- [ ] A planned Version ticket is titled exactly `Version X.Y.Z`, has no tickets attached before it is
-      finalized, and is marked *Dropped* and closed if it will not happen.
+- [ ] Tickets are aimed with their Version field. If I did create a planned Version ticket, it is titled
+      exactly `Version X.Y.Z`, has no tickets attached before it is finalized, and is marked *Dropped* and
+      closed if it will not happen.
 
 **Housekeeping** (section 7)
 
@@ -4154,6 +4193,8 @@ is the honest description of a project's first version: something exists, and no
   build, drafts the commit message and warns. They need a runtime (here Python 3).
 - **The remote workflow,** `.github/workflows/versioning.yml`, and its logic in `.github/scripts/`, with
   unit tests under `tests/`.
+- **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
+  (section 6).
 - **The pull request template,** in `.github/`.
 - **Optionally,** a workflow that copies the wiki pages to the hosting wiki.
 
@@ -4363,8 +4404,14 @@ fields reference*.
 Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
 script can create.
 
-**Saved views:** Mine, Alerts, Attention, Review and Waiting, and the consistency-check views (see the guide on issues
-and the board in practice, section 7).
+**Saved views:** All, Backlog, Board, Health and Versions (see the guide on issues and the board in practice,
+section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
+run until it is given `--apply` and needs the project token; run it once the fields exist.
+
+**Two settings of the *All* view are made by hand, once, when the views are created,** because the API cannot
+reach them: sort it by *Created, ascending* (ticket-number order), and turn off *Show hierarchy*, so that tickets
+are not listed inside their Version ticket and the list is flat. The script prints a reminder of them at the end of
+every run, and a view that is created again loses them, so make them again.
 
 #### 6.2 Rules
 
@@ -4373,6 +4420,8 @@ and the board in practice, section 7).
 - **Rule:** Build is a text field, not a number, because a build timestamp is too large for a number
   field.
 - **Rule:** the board is linked to the repository, and the preflight checks the fields and their values.
+- **Rule:** the saved views are the ones in `.github/views.json`, created by `views.py`, and a view is changed
+  by changing the file and running the script again.
 - **Recommendation:** create the fields with a script, or start from a template board that already has
   them, so that every project gets the same board.
 
@@ -4380,7 +4429,9 @@ and the board in practice, section 7).
 build timestamp stored in a number field is rejected by the hosting service.
 
 > **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
-> fields are added in the project's settings, and the saved views are views of the project.
+> fields are added in the project's settings, and the saved views are views of the project. A new board has
+> one default view, and GitHub never deletes a board's last view, so the script creates the new views first and
+> then deletes the default one (`--delete-unlisted`).
 
 
 ---
@@ -4495,7 +4546,9 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] The fields and values are exactly the standard's, Build is text, and the built-in Status values are
       replaced.
-- [ ] The saved views and the consistency views exist.
+- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Health, Versions) and `views.py`
+      reports them up to date.
+- [ ] On the All view, the sort is *Created, ascending* and *Show hierarchy* is off (both by hand).
 
 **The first version and the roles** (section 7)
 
@@ -4708,7 +4761,7 @@ new step, a test of a rule). It is the only label besides the 14 Area labels.
 | `dummy` | A throwaway ticket or version made to test the automation; left out of the board's working views. |
 
 Set by a person when the test ticket is created. A test ticket is titled `DUMMY ...` and is closed as
-*Abandoned*, with Resolution *Invalid*, when the test is over. The working views of the board exclude the
+*Abandoned*, with Resolution *Invalid*, when the test is over. Every saved view of the board except All excludes the
 label (`-label:dummy`), so test tickets never appear among real work. It never affects version numbers or
 any automation, and it is not part of Area.
 
@@ -4881,7 +4934,7 @@ Informational only: it drives no rule or automation.
 |---|---|---|
 | **Version** (text) | The version a ticket is aimed at and, once it ships, the version it really shipped in (`V2.1.0`, or `V2.1.0-HF1` for a hotfix). | a person may set it ahead of time; the automation overwrites it with the real version (for a backfilled ticket, the version where its placeholder appears). On an *Implemented* ticket the person's value stays |
 | **Build** (text) | The latest build of the ticket: the most recent build stamp among the build blocks that mention it. | the automation |
-| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation |
+| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation: at finalize, and every day for any ticket that has a Version (also one that is only aimed at a version) and a blank or different Version# |
 
 ### Start date and End date
 
@@ -5378,7 +5431,7 @@ Progress: its Delivery describes its life.
 
 | Stage | Delivery | Issue |
 |---|---|---|
-| **Planned** (optional, created by a person) | blank | open |
+| **Planned** (optional, not recommended; created by a person) | blank | open |
 | **Finalized** (created or reused by the automation at finalize) | *Merged* | closed by the automation |
 | **Released** | *Released* | stays closed |
 | **Planned, then dropped** (marked by a person) | *Dropped* | closed, with a comment saying what replaced it |
@@ -5387,7 +5440,9 @@ A hotfix version goes straight to *Released*, because a hotfix is never merged i
 automation writes the description (date, bump and why, pull request, tickets with their Type) and attaches
 the version's tickets, and any *Implemented* ones, as sub-issues, so the board shows how many are complete.
 A planned Version ticket whose number is lower than the one just finalized can no longer happen, and the
-automation raises one Alert listing them.
+automation raises one Alert listing them. Aiming a ticket at a future version needs no planned Version ticket (its
+Version field is enough), and leaving the Version tickets to the automation keeps them in the order the versions
+shipped, which the Versions view relies on.
 
 #### Alert tickets
 
@@ -5403,7 +5458,8 @@ until someone takes it. Size and Risk are set by whoever triages it. Alerts have
   *Enhancement* gives a sub-version, otherwise a mod; *Version* and *Alert* are ignored; markers `+V`, `+s`
   and `+m` override it.
 - **Delivery, Version, Build and dates** are written by the automation from pushes, merges, releases and a
-  sweep that runs after each finalize and once a day.
+  sweep that runs after each finalize and once a day. The daily run also sets Version# on any ticket that has a
+  Version, so a ticket only aimed at a version sorts with the others.
 - **Attention** is raised from the same sweep and from pushes.
 - **Nothing in Area, Risk, Priority or Size** drives any rule.
 
