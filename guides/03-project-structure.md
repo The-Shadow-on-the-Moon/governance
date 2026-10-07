@@ -955,7 +955,7 @@ developer may also set the optional *Committed* marker in Delivery.
 | Item | Who does it |
 |---|---|
 | Repository settings, branch protection and its bypass | the administrator |
-| Issue types, labels, and the board's fields and views | the administrator |
+| Issue types, labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
 | The project token and other secrets | the administrator holds and renews them |
 | Installing and updating the automation | the administrator |
 

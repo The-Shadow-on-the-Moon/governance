@@ -459,7 +459,7 @@ other guides define.
 | **"Update branch" button** | A button on a pull request that merges `main` into the branch on the server. | syncing and merging, section 1 |
 | **Project (board)** | The board of all tickets, with its fields and saved views, linked to the repository. | project structure, section 4 |
 | **Field** | A column of the board: single select, text, number or date. | new-project bootstrap, section 6 |
-| **View** | A saved filter of the board, such as Mine or Alerts. | issues and the board, section 2 |
+| **View** | A saved way of looking at the board, with a filter, grouping and sorting, such as Board or Health. | issues and the board, section 2 |
 | **Actions, workflow** | The hosting service's automation, run on a push, on a pull request or on request. | new-project bootstrap, section 2 |
 | **Secret** | A stored value a workflow can use but nobody can read back, such as the project token. | new-project bootstrap, section 4 |
 | **Repository variable** | A stored non-secret value a workflow can read, such as the board's number. | new-project bootstrap, section 2.3 |
@@ -1952,7 +1952,7 @@ developer may also set the optional *Committed* marker in Delivery.
 | Item | Who does it |
 |---|---|
 | Repository settings, branch protection and its bypass | the administrator |
-| Issue types, labels, and the board's fields and views | the administrator |
+| Issue types, labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
 | The project token and other secrets | the administrator holds and renews them |
 | Installing and updating the automation | the administrator |
 
@@ -3219,20 +3219,27 @@ somebody else did.
 6. **OnDeck.** What is next. Pick one.
 7. **ToDo.** Anything new that has not been triaged goes through section 1.
 
+Items 1 to 4 are the things that need a person, and one view, *Health* (section 2.2), lists them together.
+
 #### 2.2 Saved views
 
-A few saved views make this quick:
+The board has five saved views, in this order:
 
-- **Mine:** tickets assigned to me.
-- **Alerts:** Type *Alert*, not completed.
-- **Attention:** tickets flagged *Watch*, *Caution* or *AtRisk*.
-- **Review:** tickets at *Review*.
-- **Waiting:** tickets marked *Needs input*.
+- **All:** every ticket with all its fields, for finding anything and for audit.
+- **Backlog:** a board of the tickets at *ToDo*, *OnDeck* and *Suspended*, the most urgent first.
+- **Board:** the active work, with the columns *OnDeck*, *InProgress* and *Review* and a row for each Version,
+  so you see what each version holds and where each ticket is.
+- **Health:** everything that needs a person, or whose fields break a rule: tickets with an open Attention flag,
+  tickets marked *Needs input*, tickets at *Review*, open Alerts, and the field-consistency checks of
+  section 7.1 (for example *Completed* without Resolution *Done*, or a ticket whose issue is closed at any
+  Progress but *Completed* or *Abandoned*). Start a work session here.
+- **Versions:** the work tickets grouped by Version, with Delivery, Build and Resolution, to see what each
+  version holds and whether it shipped.
 
-Every working view leaves out test tickets by ending its filter with `-label:dummy` (see *Ticket fields
-reference*). A view of only the test tickets, `label:dummy`, is optional.
-
-Setting them up is part of configuring the board, which is the administrator's job.
+Every view leaves out test tickets by ending its filter with `-label:dummy` (see *Ticket fields reference*).
+The views are defined in a file, `.github/views.json`, and created by a script, `views.py`, so every project
+has the same ones. To change a view, change the file and run the script. Setting them up is part of
+configuring the board, which is the administrator's job.
 
 #### 2.3 Rules
 
@@ -3245,8 +3252,11 @@ Setting them up is part of configuring the board, which is the administrator's j
 planned. An Alert is a warning that a rule was bypassed, and it loses value the longer it sits. A board
 that shows false states makes the next person start from zero.
 
-> **In GitHub.** The saved views are views of the project board, configured with filters such as
-> `assignee:@me`, `type:Alert`, and the status, waiting and attention fields.
+> **In GitHub.** The saved views are views of the project board. A filter can combine fields with `AND`, `OR`
+> and parentheses, for example `status:Review OR (type:Alert AND is:open)`. A view's grouping, its board
+> columns and rows, and its sorting can only be set when the view is created, and the API cannot sort a new
+> view by Created, Updated or Closed, so the script creates a changed view again and then deletes the old
+> one (GitHub never deletes the last view of a board).
 
 #### 2.4 Attention flags
 
@@ -3485,7 +3495,8 @@ automation's Attention flag already catches stale tickets, long waits and broken
 2. **Long-suspended tickets:** resume them or abandon them (the automation flags six months).
 3. **Tickets that have waited a long time** (the automation flags two weeks): ask again, or decide
    without the answer.
-4. **Field consistency,** using the cross-field rules (see the guide on project structure, section 4.4):
+4. **Field consistency,** using the cross-field rules (see the guide on project structure, section 4.4). The
+   *Health* view lists the tickets that break them:
    - *Completed* has Resolution *Done*, and *Abandoned* has a reason.
    - Open tickets have no Resolution and no End date.
    - Waiting is only on open tickets.
@@ -3504,16 +3515,16 @@ automation's Attention flag already catches stale tickets, long waits and broken
 - **Rule:** someone holding the project owner role runs the board review, and someone holding the
   administrator role checks the board configuration.
 - **Recommendation:** do the board review regularly.
-- **Recommendation:** make the consistency checks in item 4 into saved board views, for example
-  "Completed without a Resolution", so that the review is a quick look.
+- **Recommendation:** start the review in the *Health* view, which lists the consistency checks of item 4
+  together with the tickets that need a person, so that the review is a quick look.
 
 **Why.** Each rule is applied by a person at the moment they act, and nothing checks the whole board. The
 review is where drift is caught: a ticket left in a state that stopped being true, a field that no longer
 agrees with another, or a branch nobody decided about. A suspension that never ends is an unmade decision,
 and so is a branch parked for months.
 
-> **In GitHub.** The saved views are views of the project board, filtered on the status, resolution,
-> waiting and origin fields, for example "status is Completed and resolution is empty".
+> **In GitHub.** The *Health* view is one filter that joins the checks with `OR`, for example
+> `(status:Completed no:resolution) OR (is:open has:resolution)`.
 
 
 ---
@@ -3533,7 +3544,8 @@ A one-page summary of the guide. It adds no new rules.
 
 **Each work session** (section 2)
 
-- [ ] I took Alerts first, then Attention flags, Waiting, Review, InProgress, OnDeck and ToDo.
+- [ ] I looked at the Health view first, taking Alerts first, then Attention flags, Waiting and Review, and then
+      InProgress, OnDeck and ToDo.
 - [ ] Each open Attention flag on my tickets was decided and closed with *Fine* or *Acknowledged* and a
       comment, and not just dismissed.
 - [ ] I cleared Waiting where the answer arrived.
@@ -4154,6 +4166,8 @@ is the honest description of a project's first version: something exists, and no
   build, drafts the commit message and warns. They need a runtime (here Python 3).
 - **The remote workflow,** `.github/workflows/versioning.yml`, and its logic in `.github/scripts/`, with
   unit tests under `tests/`.
+- **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
+  (section 6).
 - **The pull request template,** in `.github/`.
 - **Optionally,** a workflow that copies the wiki pages to the hosting wiki.
 
@@ -4363,8 +4377,9 @@ fields reference*.
 Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
 script can create.
 
-**Saved views:** Mine, Alerts, Attention, Review and Waiting, and the consistency-check views (see the guide on issues
-and the board in practice, section 7).
+**Saved views:** All, Backlog, Board, Health and Versions (see the guide on issues and the board in practice,
+section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
+run until it is given `--apply` and needs the project token; run it once the fields exist.
 
 #### 6.2 Rules
 
@@ -4373,6 +4388,8 @@ and the board in practice, section 7).
 - **Rule:** Build is a text field, not a number, because a build timestamp is too large for a number
   field.
 - **Rule:** the board is linked to the repository, and the preflight checks the fields and their values.
+- **Rule:** the saved views are the ones in `.github/views.json`, created by `views.py`, and a view is changed
+  by changing the file and running the script again.
 - **Recommendation:** create the fields with a script, or start from a template board that already has
   them, so that every project gets the same board.
 
@@ -4380,7 +4397,9 @@ and the board in practice, section 7).
 build timestamp stored in a number field is rejected by the hosting service.
 
 > **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
-> fields are added in the project's settings, and the saved views are views of the project.
+> fields are added in the project's settings, and the saved views are views of the project. A new board has
+> one default view, and GitHub never deletes a board's last view, so the script creates the new views first and
+> then deletes the default one (`--delete-unlisted`).
 
 
 ---
@@ -4495,7 +4514,8 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] The fields and values are exactly the standard's, Build is text, and the built-in Status values are
       replaced.
-- [ ] The saved views and the consistency views exist.
+- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Health, Versions) and `views.py`
+      reports them up to date.
 
 **The first version and the roles** (section 7)
 
@@ -4708,7 +4728,7 @@ new step, a test of a rule). It is the only label besides the 14 Area labels.
 | `dummy` | A throwaway ticket or version made to test the automation; left out of the board's working views. |
 
 Set by a person when the test ticket is created. A test ticket is titled `DUMMY ...` and is closed as
-*Abandoned*, with Resolution *Invalid*, when the test is over. The working views of the board exclude the
+*Abandoned*, with Resolution *Invalid*, when the test is over. Every saved view of the board excludes the
 label (`-label:dummy`), so test tickets never appear among real work. It never affects version numbers or
 any automation, and it is not part of Area.
 

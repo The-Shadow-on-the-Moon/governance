@@ -1,5 +1,29 @@
 # Changelog
 
+## WIP-Version
+### Build 20261007033120 (branch project-views)
+#### #70 — Add a script that creates and removes board views from a definition file
+- .github/scripts/views.py: added; reads the board's views, compares them with `.github/views.json` and creates, recreates (create the new view, then delete the old one, because GitHub never deletes the last view of a board; grouping and sorting can only be set at creation) or deletes views: `--only NAME`, `--delete NAME`, `--delete-unlisted`, `--show`, `--definition PATH`; a dry run unless `--apply`; every filter gets ` AND -label:dummy`; field names are resolved to the numeric ids REST needs (GraphQL and REST are both read, because each lacks some fields); every field name is checked before anything changes; once a view changes the ones listed after it are recreated so the tabs keep the file's order; it refuses to delete a board's last view.
+- .github/views.json: added, with an empty list of views (each view has its own ticket).
+- .github/scripts/github_api.py: added `project_views`, `view_field_ids`, `create_view` and `delete_view`.
+- tests/test_views.py: added; 34 tests (filter rule, definition checks, request bodies, reading a view, each sync case, deletion by name, the client calls).
+- .github/scripts/check_manifest.py, doc/wiki/Automation.md: the manifest covers the new files; the script is described. Checked on the real board: a view with an `OR` filter, grouping, board columns, sorting and visible fields was created and read back (a 357-character filter, the whole Health filter, is accepted), then deleted.
+- .github/scripts/views.py: found while applying the first view: the API cannot sort a new view by Created, Updated or Closed (the script refuses with a reason), and GraphQL does not report the Type field among a view's visible fields (it is left out of the comparison, so a view showing it is not seen as changed).
+#### #72 — Create the All view
+- .github/views.json: added the `All` view: a table of every ticket except the test ones, with all the fields, sorted by Version# (latest first) then Priority. The ticket asked for newest-updated first, but the API cannot sort a new view by Updated.
+#### #73 — Create the Backlog view
+- .github/views.json: added the `Backlog` view: a board with the columns ToDo, OnDeck and Suspended (filter `status:ToDo,OnDeck,Suspended`), sorted by Priority (Critical first), showing Priority, Size, Risk, Version, Assignees and Type.
+#### #74 — Create the Board view
+- .github/views.json: added the `Board` view: a board with the columns OnDeck, InProgress and Review and a row per Version (filter `is:open AND -type:Version AND -status:ToDo,Suspended`), sorted by Priority, showing Priority, Size, Assignees, Waiting, Attention and Type.
+#### #75 — Create the Health view
+- .github/views.json: added the `Health` view: one table of everything that needs a person (Attention Watch, Caution or AtRisk, Waiting for input, Review, open Alerts) or whose fields break a rule (Completed with no Resolution, open with a Resolution or an End date, Waiting on a closed ticket, Backfilled with no REF, an open issue at Completed or Abandoned, a closed issue at any other Progress except Version tickets), sorted by Priority, showing Attention, Waiting, Resolution, Delivery, End date, REF, Status, Type and Priority. It replaces the Attention, Waiting, Review, Alerts and consistency views, and adds the check that an issue is closed only at Completed or Abandoned.
+#### #76 — Create the Versions view
+- .github/views.json: added the `Versions` view: a table of the work tickets that have a Version (not the Version tickets), grouped by Version#, sorted by Priority within a group, showing Status, Type, Delivery, Build, Resolution, Version and Priority.
+#### #77 — Update the guides and the wiki for the new views
+- guides/07-issues-and-the-board-in-practice.md: section 2.2 describes the five saved views (All, Backlog, Board, Health, Versions) and that they are created from a file by a script; the Health view is where a work session starts; section 7.1 and 7.2: the Health view lists the field-consistency checks, replacing the recommendation to make them into views; the "In GitHub" notes cover `AND`/`OR` filters and that grouping and sorting are set only at creation; checklist updated.
+- guides/10-new-project-bootstrap.md: the automation includes the views file and script; section 6 lists the five views, the rule that they come from `.github/views.json`, the one default view of a new board, and the checklist line; guide 01 ("View"), guide 03 (the administrator creates the views from a file) and appendix C (every view excludes `dummy`).
+- doc/wiki/Board-Views.md: rewritten from the definition file (the five views with layout, filter, grouping and sorting, what Health catches, notes, the planned Roadmap); the wrong statement that the API cannot create views and the stale filter `has:"end date"` are gone.
+- tests/test_tools.py: added tests that the wiki page lists every view and filter of `.github/views.json` and that no guide or the page says views cannot be scripted.
 ## V0.7.0 — 2026-10-06 21:50 UTC
 ### Build 20261006214642 (branch apply-governance-to-itself)
 #### #65 — Raise the new-work Caution only when an earlier Build is recorded

@@ -75,5 +75,28 @@ class CrossReferenceTests(unittest.TestCase):
         self.assertEqual(problems, [])
 
 
+class BoardViewsPageTests(unittest.TestCase):
+    """The wiki page on the board views must say what .github/views.json says."""
+
+    def read(self, *parts):
+        with open(os.path.join(ROOT, *parts), encoding="utf-8") as handle:
+            return handle.read()
+
+    def test_the_wiki_page_lists_every_view_and_its_filter(self):
+        import json
+
+        page = self.read("doc", "wiki", "Board-Views.md")
+        for view in json.loads(self.read(".github", "views.json"))["views"]:
+            self.assertIn(f"| {view['name']} |", page, view["name"])
+            if view.get("filter"):
+                self.assertIn(f"`{view['filter']}`", page, view["name"])
+
+    def test_nothing_says_the_views_cannot_be_scripted(self):
+        for parts in (("doc", "wiki", "Board-Views.md"), ("guides", "07-issues-and-the-board-in-practice.md"),
+                      ("guides", "10-new-project-bootstrap.md")):
+            self.assertNotIn("cannot create views", self.read(*parts), parts)
+            self.assertNotIn("web interface", self.read(*parts), parts)
+
+
 if __name__ == "__main__":
     unittest.main()

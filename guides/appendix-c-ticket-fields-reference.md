@@ -61,7 +61,7 @@ new step, a test of a rule). It is the only label besides the 14 Area labels.
 | `dummy` | A throwaway ticket or version made to test the automation; left out of the board's working views. |
 
 Set by a person when the test ticket is created. A test ticket is titled `DUMMY ...` and is closed as
-*Abandoned*, with Resolution *Invalid*, when the test is over. The working views of the board exclude the
+*Abandoned*, with Resolution *Invalid*, when the test is over. Every saved view of the board excludes the
 label (`-label:dummy`), so test tickets never appear among real work. It never affects version numbers or
 any automation, and it is not part of Area.
 

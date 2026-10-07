@@ -51,6 +51,8 @@ is the honest description of a project's first version: something exists, and no
   build, drafts the commit message and warns. They need a runtime (here Python 3).
 - **The remote workflow,** `.github/workflows/versioning.yml`, and its logic in `.github/scripts/`, with
   unit tests under `tests/`.
+- **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
+  (section 6).
 - **The pull request template,** in `.github/`.
 - **Optionally,** a workflow that copies the wiki pages to the hosting wiki.
 
@@ -260,8 +262,9 @@ fields reference*.
 Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
 script can create.
 
-**Saved views:** Mine, Alerts, Attention, Review and Waiting, and the consistency-check views (see the guide on issues
-and the board in practice, section 7).
+**Saved views:** All, Backlog, Board, Health and Versions (see the guide on issues and the board in practice,
+section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
+run until it is given `--apply` and needs the project token; run it once the fields exist.
 
 ### 6.2 Rules
 
@@ -270,6 +273,8 @@ and the board in practice, section 7).
 - **Rule:** Build is a text field, not a number, because a build timestamp is too large for a number
   field.
 - **Rule:** the board is linked to the repository, and the preflight checks the fields and their values.
+- **Rule:** the saved views are the ones in `.github/views.json`, created by `views.py`, and a view is changed
+  by changing the file and running the script again.
 - **Recommendation:** create the fields with a script, or start from a template board that already has
   them, so that every project gets the same board.
 
@@ -277,7 +282,9 @@ and the board in practice, section 7).
 build timestamp stored in a number field is rejected by the hosting service.
 
 > **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
-> fields are added in the project's settings, and the saved views are views of the project.
+> fields are added in the project's settings, and the saved views are views of the project. A new board has
+> one default view, and GitHub never deletes a board's last view, so the script creates the new views first and
+> then deletes the default one (`--delete-unlisted`).
 
 
 ---
@@ -392,7 +399,8 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] The fields and values are exactly the standard's, Build is text, and the built-in Status values are
       replaced.
-- [ ] The saved views and the consistency views exist.
+- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Health, Versions) and `views.py`
+      reports them up to date.
 
 **The first version and the roles** (section 7)
 

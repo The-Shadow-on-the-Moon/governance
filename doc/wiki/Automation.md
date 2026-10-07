@@ -65,6 +65,7 @@ All in `.github/scripts/`, with a test file for each in `tests/`. Each can be ru
 | `push_step.py`, `skipped_hooks.py` | The push step and the fallback for skipped hooks. |
 | `implemented.py` | Attaching *Implemented* tickets (the daily entry). |
 | `dates.py`, `watch.py`, `field_rules.py` | The date sweep, the Watch flags and the Caution flags for field rules. |
+| `views.py` | Creates, recreates and removes the board's saved views from `.github/views.json` (grouping and sorting can only be set when a view is created, so a changed view is created again and the old one deleted after it; GitHub never deletes the last view of a board). By hand only, with `PROJECT_TOKEN`; it is a dry run unless `--apply` is given: `--only NAME`, `--delete NAME`, `--delete-unlisted`, `--show` (prints the board's views in the file's format), `--definition PATH`. Board settings are the administrator's, so it is run only when the administrator asks. |
 | `check_manifest.py` | The manifest check and its rewrite (no tokens needed). |
 | `changelog.py`, `versions.py`, `github_api.py`, `checks.py`, `alerts.py` | The shared library: changelog parsing, version rules, the GitHub client, git analysis, Alert tickets. |
 
