@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.8.1 — 2026-10-07 15:19 UTC
 ### Build 20261007150026 (branch project-views)
 #### #86 — An Implemented ticket aimed at a version that was passed waits for ever without a flag
 - .github/scripts/implemented.py: an Implemented ticket aimed at a version that is not finalized while a higher version is (the number was passed and can no longer happen) now gets Attention Caution and one comment (marker `<!-- attention:caution passed=V0.7.1 -->`), once per passed version and not when a Caution or AtRisk is already open; it is still never moved or attached by itself. A version above the latest finalized one still waits quietly. tests/test_implemented.py: 6 new tests.
