@@ -3,6 +3,9 @@ name: Ubuntu 26.04 trial
 # Throwaway: runs the project's checks on the Ubuntu 26.04 image. Never merged.
 
 on:
+  push:
+    branches:
+      - dummy-test-92-ubuntu-26
   workflow_dispatch:
 
 jobs:
