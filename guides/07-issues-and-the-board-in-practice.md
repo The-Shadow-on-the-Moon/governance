@@ -298,7 +298,11 @@ coming back.
 - A ticket with no target version is fine. It gets its version when it ships.
 - A ticket with no file change has nothing for the automation to find in the changelog. When its work is in
   effect, the person sets its Delivery to *Implemented* and its Version to the version it belongs to. The
-  automation attaches it to that version's ticket and does not change the field.
+  automation attaches it to that version's ticket and does not change the field. Leave the Version blank until the
+  version is finalized, unless the version already exists: a blank Version gets the version being finalized,
+  and a number you only expect may never exist (the bump is decided at merge). If an *Implemented* ticket is
+  aimed at a version that was passed (not finalized while a higher version is), the automation raises
+  *Caution* on it: set its Version to the version it belongs to, or clear it.
 
 ### 6.2 Planned Version tickets
 

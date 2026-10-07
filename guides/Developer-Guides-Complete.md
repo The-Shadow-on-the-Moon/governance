@@ -1391,7 +1391,9 @@ state and lose where the ticket was.
     Resolution *Done*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
     one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
     Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
-    never raises it: a ticket moved to *Review* before its first push has no earlier work.
+    never raises it: a ticket moved to *Review* before its first push has no earlier work. A *Caution* is also
+    raised on an *Implemented* ticket whose Version is a version that was passed: it is not finalized and a
+    higher version is, so it can never be attached and would wait for ever.
   - *Watch:* a ticket looks out of date: no activity at *Review* for a week, at *OnDeck* or
     *InProgress* for a month, or at *Suspended* for six months, or a ticket that has been waiting for
     input for two weeks. Activity means a comment, a change to a field, or a new build that mentions the
@@ -3460,7 +3462,11 @@ coming back.
 - A ticket with no target version is fine. It gets its version when it ships.
 - A ticket with no file change has nothing for the automation to find in the changelog. When its work is in
   effect, the person sets its Delivery to *Implemented* and its Version to the version it belongs to. The
-  automation attaches it to that version's ticket and does not change the field.
+  automation attaches it to that version's ticket and does not change the field. Leave the Version blank until the
+  version is finalized, unless the version already exists: a blank Version gets the version being finalized,
+  and a number you only expect may never exist (the bump is decided at merge). If an *Implemented* ticket is
+  aimed at a version that was passed (not finalized while a higher version is), the automation raises
+  *Caution* on it: set its Version to the version it belongs to, or clear it.
 
 #### 6.2 Planned Version tickets
 
@@ -4829,7 +4835,7 @@ These are the causes it uses today, with the level each starts at:
 
 | Level | Raised when |
 |---|---|
-| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and whose earlier work was already pushed or delivered, recognised by a recorded Build older than the one being pushed (or by Delivery *Implemented*; never for its first push), or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state). |
+| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and whose earlier work was already pushed or delivered, recognised by a recorded Build older than the one being pushed (or by Delivery *Implemented*; never for its first push), or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state), or an *Implemented* ticket is aimed at a version that was passed (not finalized while a higher version is, so it could never be attached). |
 | **Watch** | A ticket has had no activity at *Review* for a week, at *OnDeck* or *InProgress* for a month, or at *Suspended* for six months, or has been waiting for input for two weeks. |
 
 Activity means a comment, a change to a field, or a new build that mentions the ticket; the automation's

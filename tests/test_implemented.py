@@ -15,8 +15,10 @@ NOW = datetime(2026, 10, 6, 10, 0, 0, tzinfo=timezone.utc)
 V = Version.parse
 
 
-def node(number, delivery="Implemented", version="", parent=None, version_number=None, title=None, status=None):
-    return {"id": f"I{number}", "content": {"number": number, "title": title or f"Ticket {number}", "parent": {"number": parent} if parent else None},
+def node(number, delivery="Implemented", version="", parent=None, version_number=None, title=None, status=None, attention=None, comments=()):
+    return {"id": f"I{number}", "content": {"number": number, "title": title or f"Ticket {number}", "parent": {"number": parent} if parent else None,
+                                            "comments": {"nodes": [{"body": body} for body in comments]}},
+            "attention": {"name": attention} if attention else None,
             "delivery": {"name": delivery} if delivery else None,
             "status": {"name": status} if status else None,
             "version": {"text": version} if version else None,
@@ -100,6 +102,44 @@ class SweepTests(unittest.TestCase):
         run, repo, project, _ = sweep([node(50, version="V0.5.0")])
         self.assertEqual((repo.subs, project.sets), ([], []))
         self.assertIn("waits for V0.5.0", run.log[0])
+
+    def test_a_version_that_was_passed_raises_one_caution_and_changes_nothing_else(self):
+        # V0.3.5 never existed and V0.4.0 is finalized: the ticket would wait for ever.
+        run, repo, project, added = sweep([node(50, version="V0.3.5")])
+        self.assertEqual(project.sets, [("I50", "F-Attention", {"singleSelectOptionId": "Attention-Caution"})])
+        self.assertEqual(len(repo.comments), 1)
+        number, text = repo.comments[0]
+        self.assertEqual(number, 50)
+        self.assertTrue(text.startswith("<!-- attention:caution passed=V0.3.5 -->"))
+        self.assertIn("V0.4.0 is already finalized", text)
+        self.assertEqual((repo.subs, added), ([], {}))  # never attached or moved by itself
+
+    def test_the_caution_is_not_raised_twice(self):
+        marker = "<!-- attention:caution passed=V0.3.5 -->\nAttention: Caution. ..."
+        run, repo, project, _ = sweep([node(50, version="V0.3.5", comments=[marker])])
+        self.assertEqual((project.sets, repo.comments), ([], []))
+        self.assertIn("already flagged", run.log[0])
+
+    def test_an_open_flag_is_not_raised_again(self):
+        for flag in ("Caution", "AtRisk"):
+            run, repo, project, _ = sweep([node(50, version="V0.3.5", attention=flag)])
+            self.assertEqual((project.sets, repo.comments), ([], []))
+            self.assertIn("an Attention flag is already open", run.log[0])
+
+    def test_a_closed_flag_for_the_same_version_stays_quiet_but_another_passed_version_is_flagged(self):
+        marker = "<!-- attention:caution passed=V0.3.5 -->"
+        _, repo, project, _ = sweep([node(50, version="V0.3.2", attention="Fine", comments=[marker])])
+        self.assertEqual(len(repo.comments), 1)  # V0.3.2 is a different number than the one flagged before
+
+    def test_a_version_above_the_latest_finalized_waits_quietly(self):
+        run, repo, project, _ = sweep([node(50, version="V0.9.0")])
+        self.assertEqual((project.sets, repo.comments), ([], []))
+        self.assertIn("is not finalized yet", run.log[0])
+
+    def test_a_dry_run_of_a_passed_version_changes_nothing(self):
+        run, repo, project, _ = sweep([node(50, version="V0.3.5")], dry_run=True)
+        self.assertEqual((project.sets, repo.comments), ([], []))
+        self.assertTrue(any("which was passed" in line for line in run.log))
 
     def test_an_abandoned_ticket_is_never_attached(self):
         _, repo, project, _ = sweep([node(50, status="Abandoned"), node(51, status="Review")])
