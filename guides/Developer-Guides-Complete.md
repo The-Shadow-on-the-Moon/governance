@@ -4247,6 +4247,10 @@ or more than one, it stops at step 3 and asks the administrator to say which.
 - **Rule:** the preflight runs first, before any other step of the automation.
 - **Recommendation:** when the standard's automation changes, copy the new version into the project and run
   the check script, and run the check when unsure whether the files still match.
+- **Recommendation:** keep the actions the workflows use (`actions/checkout`) on a release built for the
+  runtime the hosting service currently supports. A run that warns that an action targets a deprecated
+  runtime is the sign to move: change the version in every workflow file in one ticket, and prove the steps
+  that push to git (they rely on the credentials that checkout leaves in the clone).
 
 **Why.** If every project edits its own copy, the copies drift apart and none of them matches the guides.
 Keeping project values out of the files, and checking the files against a manifest, makes drift visible.

@@ -75,6 +75,31 @@ class CrossReferenceTests(unittest.TestCase):
         self.assertEqual(problems, [])
 
 
+class WorkflowActionsTests(unittest.TestCase):
+    """Every use of actions/checkout in the workflows names the same release, and it is not the Node 20 one (GitHub removed
+    Node 20 from the runners on 2026-09-23, and a Node 20 action only runs there because the runner forces it onto Node 24)."""
+
+    def uses(self):
+        import glob
+        import re
+
+        found = []
+        for path in glob.glob(os.path.join(ROOT, ".github", "workflows", "*.yml")):
+            with open(path, encoding="utf-8") as handle:
+                found += re.findall(r"uses:\s*actions/checkout@(\S+)", handle.read())
+        return found
+
+    def test_the_workflows_check_out_with_one_release(self):
+        found = self.uses()
+        self.assertGreaterEqual(len(found), 9)
+        self.assertEqual(len(set(found)), 1, found)
+
+    def test_that_release_runs_on_node_24(self):
+        (release,) = set(self.uses())
+        self.assertRegex(release, r"^v\d+$")
+        self.assertGreaterEqual(int(release[1:]), 5)  # v5 is the first release built for Node 24
+
+
 class BoardViewsPageTests(unittest.TestCase):
     """The wiki page on the board views must say what .github/views.json says."""
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## WIP-Version
+### Build 20261007183941 (branch project-views)
+#### #90 — Move actions/checkout to a Node 24 release in the workflows
+- .github/workflows/versioning.yml and .github/workflows/wiki-sync.yml: every `actions/checkout@v4` (seven and two) is now `actions/checkout@v7`. v4 targets Node 20, which GitHub removed from the runners on 2026-09-23, so it ran only because the runner forced it onto Node 24 (the warning on every run). The extras (persist-credentials, SHA pinning, Dependabot) are not part of this change.
+- tests/test_tools.py: added a test that every `actions/checkout` use in the workflows names one release and that it is v5 or later (the first Node 24 release).
+- guides/10-new-project-bootstrap.md: a recommendation to keep the workflows' actions on a supported runtime and to prove the git pushes when moving.
+- .github/automation-manifest.json: regenerated for the changed workflow (standard V0.8.2).
 ## V0.8.1 — 2026-10-07 15:19 UTC
 ### Build 20261007150026 (branch project-views)
 #### #86 — An Implemented ticket aimed at a version that was passed waits for ever without a flag
