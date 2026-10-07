@@ -14,7 +14,7 @@ from github_api import Client  # noqa: E402
 IDS = {"Title": 1, "Status": 2, "Priority": 3, "Version": 4, "Version#": 5, "Updated": 6, "Type": 7}
 
 
-def node(number, name, layout="TABLE_LAYOUT", filter="-label:dummy", group=None, vertical=None, sort=(), fields=("Title",)):
+def node(number, name, layout="TABLE_LAYOUT", filter="is:issue AND -label:dummy", group=None, vertical=None, sort=(), fields=("Title",)):
     return {"id": f"V{number}", "number": number, "name": name, "layout": layout, "filter": filter,
             "groupByFields": {"nodes": [{"name": group}] if group else []},
             "verticalGroupByFields": {"nodes": [{"name": vertical}] if vertical else []},
@@ -59,15 +59,15 @@ def stored(entry):
 
 class FilterTests(unittest.TestCase):
     def test_a_blank_filter_only_leaves_out_the_test_tickets(self):
-        self.assertEqual(views.effective_filter(""), "-label:dummy")
-        self.assertEqual(views.effective_filter(None), "-label:dummy")
+        self.assertEqual(views.effective_filter(""), "is:issue AND -label:dummy")
+        self.assertEqual(views.effective_filter(None), "is:issue AND -label:dummy")
 
     def test_the_test_tickets_are_left_out_of_every_filter(self):
-        self.assertEqual(views.effective_filter("is:open"), "is:open AND -label:dummy")
+        self.assertEqual(views.effective_filter("is:open"), "is:open AND is:issue AND -label:dummy")
 
     def test_a_filter_with_or_is_put_in_parentheses(self):
-        self.assertEqual(views.effective_filter("a:1 OR b:2"), "(a:1 OR b:2) AND -label:dummy")
-        self.assertEqual(views.effective_filter("(a:1 OR b:2)"), "(a:1 OR b:2) AND -label:dummy")
+        self.assertEqual(views.effective_filter("a:1 OR b:2"), "(a:1 OR b:2) AND is:issue AND -label:dummy")
+        self.assertEqual(views.effective_filter("(a:1 OR b:2)"), "(a:1 OR b:2) AND is:issue AND -label:dummy")
 
 
 class DefinitionTests(unittest.TestCase):
@@ -100,6 +100,7 @@ class DefinitionTests(unittest.TestCase):
         self.refused({"views": [{"name": "X", "layout": "table", "vertical_group_by": "Status"}]}, "only for a board")
         self.refused({"views": [{"name": "X", "layout": "table", "group_by": ["Status"]}]}, "one field name")
         self.refused({"views": [{"name": "X", "layout": "table", "include_test_tickets": "yes"}]}, "true or false")
+        self.refused({"views": [{"name": "X", "layout": "table", "include_pull_requests": 1}]}, "true or false")
         self.refused({"views": [{"name": "X", "layout": "table", "manual_steps": "do it"}]}, "manual_steps")
         self.refused({"views": [{"name": "X", "layout": "table", "manual_steps": [""]}]}, "manual_steps")
 
@@ -111,14 +112,14 @@ class DefinitionTests(unittest.TestCase):
 class BodyTests(unittest.TestCase):
     def test_field_names_become_numeric_ids(self):
         body = views.request_body(BOARD_VIEW, IDS)
-        self.assertEqual(body, {"name": "Board", "layout": "board", "filter": "is:open AND -label:dummy",
+        self.assertEqual(body, {"name": "Board", "layout": "board", "filter": "is:open AND is:issue AND -label:dummy",
                                 "group_by": [4], "vertical_group_by": [2]})
 
     def test_sort_and_visible_fields(self):
         body = views.request_body(ALL, IDS)
         self.assertEqual(body["sort_by"], [[5, "desc"]])
         self.assertEqual(body["visible_fields"], [1, 2])
-        self.assertEqual(body["filter"], "-label:dummy")
+        self.assertEqual(body["filter"], "is:issue AND -label:dummy")
 
     def test_an_unknown_field_is_named_and_the_known_ones_listed(self):
         with self.assertRaises(views.ViewsError) as caught:
@@ -135,9 +136,14 @@ class BodyTests(unittest.TestCase):
 
     def test_the_test_tickets_are_kept_only_when_the_entry_asks_for_them(self):
         entry = {"name": "X", "layout": "table", "include_test_tickets": True}
-        self.assertEqual(views.request_body(entry, IDS)["filter"], "")
-        self.assertEqual(views.request_body(dict(entry, filter="is:open"), IDS)["filter"], "is:open")
-        self.assertEqual(views.effective_filter("is:open"), "is:open AND -label:dummy")
+        self.assertEqual(views.request_body(entry, IDS)["filter"], "is:issue")
+        self.assertEqual(views.request_body(dict(entry, filter="is:open"), IDS)["filter"], "is:open AND is:issue")
+        everything = dict(entry, include_pull_requests=True)
+        self.assertEqual(views.request_body(everything, IDS)["filter"], "")
+        self.assertEqual(views.request_body(dict(everything, filter="is:open"), IDS)["filter"], "is:open")
+        self.assertEqual(views.request_body(dict(everything, filter="a:1 OR b:2"), IDS)["filter"], "a:1 OR b:2")
+        self.assertEqual(views.request_body({"name": "X", "layout": "table", "include_pull_requests": True}, IDS)["filter"], "-label:dummy")
+        self.assertEqual(views.effective_filter("is:open"), "is:open AND is:issue AND -label:dummy")
 
 
 class ReadingTests(unittest.TestCase):
@@ -162,19 +168,19 @@ class ReadingTests(unittest.TestCase):
     def test_a_visible_field_the_board_cannot_report_is_not_compared(self):
         # GraphQL does not list the Type field among a view's visible fields, so a view showing it must not look changed.
         wanted = views.desired_state({"name": "X", "layout": "table", "visible_fields": ["Title", "Type"]})
-        current = views.current_state(node(1, "X", "TABLE_LAYOUT", "-label:dummy", fields=["Title"]))
+        current = views.current_state(node(1, "X", "TABLE_LAYOUT", "is:issue AND -label:dummy", fields=["Title"]))
         self.assertEqual(views.differences(wanted, current), [])
 
     def test_a_sort_that_can_only_be_set_by_hand_is_not_compared(self):
         wanted = views.desired_state({"name": "X", "layout": "table", "sort_by": [["Created", "asc"]]})
-        by_hand = views.current_state(node(1, "X", "TABLE_LAYOUT", "-label:dummy", sort=[("Created", "ASC")]))
-        none = views.current_state(node(1, "X", "TABLE_LAYOUT", "-label:dummy"))
+        by_hand = views.current_state(node(1, "X", "TABLE_LAYOUT", "is:issue AND -label:dummy", sort=[("Created", "ASC")]))
+        none = views.current_state(node(1, "X", "TABLE_LAYOUT", "is:issue AND -label:dummy"))
         self.assertEqual(views.differences(wanted, by_hand), [])
         self.assertEqual(views.differences(wanted, none), [])
 
     def test_visible_fields_are_compared_only_when_the_definition_names_them(self):
         wanted = views.desired_state({"name": "X", "layout": "table"})
-        current = views.current_state(node(1, "X", "TABLE_LAYOUT", "-label:dummy", fields=["Title", "Status"]))
+        current = views.current_state(node(1, "X", "TABLE_LAYOUT", "is:issue AND -label:dummy", fields=["Title", "Status"]))
         self.assertEqual(views.differences(wanted, current), [])
 
 

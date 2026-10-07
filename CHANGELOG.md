@@ -1,6 +1,20 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261007142146 (branch project-views)
+#### #80 — Set Version# for tickets that only have a target Version
+- .github/scripts/version_numbers.py: added; a daily step that sets Version# from Version on every work ticket that has a Version (also one only aimed at a version) when Version# is blank or different (Version# is `Version.number()`); it changes nothing else, skips Version and Alert tickets and reports text that is not a version. A dry run only reports.
+- .github/workflows/versioning.yml: the daily job runs it after attaching the Implemented tickets and before the date sweep. tests/test_version_numbers.py: 13 tests; tests/test_workflow.py: the order of the daily steps.
+- guides/appendix-c-ticket-fields-reference.md, guides/03-project-structure.md, guides/appendix-e-ticket-model.md, doc/wiki/Automation.md: Version# is also set every day for a ticket that has a Version; manifest covers the new files.
+#### #81 — Recommend aiming tickets with the Version field instead of planned Version tickets
+- guides/07-issues-and-the-board-in-practice.md: section 6.2 says to aim tickets with the Version field and leave the Version tickets to the automation, and that creating one ahead of time is allowed but not recommended (the Versions view orders its groups by the order the Version tickets were created in, so a ticket made early for a later version would sort ahead of a version that ships first; a planned number is also a guess); section 6.3 has the recommendation and the rule now covers a ticket made anyway; the Why and the checklist agree.
+- guides/03-project-structure.md (section 5.2 stage table and recommendation) and guides/appendix-e-ticket-model.md (the stage table and the note): the planned stage is optional and not recommended.
+#### #82 — Add pull requests to the board so the All view has no gaps in the numbers
+- .github/scripts/board_pull_requests.py: added; puts a pull request on the board as an item with no field set (`PULL_REQUEST` and `PULL_REQUEST_NODE_ID`, as the workflow does when one is opened or reopened), or with `--all` every pull request that is not on it yet (a one-time backfill); whether one is already on the board is asked of the pull request itself, because the board's own list of items does not show the pull requests added to it; it never fails a pull request run. tests/test_board_pull_requests.py: 13 tests.
+- .github/workflows/versioning.yml: the pull request job runs it before the advisory check, with continue-on-error, so a failure there never fails the check. tests/test_workflow.py: a test of that step.
+- .github/scripts/views.py, .github/views.json: every view except All now ends with `AND is:issue AND -label:dummy` (the new entry key `include_pull_requests`, set only on All); the five views were created again; tests/test_views.py: 42 tests.
+- tests/test_pull_request_items.py: added; the date, Watch, field-rule, Implemented and Version# sweeps skip a board item that is a pull request or a draft.
+- guides/03-project-structure.md (section 6.2), guides/07-issues-and-the-board-in-practice.md (section 2.2), doc/wiki/Automation.md and doc/wiki/Board-Views.md: describe it; the 8 existing pull requests (#2, #10, #23, #26, #32, #53, #64, #68) were added to the board.
 ### Build 20261007042123 (branch project-views)
 #### #72 — Create the All view
 - .github/views.json: the `All` view now lists every ticket and hides nothing (no filter, so the test tickets are in it too), has no grouping, and is meant to be in ticket-number order (sort by Created, ascending).

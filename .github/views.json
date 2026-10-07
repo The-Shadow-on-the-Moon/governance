@@ -4,6 +4,7 @@
       "name": "All",
       "layout": "table",
       "include_test_tickets": true,
+      "include_pull_requests": true,
       "sort_by": [["Created", "asc"]],
       "manual_steps": ["turn off \"Show hierarchy\", so that tickets are not listed inside their Version ticket and the list is flat"],
       "visible_fields": ["Title", "Assignees", "Status", "Type", "Labels", "Origin", "REF", "Waiting", "Attention", "Resolution", "Delivery", "Priority", "Size", "Risk", "Version", "Build", "Version#", "Start date", "End date"]

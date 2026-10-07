@@ -73,8 +73,8 @@ Items 1 to 4 are the things that need a person, and one view, *Health* (section 
 
 The board has five saved views, in this order:
 
-- **All:** every ticket on the board, test tickets included, with all its fields and in ticket-number order, for
-  finding anything and for audit.
+- **All:** every item on the board, test tickets and pull requests included, with all its fields and in
+  ticket-number order, with no gap in the numbers, for finding anything and for audit.
 - **Backlog:** a board of the tickets at *ToDo*, *OnDeck* and *Suspended*, the most urgent first.
 - **Board:** the active work, with the columns *OnDeck*, *InProgress* and *Review* and a row for each Version,
   so you see what each version holds and where each ticket is.
@@ -86,7 +86,8 @@ The board has five saved views, in this order:
   Build and Resolution, to see what each version holds and whether it shipped. Tickets only aimed at a version,
   which have no Version ticket yet, are in a group of their own, ordered by version.
 
-Every view except All leaves out test tickets by ending its filter with `-label:dummy` (see *Ticket fields reference*).
+Every view except All leaves out pull requests and test tickets by ending its filter with `is:issue AND -label:dummy`
+(see *Ticket fields reference*; the automation puts each pull request on the board so that All has no gaps).
 The views are defined in a file, `.github/views.json`, and created by a script, `views.py`, so every project
 has the same ones. To change a view, change the file and run the script. Two settings of *All* are made by
 hand when it is created, because the API cannot reach them: the sort *Created, ascending* and *Show hierarchy* off
@@ -301,12 +302,20 @@ coming back.
 
 ### 6.2 Planned Version tickets
 
-- You may create a Version ticket ahead of time, titled exactly `Version 2.5.0`, with Type *Version*,
-  Delivery blank and the issue open. It is a place to record what you plan for that version.
-- Before the version is finalized it is only a plan. Tickets are not attached to it as sub-issues ahead of
-  time; the target Version field on each ticket says which version it is aimed at, and the automation
-  attaches the tickets when it finalizes the version.
-- When a version ships under that number, the automation reuses the planned ticket (it matches by the exact
+- **Aim tickets with their Version field and nothing else.** The automation creates the Version ticket
+  itself when the version is finalized, so the Version tickets exist in the order the versions shipped.
+  Aimed tickets show on the *Board* view (a row for each Version), in the *Backlog*, and in the *Versions*
+  view's group of tickets with no Version ticket yet, ordered by Version#.
+- **Creating a Version ticket ahead of time is allowed but not recommended.** It would be titled exactly
+  `Version 2.5.0`, with Type *Version*, Delivery blank and the issue open, as a place to record what you
+  plan. But the *Versions* view orders its groups by the order the Version tickets were created in: a ticket
+  made early for a later version (say `Version 2.0.0` while the project is at 1.30.0) would sort ahead of a
+  version that ships first (1.31.0, created by the automation when it ships). A planned number is also a guess
+  (the bump is decided at merge), so a planned ticket tends to go stale.
+- Before the version is finalized a planned ticket is only a plan. Tickets are not attached to it as
+  sub-issues ahead of time; the target Version field on each ticket says which version it is aimed at, and
+  the automation attaches the tickets when it finalizes the version.
+- When a version ships under that number, the automation reuses a planned ticket (it matches by the exact
   title). Otherwise it creates one.
 - **If the planned version will not happen** under that number, mark it *Dropped*, close it, and comment
   what replaced it. Move its tickets' target Version to the new one.
@@ -315,8 +324,10 @@ coming back.
 ### 6.3 Rules
 
 - **Rule:** target versions and planned Version tickets are set by someone holding the project owner role.
-- **Rule:** a planned Version ticket is titled exactly `Version X.Y.Z`, so that the automation can reuse
-  it.
+- **Recommendation:** aim tickets with the Version field, and do not create Version tickets ahead of time
+  (section 6.2).
+- **Rule:** a planned Version ticket, if you create one, is titled exactly `Version X.Y.Z`, so that the
+  automation can reuse it.
 - **Rule:** tickets are not attached to a Version ticket as sub-issues before it is finalized.
 - **Rule:** a planned version that will not happen is marked *Dropped* and closed with a comment saying
   what replaced it.
@@ -329,7 +340,8 @@ coming back.
 bump is decided at merge from the tickets' Types and any marker, so a version planned as 2.5.0 may ship as
 2.4.2 or 3.0.0, and every planned number is something to clean up if it turns out wrong. Keeping the
 tickets unattached until finalize means a plan never has to be undone, and the Version field on each ticket
-already carries the aim.
+already carries the aim. The Version tickets are left to the automation, because the *Versions* view lists them
+in creation order, which is then the order the versions shipped.
 
 
 ---
@@ -419,8 +431,9 @@ A one-page summary of the guide. It adds no new rules.
 **Alerts and planning** (sections 5 and 6)
 
 - [ ] An Alert assigned to me is triaged before other work. A false positive is abandoned with *Invalid*.
-- [ ] A planned Version ticket is titled exactly `Version X.Y.Z`, has no tickets attached before it is
-      finalized, and is marked *Dropped* and closed if it will not happen.
+- [ ] Tickets are aimed with their Version field. If I did create a planned Version ticket, it is titled
+      exactly `Version X.Y.Z`, has no tickets attached before it is finalized, and is marked *Dropped* and
+      closed if it will not happen.
 
 **Housekeeping** (section 7)
 

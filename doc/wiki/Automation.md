@@ -18,10 +18,10 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 
 | When | What runs |
 |---|---|
-| A pull request | The advisory check: fails and comments once when the branch is behind `main`, and lists merges with a manual conflict resolution. |
+| A pull request | The pull request is put on the board as an item with no field set (so the All view has no gap in the numbers; a failure there never fails the run), then the advisory check: it fails and comments once when the branch is behind `main`, and lists merges with a manual conflict resolution. |
 | A push to `main` | The preflight, then bypass detection (an Alert and an `AUTO-REF` entry), then the finalize step, then the check for stale planned Version tickets, then the date sweep, then the Watch flags, then the Caution flags for field rules. |
 | A push to another branch | The preflight; then the fallback for skipped hooks (a pushed changelog that still has `### WIP-Build` gets its build heading filled in with the commit's time and hash, a note in the first entry, and a commit on the branch); then the push step: for each ticket in the changelog entries the push added, Delivery becomes *Pushed* and Build the ticket's latest build, *ToDo* and *OnDeck* tickets become *InProgress*, and a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and already had work pushed or delivered (recognised by its recorded Build being older than the pushed one, or by Delivery *Implemented*, which has no Build) gets a *Caution* flag with a comment naming the build (not on its first push, not when the Delivery was only set by hand, and not again while a *Caution* or *AtRisk* is open). |
-| Every day at 06:17 UTC, or on request with mode `daily` | The preflight, then attaching *Implemented* tickets to their versions, the date sweep, the Watch flags and the Caution flags for field rules. It never commits. |
+| Every day at 06:17 UTC, or on request with mode `daily` | The preflight, then attaching *Implemented* tickets to their versions, setting Version# from Version, the date sweep, the Watch flags and the Caution flags for field rules. It never commits. |
 | On request with mode `finalize` | The preflight and the finalize step, as a dry run unless told otherwise. Safe to repeat. |
 
 The preflight checks that the repository is reachable (the workflow's own token does not report its rights, so write access is confirmed through the project token), that `PROJECT_TOKEN` works (and warns two weeks before it expires), which board belongs to the repository (its number is kept in the repository variable `BOARD_NUMBER`) and that the board has every field and value the automation needs.
@@ -64,6 +64,8 @@ All in `.github/scripts/`, with a test file for each in `tests/`. Each can be ru
 | `advisory.py` | The advisory check on a pull request. |
 | `push_step.py`, `skipped_hooks.py` | The push step and the fallback for skipped hooks. |
 | `implemented.py` | Attaching *Implemented* tickets (the daily entry). |
+| `board_pull_requests.py` | Puts a pull request on the board (`PULL_REQUEST`, as the workflow does), or with `--all` every pull request that is not on it yet (a one-time backfill). It sets no field, and it never fails a pull request run. |
+| `version_numbers.py` | Sets Version# from Version on every work ticket that has a Version and a blank or different Version# (so an aimed ticket sorts by version). Changes nothing else. |
 | `dates.py`, `watch.py`, `field_rules.py` | The date sweep, the Watch flags and the Caution flags for field rules. |
 | `views.py` | Creates, recreates and removes the board's saved views from `.github/views.json` (grouping and sorting can only be set when a view is created, so a changed view is created again and the old one deleted after it; GitHub never deletes the last view of a board). By hand only, with `PROJECT_TOKEN`; it is a dry run unless `--apply` is given: `--only NAME`, `--delete NAME`, `--delete-unlisted`, `--show` (prints the board's views in the file's format), `--definition PATH`. Board settings are the administrator's, so it is run only when the administrator asks. |
 | `check_manifest.py` | The manifest check and its rewrite (no tokens needed). |

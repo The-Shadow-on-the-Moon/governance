@@ -1456,7 +1456,9 @@ nothing in the repository shows that a secret was stored or a setting changed.
 - **Rule:** Version is a single field for the version a ticket is aimed at and, once it ships, the
   version it really shipped in: a person may set it ahead of time, and the automation overwrites it with
   the real version. Build holds the ticket's latest build (the most recent build stamp among the build blocks that
-  mention it), and Version# is derived from Version only to sort versions.
+  mention it), and Version# is derived from Version only to sort versions. The automation sets it, not only
+  when a version ships but every day for any ticket that has a Version, so a ticket that is only aimed at a
+  version sorts among the others.
 - **Rule:** Start date and End date are the dates the automation noticed the ticket start and end. A
   person may correct one by hand. The automation clears the End date when it sees the ticket open again.
 
@@ -1505,7 +1507,7 @@ of them are complete. A Version ticket does no work and is never verified.
 
 | Stage | What happens | Delivery | Issue |
 |---|---|---|---|
-| **Planned** (optional) | A person creates it ahead of time for a future version. | blank | open |
+| **Planned** (optional, not recommended) | A person creates it ahead of time for a future version. | blank | open |
 | **Finalized** | The automation creates it, or reuses the planned one with the same title, when the version is finalized. | Merged | closed by the automation |
 | **Released** | A release is cut on that version. The automation posts a comment with the date and the tag name. | Released | stays closed |
 | **Planned, then dropped** | The version never happened under that number. A person marks it. | Dropped | closed, with a comment saying what replaced it |
@@ -1524,8 +1526,11 @@ of them are complete. A Version ticket does no work and is never verified.
 - **Rule:** when a version is finalized, any planned Version ticket with a lower number can no longer
   happen under that number. The automation raises one Alert listing them (section 5.3). Hotfix versions
   do not run this check.
-- **Recommendation:** planning ahead by creating a Version ticket is optional. When a planned number turns
-  out wrong, the alert above is how the mismatch is cleaned up.
+- **Recommendation:** do not create Version tickets ahead of time. Aim tickets at a version with their
+  Version field instead (the guide on issues and the board in practice, section 6): the automation creates the
+  Version ticket when the version is finalized, so the Version tickets are in the order the versions shipped,
+  which the *Versions* view relies on. If you do plan one and the number turns out wrong, the alert above is
+  how the mismatch is cleaned up.
 
 *Why.* Delivery already describes a version's life (planned, merged, released, dropped), so a Version
 ticket needs no Progress. One ticket per version gives a single place to see what shipped in it and how
@@ -1651,6 +1656,11 @@ in the guide on branching and merging; this section only defines it and says wha
 
 Ticket fields (Type, Area, Priority and the rest) do not apply to a pull request, and labels on it play no
 part in versioning: the version number comes from the tickets.
+
+A pull request shares its number with the tickets, so the numbers of the pull requests would be missing from the
+board's *All* view. The automation therefore puts each pull request on the board as an item when it is opened,
+and sets no field on it. The other views leave pull requests out (their filters end with `is:issue`), and the
+automation's sweeps skip them, because a pull request is not a ticket.
 
 #### 6.3 Creating and ending one
 
@@ -3225,8 +3235,8 @@ Items 1 to 4 are the things that need a person, and one view, *Health* (section 
 
 The board has five saved views, in this order:
 
-- **All:** every ticket on the board, test tickets included, with all its fields and in ticket-number order, for
-  finding anything and for audit.
+- **All:** every item on the board, test tickets and pull requests included, with all its fields and in
+  ticket-number order, with no gap in the numbers, for finding anything and for audit.
 - **Backlog:** a board of the tickets at *ToDo*, *OnDeck* and *Suspended*, the most urgent first.
 - **Board:** the active work, with the columns *OnDeck*, *InProgress* and *Review* and a row for each Version,
   so you see what each version holds and where each ticket is.
@@ -3238,7 +3248,8 @@ The board has five saved views, in this order:
   Build and Resolution, to see what each version holds and whether it shipped. Tickets only aimed at a version,
   which have no Version ticket yet, are in a group of their own, ordered by version.
 
-Every view except All leaves out test tickets by ending its filter with `-label:dummy` (see *Ticket fields reference*).
+Every view except All leaves out pull requests and test tickets by ending its filter with `is:issue AND -label:dummy`
+(see *Ticket fields reference*; the automation puts each pull request on the board so that All has no gaps).
 The views are defined in a file, `.github/views.json`, and created by a script, `views.py`, so every project
 has the same ones. To change a view, change the file and run the script. Two settings of *All* are made by
 hand when it is created, because the API cannot reach them: the sort *Created, ascending* and *Show hierarchy* off
@@ -3453,12 +3464,20 @@ coming back.
 
 #### 6.2 Planned Version tickets
 
-- You may create a Version ticket ahead of time, titled exactly `Version 2.5.0`, with Type *Version*,
-  Delivery blank and the issue open. It is a place to record what you plan for that version.
-- Before the version is finalized it is only a plan. Tickets are not attached to it as sub-issues ahead of
-  time; the target Version field on each ticket says which version it is aimed at, and the automation
-  attaches the tickets when it finalizes the version.
-- When a version ships under that number, the automation reuses the planned ticket (it matches by the exact
+- **Aim tickets with their Version field and nothing else.** The automation creates the Version ticket
+  itself when the version is finalized, so the Version tickets exist in the order the versions shipped.
+  Aimed tickets show on the *Board* view (a row for each Version), in the *Backlog*, and in the *Versions*
+  view's group of tickets with no Version ticket yet, ordered by Version#.
+- **Creating a Version ticket ahead of time is allowed but not recommended.** It would be titled exactly
+  `Version 2.5.0`, with Type *Version*, Delivery blank and the issue open, as a place to record what you
+  plan. But the *Versions* view orders its groups by the order the Version tickets were created in: a ticket
+  made early for a later version (say `Version 2.0.0` while the project is at 1.30.0) would sort ahead of a
+  version that ships first (1.31.0, created by the automation when it ships). A planned number is also a guess
+  (the bump is decided at merge), so a planned ticket tends to go stale.
+- Before the version is finalized a planned ticket is only a plan. Tickets are not attached to it as
+  sub-issues ahead of time; the target Version field on each ticket says which version it is aimed at, and
+  the automation attaches the tickets when it finalizes the version.
+- When a version ships under that number, the automation reuses a planned ticket (it matches by the exact
   title). Otherwise it creates one.
 - **If the planned version will not happen** under that number, mark it *Dropped*, close it, and comment
   what replaced it. Move its tickets' target Version to the new one.
@@ -3467,8 +3486,10 @@ coming back.
 #### 6.3 Rules
 
 - **Rule:** target versions and planned Version tickets are set by someone holding the project owner role.
-- **Rule:** a planned Version ticket is titled exactly `Version X.Y.Z`, so that the automation can reuse
-  it.
+- **Recommendation:** aim tickets with the Version field, and do not create Version tickets ahead of time
+  (section 6.2).
+- **Rule:** a planned Version ticket, if you create one, is titled exactly `Version X.Y.Z`, so that the
+  automation can reuse it.
 - **Rule:** tickets are not attached to a Version ticket as sub-issues before it is finalized.
 - **Rule:** a planned version that will not happen is marked *Dropped* and closed with a comment saying
   what replaced it.
@@ -3481,7 +3502,8 @@ coming back.
 bump is decided at merge from the tickets' Types and any marker, so a version planned as 2.5.0 may ship as
 2.4.2 or 3.0.0, and every planned number is something to clean up if it turns out wrong. Keeping the
 tickets unattached until finalize means a plan never has to be undone, and the Version field on each ticket
-already carries the aim.
+already carries the aim. The Version tickets are left to the automation, because the *Versions* view lists them
+in creation order, which is then the order the versions shipped.
 
 
 ---
@@ -3571,8 +3593,9 @@ A one-page summary of the guide. It adds no new rules.
 **Alerts and planning** (sections 5 and 6)
 
 - [ ] An Alert assigned to me is triaged before other work. A false positive is abandoned with *Invalid*.
-- [ ] A planned Version ticket is titled exactly `Version X.Y.Z`, has no tickets attached before it is
-      finalized, and is marked *Dropped* and closed if it will not happen.
+- [ ] Tickets are aimed with their Version field. If I did create a planned Version ticket, it is titled
+      exactly `Version X.Y.Z`, has no tickets attached before it is finalized, and is marked *Dropped* and
+      closed if it will not happen.
 
 **Housekeeping** (section 7)
 
@@ -4911,7 +4934,7 @@ Informational only: it drives no rule or automation.
 |---|---|---|
 | **Version** (text) | The version a ticket is aimed at and, once it ships, the version it really shipped in (`V2.1.0`, or `V2.1.0-HF1` for a hotfix). | a person may set it ahead of time; the automation overwrites it with the real version (for a backfilled ticket, the version where its placeholder appears). On an *Implemented* ticket the person's value stays |
 | **Build** (text) | The latest build of the ticket: the most recent build stamp among the build blocks that mention it. | the automation |
-| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation |
+| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation: at finalize, and every day for any ticket that has a Version (also one that is only aimed at a version) and a blank or different Version# |
 
 ### Start date and End date
 
@@ -5408,7 +5431,7 @@ Progress: its Delivery describes its life.
 
 | Stage | Delivery | Issue |
 |---|---|---|
-| **Planned** (optional, created by a person) | blank | open |
+| **Planned** (optional, not recommended; created by a person) | blank | open |
 | **Finalized** (created or reused by the automation at finalize) | *Merged* | closed by the automation |
 | **Released** | *Released* | stays closed |
 | **Planned, then dropped** (marked by a person) | *Dropped* | closed, with a comment saying what replaced it |
@@ -5417,7 +5440,9 @@ A hotfix version goes straight to *Released*, because a hotfix is never merged i
 automation writes the description (date, bump and why, pull request, tickets with their Type) and attaches
 the version's tickets, and any *Implemented* ones, as sub-issues, so the board shows how many are complete.
 A planned Version ticket whose number is lower than the one just finalized can no longer happen, and the
-automation raises one Alert listing them.
+automation raises one Alert listing them. Aiming a ticket at a future version needs no planned Version ticket (its
+Version field is enough), and leaving the Version tickets to the automation keeps them in the order the versions
+shipped, which the Versions view relies on.
 
 #### Alert tickets
 
@@ -5433,7 +5458,8 @@ until someone takes it. Size and Risk are set by whoever triages it. Alerts have
   *Enhancement* gives a sub-version, otherwise a mod; *Version* and *Alert* are ignored; markers `+V`, `+s`
   and `+m` override it.
 - **Delivery, Version, Build and dates** are written by the automation from pushes, merges, releases and a
-  sweep that runs after each finalize and once a day.
+  sweep that runs after each finalize and once a day. The daily run also sets Version# on any ticket that has a
+  Version, so a ticket only aimed at a version sorts with the others.
 - **Attention** is raised from the same sweep and from pushes.
 - **Nothing in Area, Risk, Priority or Size** drives any rule.
 

@@ -86,6 +86,15 @@ class WorkflowTests(unittest.TestCase):
         main = text[text.index("  main:"):]
         self.assertIn("github.ref == 'refs/heads/main'", main)
 
+    def test_a_pull_request_is_put_on_the_board_before_the_advisory_check_and_cannot_fail_the_run(self):
+        text = workflow()
+        advisory = text[text.index("\n  advisory:\n"):text.index("\n  branch:\n")]
+        step = advisory[advisory.index("Put the pull request on the board"):advisory.index("Advisory check")]
+        self.assertIn("continue-on-error: true", step)
+        self.assertIn("board_pull_requests.py", step)
+        self.assertIn("PULL_REQUEST_NODE_ID: ${{ github.event.pull_request.node_id }}", step)
+        self.assertIn("PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}", step)
+
     def test_the_daily_job_is_scheduled_and_can_be_started_by_hand(self):
         text = workflow()
         self.assertRegex(text, r"schedule:\n    - cron: '\d+ \d+ \* \* \*'")
@@ -99,7 +108,7 @@ class WorkflowTests(unittest.TestCase):
     def test_the_daily_job_runs_the_checks_in_order_and_never_commits(self):
         text = workflow()
         daily = text[text.index("  daily:"):text.index("  release:")]
-        order = ["preflight.py", "implemented.py", "dates.py", "watch.py", "field_rules.py"]
+        order = ["preflight.py", "implemented.py", "version_numbers.py", "dates.py", "watch.py", "field_rules.py"]
         positions = [daily.index(name) for name in order]
         self.assertEqual(positions, sorted(positions))
         for forbidden in ("git push", "git commit", "finalize.py", "bypass.py"):

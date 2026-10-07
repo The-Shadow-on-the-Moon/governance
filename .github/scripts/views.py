@@ -8,9 +8,10 @@ GitHub never deletes the last view of a board, so the new view is created before
 The definition file (`.github/views.json`) lists the views in the order of their tabs. Each entry has a
 `name`, a `layout` (`table`, `board` or `roadmap`) and optionally a `filter`, `group_by` (a field name),
 `vertical_group_by` (the board columns), `sort_by` (a list of [field name, "asc" or "desc"]) and
-`visible_fields` (field names). Every filter automatically ends with ` AND -label:dummy`, so test tickets
-never show in a view (see the ticket fields reference), unless the entry has `"include_test_tickets": true`
-(the view that lists every ticket). A sort by Created, Updated or Closed can be written in `sort_by`, but the
+`visible_fields` (field names). Every filter automatically ends with ` AND is:issue AND -label:dummy`, so
+pull requests (which are on the board only to fill the gaps in the numbers of the All view) and test tickets
+(see the ticket fields reference) never show in a view, unless the entry has `"include_pull_requests": true`
+and `"include_test_tickets": true` (the view that lists everything). A sort by Created, Updated or Closed can be written in `sort_by`, but the
 API cannot set it when a view is created, so the script leaves it out, does not compare it, and says to set
 it by hand in the web interface. An entry may also list `manual_steps`: settings the API cannot reach (for
 example turning off "Show hierarchy"), which the script prints as a reminder whenever it creates the view.
@@ -36,8 +37,9 @@ from github_api import Client, GitHubError
 
 DEFINITION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "views.json")
 LAYOUTS = {"table": "TABLE_LAYOUT", "board": "BOARD_LAYOUT", "roadmap": "ROADMAP_LAYOUT"}
-KEYS = {"name", "layout", "filter", "group_by", "vertical_group_by", "sort_by", "visible_fields", "include_test_tickets", "manual_steps"}
+KEYS = {"name", "layout", "filter", "group_by", "vertical_group_by", "sort_by", "visible_fields", "include_test_tickets", "include_pull_requests", "manual_steps"}
 TEST_TICKETS = "-label:dummy"
+ISSUES_ONLY = "is:issue"
 UNREADABLE = ("Type",)  # GraphQL does not report this field among a view's visible fields, so it is not compared
 MANUAL_SORT = ("Created", "Updated", "Closed")  # the API rejects these as a sort field when a view is created
 
@@ -46,16 +48,16 @@ class ViewsError(RuntimeError):
     pass
 
 
-def effective_filter(text, include_test_tickets=False):
-    """The filter a view really gets: the written one, then the exclusion of the test tickets (unless they are wanted)."""
+def effective_filter(text, include_test_tickets=False, include_pull_requests=False):
+    """The filter a view really gets: the written one, then `is:issue` (pull requests are on the board only so that
+    the All view has no gaps in the numbers) and the exclusion of the test tickets, unless they are wanted."""
     text = (text or "").strip()
-    if include_test_tickets:
+    added = ([] if include_pull_requests else [ISSUES_ONLY]) + ([] if include_test_tickets else [TEST_TICKETS])
+    if not added:
         return text
-    if not text:
-        return TEST_TICKETS
-    if " OR " in text and not (text.startswith("(") and text.endswith(")")):
+    if text and " OR " in text and not (text.startswith("(") and text.endswith(")")):
         text = f"({text})"
-    return f"{text} AND {TEST_TICKETS}"
+    return " AND ".join(([text] if text else []) + added)
 
 
 def load_definition(path=DEFINITION):
@@ -81,8 +83,9 @@ def load_definition(path=DEFINITION):
             raise ViewsError(f"{label}: unknown key(s) {', '.join(sorted(extra))}")
         if entry.get("layout") not in LAYOUTS:
             raise ViewsError(f"{label}: the layout must be one of {', '.join(LAYOUTS)}")
-        if "include_test_tickets" in entry and not isinstance(entry["include_test_tickets"], bool):
-            raise ViewsError(f"{label}: include_test_tickets must be true or false")
+        for flag in ("include_test_tickets", "include_pull_requests"):
+            if flag in entry and not isinstance(entry[flag], bool):
+                raise ViewsError(f"{label}: {flag} must be true or false")
         steps = entry.get("manual_steps", [])
         if not (isinstance(steps, list) and all(isinstance(step, str) and step.strip() for step in steps)):
             raise ViewsError(f"{label}: manual_steps must be a list of sentences")
@@ -106,7 +109,7 @@ def load_definition(path=DEFINITION):
 def desired_state(entry):
     """The entry in the form that a board view is read back in, with the automatic filter added."""
     state = {"name": entry["name"], "layout": entry["layout"],
-             "filter": effective_filter(entry.get("filter"), entry.get("include_test_tickets", False)),
+             "filter": effective_filter(entry.get("filter"), entry.get("include_test_tickets", False), entry.get("include_pull_requests", False)),
              "group_by": entry.get("group_by"), "vertical_group_by": entry.get("vertical_group_by"),
              "sort_by": [list(sort) for sort in entry.get("sort_by", [])]}
     if entry.get("visible_fields") is not None:
@@ -158,7 +161,7 @@ def request_body(entry, ids):
         return ids.get(name)
 
     body = {"name": entry["name"], "layout": entry["layout"],
-            "filter": effective_filter(entry.get("filter"), entry.get("include_test_tickets", False))}
+            "filter": effective_filter(entry.get("filter"), entry.get("include_test_tickets", False), entry.get("include_pull_requests", False))}
     if entry.get("visible_fields") is not None:
         body["visible_fields"] = [one(name) for name in entry["visible_fields"]]
     sorts = [[name, direction] for name, direction in entry.get("sort_by", []) if name not in MANUAL_SORT]

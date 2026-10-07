@@ -121,7 +121,7 @@ Progress: its Delivery describes its life.
 
 | Stage | Delivery | Issue |
 |---|---|---|
-| **Planned** (optional, created by a person) | blank | open |
+| **Planned** (optional, not recommended; created by a person) | blank | open |
 | **Finalized** (created or reused by the automation at finalize) | *Merged* | closed by the automation |
 | **Released** | *Released* | stays closed |
 | **Planned, then dropped** (marked by a person) | *Dropped* | closed, with a comment saying what replaced it |
@@ -130,7 +130,9 @@ A hotfix version goes straight to *Released*, because a hotfix is never merged i
 automation writes the description (date, bump and why, pull request, tickets with their Type) and attaches
 the version's tickets, and any *Implemented* ones, as sub-issues, so the board shows how many are complete.
 A planned Version ticket whose number is lower than the one just finalized can no longer happen, and the
-automation raises one Alert listing them.
+automation raises one Alert listing them. Aiming a ticket at a future version needs no planned Version ticket (its
+Version field is enough), and leaving the Version tickets to the automation keeps them in the order the versions
+shipped, which the Versions view relies on.
 
 ### Alert tickets
 
@@ -146,7 +148,8 @@ until someone takes it. Size and Risk are set by whoever triages it. Alerts have
   *Enhancement* gives a sub-version, otherwise a mod; *Version* and *Alert* are ignored; markers `+V`, `+s`
   and `+m` override it.
 - **Delivery, Version, Build and dates** are written by the automation from pushes, merges, releases and a
-  sweep that runs after each finalize and once a day.
+  sweep that runs after each finalize and once a day. The daily run also sets Version# on any ticket that has a
+  Version, so a ticket only aimed at a version sorts with the others.
 - **Attention** is raised from the same sweep and from pushes.
 - **Nothing in Area, Risk, Priority or Size** drives any rule.
 
