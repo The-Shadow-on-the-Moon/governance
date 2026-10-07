@@ -1,6 +1,9 @@
 # Changelog
 
 ## WIP-Version
+### WIP-Build
+#### #93 — DUMMY test for #90: git push with the credentials of actions/checkout@v7
+- CHANGELOG.md: a second throwaway entry with a build placeholder, hooks skipped, pushed with the workflows of actions/checkout@v7.
 ### Build 20261007185122 (branch dummy-test-90-checkout-credentials, commit a96c9ad)
 #### #93 — DUMMY test for #90: git push with the credentials of actions/checkout@v7
 - Note from the automation: this commit (a96c9ad, made 2026-10-07 18:51 UTC) was pushed with the build placeholder still in the changelog, so the local hooks were skipped. The build heading was filled in here, and the commit message was not drafted from these entries.
