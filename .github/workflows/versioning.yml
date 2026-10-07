@@ -66,7 +66,7 @@ permissions:
 jobs:
   advisory:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout the pull request
         uses: actions/checkout@v7
@@ -93,7 +93,7 @@ jobs:
 
   branch:
     if: github.event_name == 'push' && github.ref != 'refs/heads/main' && !github.event.deleted
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: versioning-branch-${{ github.ref }}
       cancel-in-progress: false
@@ -135,7 +135,7 @@ jobs:
        github.ref == 'refs/heads/main' &&
        !startsWith(github.event.head_commit.message, 'Finalize ') &&
        !startsWith(github.event.head_commit.message, 'Flag bypass'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: versioning-main
       cancel-in-progress: false
@@ -214,7 +214,7 @@ jobs:
 
   daily:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'daily')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: versioning-daily
       cancel-in-progress: false
@@ -273,7 +273,7 @@ jobs:
 
   release:
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'release'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: versioning-release
       cancel-in-progress: false
@@ -301,7 +301,7 @@ jobs:
 
   hotfix:
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'hotfix' && github.ref_type == 'branch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: versioning-hotfix-${{ github.ref_name }}
       cancel-in-progress: false
@@ -337,7 +337,7 @@ jobs:
 
   retire:
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'retire'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: versioning-retire
       cancel-in-progress: false

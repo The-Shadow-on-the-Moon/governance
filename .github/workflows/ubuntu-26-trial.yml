@@ -1,0 +1,35 @@
+name: Ubuntu 26.04 trial
+
+# Throwaway: runs the project's checks on the Ubuntu 26.04 image. Never merged.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  trial:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Versions on the image
+        run: |
+          cat /etc/os-release | head -3
+          python3 --version
+          git --version
+          gh --version | head -1
+          node --version || true
+
+      - name: Cross-reference check
+        run: python3 tools/xref_check.py
+
+      - name: Combined guide is up to date
+        run: python3 tools/combine.py --check
+
+      - name: Manifest check
+        run: python3 .github/scripts/check_manifest.py
+
+      - name: Tests
+        run: python3 -m unittest discover -s tests
