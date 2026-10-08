@@ -104,19 +104,16 @@ procedure.
 
 ### 2.4 Rules
 
-- **Rule:** a hotfix starts from a release tag and is never merged into `main`.
-- **Rule:** the hotfix number is a single digit, starting at 1, counted separately for each released
-  version: `V1.25.0-HF1`, `V1.25.0-HF2`. If a release would need a tenth hotfix, finish the fix on `main` and
-  release that version instead. The limit is deliberate: a release that needs that many fixes should be
-  replaced by a newer one, not patched further.
+The rules about what a hotfix is (it starts from a release tag and is never merged, its version lineage
+and the single-digit limit on hotfix numbers, how the fix reaches `main`, and that a finished hotfix
+branch is deleted without a retirement tag) are in the guide on branching and merging, sections 1.3
+and 2.2. The rules for the procedure are these:
+
 - **Rule:** the hotfix version is given explicitly when it is finished, because there is nothing to
   compute it from.
 - **Rule:** verify the hotfix before finishing it, as for any release.
-- **Rule:** the fix reaches `main` separately, as its own ticket and pull request.
 - **Rule:** the developer starts and finishes a hotfix, and tells the project owner when it is started and
   when it is released.
-- **Rule:** a finished hotfix branch is deleted without a retirement tag, because its release tag already
-  keeps its history. A hotfix that was never finished is suspended or abandoned like any other branch.
 - **Recommendation:** keep a hotfix to the fix itself, and nothing else.
 
 **Why.**

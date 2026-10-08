@@ -1,6 +1,15 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261008230718 (branch project-views)
+#### #113 — Keep each rule in one place in the guides, with tests against drift
+- A sweep of every guide, the appendices, the wiki and the readmes for rules stated in more than one place (a scan of repeated passages, a scan of repeated numbers and counts, and a check that every cross-reference points at a section about the topic named).
+- guides/appendix-c-ticket-fields-reference.md: the Progress, Waiting and Resolution paragraphs no longer repeat the rules of Project structure, section 4.3; they point to it.
+- guides/08-releases-hotfixes-and-retiring-branches.md (section 2.4): the hotfix rules that Branching and merging sections 1.3 and 2.2 already set out are replaced by a pointer; the rules that belong to the procedure stay. guides/06-syncing-and-merging.md (sections 6.3, 7.1): the bypass and branch-retirement rules point to Branching and merging, sections 6.5 and 1.5. guides/04-starting-work.md (section 3.2) and guides/03-project-structure.md (section 8.1): the hotfix branch name points to Branching and merging, section 2.1. guides/03-project-structure.md (section 7.3), guides/05-working-and-committing.md (sections 1, 7.2) and guides/01-concepts-and-vocabulary.md (section 1): the rules on entries and on the build block, the Attention advice and the test-result sentence point to their one home.
+- guides/appendix-e-ticket-model.md and doc/wiki/Ticket-Model.md: the questions of the Attention and Origin fields are worded as in Project structure, section 4.2 (the test found them different).
+- doc/wiki/Automation.md: the date sweep runs on every scheduled run (it said "every day"); a release treats Implemented tickets like merged ones (it said "will"); the release step records the result as a strong recommendation; bypass detection includes the changelog-error Alert.
+- tests/test_tools.py: 2 new tests, the field questions of Project structure, Appendix E and the wiki page Ticket-Model are identical, and the line-endings rule quotes the project's own `.gitattributes`; 9 tests in `GuideValueTests`.
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
 ### Build 20261008225021 (branch project-views)
 #### #113 — Keep each rule in one place in the guides, with tests against drift
 - guides/README.md: new section "Where a rule lives", a table that names the one place each rule is set out.

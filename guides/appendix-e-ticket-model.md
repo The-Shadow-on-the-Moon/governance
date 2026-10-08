@@ -18,10 +18,10 @@ code has shipped).
 |---|---|---|---|
 | **Type** | What sort of ticket is this, and why is the change being made? | the issue type | a person (the automation for Version and Alert tickets) |
 | **Area** | What kind of work does it involve? | labels, several per ticket | a person |
-| **Origin**, **REF** | Was it created after the work, and which placeholder did it replace? | board fields | a person |
+| **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | board fields | a person |
 | **Progress** | Where is the work? | the board's Status field | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
 | **Waiting** | Is it waiting for someone's input? | board field | a person |
-| **Attention** | Has its state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
+| **Attention** | Has the ticket's state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
 | **Resolution** | How did it end? | board field | a person |
 | **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed* and *Implemented*) |
 | **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Version#, Start date, End date | a person, except Build, Version#, the real Version and the dates |

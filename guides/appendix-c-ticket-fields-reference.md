@@ -94,10 +94,9 @@ Where the work is.
 | **Abandoned** | Dropped, not expected to return. | a person |
 
 The path is *ToDo, OnDeck, InProgress, Review, Completed*. *Suspended* and *Abandoned* are exits from any
-open state. A reviewer may send work back from *Review* to *InProgress*. The automation never sets
-*Review* or *Completed*, and never moves a ticket out of *Review*, *Completed*, *Abandoned* or
-*Suspended*: it raises Attention instead. An assistant may set *Review* when work is done and
-never *Completed*. The GitHub issue is closed only at *Completed* or *Abandoned*, by a person.
+open state. What the automation may and may not do to Progress, and when the issue is closed, is set out in
+*Project structure*, section 4.3; what an assistant may set is in *Working with an AI assistant*,
+section 4.1.
 
 ## Waiting
 
@@ -107,8 +106,8 @@ Blank by default.
 |---|---|
 | **Needs input** | The ticket is waiting for someone's feedback, an answer to a question, or a verification. |
 
-Set by a person together with a comment that says what is needed and from whom. Applies to open tickets
-only. Cleared when the answer arrives, and always when the ticket becomes *Completed* or *Abandoned*.
+Set by a person together with a comment that says what is needed and from whom. When it is cleared is in
+*Project structure*, section 4.3.
 
 ## Attention
 
@@ -141,8 +140,8 @@ How a ticket ended. Blank while the ticket is open.
 | **Superseded** | Replaced by a different approach or ticket: the work was real, but something else took its place. | *Abandoned* |
 | **Obsolete** | No longer relevant because the thing it was about changed or was removed. | *Abandoned* |
 
-Set by the person making the move to *Completed* or *Abandoned*. An abandoned ticket also gets a comment
-that links any related ticket. Cleared when the ticket becomes open again.
+Set by the person making the move to *Completed* or *Abandoned*. When it is set and cleared is in *Project
+structure*, section 4.3.
 
 ## Delivery
 

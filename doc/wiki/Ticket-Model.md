@@ -10,10 +10,10 @@ Each field answers one question, and the fields are kept separate on purpose.
 |---|---|---|
 | **Type** | What sort of ticket is this, and why is the change being made? | a person (the automation for Version and Alert tickets) |
 | **Area** | What kind of work does it involve? | a person |
-| **Origin**, **REF** | Was it created after the work, and which changelog placeholder did it replace? | a person |
+| **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | a person |
 | **Progress** | Where is the work? | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
 | **Waiting** | Is it waiting for someone's input? | a person |
-| **Attention** | Has its state been looked at, and is it sound? | the automation raises flags, a person closes them |
+| **Attention** | Has the ticket's state been looked at, and is it sound? | the automation raises flags, a person closes them |
 | **Resolution** | How did it end? | a person |
 | **Delivery** | Where is the delivered work? | the automation (a person sets *Committed* and *Implemented*) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | a person |

@@ -807,8 +807,8 @@ section describes what the file contains and how it is structured.
   everything the automation writes are UTC (see the guide on concepts, section 2).
 - **Rule:** the topmost finalized version heading is the single source of truth for the version (see the
   guide on branching and merging).
-- **Rule:** entries of commits already made are not edited, except to replace a placeholder (section
-  7.4) or to make a critical correction (see the guide on working and committing).
+- **Rule:** entries of commits already made are not edited (the two exceptions, a placeholder replaced
+  and a critical correction, are in the guide on working and committing, sections 2.3 and 2.5).
 - **Rule:** the commit message is drafted from the entries just written, so each ticket's title and
   bullets are written once.
 - **Rule:** a hotfix version's heading lives only on its hotfix branch. The link between a hotfix and
@@ -882,8 +882,6 @@ merging; if the two ever differ, that guide is the reference.
 - `main` is the one integration line. Every other branch is named in kebab-case, with no `/`.
 - A branch is a **work branch** (starts from `main` and merges back), a **hotfix branch** (starts from a
   release tag and never merges), or a **parked branch** (finished work deliberately kept off `main`).
-- A hotfix branch is named `hotfix-v<major>-<sub>-<mod>-<description>`, with the version's dots written
-  as hyphens.
 
 ### 8.2 Tags
 

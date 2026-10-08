@@ -27,7 +27,7 @@ change in the changelog, commit.
 - **Rule:** every commit builds. Compiling is done locally by the developer, and nothing else compiles
   the code.
 - **Rule:** every commit that changes files adds a build block to the changelog, with at least one ticket
-  block or `REF` block.
+  block or `REF` block (the changelog's rules are in the guide on project structure, section 7.3).
 - **Recommendation:** commit when a logical step is complete and verified, not only at the end of the day.
 - **Recommendation:** do not mix unrelated changes in one commit.
 
@@ -448,8 +448,8 @@ where the work actually shipped, instead of when someone got round to documentin
   for the day.
 - **Recommendation:** move a ticket to *Review* before the merge, once the work is done and ready to merge.
   The automation then has nothing to change when the version is finalized.
-- **Recommendation:** deal with an Attention flag on your ticket when you see it, and close it only after
-  deciding. A flag closed without acting is not raised again for the same situation, so nothing will remind you.
+- **Recommendation:** deal with an Attention flag on your ticket when you see it, as set out in the guide
+  on issues and the board in practice, section 2.4.
 - **Recommendation:** comment on decisions and scope changes as they happen, not afterwards.
 - **Recommendation:** when you correct a Size, say why.
 

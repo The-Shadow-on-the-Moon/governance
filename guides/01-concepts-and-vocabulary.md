@@ -29,8 +29,8 @@ Four words that are easy to confuse. Each answers a different question.
 - **Rule:** a product that is compiled carries a compile stamp, generated afresh on every compile and
   embedded in the product itself. It is a UTC timestamp and needs no lookup and no git command. It is
   unique in practice, even for repeated compiles of the same commit, though its resolution is one second.
-- **Strong recommendation:** a recorded test result names the build it applies to and, where the product
-  has one, the compile stamp of what was tested (see the guide on working and committing, section 4).
+- A recorded test result names the build, and the compile stamp where there is one, of what was tested
+  (the guide on working and committing, section 4.3, sets this out).
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
   Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
   exception and has no `V` (`Version 2.4.1`).

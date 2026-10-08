@@ -237,8 +237,8 @@ Four words that are easy to confuse. Each answers a different question.
 - **Rule:** a product that is compiled carries a compile stamp, generated afresh on every compile and
   embedded in the product itself. It is a UTC timestamp and needs no lookup and no git command. It is
   unique in practice, even for repeated compiles of the same commit, though its resolution is one second.
-- **Strong recommendation:** a recorded test result names the build it applies to and, where the product
-  has one, the compile stamp of what was tested (see the guide on working and committing, section 4).
+- A recorded test result names the build, and the compile stamp where there is one, of what was tested
+  (the guide on working and committing, section 4.3, sets this out).
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
   Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
   exception and has no `V` (`Version 2.4.1`).
@@ -1828,8 +1828,8 @@ section describes what the file contains and how it is structured.
   everything the automation writes are UTC (see the guide on concepts, section 2).
 - **Rule:** the topmost finalized version heading is the single source of truth for the version (see the
   guide on branching and merging).
-- **Rule:** entries of commits already made are not edited, except to replace a placeholder (section
-  7.4) or to make a critical correction (see the guide on working and committing).
+- **Rule:** entries of commits already made are not edited (the two exceptions, a placeholder replaced
+  and a critical correction, are in the guide on working and committing, sections 2.3 and 2.5).
 - **Rule:** the commit message is drafted from the entries just written, so each ticket's title and
   bullets are written once.
 - **Rule:** a hotfix version's heading lives only on its hotfix branch. The link between a hotfix and
@@ -1903,8 +1903,6 @@ merging; if the two ever differ, that guide is the reference.
 - `main` is the one integration line. Every other branch is named in kebab-case, with no `/`.
 - A branch is a **work branch** (starts from `main` and merges back), a **hotfix branch** (starts from a
   release tag and never merges), or a **parked branch** (finished work deliberately kept off `main`).
-- A hotfix branch is named `hotfix-v<major>-<sub>-<mod>-<description>`, with the version's dots written
-  as hyphens.
 
 #### 8.2 Tags
 
@@ -2196,8 +2194,8 @@ request, and unlike a ticket number it stays true however many tickets the branc
 - **Rule:** a hotfix branch starts from the release tag being patched, not from `main`. A further
   hotfix for the same release starts from the tag of the latest hotfix, so that it includes the earlier
   fixes.
-- **Rule:** it is named `hotfix-v<major>-<sub>-<mod>-<description>`, with the version's dots written as
-  hyphens (for example `hotfix-v1-25-0-fix-sensor-timeout`).
+- **Rule:** it is named as set out in the guide on branching and merging, section 2.1 (for example
+  `hotfix-v1-25-0-fix-sensor-timeout`).
 
 The details of finishing a hotfix are in the guide on releases and hotfixes.
 
@@ -2411,7 +2409,7 @@ change in the changelog, commit.
 - **Rule:** every commit builds. Compiling is done locally by the developer, and nothing else compiles
   the code.
 - **Rule:** every commit that changes files adds a build block to the changelog, with at least one ticket
-  block or `REF` block.
+  block or `REF` block (the changelog's rules are in the guide on project structure, section 7.3).
 - **Recommendation:** commit when a logical step is complete and verified, not only at the end of the day.
 - **Recommendation:** do not mix unrelated changes in one commit.
 
@@ -2832,8 +2830,8 @@ where the work actually shipped, instead of when someone got round to documentin
   for the day.
 - **Recommendation:** move a ticket to *Review* before the merge, once the work is done and ready to merge.
   The automation then has nothing to change when the version is finalized.
-- **Recommendation:** deal with an Attention flag on your ticket when you see it, and close it only after
-  deciding. A flag closed without acting is not raised again for the same situation, so nothing will remind you.
+- **Recommendation:** deal with an Attention flag on your ticket when you see it, as set out in the guide
+  on issues and the board in practice, section 2.4.
 - **Recommendation:** comment on decisions and scope changes as they happen, not afterwards.
 - **Recommendation:** when you correct a Size, say why.
 
@@ -3221,10 +3219,10 @@ both are detected afterwards (see the guide on branching and merging, section 6.
 
 #### 6.3 Rules
 
-- **Recommendation:** a bypass is legitimate when there is a reason. Treat the Alert as the other half of
-  the decision, not as a penalty.
+The rules about bypassing, including that a bypass is legitimate when there is a reason and that it is
+never hidden, are in the guide on branching and merging, section 6.5. What this guide adds:
+
 - **Recommendation:** after a bypass, build and test `main` at once.
-- **Rule:** never hide a bypass.
 
 **Why.** The system accepts that rules will sometimes be bypassed, and has a way to recover afterwards,
 instead of a wall that gets forced through anyway (see the guide on branching and merging, section 6).
@@ -3246,9 +3244,8 @@ After a merge the branch still exists, and what to do with it is the developer's
 
 #### 7.1 Rules
 
-- **Recommendation:** do not wait too long to retire a branch whose work is merged. For a small team that
-  does not work on the project full time, anything from a week or two up to about a month is reasonable
-  (see the guide on branching and merging, section 1.5).
+- **Recommendation:** do not wait too long to retire a branch whose work is merged (how long is too long
+  is in the guide on branching and merging, section 1.5).
 - **Recommendation:** if you continue a branch, make that a deliberate choice, not a default.
 
 **Why.** A branch left open and forgotten hides an unmade decision, and it falls behind `main`, which makes
@@ -3863,19 +3860,16 @@ procedure.
 
 #### 2.4 Rules
 
-- **Rule:** a hotfix starts from a release tag and is never merged into `main`.
-- **Rule:** the hotfix number is a single digit, starting at 1, counted separately for each released
-  version: `V1.25.0-HF1`, `V1.25.0-HF2`. If a release would need a tenth hotfix, finish the fix on `main` and
-  release that version instead. The limit is deliberate: a release that needs that many fixes should be
-  replaced by a newer one, not patched further.
+The rules about what a hotfix is (it starts from a release tag and is never merged, its version lineage
+and the single-digit limit on hotfix numbers, how the fix reaches `main`, and that a finished hotfix
+branch is deleted without a retirement tag) are in the guide on branching and merging, sections 1.3
+and 2.2. The rules for the procedure are these:
+
 - **Rule:** the hotfix version is given explicitly when it is finished, because there is nothing to
   compute it from.
 - **Rule:** verify the hotfix before finishing it, as for any release.
-- **Rule:** the fix reaches `main` separately, as its own ticket and pull request.
 - **Rule:** the developer starts and finishes a hotfix, and tells the project owner when it is started and
   when it is released.
-- **Rule:** a finished hotfix branch is deleted without a retirement tag, because its release tag already
-  keeps its history. A hotfix that was never finished is suspended or abandoned like any other branch.
 - **Recommendation:** keep a hotfix to the fix itself, and nothing else.
 
 **Why.**
@@ -4989,10 +4983,9 @@ Where the work is.
 | **Abandoned** | Dropped, not expected to return. | a person |
 
 The path is *ToDo, OnDeck, InProgress, Review, Completed*. *Suspended* and *Abandoned* are exits from any
-open state. A reviewer may send work back from *Review* to *InProgress*. The automation never sets
-*Review* or *Completed*, and never moves a ticket out of *Review*, *Completed*, *Abandoned* or
-*Suspended*: it raises Attention instead. An assistant may set *Review* when work is done and
-never *Completed*. The GitHub issue is closed only at *Completed* or *Abandoned*, by a person.
+open state. What the automation may and may not do to Progress, and when the issue is closed, is set out in
+*Project structure*, section 4.3; what an assistant may set is in *Working with an AI assistant*,
+section 4.1.
 
 ### Waiting
 
@@ -5002,8 +4995,8 @@ Blank by default.
 |---|---|
 | **Needs input** | The ticket is waiting for someone's feedback, an answer to a question, or a verification. |
 
-Set by a person together with a comment that says what is needed and from whom. Applies to open tickets
-only. Cleared when the answer arrives, and always when the ticket becomes *Completed* or *Abandoned*.
+Set by a person together with a comment that says what is needed and from whom. When it is cleared is in
+*Project structure*, section 4.3.
 
 ### Attention
 
@@ -5036,8 +5029,8 @@ How a ticket ended. Blank while the ticket is open.
 | **Superseded** | Replaced by a different approach or ticket: the work was real, but something else took its place. | *Abandoned* |
 | **Obsolete** | No longer relevant because the thing it was about changed or was removed. | *Abandoned* |
 
-Set by the person making the move to *Completed* or *Abandoned*. An abandoned ticket also gets a comment
-that links any related ticket. Cleared when the ticket becomes open again.
+Set by the person making the move to *Completed* or *Abandoned*. When it is set and cleared is in *Project
+structure*, section 4.3.
 
 ### Delivery
 
@@ -5501,10 +5494,10 @@ code has shipped).
 |---|---|---|---|
 | **Type** | What sort of ticket is this, and why is the change being made? | the issue type | a person (the automation for Version and Alert tickets) |
 | **Area** | What kind of work does it involve? | labels, several per ticket | a person |
-| **Origin**, **REF** | Was it created after the work, and which placeholder did it replace? | board fields | a person |
+| **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | board fields | a person |
 | **Progress** | Where is the work? | the board's Status field | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
 | **Waiting** | Is it waiting for someone's input? | board field | a person |
-| **Attention** | Has its state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
+| **Attention** | Has the ticket's state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
 | **Resolution** | How did it end? | board field | a person |
 | **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed* and *Implemented*) |
 | **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Version#, Start date, End date | a person, except Build, Version#, the real Version and the dates |

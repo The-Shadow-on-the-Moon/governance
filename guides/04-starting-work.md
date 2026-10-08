@@ -114,8 +114,8 @@ request, and unlike a ticket number it stays true however many tickets the branc
 - **Rule:** a hotfix branch starts from the release tag being patched, not from `main`. A further
   hotfix for the same release starts from the tag of the latest hotfix, so that it includes the earlier
   fixes.
-- **Rule:** it is named `hotfix-v<major>-<sub>-<mod>-<description>`, with the version's dots written as
-  hyphens (for example `hotfix-v1-25-0-fix-sensor-timeout`).
+- **Rule:** it is named as set out in the guide on branching and merging, section 2.1 (for example
+  `hotfix-v1-25-0-fix-sensor-timeout`).
 
 The details of finishing a hotfix are in the guide on releases and hotfixes.
 

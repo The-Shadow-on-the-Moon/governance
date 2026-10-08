@@ -330,10 +330,10 @@ both are detected afterwards (see the guide on branching and merging, section 6.
 
 ### 6.3 Rules
 
-- **Recommendation:** a bypass is legitimate when there is a reason. Treat the Alert as the other half of
-  the decision, not as a penalty.
+The rules about bypassing, including that a bypass is legitimate when there is a reason and that it is
+never hidden, are in the guide on branching and merging, section 6.5. What this guide adds:
+
 - **Recommendation:** after a bypass, build and test `main` at once.
-- **Rule:** never hide a bypass.
 
 **Why.** The system accepts that rules will sometimes be bypassed, and has a way to recover afterwards,
 instead of a wall that gets forced through anyway (see the guide on branching and merging, section 6).
@@ -355,9 +355,8 @@ After a merge the branch still exists, and what to do with it is the developer's
 
 ### 7.1 Rules
 
-- **Recommendation:** do not wait too long to retire a branch whose work is merged. For a small team that
-  does not work on the project full time, anything from a week or two up to about a month is reasonable
-  (see the guide on branching and merging, section 1.5).
+- **Recommendation:** do not wait too long to retire a branch whose work is merged (how long is too long
+  is in the guide on branching and merging, section 1.5).
 - **Recommendation:** if you continue a branch, make that a deliberate choice, not a default.
 
 **Why.** A branch left open and forgotten hides an unmade decision, and it falls behind `main`, which makes

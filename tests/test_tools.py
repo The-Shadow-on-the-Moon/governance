@@ -219,6 +219,31 @@ class GuideValueTests(unittest.TestCase):
             self.assertIn("14 Area labels", text, name)
             self.assertIn("`dummy`", text, name)
 
+    def test_the_field_questions_are_the_same_in_the_guides_and_the_wiki(self):
+        import re
+
+        def questions(text):
+            found = {}
+            for field, question in re.findall(r"^\| (\*\*[^|]+?) \| ([^|]+?\?) \|", text, re.M):
+                found[field] = question
+            return found
+
+        structure = self.guide("03-project-structure.md").split("### 4.2 The fields at a glance", 1)[1].split("### 4.3", 1)[0]
+        model = self.guide("appendix-e-ticket-model.md").split("## 1. The idea", 1)[1].split("## 2.", 1)[0]
+        wiki = self.read("doc", "wiki", "Ticket-Model.md")
+        tables = [questions(structure), questions(model), questions(wiki)]
+        shared = set(tables[0]) & set(tables[1]) & set(tables[2])
+        self.assertGreaterEqual(len(shared), 8)
+        for field in shared:
+            self.assertEqual(tables[0][field], tables[1][field], field)
+            self.assertEqual(tables[0][field], tables[2][field], field)
+
+    def test_the_line_endings_rule_quotes_the_file_the_project_uses(self):
+        line = self.read(".gitattributes").strip()
+        self.assertEqual(line, "* text=auto eol=lf")
+        for name in ("03-project-structure.md", "10-new-project-bootstrap.md"):
+            self.assertIn(f"`{line}`", self.guide(name), name)
+
     def test_every_board_value_in_the_bootstrap_is_defined_in_the_fields_reference(self):
         import re
 
