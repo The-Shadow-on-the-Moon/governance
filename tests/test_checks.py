@@ -306,7 +306,8 @@ class HandlePushTests(GitRepo):
         fields = {field: value for _, field, value in project.sets}
         self.assertEqual(fields["F-Priority"], {"singleSelectOptionId": "Priority-Critical"})
         self.assertEqual(fields["F-Status"], {"singleSelectOptionId": "Status-ToDo"})
-        text = open(os.path.join(self.dir, "CHANGELOG.md"), encoding="utf-8").read()
+        with open(os.path.join(self.dir, "CHANGELOG.md"), encoding="utf-8") as handle:
+            text = handle.read()
         wip = changelog.open_section(changelog.parse(text))
         self.assertEqual(wip.blocks()[0].kind, "autoref")
         self.assertEqual(self.git("log", "-1", "--format=%s")[1], "Flag bypass (Alert #91)")

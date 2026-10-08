@@ -39,8 +39,13 @@ NAMES = [
 ]
 
 
+def read(path):
+    with open(path, encoding="utf-8") as handle:
+        return handle.read()
+
+
 def load(base=GUIDES_DIR):
-    return {k: open(os.path.join(base, v), encoding="utf-8").read() for k, v in FILES.items()}
+    return {k: read(os.path.join(base, v)) for k, v in FILES.items()}
 
 
 def find_sections(text):

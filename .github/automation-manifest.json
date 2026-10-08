@@ -31,7 +31,7 @@
     ".github/workflows/versioning.yml": "d91febaa7a71b6dadd96dda86e096d15d8f6a952a44482c51684f40249f41add",
     "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
     "tests/test_board_pull_requests.py": "dd19aed809d59017dc0f4ce9d3397484c7ac883f8864c96db37432a38bc6c3b9",
-    "tests/test_checks.py": "0129fdd6425bfdffa54202c0c76793591eac8a9c8db90f1a3b219384b74d72ef",
+    "tests/test_checks.py": "afc7f6fb6affa01a044b8017eb14d6f9c232828c59a528a8ae5d99dff360d56b",
     "tests/test_dates.py": "0f810f7082f3b18bfa0bbdc20ca8be28505dc964b8df565ed6a549f25797b7b4",
     "tests/test_field_rules.py": "27131dee1e5ea5f47348e0c405b944f800c4760215fd998b5c3bba3caeb99b5c",
     "tests/test_finalize.py": "4cc4476a08b216bdb8346e482151a6b6ebdcf0dfa0485bdeed9bb3f007989f44",
@@ -50,5 +50,5 @@
     "tests/test_watch.py": "afbbf5bc4f57f9236cfa254c02606357cc9b269fa6397fe016306fc54fcba77a",
     "tests/test_workflow.py": "3e345dba24d85946c6fad9e7e46e84193bbb7190fdde6168a5fa38e258e4e485"
   },
-  "standard": "V0.8.2"
+  "standard": "V0.8.3"
 }
