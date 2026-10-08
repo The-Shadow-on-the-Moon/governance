@@ -1,6 +1,9 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261008215441 (branch project-views)
+#### #108 — Analyze Guidelines
+- doc/Evaluation/Combined-eval.md: added section 5, how the tickets #109 to #113 address the findings: the decisions taken, a map from each finding to its ticket, the findings with no ticket and why, and the order of work.
 ### Build 20261008211150 (branch project-views)
 #### #108 — Analyze Guidelines
 - doc/Evaluation/Claude-eval.md, Gemini-eval.md, Copilot-eval.md: added; three independent evaluations of the guides for coherence, consistency and completeness (the Claude one also checks the project against the guides).

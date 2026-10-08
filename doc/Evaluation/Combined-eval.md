@@ -79,3 +79,39 @@ Fix: keep one canonical location per rule (the fields reference, Appendix C, is 
 7. After each guide edit: `python tools/combine.py`, `python tools/xref_check.py` (expect `problems: 0`) and `python -m unittest discover -s tests`. Guides aren't automation files, so the manifest isn't affected.
 
 Decision needed from you first: **G1**, because it determines whether the project (P1) is non-compliant or the rule is simply too strict.
+
+## 5. How the tickets address the findings (added 2026-10-08)
+
+Decisions taken on 2026-10-08, and the tickets created from them. All five are assigned to the administrator and are in *ToDo*. They come from the analysis in #108.
+
+### Decisions
+
+| Item | Decision |
+|---|---|
+| G1 test results | Recording becomes a strong recommendation everywhere, with no exception for releases or hotfixes (so 08 §1.1, §2.4 and the checklists change too). The project then counts as compliant (P1 closed). |
+| G7 assistant sync | Option A: syncing `main` into the person's own branch is routine. Merging into `main` or any shared branch stays ask-first. |
+| G12 `.gitattributes` | Option A: a rule in the bootstrap guide and the root table. |
+| G13, G14, G15, G17 | All included. |
+
+### Ticket map
+
+| Ticket | Type, Size | Findings it addresses | What it changes |
+|---|---|---|---|
+| **#109** Fix contradictions and stale statements in the guides | Task, M | G1, G2, G4, G5, G8, G9, G10, G16, G18 | The guides say the same thing in every place: recording test results, the fourth Alert type, the label list, the two waits, the Critical-comment exception, hotfix version assignment, the Appendix B cross-reference, the `AUTO-REF` note, the guide 01 §5 heading, the wiki Home page and the attribution note in `AGENTS.md`. |
+| **#110** Add missing guidance to the guides | Enhancement, M | G3, G6, G11, G12, G13, G14, G15, G17 | New text: the scheduled run (definition, glossary, bootstrap list and checklist, including `reenable-schedule.yml`), a fresh `WIP-Build` before each commit, root-table rows and the `.gitattributes` rule, the DUMMY-ticket procedure, build order, rejected pushes on shared branches, and a personal-preferences template. |
+| **#111** Let an assistant sync main into the person's own branch without asking | Change, XS | G7 | Guide 09 §2.1, §3.1, §3.2 and its checklist. |
+| **#112** Housekeeping found by the guidelines analysis | Task, S | P3, P4, P5, P6 | The undocumented collaborator, the leftover workflow and local tags, label and issue-type descriptions, and the `.anchor` entry in `.gitignore`. Needs the administrator's approval for each setting. |
+| **#113** Keep each rule in one place in the guides, with tests against drift | Refactor, L | The structural recommendation (the cause of G2, G5 and G8) | One canonical place per rule, links elsewhere, and tests for values that appear in several places. Low priority, after the others, since it rewrites the text they change. |
+
+### Findings with no ticket
+
+| Finding | Why |
+|---|---|
+| P1 no stored test results | Closed by the G1 decision: recording is a recommendation, so the project is compliant. |
+| P2 board actions described in the changelog | Earlier entries are not edited. Keep such statements in ticket comments from now on. |
+| Section 3, irrelevant or incorrect findings | Not defects, so nothing to fix. |
+| Scaling to large organisations, wider secrets guidance, beginner setup help (Copilot) | Out of scope for a small-team standard. |
+
+### Order
+
+#109 first (it settles the wording #110 and #111 build on), then #110 and #111, then #112 whenever the administrator is ready, and #113 last.
