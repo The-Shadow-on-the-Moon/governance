@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.8.3 — 2026-10-08 13:15 UTC
 ### Build 20261008013731 (branch project-views)
 #### #96 — Two files are opened without being closed (ResourceWarning on Python 3.14)
 - tools/xref_check.py: fixed; `load()` read the ten guide files with `open(...).read()` and never closed them (ten unclosed files per call, about 20 `ResourceWarning` lines per test run); it now reads each file with a `with` statement.
