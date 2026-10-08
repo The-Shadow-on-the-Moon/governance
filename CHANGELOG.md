@@ -1,6 +1,14 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261008225021 (branch project-views)
+#### #113 — Keep each rule in one place in the guides, with tests against drift
+- guides/README.md: new section "Where a rule lives", a table that names the one place each rule is set out.
+- guides/appendix-c-ticket-fields-reference.md: the Attention causes, idle times, waits and re-raise rules and the Delivery rules paragraph are replaced by a pointer to Project structure, sections 4.3, 4.4 and 5.2 (the values tables stay). guides/03-project-structure.md (section 4.3): the rules that only the reference had are moved there (*Committed* is overwritten by *Pushed*, a suspended branch keeps *Pushed*, hotfix and release Delivery); section 5.2: a scheduled run attaches a blank Version to the latest finalized version; section 8.2: the tag table is replaced by a pointer to Branching and merging, section 2.2.
+- guides/appendix-e-ticket-model.md: the restatements of the Caution rule, the cross-field table, the Version and Alert ticket stages and the bump rules are shortened to a summary and a pointer.
+- guides/04-starting-work.md (section 5): the restatement of the Caution rule is replaced by a pointer to project structure, section 4.3.
+- tests/test_tools.py: added `GuideValueTests`, 7 tests that fail when the guides and the automation disagree: the idle thresholds and the waits before a flag (against `watch.py` and `field_rules.py`, in Project structure), that the fields reference does not repeat them, the Alert kinds, the Area labels, the board values of the bootstrap against the fields reference, and the bump per Type in Appendix C against the table in Branching and merging.
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
 ### Build 20261008223645 (branch project-views)
 #### #109 — Fix contradictions and stale statements in the guides
 - guides/01-concepts-and-vocabulary.md, 05-working-and-committing.md (sections 4.2, 4.3, checklists), 06-syncing-and-merging.md (section 2.1), 07-issues-and-the-board-in-practice.md (section 3), 08-releases-hotfixes-and-retiring-branches.md (section 1.1 and the checklist), 03-project-structure.md (section 2.1), appendix-a-cheat-sheet-daily-flow.md: recording test results is now a strong recommendation everywhere, releases and hotfixes included; "recorded result" is defined (previously a rule in 05 section 4.3, a recommendation for the file, and mandatory in two checklists).

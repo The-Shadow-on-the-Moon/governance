@@ -477,6 +477,11 @@ are worth keeping: they answer later questions such as "did we already decide no
   needs it, because the automation sets *Merged*.
 - **Rule:** Delivery depends only on the work, never on Progress or Resolution. It can move back: new work
   pushed on a ticket that is already *Merged*, *Implemented*, *Released* or *Dropped* returns it to *Pushed*.
+- **Rule:** *Committed* is never required, and the next push overwrites it with *Pushed*; nobody else can
+  see a local commit, so the team cannot rely on it. A suspended branch is not dropped, because its code is
+  kept: *Pushed* stays, and only an abandoned branch sets *Dropped*.
+- **Rule:** a hotfix ticket skips *Merged* and goes straight to *Released* when the hotfix is finished, and
+  a release marks the tickets as *Released* as set out in the guide on releases and hotfixes, section 1.1.
 
 *Why.* Where the code is, is a fact the automation can see, and mixing it with anyone's judgment would
 make it unreliable. A ticket whose code has shipped but is not yet verified is *Merged* or *Released* and
@@ -558,7 +563,7 @@ of them are complete. A Version ticket does no work and is never verified.
   Build holds the last build of the version.
 - **Rule:** at every finalize, and on a manual run, the automation also attaches the tickets with Delivery
   *Implemented* that are not yet sub-issues of any Version ticket, by their Version: a blank Version gets
-  the version being finalized, an already finalized version is kept and the ticket is attached to that
+  the version being finalized (at a scheduled run, the latest finalized version), an already finalized version is kept and the ticket is attached to that
   version's ticket, and a later version makes the ticket wait. Such a ticket keeps Delivery *Implemented*
   and gets no Build. A comment on the Version ticket says which tickets were added, because its description
   is written once.
@@ -882,15 +887,9 @@ merging; if the two ever differ, that guide is the reference.
 
 ### 8.2 Tags
 
-| Namespace | Format | Applied when |
-|---|---|---|
-| `archived/` | `archived/<yyyy-mm-dd>_<branch>[_<comment>]` | a merged branch is retired |
-| `suspended/` | `suspended/<yyyy-mm-dd>_<branch>[_<comment>]` | a branch is set aside to resume later |
-| `abandoned/` | `abandoned/<yyyy-mm-dd>_<branch>[_<comment>]` | a branch is discarded |
-| `released/` | `released/V<major>.<sub>.<mod>` or `released/V<major>.<sub>.<mod>-HF<n>` | a version, or a finished hotfix, is declared a release |
-
-The date is the UTC date of the branch's last commit when it is tagged. The optional comment is short and
-in kebab-case.
+A tag is in one of four namespaces: `archived/`, `suspended/` and `abandoned/` for a branch that is
+retired, and `released/` for a version, or a finished hotfix, declared a release. The formats, with their
+reasons, are in the guide on branching and merging, section 2.2.
 
 ### 8.3 How they fit in the map
 

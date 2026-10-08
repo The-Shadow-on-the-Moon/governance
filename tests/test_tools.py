@@ -125,3 +125,111 @@ class BoardViewsPageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GuideValueTests(unittest.TestCase):
+    """Values that the guides repeat in several places must agree with each other and with the automation.
+
+    The guides restate some rules in more than one place, and the section checks only prove that a section
+    exists. These tests fail when a value changes in one place and not in the others.
+    """
+
+    def read(self, *parts):
+        with open(os.path.join(ROOT, *parts), encoding="utf-8") as handle:
+            return handle.read()
+
+    def guide(self, name):
+        return self.read("guides", name)
+
+    def automation(self, name):
+        sys.path.insert(0, os.path.join(ROOT, ".github", "scripts"))
+        try:
+            return __import__(name)
+        finally:
+            sys.path.pop(0)
+
+    def test_the_idle_thresholds_agree_with_the_automation(self):
+        watch = self.automation("watch")
+        days = {status: limit.days for status, limit in watch.THRESHOLDS.items()}
+        self.assertEqual(days, {"Review": 7, "OnDeck": 30, "InProgress": 30, "Suspended": 182})
+        self.assertEqual(watch.WAITING_AFTER.days, 14)
+        text = self.guide("03-project-structure.md")
+        for phrase in ("for a week", "for a month", "for six months", "two weeks"):
+            self.assertIn(phrase, text, phrase)
+        housekeeping = self.guide("07-issues-and-the-board-in-practice.md")
+        for phrase in ("a week at *Review*", "about a month", "six months", "two weeks"):
+            self.assertIn(phrase, housekeeping, phrase)
+
+    def test_the_waits_before_a_flag_agree_with_the_automation(self):
+        from datetime import timedelta
+
+        rules = self.automation("field_rules")
+        self.assertEqual(rules.QUIET, timedelta(minutes=5))
+        self.assertEqual({wait for wait in rules.WAIT.values()}, {timedelta(hours=2)})
+        text = self.guide("03-project-structure.md")
+        self.assertIn("five minutes", text)
+        self.assertIn("two hours", text)
+
+    def test_the_fields_reference_does_not_repeat_the_attention_rules(self):
+        reference = self.guide("appendix-c-ticket-fields-reference.md")
+        for phrase in ("for a week", "for a month", "five minutes", "two hours"):
+            self.assertNotIn(phrase, reference, phrase)
+        self.assertIn("section 4.3", reference)
+
+    def test_the_version_bump_per_type_is_the_same_in_both_places(self):
+        import re
+
+        branching = self.guide("02-branching-and-merging-strategy.md")
+        table = branching.split("| Ticket Type | Bump |", 1)[1].split("\n\n", 1)[0]
+        bump = {}
+        for types, size in re.findall(r"^\s*\| (.*?) \| (sub|mod|none)[^|]*\|$", table, re.M):
+            for name in re.split(r",\s*|\s+and\s+", types):
+                bump[name.strip()] = size
+        reference = self.guide("appendix-c-ticket-fields-reference.md")
+        section = reference.split("## Type", 1)[1].split("## Area", 1)[0]
+        listed = dict(re.findall(r"^\| \*\*([A-Za-z]+)\*\* \| .*? \| (sub|mod|none) \|$", section, re.M))
+        self.assertEqual(len(listed), 8)
+        self.assertEqual(listed, bump)
+
+    def test_every_alert_kind_is_described_where_alerts_are_listed(self):
+        import re
+
+        alerts = self.automation("alerts")
+        titles = [alerts.stale_alert("V1.0.0", [(1, "Version 0.9.0")])[0],
+                  alerts.changelog_error_alert("x", "abc1234", "2026-10-05 16:40")[0]]
+        self.assertEqual(len(titles), 2)  # the bypass Alert has two shapes, tested elsewhere
+        unreadable = re.compile(r"cannot read|could not be read|unreadable|could not read")
+        for name in ("03-project-structure.md", "07-issues-and-the-board-in-practice.md"):
+            text = self.guide(name)
+            self.assertTrue(unreadable.search(text), f"{name} does not mention the changelog-error Alert")
+        self.assertIn("Changelog error on main", self.guide("03-project-structure.md"))
+
+    def test_the_area_labels_are_the_same_in_every_guide_that_lists_them(self):
+        import re
+
+        reference = self.guide("appendix-c-ticket-fields-reference.md")
+        area = reference.split("## Area", 1)[1].split("## The `dummy` label", 1)[0]
+        labels = re.findall(r"^\| `([a-z]+)` \|", area, re.M)
+        self.assertEqual(len(labels), 14)
+        bootstrap = self.guide("10-new-project-bootstrap.md")
+        for label in labels:
+            self.assertIn(f"`{label}`", bootstrap, label)
+        for name in ("01-concepts-and-vocabulary.md", "10-new-project-bootstrap.md"):
+            text = self.guide(name)
+            self.assertIn("14 Area labels", text, name)
+            self.assertIn("`dummy`", text, name)
+
+    def test_every_board_value_in_the_bootstrap_is_defined_in_the_fields_reference(self):
+        import re
+
+        bootstrap = self.guide("10-new-project-bootstrap.md")
+        table = bootstrap.split("| Field | Kind | Values |", 1)[1].split("Type is the issue type", 1)[0]
+        reference = self.guide("appendix-c-ticket-fields-reference.md")
+        checked = 0
+        for row in re.findall(r"^\| (Status|Origin|Waiting|Attention|Resolution|Delivery|Priority|Size|Risk) \| single select \| (.*?) \|$",
+                              table, re.M):
+            for value in row[1].split(", "):
+                value = re.sub(r" \(.*\)$", "", value)
+                self.assertIn(f"**{value}**", reference, f"{row[0]}: {value}")
+                checked += 1
+        self.assertGreater(checked, 40)
