@@ -136,7 +136,8 @@ Activity means a comment, a change to a field, or a new build that mentions the 
 own flag comments do not count.
 
 A broken field rule is raised only if the ticket, meaning its issue or its board fields, has not changed
-for five minutes, because fixing one takes several edits.
+for five minutes, because fixing one takes several edits (two hours for the Delivery and Version rules, which a
+person may be in the middle of completing).
 
 The automation sets an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or that has a
 lower open flag, and a higher level replaces a lower one. It never sets *Fine* or *Acknowledged* and never
@@ -182,9 +183,12 @@ local commit, so the team cannot rely on it. Delivery can move back: new work pu
 *Released* when the hotfix is finished. When a release is cut, every ticket merged up to and including that
 version becomes *Released* (a ticket merged or implemented), whatever its Progress or Resolution, unless newer work has moved its Delivery back to *Pushed*. A suspended branch is not dropped: its code
 is kept, so *Pushed* stays. A ticket that produces no file change stays blank until its work is in effect. Then a person
-sets *Implemented* and its Version. At every finalize, and on a manual run, the automation attaches
-*Implemented* tickets that no Version ticket has yet: a blank Version gets the version being finalized, a
-finalized version is kept, and a later version waits. It never sets *Merged* or a Build on such a ticket.
+sets *Implemented* and its Version. At every finalize and every scheduled run (three a day), and on a manual run, the automation attaches
+*Implemented* tickets that no Version ticket has yet: a blank Version gets the version being finalized (at a scheduled run, the
+latest finalized version), a finalized version is kept, and a later version waits. It never sets *Merged* or a Build on such a ticket.
+A *Completed* work ticket must have a Delivery (*Merged* if files changed, *Implemented* if none did), and a ticket whose Delivery is
+*Merged*, *Implemented* or *Released* must have a Version; the automation flags either gap with *Caution*. Version and Alert tickets
+are not work tickets.
 
 ## Priority
 
@@ -234,7 +238,7 @@ Informational only: it drives no rule or automation.
 |---|---|---|
 | **Version** (text) | The version a ticket is aimed at and, once it ships, the version it really shipped in (`V2.1.0`, or `V2.1.0-HF1` for a hotfix). | a person may set it ahead of time; the automation overwrites it with the real version (for a backfilled ticket, the version where its placeholder appears). On an *Implemented* ticket the person's value stays |
 | **Build** (text) | The latest build of the ticket: the most recent build stamp among the build blocks that mention it. | the automation |
-| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation: at finalize, and every day for any ticket that has a Version (also one that is only aimed at a version) and a blank or different Version# |
+| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation: at finalize, and on every scheduled run for any ticket that has a Version (also one that is only aimed at a version) and a blank or different Version# |
 
 ## Start date and End date
 
@@ -246,7 +250,7 @@ Dates the automation noticed, never planned ones. Set by the automation; a perso
 | **End date** | The automation first sees the ticket *Completed* or *Abandoned*. | Set only if blank. Cleared by the automation when it sees the ticket open again, and set again the next time it ends. |
 
 The automation cannot be told when a person changes Progress, so the dates are found by a sweep on every
-run and a scheduled daily run; a date is accurate to the day it was noticed, in UTC. Version and Alert
+run and a scheduled run; a date is accurate to the day it was noticed, in UTC. Version and Alert
 tickets have no dates.
 
 ---

@@ -23,6 +23,7 @@ PATTERNS = [
     ".githooks/*",
     ".github/scripts/*.py",
     ".github/workflows/versioning.yml",
+    ".github/workflows/reenable-schedule.yml",
     ".github/views.json",
     ".github/pull_request_template.md",
     "tests/test_automation_library.py",
@@ -44,6 +45,7 @@ PATTERNS = [
     "tests/test_hotfix.py",
     "tests/test_retire.py",
     "tests/test_views.py",
+    "tests/test_reenable_schedule.py",
     "tests/test_manifest.py",
 ]
 

@@ -108,6 +108,8 @@ These are the rules that span fields (the full table is in *Project structure*, 
 | Origin is *Backfilled* | REF names the placeholder it replaced. |
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
 | A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names its version. |
+| A work ticket is *Completed* | Delivery is set (*Merged* or *Implemented*). |
+| Delivery is *Merged*, *Implemented* or *Released* | Version is set (the automation sets it; a gap is flagged after two hours). |
 
 ## 5. Special tickets
 
@@ -148,7 +150,7 @@ until someone takes it. Size and Risk are set by whoever triages it. Alerts have
   *Enhancement* gives a sub-version, otherwise a mod; *Version* and *Alert* are ignored; markers `+V`, `+s`
   and `+m` override it.
 - **Delivery, Version, Build and dates** are written by the automation from pushes, merges, releases and a
-  sweep that runs after each finalize and once a day. The daily run also sets Version# on any ticket that has a
+  sweep that runs after each finalize and on every scheduled run. The scheduled run also sets Version# on any ticket that has a
   Version, so a ticket only aimed at a version sorts with the others.
 - **Attention** is raised from the same sweep and from pushes.
 - **Nothing in Area, Risk, Priority or Size** drives any rule.

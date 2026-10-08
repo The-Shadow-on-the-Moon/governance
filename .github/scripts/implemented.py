@@ -74,7 +74,7 @@ def flag_passed(run, repo_client, project_client, board, ticket, aimed, latest):
     run.do(f"#{number}: comment on the passed version", repo_client.comment, number,
            f"{marker}\nAttention: Caution. This ticket is Implemented and aimed at {aimed}, but {latest} is already finalized and {aimed} was "
            f"never released, so it can no longer happen and the ticket would wait for ever. Set its Version to the version it belongs to "
-           f"(for example {latest}), or clear the Version: a blank Version gets the latest finalized version. The next daily run then "
+           f"(for example {latest}), or clear the Version: a blank Version gets the latest finalized version. The next scheduled run then "
            "attaches it to that version's ticket. Then set Attention to Fine, or to Acknowledged if it is handled elsewhere, and say what you decided.")
 
 
@@ -121,7 +121,7 @@ def sweep(run, repo_client, project_client, board, finalized, current, now):
     return added
 
 
-def daily_sweep(root, repo_client, project_client, board, now, dry_run=False):
+def scheduled_sweep(root, repo_client, project_client, board, now, dry_run=False):
     """The scheduled run: attach waiting Implemented tickets without touching the changelog or main.
 
     The tickets are judged against the finalized versions in the changelog, and a blank Version gets the
@@ -165,7 +165,7 @@ def main(argv=None):
         return 0
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
     try:
-        run = daily_sweep(root, repo_client, project_client, report.board, versions.utc_now(), "--dry-run" in args)
+        run = scheduled_sweep(root, repo_client, project_client, report.board, versions.utc_now(), "--dry-run" in args)
     except GitHubError as error:
         print(f"Implemented sweep stopped: {error}")
         return 0

@@ -18,15 +18,19 @@ def ago(minutes):
 
 
 def ticket(number, status, resolution=None, state=None, waiting=None, origin=None, ref=None, end=None, attention=None,
-           kind="Task", quiet=60, comments=(), issue_quiet=None):
+           kind="Task", quiet=60, comments=(), issue_quiet=None, delivery="default", version="default"):
+    if delivery == "default":  # a Completed ticket has shipped, unless the test says otherwise
+        delivery = "Merged" if status == "Completed" else None
+    if version == "default":  # shipped work has a Version, unless the test says otherwise
+        version = "V0.8.0" if delivery in ("Merged", "Implemented", "Released") else None
     if state is None:
         state = "CLOSED" if status in ("Completed", "Abandoned") else "OPEN"
     pick = lambda value: {"name": value} if value else None  # noqa: E731
     return {"id": f"I{number}", "updatedAt": ago(quiet),
             "content": {"number": number, "state": state, "updatedAt": ago(quiet if issue_quiet is None else issue_quiet),
                         "issueType": pick(kind), "comments": {"nodes": [{"body": b} for b in comments]}},
-            "status": pick(status), "resolution": pick(resolution), "waiting": pick(waiting), "origin": pick(origin),
-            "attention": pick(attention), "ref": {"text": ref} if ref else None, "end": {"date": end} if end else None}
+            "status": pick(status), "delivery": pick(delivery), "resolution": pick(resolution), "waiting": pick(waiting), "origin": pick(origin),
+            "attention": pick(attention), "ref": {"text": ref} if ref else None, "version": {"text": version} if version else None, "end": {"date": end} if end else None}
 
 
 class FakeProject:
@@ -107,6 +111,34 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(rules(status="Abandoned", resolution="WontFix", state="OPEN"), ["issue-open"])
         self.assertEqual(rules(status="Review", state="CLOSED"), ["issue-closed"])
 
+    def test_completed_work_needs_a_delivery(self):
+        self.assertEqual(rules(status="Completed", resolution="Done", delivery=None), ["completed-without-delivery"])
+        for delivery in ("Merged", "Implemented", "Released"):
+            self.assertEqual(rules(status="Completed", resolution="Done", delivery=delivery), [], delivery)
+
+    def test_the_delivery_rule_concerns_only_completed_work_tickets(self):
+        self.assertEqual(rules(status="Review", delivery=None), [])
+        self.assertEqual(rules(status="Abandoned", resolution="Invalid", delivery=None), [])
+        self.assertEqual(rules(status="Completed", resolution="Done", kind="Version", delivery=None), [])
+        self.assertEqual(rules(status="Completed", resolution="Done", kind="Alert", delivery=None), [])
+
+    def test_shipped_work_needs_a_version(self):
+        for delivery in ("Merged", "Implemented", "Released"):
+            self.assertEqual(rules(status="Completed", resolution="Done", delivery=delivery, version=None),
+                             ["shipped-without-version"], delivery)
+            self.assertEqual(rules(status="Completed", resolution="Done", delivery=delivery, version="V0.8.3"), [], delivery)
+        self.assertEqual(rules(status="Review", delivery="Implemented", version="  "), ["shipped-without-version"])
+
+    def test_the_version_rule_leaves_out_work_that_has_not_shipped_or_never_will(self):
+        for delivery in (None, "Committed", "Pushed", "Dropped"):
+            self.assertEqual(rules(status="Review", delivery=delivery, version=None), [], delivery)
+        self.assertEqual(rules(status="Abandoned", resolution="Invalid", delivery="Implemented", version=None), [])
+        self.assertEqual(rules(status="Completed", resolution="Done", kind="Version", delivery="Merged", version=None), [])
+        self.assertEqual(rules(status="Completed", resolution="Done", kind="Alert", delivery="Merged", version=None), [])
+
+    def test_a_ticket_aimed_at_a_version_that_is_not_finalized_is_not_flagged(self):
+        self.assertEqual(rules(status="Review", delivery="Implemented", version="V9.9.9"), [])
+
     def test_a_ticket_with_no_progress_has_no_rules_to_break(self):
         self.assertEqual(rules(status=None, resolution="Done"), [])
 
@@ -127,6 +159,29 @@ class SweepTests(unittest.TestCase):
         self.assertEqual(sweep([ticket(1, "Completed", quiet=4)])[3], [])
         self.assertEqual(sweep([ticket(1, "Completed", quiet=60, issue_quiet=2)])[3], [])
         self.assertEqual(sweep([ticket(1, "Completed", quiet=5)])[3], [1])
+
+    def test_the_delivery_rule_waits_two_hours(self):
+        blank = dict(resolution="Done", delivery=None)
+        self.assertEqual(sweep([ticket(1, "Completed", quiet=119, **blank)])[3], [])
+        self.assertEqual(sweep([ticket(1, "Completed", quiet=60, issue_quiet=30, **blank)])[3], [])
+        run, repo, _, flagged = sweep([ticket(1, "Completed", quiet=120, **blank)])
+        self.assertEqual(flagged, [1])
+        self.assertIn("rules=completed-without-delivery -->", repo.comments[0][1])
+        self.assertIn("Delivery is blank", repo.comments[0][1])
+
+    def test_the_version_rule_waits_two_hours_and_names_itself_in_the_flag(self):
+        blank = dict(resolution="Done", delivery="Implemented", version=None)
+        self.assertEqual(sweep([ticket(1, "Completed", quiet=119, **blank)])[3], [])
+        _, repo, _, flagged = sweep([ticket(1, "Completed", quiet=120, **blank)])
+        self.assertEqual(flagged, [1])
+        self.assertIn("rules=shipped-without-version -->", repo.comments[0][1])
+        self.assertIn("Delivery is Implemented but its Version is blank", repo.comments[0][1])
+
+    def test_a_quick_rule_is_flagged_without_waiting_for_the_slow_one(self):
+        # Waits five minutes for completed-without-done; the delivery rule, still inside its two hours, is not named.
+        _, repo, _, flagged = sweep([ticket(1, "Completed", quiet=10, delivery=None)])
+        self.assertEqual(flagged, [1])
+        self.assertIn("rules=completed-without-done -->", repo.comments[0][1])
 
     def test_a_flag_that_is_open_is_not_raised_again(self):
         for attention in ("Caution", "AtRisk"):

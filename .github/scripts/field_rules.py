@@ -7,9 +7,15 @@ The rules that span fields (guide on project structure, section 4.4) are checked
 - Waiting is only on open tickets.
 - A Backfilled ticket has its REF.
 - The issue is closed only at *Completed* or *Abandoned*, and open otherwise.
+- A *Completed* work ticket has a Delivery (*Merged* if files changed, *Implemented* if none did); Version and
+  Alert tickets are not work tickets.
+- Shipped work (Delivery *Merged*, *Implemented* or *Released*) has a Version. The scheduled run gives a blank Version to an
+  *Implemented* ticket and the finalize step to a *Merged* one, so a ticket still without one two hours later means a step
+  failed. An *Abandoned* ticket never shipped and is left out.
 
 A broken rule raises *Caution*, with one comment, only if the ticket (its issue and its board fields) has not
-changed for five minutes, because fixing one takes several edits. The flag is set only on a ticket that is
+changed for five minutes, because fixing one takes several edits (two hours for the rules in `WAIT`, which a
+person may be in the middle of completing). The flag is set only on a ticket that is
 blank, *Fine*, *Acknowledged* or *Watch* (a higher level replaces a lower one, nothing is lowered). It is
 raised when a rule becomes broken and not again while it stays broken: after a person closed it, it comes
 back only when a rule that was not named in the last flag is broken. The rules named are kept in a hidden
@@ -29,8 +35,10 @@ from watch import FLAG_MARKER, NO_ATTENTION, parse_time
 
 OPEN = ("ToDo", "OnDeck", "InProgress", "Review", "Suspended")
 CLOSED = ("Completed", "Abandoned")
+SHIPPED = ("Merged", "Implemented", "Released")
 REASONS = ("Duplicate", "Invalid", "WontFix", "Superseded", "Obsolete")
 QUIET = timedelta(minutes=5)
+WAIT = {"completed-without-delivery": timedelta(hours=2), "shipped-without-version": timedelta(hours=2)}  # rules that wait longer than QUIET
 RULES_MARKER = re.compile(r"<!-- attention:caution rules=(\S*) -->")
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
@@ -39,8 +47,10 @@ ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first
          "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "resolution:fieldValueByName(name:\"Resolution\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "waiting:fieldValueByName(name:\"Waiting\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
+         "delivery:fieldValueByName(name:\"Delivery\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "origin:fieldValueByName(name:\"Origin\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "attention:fieldValueByName(name:\"Attention\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
+         "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}} "
          "ref:fieldValueByName(name:\"REF\"){... on ProjectV2ItemFieldTextValue{text}} "
          "end:fieldValueByName(name:\"End date\"){... on ProjectV2ItemFieldDateValue{date}}}}}}}")
 
@@ -61,9 +71,10 @@ def board_tickets(project_client, board):
                           "issue_updated": content["updatedAt"], "state": content["state"],
                           "type": (content.get("issueType") or {}).get("name"),
                           "comments": (content.get("comments") or {}).get("nodes") or [],
-                          "status": name("status"), "resolution": name("resolution"), "waiting": name("waiting"),
+                          "status": name("status"), "delivery": name("delivery"), "resolution": name("resolution"), "waiting": name("waiting"),
                           "origin": name("origin"), "attention": name("attention"),
                           "ref": (node.get("ref") or {}).get("text") or "",
+                          "version": (node.get("version") or {}).get("text") or "",
                           "end": (node.get("end") or {}).get("date")})
         if not page["pageInfo"]["hasNextPage"]:
             return found
@@ -87,6 +98,13 @@ def violations(ticket):
         broken["waiting-on-closed"] = f"it is {status} but Waiting is still set"
     if ticket["origin"] == "Backfilled" and not ticket["ref"]:
         broken["backfilled-without-ref"] = "its Origin is Backfilled but its REF is blank"
+    if status == "Completed" and not ticket["delivery"] and ticket["type"] not in NO_ATTENTION:
+        broken["completed-without-delivery"] = ("it is Completed but its Delivery is blank (set Implemented if no file changed, "
+                                                "Merged if files did, or set Abandoned with a reason if nothing came of it)")
+    if (ticket["delivery"] in SHIPPED and not ticket["version"].strip() and status != "Abandoned"
+            and ticket["type"] not in NO_ATTENTION):
+        broken["shipped-without-version"] = (f"its Delivery is {ticket['delivery']} but its Version is blank (the scheduled run or the "
+                                             "finalize step should have set it: set the Version of the version it belongs to)")
     if status in CLOSED and ticket["state"] == "OPEN":
         broken["issue-open"] = f"it is {status} but its issue is still open"
     if status not in CLOSED and ticket["state"] == "CLOSED":
@@ -122,8 +140,9 @@ def sweep(run, repo_client, project_client, board, now):
     for ticket in board_tickets(project_client, board):
         if ticket["type"] in NO_ATTENTION or ticket["attention"] in ("Caution", "AtRisk"):
             continue
-        broken = violations(ticket)
-        if not broken or now - last_change(ticket) < QUIET:
+        idle = now - last_change(ticket)
+        broken = {rule: why for rule, why in violations(ticket).items() if idle >= WAIT.get(rule, QUIET)}
+        if not broken:
             continue
         before = named_before(ticket)
         if before is not None and set(broken) <= before:
