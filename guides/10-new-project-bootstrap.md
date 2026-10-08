@@ -331,6 +331,9 @@ build stamp stored in a number field is rejected by the hosting service.
 - **Rule:** the first merge is a real change, logged and merged by pull request like any other, so that
   the first version comes from the normal flow.
 - **Recommendation:** make that first change the initial structure of the project.
+- **Rule:** create the ticket for that first change only after the issue types, the labels and the board exist
+  (sections 5 and 6): a ticket needs a Type, an Area and its board fields, and the first version needs a ticket
+  to attach to.
 
 **Why.** A first version that comes from the normal flow proves the flow works, and it avoids a bypass
 Alert on the very first push. An empty repository starts with a single commit made by the hosting service,
@@ -427,7 +430,8 @@ A one-page summary of the guide. It adds no new rules.
 
 **The first version and the roles** (section 7)
 
-- [ ] The first change goes by pull request (the initial structure).
+- [ ] The first change goes by pull request (the initial structure), with its ticket made after the issue
+      types, the labels and the board exist.
 - [ ] The roles are recorded in `AGENTS.md`.
 
 **Proof** (section 8)

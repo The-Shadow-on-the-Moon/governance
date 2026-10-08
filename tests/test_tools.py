@@ -297,6 +297,32 @@ class GuideValueTests(unittest.TestCase):
             self.assertNotIn("feature branch", text, name)  # the guides say work branch
             self.assertEqual(len(re.findall(r"merge request", text)), 1 if name.startswith("02-") else 0, name)
 
+    def test_the_example_tickets_use_only_values_the_reference_defines(self):
+        import re
+
+        reference = self.guide("appendix-c-ticket-fields-reference.md")
+
+        def values(start, end):
+            return re.findall(r"^\| \*\*([^*]+)\*\* \|", reference.split(start, 1)[1].split(end, 1)[0], re.M)
+
+        types = values("## Type", "## Area")
+        areas = re.findall(r"^\| `([a-z]+)` \|", reference.split("## Area", 1)[1].split("## The `dummy`", 1)[0], re.M)
+        priorities, sizes = values("## Priority", "## Size"), values("## Size", "## Risk")
+        risks = values("## Risk", "## Version, Build")
+        pattern = re.compile(r"\| \*\*Title\*\* \| (.*?) \|\n\| \*\*Type\*\* \| (.*?) \|\n(?:\| \*\*Area\*\* \| (.*?) \|\n)?"
+                             r"\| \*\*Priority\*\* \| (.*?) \|\n\| \*\*Size\*\* \| (.*?) \|\n\| \*\*Risk\*\* \| (.*?) \|\n")
+        checked = 0
+        for name in ("03-project-structure.md", "appendix-d-ticket-examples.md"):
+            for title, kind, area, priority, size, risk in pattern.findall(self.guide(name)):
+                checked += 1
+                self.assertIn(kind, types, title)
+                for one in [a.strip() for a in area.split(",") if a.strip()]:
+                    self.assertIn(one, areas, title)
+                self.assertIn(priority, priorities, title)
+                self.assertIn(size, sizes, title)
+                self.assertIn(re.sub(r"[()]", "", risk), risks, title)
+        self.assertGreaterEqual(checked, 12)
+
     def test_every_board_value_in_the_bootstrap_is_defined_in_the_fields_reference(self):
         import re
 

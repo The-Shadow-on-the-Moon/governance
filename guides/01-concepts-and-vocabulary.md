@@ -104,6 +104,7 @@ with where it is explained. Nothing here is new: it collects what the other guid
 | **Finalized version** | A `## V2.4.1 — 2026-10-05 14:32 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
 | **`WIP-Build`** | The placeholder build heading for the commit being made. The local hook replaces it at commit time. | starting work, section 5 |
 | **Build heading** | `### Build 20261005143045 (branch <name>)`: one commit's worth of changes, stamped with the UTC time of the commit. If a commit was made without the hook, the automation writes a form that also carries the commit's hash. | project structure, section 7 |
+| **Build block** | A build heading with the ticket blocks under it: everything one commit added to the changelog. | working and committing, section 1 |
 | **Ticket block** | `#### #123 — title` with the bullets under it: the changes belonging to one ticket. | working and committing, section 2 |
 | **Bullet** | One concrete change, starting with the file or component. | working and committing, section 2 |
 | **`REF`** | A placeholder block for a change made without a ticket, named by a token and a short reason. | project structure, section 7.4 |
@@ -170,6 +171,7 @@ what the other guides define.
 | **Abandoned** | The outcome for a branch whose work is discarded. It too can be recovered from its tag. | branching and merging, section 1.5 |
 | **Recover** | Recreating a suspended or abandoned branch from its tag. The tag stays as history. | starting work, section 3.4 |
 | **Tag namespaces** | `archived/`, `suspended/`, `abandoned/` and `released/`, each with a fixed format. | branching and merging, section 2.2 |
+| **Kebab-case** | Lowercase words separated by hyphens, as in `csv-export`: the style of every branch name. | branching and merging, section 2.1 |
 | **Release tag** | A `released/V…` tag on a version declared a release. It only indicates the version, and a mistaken one can be removed. | releases and hotfixes, section 1 |
 | **Hotfix version** | A version with `-HF<n>` after it, such as `V1.25.0-HF1`, counted separately for each released version. | branching and merging, section 1.3 |
 
@@ -201,6 +203,8 @@ Nothing here is new: it collects what the other guides define.
 | **Fail open** | When a check cannot run or hits an error, work continues and the check says so. | branching and merging, section 6 |
 | **Bypass** | Going around a rule on purpose. It is allowed, and it is detected and recorded afterwards as an Alert. | branching and merging, section 6 |
 | **Dry run** | Running a step so that it prints every write it would make, without making any. | new-project bootstrap, section 8 |
+| **Trial** | Trying a change to the automation on throwaway material: a ticket titled `DUMMY ...` with the label `dummy`, a throwaway branch and their tags, so that no real ticket, version or tag is touched. | working and committing, section 4.4 |
+| **Regression checks** | The checks that show a version still does what the one before it did. They are run to verify a version before it is declared a release. | releases and hotfixes, section 1.1 |
 | **Project token** | The credential, stored as a secret, that lets the automation write to the board. | new-project bootstrap, section 4 |
 | **Manifest** | The file that lists the version of the standard a project follows and a hash of each automation file. | new-project bootstrap, section 2.4 |
 

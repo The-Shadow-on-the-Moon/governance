@@ -1,6 +1,12 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261008235402 (branch project-views)
+#### #116 — Fix gaps and conflicts found by the repeated sweeps of the guides
+- guides/01-concepts-and-vocabulary.md (glossary): four terms used throughout and not defined are added: build block, kebab-case, trial and regression checks.
+- guides/10-new-project-bootstrap.md (section 7.3 and the checklist): the ticket for the first change is made after the issue types, the labels and the board exist (it needs a Type, an Area and its board fields, and the first version needs a ticket to attach to); the guide did not say in what order.
+- tests/test_tools.py: added a test that the 13 example tickets in guide 03 and Appendix D use only the Types, Areas, Priorities, Sizes and Risks that Appendix C defines; 14 tests in `GuideValueTests`.
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
 ### Build 20261008233338 (branch project-views)
 #### #113 — Keep each rule in one place in the guides, with tests against drift
 - A third sweep, of the rules against each other and of the process against realistic situations: every rule that says never, always or only was read for a conflict with another rule, the situations a team meets were walked through for a documented answer, the Version ticket description and the release and hotfix comments were checked against the code, and the saved views against guide 07.
