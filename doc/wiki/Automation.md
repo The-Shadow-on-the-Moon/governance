@@ -30,7 +30,7 @@ The finalize step decides the bump from the tickets' Types or the marker, rename
 
 ## The daily run
 
-The checks that depend on time rather than on a push run from a `daily` job, started by a schedule (06:17 UTC) and by hand from the Actions tab (run the *Versioning* workflow with mode `daily`; a dry run is the default for a manual start). Scheduled runs only start from the default branch, so the schedule works once this workflow is on `main`, and GitHub stops scheduled runs of a repository that has had no activity for 60 days: a manual run starts them again.
+The checks that depend on time rather than on a push run from a `daily` job, started by a schedule (06:17 UTC) and by hand from the Actions tab (run the *Versioning* workflow with mode `daily`; a dry run is the default for a manual start). Scheduled runs only start from the default branch, so the schedule works once this workflow is on `main`, and GitHub stops scheduled runs of a repository that has had no activity for 60 days. A second workflow, `reenable-schedule.yml`, has no schedule (so GitHub never disables it) and runs on every push: `.github/scripts/reenable_schedule.py` asks for the state of `versioning.yml` and enables it again only when the state is `disabled_inactivity`; a workflow a person disabled (`disabled_manually`) stays disabled. It can also be started by hand (a dry run is the default). If it cannot enable the workflow the run fails, so it shows; then enable it by hand: `gh workflow enable versioning.yml`.
 
 ## The date sweep
 

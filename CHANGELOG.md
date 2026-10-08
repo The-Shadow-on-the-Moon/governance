@@ -1,5 +1,13 @@
 # Changelog
 
+## WIP-Version
+### Build 20261008200831 (branch project-views)
+#### #105 — Re-enable the scheduled workflow after GitHub disables it for inactivity
+- .github/scripts/reenable_schedule.py: added; reads the state of `versioning.yml` and enables it only when it is `disabled_inactivity` (switched off by GitHub after 60 days without repository activity); `disabled_manually` and every other state are left alone; `--dry-run` only reports; a failure to enable fails the run.
+- .github/workflows/reenable-schedule.yml: added; no schedule (so GitHub never disables it), runs on a push to any branch (not only `main`, so the first activity after a long pause wakes the schedule) and on request; permission `actions: write` only.
+- tests/test_reenable_schedule.py: 12 tests (the decision, the calls made, dry run, a refused enable, and the structure of the workflow file).
+- doc/wiki/Automation.md: describes it.
+- .github/automation-manifest.json: regenerated for the three new files (standard V0.9.0 is provisional: an Enhancement bumps the sub version; check it against the changelog after the finalize).
 ## V0.8.3 — 2026-10-08 13:15 UTC
 ### Build 20261008013731 (branch project-views)
 #### #96 — Two files are opened without being closed (ResourceWarning on Python 3.14)
