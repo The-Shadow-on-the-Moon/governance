@@ -234,7 +234,7 @@ Informational only: it drives no rule or automation.
 |---|---|---|
 | **Version** (text) | The version a ticket is aimed at and, once it ships, the version it really shipped in (`V2.1.0`, or `V2.1.0-HF1` for a hotfix). | a person may set it ahead of time; the automation overwrites it with the real version (for a backfilled ticket, the version where its placeholder appears). On an *Implemented* ticket the person's value stays |
 | **Build** (text) | The latest build of the ticket: the most recent build stamp among the build blocks that mention it. | the automation |
-| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation: at finalize, and every day for any ticket that has a Version (also one that is only aimed at a version) and a blank or different Version# |
+| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation: at finalize, and on every scheduled run for any ticket that has a Version (also one that is only aimed at a version) and a blank or different Version# |
 
 ## Start date and End date
 
@@ -246,7 +246,7 @@ Dates the automation noticed, never planned ones. Set by the automation; a perso
 | **End date** | The automation first sees the ticket *Completed* or *Abandoned*. | Set only if blank. Cleared by the automation when it sees the ticket open again, and set again the next time it ends. |
 
 The automation cannot be told when a person changes Progress, so the dates are found by a sweep on every
-run and a scheduled daily run; a date is accurate to the day it was noticed, in UTC. Version and Alert
+run and a scheduled run; a date is accurate to the day it was noticed, in UTC. Version and Alert
 tickets have no dates.
 
 ---

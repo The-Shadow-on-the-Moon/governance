@@ -19,18 +19,18 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 | When | What runs |
 |---|---|
 | A pull request | The pull request is put on the board as an item with no field set (so the All view has no gap in the numbers; a failure there never fails the run), then the advisory check: it fails and comments once when the branch is behind `main`, and lists merges with a manual conflict resolution. |
-| A push to `main` | The preflight, then bypass detection (an Alert and an `AUTO-REF` entry), then the finalize step, then the check for stale planned Version tickets, then the date sweep, then the Watch flags, then the Caution flags for field rules. |
+| A push to `main` | The preflight, then bypass detection (an Alert and an `AUTO-REF` entry), then the finalize step, then the check for stale planned Version tickets, then setting Version# from Version, then the date sweep, then the Watch flags, then the Caution flags for field rules. |
 | A push to another branch | The preflight; then the fallback for skipped hooks (a pushed changelog that still has `### WIP-Build` gets its build heading filled in with the commit's time and hash, a note in the first entry, and a commit on the branch); then the push step: for each ticket in the changelog entries the push added, Delivery becomes *Pushed* and Build the ticket's latest build, *ToDo* and *OnDeck* tickets become *InProgress*, and a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and already had work pushed or delivered (recognised by its recorded Build being older than the pushed one, or by Delivery *Implemented*, which has no Build) gets a *Caution* flag with a comment naming the build (not on its first push, not when the Delivery was only set by hand, and not again while a *Caution* or *AtRisk* is open). |
-| Every day at 06:17 UTC, or on request with mode `daily` | The preflight, then attaching *Implemented* tickets to their versions, setting Version# from Version, the date sweep, the Watch flags and the Caution flags for field rules. It never commits. |
+| Three times a day (08:17, 16:17 and 20:17 UTC; 4am, noon and 4pm ET in summer time, an hour earlier in winter), or on request with mode `scheduled` | The preflight, then attaching *Implemented* tickets to their versions, setting Version# from Version, the date sweep, the Watch flags and the Caution flags for field rules. It never commits. |
 | On request with mode `finalize` | The preflight and the finalize step, as a dry run unless told otherwise. Safe to repeat. |
 
 The preflight checks that the repository is reachable (the workflow's own token does not report its rights, so write access is confirmed through the project token), that `PROJECT_TOKEN` works (and warns two weeks before it expires), which board belongs to the repository (its number is kept in the repository variable `BOARD_NUMBER`) and that the board has every field and value the automation needs.
 
 The finalize step decides the bump from the tickets' Types or the marker, renames the open `WIP-Version` heading in a commit of its own, sets Delivery, Version, Build and Version# on each ticket, and creates and closes the Version ticket with the tickets as sub-issues. If the board cannot be updated, the version is still finalized.
 
-## The daily run
+## The scheduled run
 
-The checks that depend on time rather than on a push run from a `daily` job, started by a schedule (06:17 UTC) and by hand from the Actions tab (run the *Versioning* workflow with mode `daily`; a dry run is the default for a manual start). Scheduled runs only start from the default branch, so the schedule works once this workflow is on `main`, and GitHub stops scheduled runs of a repository that has had no activity for 60 days. A second workflow, `reenable-schedule.yml`, has no schedule (so GitHub never disables it) and runs on every push: `.github/scripts/reenable_schedule.py` asks for the state of `versioning.yml` and enables it again only when the state is `disabled_inactivity`; a workflow a person disabled (`disabled_manually`) stays disabled. It can also be started by hand (a dry run is the default). If it cannot enable the workflow the run fails, so it shows; then enable it by hand: `gh workflow enable versioning.yml`.
+The checks that depend on time rather than on a push run from a `scheduled` job, started by a schedule (three runs a day: 08:17, 16:17 and 20:17 UTC) and by hand from the Actions tab (run the *Versioning* workflow with mode `scheduled`; a dry run is the default for a manual start). Scheduled runs only start from the default branch, so the schedule works once this workflow is on `main`, and GitHub stops scheduled runs of a repository that has had no activity for 60 days. This job and the `main` job (a push to `main`) share one concurrency group, so a merge and a scheduled run never overlap: the second waits for the first, and a run is never cancelled once it started (GitHub does replace a run that is still waiting when a third one arrives, which needs three runs within about a minute). A second workflow, `reenable-schedule.yml`, has no schedule (so GitHub never disables it) and runs on every push: `.github/scripts/reenable_schedule.py` asks for the state of `versioning.yml` and enables it again only when the state is `disabled_inactivity`; a workflow a person disabled (`disabled_manually`) stays disabled. It can also be started by hand (a dry run is the default). If it cannot enable the workflow the run fails, so it shows; then enable it by hand: `gh workflow enable versioning.yml`.
 
 ## The date sweep
 
@@ -63,7 +63,7 @@ All in `.github/scripts/`, with a test file for each in `tests/`. Each can be ru
 | `bypass.py` | Bypass detection after a push to `main`, and the stale-version check (`stale`). |
 | `advisory.py` | The advisory check on a pull request. |
 | `push_step.py`, `skipped_hooks.py` | The push step and the fallback for skipped hooks. |
-| `implemented.py` | Attaching *Implemented* tickets (the daily entry). |
+| `implemented.py` | Attaching *Implemented* tickets (the scheduled entry). |
 | `board_pull_requests.py` | Puts a pull request on the board (`PULL_REQUEST`, as the workflow does), or with `--all` every pull request that is not on it yet (a one-time backfill). It sets no field, and it never fails a pull request run. |
 | `version_numbers.py` | Sets Version# from Version on every work ticket that has a Version and a blank or different Version# (so an aimed ticket sorts by version). Changes nothing else. |
 | `dates.py`, `watch.py`, `field_rules.py` | The date sweep, the Watch flags and the Caution flags for field rules. |
@@ -78,7 +78,7 @@ In the Actions tab, run the *Versioning* workflow with a mode and the dry run on
 | Mode | Start it from | Inputs |
 |---|---|---|
 | `finalize` | `main` (or a branch, to try a change) | none: repeat or dry-run a finalize |
-| `daily` | `main` | none: the daily checks |
+| `scheduled` | `main` | none: the scheduled checks |
 | `release` | `main` (or a branch, to try a change) | `version`: a finalized version, or empty for the latest |
 | `hotfix` | the hotfix branch itself | `version`: the hotfix version, for example `V1.25.0-HF1` |
 | `retire` | `main` (or a branch, to try a change) | `branch`, `outcome` (archived, suspended or abandoned), `confirm` (the branch name again) and an optional `comment` for the tag |

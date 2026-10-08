@@ -462,7 +462,7 @@ nothing in the repository shows that a secret was stored or a setting changed.
   version it really shipped in: a person may set it ahead of time, and the automation overwrites it with
   the real version. Build holds the ticket's latest build (the most recent build stamp among the build blocks that
   mention it), and Version# is derived from Version only to sort versions. The automation sets it, not only
-  when a version ships but every day for any ticket that has a Version, so a ticket that is only aimed at a
+  when a version ships but on every scheduled run for any ticket that has a Version, so a ticket that is only aimed at a
   version sorts among the others.
 - **Rule:** Start date and End date are the dates the automation noticed the ticket start and end. A
   person may correct one by hand. The automation clears the End date when it sees the ticket open again.

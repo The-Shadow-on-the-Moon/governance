@@ -2,7 +2,7 @@
 
 Version# is the number that is derived from a ticket's Version, used only to sort versions. The finalize step
 sets it when a version ships, but a ticket that is only aimed at a version (its Version field says `V2.1.0` before
-that version exists) would have none, and a view could not sort it among the others. So the daily run sets
+that version exists) would have none, and a view could not sort it among the others. So the scheduled run sets
 Version# on every work ticket whose Version is a version and whose Version# is blank or different. It changes
 nothing else: not Version, not Build. A Version that is not a version (any other text) is reported and skipped.
 Version and Alert tickets are left alone (finalize sets theirs).

@@ -70,6 +70,24 @@ class FilterTests(unittest.TestCase):
         self.assertEqual(views.effective_filter("(a:1 OR b:2)"), "(a:1 OR b:2) AND is:issue AND -label:dummy")
 
 
+class HealthViewTests(unittest.TestCase):
+    """The real definition file: Health shows finished work that has no Delivery or no Version."""
+
+    def health(self):
+        entries = views.load_definition(os.path.join(ROOT, ".github", "views.json"))
+        return next(entry for entry in entries if entry["name"] == "Health")
+
+    def test_it_lists_completed_work_without_a_delivery_but_not_version_or_alert_tickets(self):
+        self.assertIn("(status:Completed no:delivery AND -type:Version AND -type:Alert)", self.health()["filter"])
+
+    def test_it_lists_implemented_and_merged_tickets_without_a_version(self):
+        self.assertIn("(delivery:Implemented,Merged no:version)", self.health()["filter"])
+
+    def test_it_shows_the_version_next_to_the_delivery(self):
+        fields = self.health()["visible_fields"]
+        self.assertEqual(fields[fields.index("Delivery") + 1], "Version")
+
+
 class DefinitionTests(unittest.TestCase):
     def load(self, data):
         with tempfile.TemporaryDirectory() as folder:

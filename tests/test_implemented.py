@@ -184,7 +184,7 @@ class SweepTests(unittest.TestCase):
         self.assertEqual(project.queries, 3)
 
 
-class DailySweepTests(unittest.TestCase):
+class ScheduledSweepTests(unittest.TestCase):
     def folder_with(self, text):
         import tempfile
         folder = tempfile.TemporaryDirectory()
@@ -199,23 +199,23 @@ class DailySweepTests(unittest.TestCase):
     def test_it_attaches_by_the_finalized_versions_without_touching_anything_else(self):
         repo = FakeRepo(OLD_TICKETS + [{"title": "Version 0.4.0", "state": "closed", "number": 30}])
         project = FakeProject([node(50), node(51, version="V0.3.1"), node(52, version="V0.9.0")])
-        run = implemented.daily_sweep(self.folder_with(self.LOG), repo, project, board(), NOW)
+        run = implemented.scheduled_sweep(self.folder_with(self.LOG), repo, project, board(), NOW)
         self.assertEqual(sorted(repo.subs), [(27, 51), (30, 50)])
         self.assertTrue(any("waits for V0.9.0" in line for line in run.log))
 
     def test_dry_run(self):
         repo = FakeRepo(OLD_TICKETS + [{"title": "Version 0.4.0", "state": "closed", "number": 30}])
-        run = implemented.daily_sweep(self.folder_with(self.LOG), repo, FakeProject([node(50)]), board(), NOW, dry_run=True)
+        run = implemented.scheduled_sweep(self.folder_with(self.LOG), repo, FakeProject([node(50)]), board(), NOW, dry_run=True)
         self.assertEqual((repo.subs, repo.comments), ([], []))
         self.assertTrue(run.log)
 
     def test_no_finalized_version_yet(self):
-        run = implemented.daily_sweep(self.folder_with("# Changelog\n"), FakeRepo([]), FakeProject([node(50)]), board(), NOW)
+        run = implemented.scheduled_sweep(self.folder_with("# Changelog\n"), FakeRepo([]), FakeProject([node(50)]), board(), NOW)
         self.assertEqual(run.log, ["no finalized version yet: nothing to attach to"])
 
     def test_the_latest_version_has_no_ticket(self):
         repo = FakeRepo(OLD_TICKETS)
-        run = implemented.daily_sweep(self.folder_with(self.LOG), repo, FakeProject([node(50)]), board(), NOW)
+        run = implemented.scheduled_sweep(self.folder_with(self.LOG), repo, FakeProject([node(50)]), board(), NOW)
         self.assertEqual(repo.subs, [])
         self.assertIn("no Version ticket for V0.4.0", run.log[0])
 

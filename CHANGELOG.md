@@ -1,6 +1,30 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261008202143 (branch project-views)
+#### #99 — Flag a Completed work ticket that has no Delivery
+- .github/scripts/field_rules.py: added the rule `completed-without-delivery` (Status Completed, Delivery blank; Version and Alert tickets exempt); the Caution comment says to set Implemented if no file changed, Merged if files did, or Abandoned with a reason. The board query now reads Delivery. A rule can wait longer than the usual five minutes: `WAIT` gives this one two hours (a person may be in the middle of completing the ticket); a rule still inside its wait is left out of the flag, and the others in the same sweep are flagged as before.
+- tests/test_field_rules.py: 4 new tests (the rule, its exemptions, the two-hour wait, a quick rule flagged while the slow one waits); the ticket helper gives a Completed ticket Delivery Merged unless a test says otherwise. A dry run against the board reports no flag.
+- .github/automation-manifest.json: regenerated for `field_rules.py`.
+#### #100 — Flag shipped work that still has no Version
+- .github/scripts/field_rules.py: added the rule `shipped-without-version` (Delivery Merged, Implemented or Released and a blank Version; Version and Alert tickets and Abandoned tickets are left out, because the sweeps never attach those). It waits two hours since the ticket's last change (`WAIT`), and runs after the Implemented sweep and the finalize step in the same run, so a ticket they attach is not flagged. A ticket with a Version, even one aimed at a version that is not finalized yet, is not flagged (the passed-version Caution covers the other case). The board query now reads Version.
+- tests/test_field_rules.py: 4 new tests (the rule and its exemptions, the aimed-at-a-future-version case, the two-hour wait and the flag text); 27 tests. A dry run against the board reports no flag.
+- .github/automation-manifest.json: regenerated for `field_rules.py`.
+#### #101 — Show unversioned finished work in the Health view
+- .github/views.json: the Health filter gains two clauses, `(status:Completed no:delivery AND -type:Version AND -type:Alert)` (a Completed work ticket with no Delivery) and `(delivery:Implemented,Merged no:version)` (shipped work with no Version), and the view shows the Version field after Delivery. The filter is now 468 characters (the longest one tried on the board before was 357); a dry run of `views.py --only Health` plans to recreate the view, and it has not been applied.
+- tests/test_views.py: 3 new tests on the real definition file (both clauses and the Version column).
+- doc/wiki/Board-Views.md: the Health row and the table of what Health catches describe the two clauses.
+- .github/automation-manifest.json: regenerated for `views.json`.
+#### #102 — Run the scheduled job three times a day and stop it overlapping a merge
+- .github/workflows/versioning.yml: the schedule is three runs a day, 08:17, 16:17 and 20:17 UTC (4am, noon and 4pm ET in summer time; an hour earlier in winter, because cron has no time zone). The `main` job (a push to main) and the `daily` job now share one concurrency group, `versioning-board` (they were `versioning-main` and `versioning-daily`, so a merge and a scheduled run could attach a ticket or post a comment twice), with `cancel-in-progress: false`. The `main` job also runs the Version# sweep, after the stale-version check and before the date sweep (it ran only in the daily job). The header comment describes all of it.
+- tests/test_workflow.py: the three times, the shared group, and the order of the new step in the main job.
+- doc/wiki/Automation.md: the table rows and the paragraph on the scheduled job. Not done here: the guides that say "every day" or "once a day" (appendix E, guide 03, appendix C) are left to the documentation ticket #104.
+- .github/automation-manifest.json: regenerated for the workflow.
+#### #103 — Rename the daily job and mode to scheduled
+- .github/workflows/versioning.yml: the job `daily` and the manual mode `daily` are now `scheduled` (the job runs three times a day and on request); the header comment says so. A manual start now uses mode `scheduled`; the old name is gone.
+- .github/scripts/implemented.py: `daily_sweep` is now `scheduled_sweep`, and the comment on a passed version says "the next scheduled run". .github/scripts/version_numbers.py: its docstring says "the scheduled run". tests/test_workflow.py and tests/test_implemented.py follow (the test names too).
+- doc/wiki/Automation.md (the table rows, the section "The scheduled run", the script and job tables), README.md, guides 03 (section 5.2), appendix C and appendix E: "daily" and "every day" became "scheduled" and "on every scheduled run". Left as they are, because they mean something else: "the daily flow" (appendix A), "the daily board" and "daily handling" (guide 07, the guide README, Home).
+- guides/Developer-Guides-Complete.md rebuilt; .github/automation-manifest.json regenerated.
 ### Build 20261008200831 (branch project-views)
 #### #105 — Re-enable the scheduled workflow after GitHub disables it for inactivity
 - .github/scripts/reenable_schedule.py: added; reads the state of `versioning.yml` and enables it only when it is `disabled_inactivity` (switched off by GitHub after 60 days without repository activity); `disabled_manually` and every other state are left alone; `--dry-run` only reports; a failure to enable fails the run.

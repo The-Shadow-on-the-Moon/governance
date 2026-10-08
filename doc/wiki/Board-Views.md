@@ -11,7 +11,7 @@ Every view except All also ends with `AND is:issue AND -label:dummy`, which the 
 | All | table | none (neither the test tickets nor the pull requests are left out) | no grouping; in ticket-number order (see the notes) | Every item on the board, test tickets and pull requests included, with all its fields, for finding anything and for audit. |
 | Backlog | board | `status:ToDo,OnDeck,Suspended` | columns by Status; sorted by Priority | The waiting and set-aside work, the most urgent first. |
 | Board | board | `is:open AND -type:Version AND -status:ToDo,Suspended` | columns by Status, rows by Version; sorted by Priority | The active work (OnDeck, InProgress, Review) with a row for each Version. |
-| Health | table | `attention:Watch,Caution,AtRisk OR waiting:"Needs input" OR status:Review OR (type:Alert AND is:open) OR (status:Completed no:resolution) OR (is:open has:resolution) OR (is:open has:end-date) OR (is:closed has:waiting) OR (origin:Backfilled no:ref) OR (status:Completed,Abandoned AND is:open) OR (is:closed AND -status:Completed,Abandoned AND -type:Version)` | sorted by Priority | Everything that needs a person, and every ticket whose fields break a rule. |
+| Health | table | `attention:Watch,Caution,AtRisk OR waiting:"Needs input" OR status:Review OR (type:Alert AND is:open) OR (status:Completed no:resolution) OR (is:open has:resolution) OR (is:open has:end-date) OR (is:closed has:waiting) OR (origin:Backfilled no:ref) OR (status:Completed,Abandoned AND is:open) OR (is:closed AND -status:Completed,Abandoned AND -type:Version) OR (status:Completed no:delivery AND -type:Version AND -type:Alert) OR (delivery:Implemented,Merged no:version)` | sorted by Priority | Everything that needs a person, and every ticket whose fields break a rule. |
 | Versions | table | `has:version AND -type:Version` | grouped by Parent issue (the Version ticket, so a group reads "Version 0.7.0"); sorted by Version#, then Priority | What each version holds, with Delivery, Build and Resolution. Tickets only aimed at a version (no Version ticket yet) are in the "No parent issue" group, ordered by their Version#. |
 
 ## What Health catches
@@ -27,6 +27,8 @@ The first four conditions are the work that waits for a person: an open Attentio
 | `origin:Backfilled no:ref` | A backfilled ticket has its REF. |
 | `status:Completed,Abandoned AND is:open` | A *Completed* or *Abandoned* ticket has its issue closed. |
 | `is:closed AND -status:Completed,Abandoned AND -type:Version` | An issue is closed only at *Completed* or *Abandoned* (Version tickets are closed by the automation and have no Progress, so they are left out). |
+| `status:Completed no:delivery AND -type:Version AND -type:Alert` | A *Completed* work ticket has a Delivery (*Merged* if files changed, *Implemented* if none did). Version and Alert tickets are not work tickets. |
+| `delivery:Implemented,Merged no:version` | Shipped work has a Version. The scheduled run gives a blank Version to an *Implemented* ticket, and the finalize step to a *Merged* one, so this row shows the gap until that happens, or a step that failed. |
 
 ## Notes
 
