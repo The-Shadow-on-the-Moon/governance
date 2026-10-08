@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.9.0 — 2026-10-08 20:36 UTC
 ### Build 20261008202952 (branch project-views)
 #### #104 — Document that Completed work has a Delivery and shipped work has a Version
 - guides/03-project-structure.md (section 4.4: three rows, and the Caution causes), guides/07-issues-and-the-board-in-practice.md (section 6.1 on Implemented tickets and a blank Version, the board review item 4, and a checklist line before Completed), guides/appendix-c-ticket-fields-reference.md (the two-hour wait of the Delivery and Version rules; the Delivery section: the sweep runs at every scheduled run, and the two gaps are flagged), guides/appendix-e-ticket-model.md (two rows): a Completed work ticket has a Delivery, shipped work has a Version, pure analysis is Implemented and never blank.
