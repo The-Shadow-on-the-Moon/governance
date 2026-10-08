@@ -108,6 +108,8 @@ These are the rules that span fields (the full table is in *Project structure*, 
 | Origin is *Backfilled* | REF names the placeholder it replaced. |
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
 | A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names its version. |
+| A work ticket is *Completed* | Delivery is set (*Merged* or *Implemented*). |
+| Delivery is *Merged*, *Implemented* or *Released* | Version is set (the automation sets it; a gap is flagged after two hours). |
 
 ## 5. Special tickets
 

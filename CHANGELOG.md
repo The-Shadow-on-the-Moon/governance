@@ -1,6 +1,11 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261008202952 (branch project-views)
+#### #104 — Document that Completed work has a Delivery and shipped work has a Version
+- guides/03-project-structure.md (section 4.4: three rows, and the Caution causes), guides/07-issues-and-the-board-in-practice.md (section 6.1 on Implemented tickets and a blank Version, the board review item 4, and a checklist line before Completed), guides/appendix-c-ticket-fields-reference.md (the two-hour wait of the Delivery and Version rules; the Delivery section: the sweep runs at every scheduled run, and the two gaps are flagged), guides/appendix-e-ticket-model.md (two rows): a Completed work ticket has a Delivery, shipped work has a Version, pure analysis is Implemented and never blank.
+- doc/wiki/Automation.md: the two rules, their two-hour wait and why they run after the sweeps; the sweep gives a blank Version the latest finalized version at a scheduled run.
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
 ### Build 20261008202143 (branch project-views)
 #### #99 — Flag a Completed work ticket that has no Delivery
 - .github/scripts/field_rules.py: added the rule `completed-without-delivery` (Status Completed, Delivery blank; Version and Alert tickets exempt); the Caution comment says to set Implemented if no file changed, Merged if files did, or Abandoned with a reason. The board query now reads Delivery. A rule can wait longer than the usual five minutes: `WAIT` gives this one two hours (a person may be in the middle of completing the ticket); a rule still inside its wait is left out of the flag, and the others in the same sweep are flagged as before.

@@ -391,7 +391,7 @@ state and lose where the ticket was.
   - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
     whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
     *Released* or *Dropped*), or a rule in section 4.4 is broken (for example *Completed* without
-    Resolution *Done*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
+    Resolution *Done*, or without a Delivery). Earlier work is recognised by the ticket's recorded Build: a Build older than the
     one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
     Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
     never raises it: a ticket moved to *Review* before its first push has no earlier work. A *Caution* is also
@@ -482,7 +482,9 @@ ticket planned for a later version that ships earlier fixes itself.
 | A ticket leaves *Completed* or *Abandoned* | The person clears Resolution; the automation clears the End date. |
 | Origin is *Backfilled* | REF names the placeholder it replaced. |
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
-| A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names the version it belongs to. |
+| A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names the version it belongs to. Pure analysis, a setting or a check that was run counts: the Delivery is never left blank. |
+| A work ticket is *Completed* | Delivery is set: *Merged* if files changed, *Implemented* if none did. (A ticket that came to nothing is *Abandoned*, not *Completed*. Version and Alert tickets are not work tickets.) |
+| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
 | A work ticket breaks one of these rules | The automation raises *Caution* in Attention, with a comment. |

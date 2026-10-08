@@ -299,8 +299,10 @@ coming back.
 - A ticket with no file change has nothing for the automation to find in the changelog. When its work is in
   effect, the person sets its Delivery to *Implemented* and its Version to the version it belongs to. The
   automation attaches it to that version's ticket and does not change the field. Leave the Version blank until the
-  version is finalized, unless the version already exists: a blank Version gets the version being finalized,
-  and a number you only expect may never exist (the bump is decided at merge). If an *Implemented* ticket is
+  version is finalized, unless the version already exists: a blank Version gets the version being finalized (or,
+  at a scheduled run between two merges, the latest finalized version, which is the version the work was done
+  under), and a number you only expect may never exist (the bump is decided at merge). Pure analysis counts
+  as a change with no file: set *Implemented*, never leave the Delivery blank on a ticket you complete. If an *Implemented* ticket is
   aimed at a version that was passed (not finalized while a higher version is), the automation raises
   *Caution* on it: set its Version to the version it belongs to, or clear it.
 
@@ -370,6 +372,8 @@ automation's Attention flag already catches stale tickets, long waits and broken
    - Waiting is only on open tickets.
    - A backfilled ticket has its REF.
    - The issue is closed only at *Completed* or *Abandoned*.
+   - A *Completed* work ticket has a Delivery, and a ticket with Delivery *Merged*, *Implemented* or *Released*
+     has a Version.
 5. **Labels:** the Area list and `dummy` are fixed. Remove strays and duplicates.
 6. **Planned Version tickets:** closed if dropped, and none left behind for versions already passed.
 7. **Branches:** merged branches not yet retired (a week or two up to about a month), and parked branches
@@ -423,6 +427,8 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] I verified on a named build, before or after the merge.
 - [ ] It passes: Resolution *Done* and Progress *Completed* set together, the issue closed, and a comment
       naming the build.
+- [ ] Before I set *Completed*, the Delivery is set (*Merged* if files changed, *Implemented* if none did, even for
+      pure analysis).
 - [ ] It fails: back to *InProgress* with a comment, or a new *Bug* linked as "introduced by #123".
 
 **Suspend, abandon or reopen** (section 4)
