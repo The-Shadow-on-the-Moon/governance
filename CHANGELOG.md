@@ -1,5 +1,11 @@
 # Changelog
 
+## WIP-Version
+### Build 20261008013731 (branch project-views)
+#### #96 — Two files are opened without being closed (ResourceWarning on Python 3.14)
+- tools/xref_check.py: fixed; `load()` read the ten guide files with `open(...).read()` and never closed them (ten unclosed files per call, about 20 `ResourceWarning` lines per test run); it now reads each file with a `with` statement.
+- tests/test_checks.py: fixed; the bypass test read `CHANGELOG.md` the same way and now closes it.
+- .github/automation-manifest.json: regenerated for `tests/test_checks.py` (standard V0.8.3, a mod bump after V0.8.2).
 ## V0.8.2 — 2026-10-07 19:08 UTC
 ### Build 20261007183941 (branch project-views)
 #### #90 — Move actions/checkout to a Node 24 release in the workflows
