@@ -1,5 +1,11 @@
 # Changelog
 
+## WIP-Version
+### Build 20261008211150 (branch project-views)
+#### #108 — Analyze Guidelines
+- doc/Evaluation/Claude-eval.md, Gemini-eval.md, Copilot-eval.md: added; three independent evaluations of the guides for coherence, consistency and completeness (the Claude one also checks the project against the guides).
+- doc/Evaluation/Combined-eval.md: added; the three compared, with what to address, what is irrelevant or incorrect (and why), and how to fix each item.
+
 ## V0.9.0 — 2026-10-08 20:36 UTC
 ### Build 20261008202952 (branch project-views)
 #### #104 — Document that Completed work has a Delivery and shipped work has a Version
