@@ -39,10 +39,10 @@ The steps:
 
 - **Rule:** the developer decides which versions are releases, and tells the project owner. The remote
   automation carries it out.
-- **Rule:** verify the version before releasing it: run the regression checks on it and record the results,
-  naming the build (see the guide on working and committing, section 4). The regression checks are an
-  ordinary Task: its result file is committed like any change and lands in a later version, and the
-  result names the version and build that were tested.
+- **Rule:** verify the version before releasing it: run the regression checks on it.
+- **Strong recommendation:** record the results, naming the build (see the guide on working and
+  committing, section 4). The regression checks are an ordinary Task: its result file is committed like
+  any change and lands in a later version, and the result names the version and build that were tested.
 - **Rule:** a release marks as *Released* only the tickets whose Delivery is *Merged* or *Implemented* and
   whose version is at or below the released one. A ticket with newer work pushed keeps *Pushed*.
 - **Recommendation:** have the version's tickets completed before releasing it.
@@ -191,7 +191,8 @@ A one-page summary of the guide. It adds no new rules.
 **Cut a release** (section 1)
 
 - [ ] The version is finalized on `main`.
-- [ ] It is verified: the regression checks are run and the results recorded with the build.
+- [ ] It is verified: the regression checks are run, and the results are recorded with the build (a
+      strong recommendation).
 - [ ] Its tickets are completed (a recommendation).
 - [ ] The release step is run with that version, and the project owner is told.
 - [ ] The tag is on the commit where the version was finalized, the Version ticket shows *Released* with

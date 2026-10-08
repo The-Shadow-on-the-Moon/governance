@@ -89,7 +89,7 @@ roles (see *Project structure*, section 10.6).
   - [2. Timestamps and the UTC rule](#2-timestamps-and-the-utc-rule)
   - [3. The changelog's words](#3-the-changelogs-words)
   - [4. Tickets and the board's words](#4-tickets-and-the-boards-words)
-  - [5. Branches and tags' words](#5-branches-and-tags-words)
+  - [5. The words for branches and tags](#5-the-words-for-branches-and-tags)
   - [6. Roles and automation's words](#6-roles-and-automations-words)
   - [7. Git: names and concepts used](#7-git-names-and-concepts-used)
   - [8. GitHub: names used](#8-github-names-used)
@@ -203,7 +203,7 @@ Four words that are easy to confuse. Each answers a different question.
 
 | | What it is | Assigned | Lives in | Identifies |
 |---|---|---|---|---|
-| **Version** | `V<major>.<sub>.<mod>`, with `-HF<n>` added for a hotfix | when a branch merges into `main` | the topmost finalized heading of the changelog | a position in the history |
+| **Version** | `V<major>.<sub>.<mod>`, with `-HF<n>` added for a hotfix | when a branch merges into `main`; for a hotfix, when it is finished | the topmost finalized heading of the changelog | a position in the history |
 | **Build** | a UTC timestamp, `yyyymmddhhmmss` | when a commit is made, by the local hook | a build heading in the changelog | one commit's worth of changes |
 | **Compile stamp** | a UTC timestamp, `yyyymmddhhmmss` | every time the product is compiled | inside the compiled product | exactly what was compiled |
 | **Release** | a version declared a release | deliberately, after verifying it | a tag `released/V…` | a version that is fit to be used |
@@ -214,8 +214,8 @@ Four words that are easy to confuse. Each answers a different question.
 - **Rule:** a product that is compiled carries a compile stamp, generated afresh on every compile and
   embedded in the product itself. It is a UTC timestamp and needs no lookup and no git command. It is
   unique in practice, even for repeated compiles of the same commit, though its resolution is one second.
-- **Rule:** a recorded test result names the build it applies to and, where the product has one, the
-  compile stamp of what was tested (see the guide on working and committing, section 4).
+- **Strong recommendation:** a recorded test result names the build it applies to and, where the product
+  has one, the compile stamp of what was tested (see the guide on working and committing, section 4).
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
   Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
   exception and has no `V` (`Version 2.4.1`).
@@ -331,7 +331,7 @@ design of a ticket as a whole. Nothing here is new: it collects what the other g
 
 ---
 
-### 5. Branches and tags' words
+### 5. The words for branches and tags
 
 "Branching and merging" below means the guide on branching and merging. Nothing here is new: it collects
 what the other guides define.
@@ -374,6 +374,7 @@ Nothing here is new: it collects what the other guides define.
 | **Durable authorization** | An approval for a kind of action that is recorded in the shared instructions file, so the assistant need not ask each time. | working with an assistant, section 3 |
 | **Local automation** | The git hooks and scripts that run on a developer's machine. | project structure, section 10 |
 | **Remote automation** | The workflow that runs on the hosting service. | project structure, section 10 |
+| **Scheduled run** | The workflow's runs on a timer (three a day) and on request. It sweeps the board for what no event announces: dates, stale and waiting tickets, broken field rules, Version# and *Implemented* tickets. A small workflow switches the schedule back on if GitHub turns it off for inactivity. | project structure, section 2.3 |
 | **Hook** | A small script git runs at a set moment, such as before a commit. The hooks stamp the build, draft the message and warn. | working and committing, section 5 |
 | **Workflow** | The hosting service's automation. It finalizes versions, tags, updates the board and raises Alerts. | new-project bootstrap, section 2 |
 | **Finalize** | The automation's step at merge: it renames the open version to the real one, updates the tickets and creates the Version ticket. | syncing and merging, section 5 |
@@ -451,7 +452,7 @@ other guides define.
 | **Organization** | The account that owns the repository and the board. The standard needs one, because issue types are an organization feature. | new-project bootstrap, section 5 |
 | **Issue** | A ticket. | project structure, section 3 |
 | **Issue type** | The native single value on an issue that says what sort of ticket it is. It carries the Type. | fields reference |
-| **Label** | A tag on an issue. The only labels are the 14 Area labels. | fields reference |
+| **Label** | A tag on an issue. The only labels are the 14 Area labels and the marker label `dummy`. | fields reference |
 | **Sub-issue** | An issue attached to another, which has one parent. | project structure, section 5 |
 | **Closing keyword** | A word such as *Closes*, *Fixes* or *Resolves* followed by a ticket number, which closes the ticket automatically when the pull request merges. The process never uses one. | syncing and merging, section 3 |
 | **Pull request** | The proposal to merge a branch into `main`. | project structure, section 6 |
@@ -1080,13 +1081,15 @@ branch they came through.
 | **readme** (root) | What the project is, how to build and use it. |
 | **`CHANGELOG.md`** (root) | The changelog (structure in section 7). |
 | **Source folders** | The project's own code. Project-specific, so this guide says nothing about them. |
-| **`tests/`** | Automated tests, for the product and for the automation scripts, and the recorded test results in `tests/results/`. Present when the project has code or scripts of its own. |
+| **`tests/`** | Automated tests, for the product and for the automation scripts, and any recorded test results in `tests/results/`. Present when the project has code or scripts of its own. |
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
 | **`.githooks/`** | The local git hooks. |
 | **`.github/`** | Server-side workflows and their scripts, and the pull request template. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
+| **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
+| **Licence files** (root) | The project's licence, when it has one. |
 
 #### 2.2 Rules
 
@@ -1098,11 +1101,15 @@ branch they came through.
 - **Rule:** the hooks are activated once per clone, with one command. A fresh clone has no hooks until
   that step is done. (The procedure is in the guide on starting work; this guide only states that the
   step exists.)
+- **Rule:** `.gitattributes` contains the line `* text=auto eol=lf`, so the changelog, the hooks and the
+  scripts keep Unix line endings on every platform.
 - **Recommendation:** keep personal and generated files out of the repository through the ignore file,
   so nobody commits the state of their own machine.
 
 **Why.**
 
+- *Line endings* because the hooks and the automation read the changelog byte for byte. A changelog saved
+  with Windows line endings once broke both, and rewrote the whole file on the next commit.
 - *Fixed names* mean any developer can open any project and know where to look, and tooling and guides
   can refer to a location without asking.
 - *The hooks and automation live in the repository* because the project's rules are only as reliable as
@@ -1118,6 +1125,33 @@ branch they came through.
 > a wiki is available (a wiki must first be initialized by creating a first page, and it may not be
 > offered for private repositories on every plan). Where it is not, `doc/wiki/` simply remains the
 > readable source in the repository.
+
+#### 2.3 The scheduled run
+
+Most of the automation reacts to an event: a push, a pull request, a merge. Some things are not events.
+Nothing is sent when a person changes a field on the board, and nothing happens when a ticket simply goes
+quiet. The *scheduled run* covers them: the workflow also starts on a timer, three times a day, and on
+request. Each run sweeps the board and does the following, and the other guides refer to it by this name:
+
+- sets the Start and End dates of tickets that have started or ended;
+- raises *Watch* on tickets that have gone quiet or have waited too long, and *Caution* on tickets that
+  break a field rule (section 4.3);
+- sets Version# on every ticket that has a Version, including one that is only aimed at a version;
+- attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2).
+
+- **Rule:** the project keeps the schedule enabled.
+- **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
+  *Implemented* tickets), so a version that has just been finalized does not wait for the next run, and the
+  two never run at the same time: the second waits for the first.
+
+**Why.** Facts that no event announces are still facts the board depends on. A timer finds them without
+asking a person to remember, and without a person's edit having to trigger anything.
+
+> **In GitHub.** The schedule is the workflow's `schedule` trigger (three cron times a day, in UTC, which
+> cannot follow daylight saving). GitHub switches a scheduled workflow off after 60 days without activity
+> in the repository, so the project also has a small workflow with no schedule of its own that switches it
+> back on at the next push to any branch, or on request. It leaves a workflow that a person disabled by
+> hand alone.
 
 ---
 
@@ -1400,7 +1434,8 @@ state and lose where the ticket was.
     ticket; the automation's own flag comments do not count.
 - **Rule:** a broken rule is raised only if the ticket, meaning its issue or its board fields, has not
   changed for five minutes. Fixing a ticket takes several edits (for example *Completed*, *Done* and
-  closing the issue), and a ticket in the middle of them is not yet wrong.
+  closing the issue), and a ticket in the middle of them is not yet wrong. The two rules about Delivery and
+  Version (section 4.4) wait two hours, because a person may be in the middle of completing the ticket.
 - **Rule:** the automation sets an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or
   that has a lower open flag, and a higher level replaces a lower one. It never sets *Fine* or
   *Acknowledged*, and never lowers a level. A person may set any value by hand.
@@ -1544,8 +1579,8 @@ tickets that need attention.
 #### 5.3 Alert tickets
 
 An Alert is a real check that a person must do. The automation raises one when something needs a person
-to review it: a detected bypass, a merge that landed without changelog entries, or planned versions that
-can no longer happen. It is not the same as the Attention flag: an Alert is about a rule that was bypassed
+to review it: a detected bypass, a merge that landed without changelog entries, a changelog it cannot read
+(so no version was finalized), or planned versions that can no longer happen. It is not the same as the Attention flag: an Alert is about a rule that was bypassed
 and is a ticket of its own, while Attention is a flag on a work ticket whose own state needs a look.
 
 - **Rule:** an Alert has Priority *Critical*, Area `process` and Progress *ToDo* when it is created. Size
@@ -1553,9 +1588,9 @@ and is a ticket of its own, while Attention is a flag on a work ticket whose own
 - **Rule:** every move of an Alert after creation is manual: *InProgress* when someone starts, *Review*
   when they believe it is handled, *Completed* when a human verifies it. Shipping a version never moves
   it. A person closes it.
-- **Rule:** an Alert for a bypass or for a merge without changelog entries is assigned to the person who
-  pushed, because they know the context. An Alert for stale planned versions is unassigned until someone
-  takes it.
+- **Rule:** an Alert for a bypass, for a merge without changelog entries or for a changelog that could not
+  be read is assigned to the person who pushed, because they know the context. An Alert for stale planned
+  versions is unassigned until someone takes it.
 - For a bypass, the changelog also gets an entry that points at the Alert. What the person does with it
   is described in the guide on branching and merging, in the section on enforcement.
 
@@ -1632,6 +1667,11 @@ When a release is cut on this version, the automation sets Delivery to *Released
 A third kind of Alert, for a merge that landed without changelog entries, reads like the bypass Alert: it
 says that file changes reached `main` with no changelog entries, that the automation created the version
 and the changelog entry itself, and asks the person who pushed to document what changed.
+
+A fourth kind, for a changelog the automation could not read, is titled "Changelog error on main: no
+version finalized". It names the push and quotes the error (for example two open `WIP-Version` headings,
+or text after the heading that is not a marker), and asks the person who pushed to correct `CHANGELOG.md`
+by hand and then run the finalize step again.
 
 
 ---
@@ -1755,8 +1795,9 @@ section describes what the file contains and how it is structured.
   are no "Known bugs" or "Planned" sections.
 - **Rule:** every commit that changes files adds a build block with at least one ticket block or `REF`
   block.
-- **Rule:** the newest version comes first. Stamps and everything the automation writes are UTC (see the
-  guide on concepts, section 2).
+- **Rule:** the newest version comes first, and within a version the newest build comes first: the hook
+  stamps a `### WIP-Build` placeholder where it stands, so it is added above the earlier builds. Stamps and
+  everything the automation writes are UTC (see the guide on concepts, section 2).
 - **Rule:** the topmost finalized version heading is the single source of truth for the version (see the
   guide on branching and merging).
 - **Rule:** entries of commits already made are not edited, except to replace a placeholder (section
@@ -1788,6 +1829,9 @@ or ticket existed.
   points at the Alert ticket that was opened for it. The person triaging the Alert documents the
   change, either by replacing the generated note in place or, preferably, by describing it in a new block
   in the current version.
+
+When the change is described in a new block, the placeholder, a `REF` or an `AUTO-REF`, stays where it is:
+it is the record of how the change first appeared, and the new block is the description.
 
 The procedure for backfilling a `REF` is in the guide on working and committing, and the procedure for
 triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the board.
@@ -2493,7 +2537,7 @@ condition is given.
 | **Tests** | ☐ Changelog bullet<br>☐ Build and run<br>☐ Ticket<br>☐ Test procedure document *(if what it describes changed)* |
 | **Documentation** (readme, wiki, records, comments) | ☐ Changelog bullet<br>☐ Ticket<br>☐ Wiki `Home` and links *(if a page is added, renamed or removed)*<br>☐ Date in the file name *(if it is a record)* |
 | **Build, tooling, config files** | ☐ Changelog bullet<br>☐ Build locally<br>☐ Ticket<br>☐ Tests *(if scripts have logic)*<br>☐ Readme *(if setup or build changed)*<br>☐ Readme and wiki variable list *(if people must apply new settings)* |
-| **Hooks, automation, process rules** | ☐ Changelog bullet<br>☐ Tests for the scripts<br>☐ Build locally<br>☐ Ticket<br>☐ Every page that states a changed rule *(if a rule changed)*<br>☐ Readme setup text *(if hook setup changed)*<br>☐ Guides and board setup *(if what the automation reads or writes changed)* |
+| **Hooks, automation, process rules** | ☐ Changelog bullet<br>☐ Tests for the scripts<br>☐ Build locally<br>☐ Ticket<br>☐ Try it with a throwaway ticket and branch *(if it writes to the board, the tags or the repository; section 4.4)*<br>☐ Every page that states a changed rule *(if a rule changed)*<br>☐ Readme setup text *(if hook setup changed)*<br>☐ Guides and board setup *(if what the automation reads or writes changed)* |
 | **Settings** (repository or board, no file changes) | ☐ Ticket records it, not the changelog<br>☐ Delivery *Implemented* and Version, when the work is in effect<br>☐ The page that states the rule *(if a documented rule changed)* |
 
 The wiki's known-issues page lists only the critical or very important limitations, as a summary. The
@@ -2527,17 +2571,22 @@ commit gets.
 
 #### 4.2 Testing
 
-Testing helps, and the higher the risk of a change, the more it helps. Nothing more is prescribed. After
-a sync that brought in changes, recompiling is a rule and retesting is a strong recommendation (see the
-guide on branching and merging, section 4.5).
+Testing helps, and the higher the risk of a change, the more it helps. How much to test is the
+developer's judgment, and recording results is a strong recommendation (section 4.3). After a sync that
+brought in changes, recompiling is a rule and retesting is a strong recommendation (see the guide on
+branching and merging, section 4.5).
 
 #### 4.3 Recording results
 
-- **Rule:** keep every recorded test result in the ticket, as a comment, and also store it in the
-  repository. No recorded result is thrown away.
-- **Rule:** a recorded result names the build it applies to and, where the product has one, the compile
-  stamp of what was tested. The build named is the one the tests ran against, which always comes before
-  the commit that stores the result.
+A *recorded result* is the outcome of a test run that you write down: what was run, on which build, and
+whether it passed. The routine run before each commit (section 4.1) is not one unless you write it down.
+
+- **Strong recommendation:** record the results of a test run that matters: a review, a verification, a
+  regression run for a release, or a run that found a problem. Keep each one in the ticket, as a comment,
+  and also store it in the repository. Do not throw a recorded result away.
+- **Strong recommendation:** a recorded result names the build it applies to and, where the product has
+  one, the compile stamp of what was tested. The build named is the one the tests ran against, which always
+  comes before the commit that stores the result.
 - **Recommendation:** store each result as a markdown file under `tests/results/`, named
   `<date>_<build>_<subject>.md`, with the date in your own local time (for example `2026-10-06_20261006091200_csv-export.md`), so the files sort
   by date and show the build at a glance.
@@ -2552,6 +2601,33 @@ result will be needed, so none is discarded.
 > `tests/results/`, committed like any other change, so they appear in the changelog entry as their own
 > bullet.
 
+#### 4.4 Trying an automation change
+
+A change to the hooks, the workflow or a rule the automation applies can only be proved for real by
+running it against the board, the tags and the repository. Do that with throwaway material, so that no
+real ticket, version or tag is touched.
+
+The steps:
+
+1. **Create a throwaway ticket** titled `DUMMY ...` (what is being tried), with the label `dummy` and a
+   Size. The saved views leave it out, so it never mixes with real work.
+2. **Work on a throwaway branch** named `dummy-...`, started from the branch under test. It is never
+   merged into `main`. If the trial needs a pull request, title it `DUMMY ...` and close it unmerged.
+3. **Run the trial** and check what the automation did: the build heading, the ticket's fields, the
+   comments, the Alerts.
+4. **Close it down.** Close the ticket as *Abandoned* with Resolution *Invalid* and a comment saying what
+   was proved. Close any pull request. Retire the branch as abandoned, tagging it first (a short comment in
+   the tag such as `dummy-test`). Mark any Version ticket the trial made as *Dropped*, and delete any
+   release tag it made.
+
+- **Rule:** a trial uses throwaway tickets, branches and tags only, and never merges into `main`.
+- **Recommendation:** leave nothing behind: the trial's tickets are closed, its branches are retired and
+  its tags are removed or are the retirement tags of step 4.
+
+**Why.** An automation that writes to shared records has to be tried on shared records, and a mistake
+there is visible to everyone. The `dummy` label and the retirement tags keep the trial out of the working
+views while leaving a record of what was tried.
+
 
 ---
 
@@ -2562,6 +2638,22 @@ result will be needed, so none is discarded.
 Stage by logical change, with each change's changelog entry in the same commit. When you commit, two
 hooks run: one stamps the build in the staged changelog, and one drafts the commit message from the
 entries you wrote.
+
+The hook stamps a `### WIP-Build` placeholder that is already there; it does not add one. So before each
+commit that logs a change, put a fresh `### WIP-Build` heading directly under the open `## WIP-Version`
+heading, above the builds already stamped, and write that commit's ticket blocks under it. The first
+commit of a branch uses the placeholder opened in the guide on starting work; every later commit needs its
+own.
+
+```
+## WIP-Version
+### WIP-Build                              the new commit's entries go here
+#### #201 — Add CSV export to the reports page
+- reports page: the Export button now keeps the report's column order.
+### Build 20261006091200 (branch csv-export)   the earlier commit, already stamped
+#### #201 — Add CSV export to the reports page
+- reports page: added an Export button that downloads the current report as CSV.
+```
 
 #### 5.2 The message
 
@@ -2732,7 +2824,8 @@ is done, the pull request lands it, and the version records it.
 #### 7.3 Before moving a ticket to Review
 
 - ☐ The changelog entries are complete.
-- ☐ Tests and their results are recorded (section 4).
+- ☐ The tests that matter and their results are recorded, naming the build (section 4; a strong
+  recommendation).
 - ☐ The documentation the change affects is updated (section 3).
 - ☐ Risk is revised.
 
@@ -2754,15 +2847,17 @@ syncing and merging.
 - [ ] Earlier entries are untouched, except a placeholder replaced or a critical correction made by the
       procedure (sections 2.5 and 6).
 - [ ] Built locally, and the existing tests pass (section 4).
-- [ ] Test results are recorded in the ticket and in `tests/results/`, naming the build (section 4).
+- [ ] Any test result worth keeping is recorded in the ticket and in `tests/results/`, naming the build
+      (section 4; a strong recommendation).
+- [ ] A fresh `### WIP-Build` was added under the open `## WIP-Version` for this commit's entries.
 - [ ] The change and its entry are staged together, committed through the editor, and the drafted message
       names every ticket (section 5).
 - [ ] No squash and no rebase. Any amend was allowed under the rule (section 5).
 
 **Before moving a ticket to Review**
 
-- [ ] The changelog entries are complete, tests and results are recorded, the documentation is updated,
-      and Risk is revised (section 7).
+- [ ] The changelog entries are complete, the results worth keeping are recorded, the documentation is
+      updated, and Risk is revised (section 7).
 - [ ] Waiting is set, with a comment, if I need input. Size is corrected if it was wrong.
 
 **Before opening the pull request**
@@ -2870,6 +2965,24 @@ A sync with no conflict and nothing adjusted needs no entry, because you made no
 > repository's merge setting still creates a merge commit when the pull request is merged, so the history
 > looks the same as for any other merge.
 
+#### 1.4 When a push is rejected
+
+When two people work on the same branch, a push can be rejected because the other person pushed first.
+
+- **Rule:** fetch, merge the remote branch into yours (`origin/<branch>`), and push again. Never rebase and
+  never force the push.
+- **Rule:** a conflict in that merge is resolved on the branch as in section 1.2, then built and tested
+  before the push.
+- **Recommendation:** recompile after the merge, and retest in proportion to what the other person
+  changed.
+
+**Why.** Rebasing or forcing would rewrite commits the other person has already built on and tested (see
+the guide on branching and merging, section 4.3), and would leave their work pointing at commits that no
+longer exist.
+
+> **In GitHub.** `git fetch`, then `git merge origin/<branch-name>`. A plain `git pull` does the same
+> when git is set to merge on pull (`git config pull.rebase false`).
+
 
 ---
 
@@ -2885,8 +2998,8 @@ A sync with no conflict and nothing adjusted needs no entry, because you made no
   every change logged under a ticket or a `REF`.
 - ☐ **Every `REF` is backfilled** (a strong recommendation; guide on working and committing, section 6).
 - ☐ **The documentation your changes affect is updated** (guide on working and committing, section 3).
-- ☐ **Test results are recorded** in the ticket and in `tests/results/`, naming the build (guide on
-  working and committing, section 4).
+- ☐ **Test results worth keeping are recorded** in the ticket and in `tests/results/`, naming the build
+  (a strong recommendation; guide on working and committing, section 4).
 - ☐ **The tickets are at *Review*** (or already *Completed*) and their Risk is revised (a
   recommendation; guide on working and committing, section 7).
 - ☐ **The Type of each ticket is right.**
@@ -3135,6 +3248,7 @@ description.
       rebased).
 - [ ] Any conflict is resolved on the branch, logged under my ticket, with the details in a comment.
 - [ ] I recompiled, and retested in proportion.
+- [ ] If a push was rejected, I merged `origin/<branch>` and pushed again: no rebase, no force (section 1.4).
 
 **Get ready** (section 2)
 
@@ -3322,7 +3436,7 @@ The steps:
 2. **Verify it.** Check the ticket's "done when" against the result. Verification can happen before the
    merge, on the build made on the branch (the most common case), or after it, on `main`; either is fine.
    Name the build you verified (the build, and the compile stamp where there is one). Check that the
-   changelog entries match what was done, and that test results are recorded.
+   changelog entries match what was done, and, where test results were recorded, that they name the build.
 3. **Decide the outcome.**
    - **It passes:** set Resolution to *Done* and Progress to *Completed* together, and close the issue.
      Add a comment saying what was verified and on which build.
@@ -3411,8 +3525,8 @@ covers who takes it and what to do with it.
 
 #### 5.1 Who takes an Alert
 
-- **A bypass, or a merge that landed without changelog entries:** the Alert is assigned to the person who
-  pushed, who triages it.
+- **A bypass, a merge that landed without changelog entries, or a changelog that could not be read:** the
+  Alert is assigned to the person who pushed, who triages it.
 - **Stale planned versions:** the Alert starts unassigned. Planned Version tickets belong to the project
   owner role (see the guide on project structure, section 10), so someone holding that role takes it.
 
@@ -3421,6 +3535,9 @@ covers who takes it and what to do with it.
 - **A bypass or a merge without entries:** the steps are in the guide on working and committing,
   section 6.2. Confirm that the result was built and tested, document what changed, comment, and move the
   Alert to *Review* for a human to complete.
+- **A changelog that could not be read:** no version was finalized. Correct `CHANGELOG.md` by hand (one
+  open `WIP-Version` heading, with at most one marker and no other text), run the finalize step again,
+  comment on the Alert with what was wrong, and move it to *Review*.
 - **Stale planned versions:** for each Version ticket the Alert lists, either set its Delivery to
   *Dropped* and close it with a comment saying what replaced it, or correct the number if it was a
   mistake. Then move the Alert to *Review*.
@@ -3660,10 +3777,10 @@ The steps:
 
 - **Rule:** the developer decides which versions are releases, and tells the project owner. The remote
   automation carries it out.
-- **Rule:** verify the version before releasing it: run the regression checks on it and record the results,
-  naming the build (see the guide on working and committing, section 4). The regression checks are an
-  ordinary Task: its result file is committed like any change and lands in a later version, and the
-  result names the version and build that were tested.
+- **Rule:** verify the version before releasing it: run the regression checks on it.
+- **Strong recommendation:** record the results, naming the build (see the guide on working and
+  committing, section 4). The regression checks are an ordinary Task: its result file is committed like
+  any change and lands in a later version, and the result names the version and build that were tested.
 - **Rule:** a release marks as *Released* only the tickets whose Delivery is *Merged* or *Implemented* and
   whose version is at or below the released one. A ticket with newer work pushed keeps *Pushed*.
 - **Recommendation:** have the version's tickets completed before releasing it.
@@ -3812,7 +3929,8 @@ A one-page summary of the guide. It adds no new rules.
 **Cut a release** (section 1)
 
 - [ ] The version is finalized on `main`.
-- [ ] It is verified: the regression checks are run and the results recorded with the build.
+- [ ] It is verified: the regression checks are run, and the results are recorded with the build (a
+      strong recommendation).
 - [ ] Its tickets are completed (a recommendation).
 - [ ] The release step is run with that version, and the project owner is told.
 - [ ] The tag is on the commit where the version was finalized, the Version ticket shows *Released* with
@@ -3904,6 +4022,8 @@ behave differently depending on whose assistant did the work.
 - **Running scripts, tests and builds inside the project.**
 - **Following the procedures in these guides** for the person's task: creating a branch, writing
   changelog entries, staging, drafting a commit message, drafting a pull request description.
+- **Syncing `main` into the person's own work branch,** as in the guide on syncing and merging (section
+  1), and then recompiling. A sync changes only that branch, and nothing is shared until a push.
 - **Writing or updating tests alongside new logic,** and running the existing tests before calling a
   change done.
 - **Setting a ticket to *Review*** when its work is done (section 4).
@@ -3934,9 +4054,10 @@ says it did.
 #### 3.1 Ask first
 
 - **Any git operation that records or shares work, or can lose it:** commit, push, merge, reset, a
-  checkout that discards changes, branch or tag deletion, and force operations. For a commit, the
-  assistant proposes the commit message and waits for explicit approval. Creating or switching a branch
-  and fetching are routine and need no approval.
+  checkout that discards changes, branch or tag deletion, and force operations. A *merge* here means a
+  merge into `main` or into any shared branch. For a commit, the assistant proposes the commit message and
+  waits for explicit approval. Creating or switching a branch, fetching, and syncing `main` into the
+  person's own work branch are routine and need no approval.
 - **Risky or out-of-scope actions:** deleting files, changing anything outside the project, changing
   system or global settings, installing global packages, running commands that touch other projects, and
   anything destructive or hard to reverse.
@@ -3955,8 +4076,8 @@ says it did.
   The exception is a kind of action the person has authorized durably.
 - **Rule:** a durable authorization is recorded in the shared instructions file (section 6), for example
   "you may push my feature branches", so that it is written down and can be withdrawn.
-- **Rule:** a durable authorization may cover commits and pushes on the person's own feature branches, and
-  creating or syncing branches. It never covers anything on `main`, tags, releases, hotfix finalize,
+- **Rule:** a durable authorization may cover commits and pushes on the person's own feature branches. It
+  never covers anything on `main`, tags, releases, hotfix finalize,
   deleting or retiring branches, force pushes or skipping hooks: those are decided each time.
 - **Rule:** for a real decision, the assistant presents the options, recommends one, and asks.
 - **Rule:** the assistant never bypasses a rule on its own initiative: no skipping hooks, no force push,
@@ -4097,6 +4218,28 @@ This project
 is one people actually keep up to date, and an authorization written down with a date and a name is a
 decision that someone made and can see, and can take back.
 
+#### 6.5 A starter text for personal preferences
+
+Optional. A personal file holds how one person likes to work with an assistant, across projects. It is not
+committed, and it never overrides the shared file or the rules in these guides; where they differ, the
+shared file and the guides win.
+
+```
+# Preferences (personal)
+
+Communication
+- <how short or detailed the replies should be; whether to summarise at the end>
+
+Autonomy
+- <what to do without asking; what to always ask about first>
+
+Tools and environment
+- <how the local environment is set up, and what must never be started, stopped or installed by the assistant>
+
+Style
+- <rules about wording in code comments, messages and documents>
+```
+
 > **In GitHub.** The file is `AGENTS.md` at the repository root, which many assistant tools look for on
 > their own. Personal preferences go in a separate file that is listed in the ignore file.
 
@@ -4116,14 +4259,15 @@ A one-page summary of the guide. It adds no new rules.
 **Without asking** (section 2)
 
 - [ ] Routine work was done without asking: read-only operations, edits inside the project, scripts,
-      tests and builds, the guides' procedures, tests with new logic, and *Review* when work is done.
+      tests and builds, the guides' procedures (including syncing `main` into the person's own work
+      branch), tests with new logic, and *Review* when work is done.
 - [ ] The report is concise and faithful: test failures are stated with their output, and skipped steps
       are named.
 
 **Asked first** (section 3)
 
 - [ ] Commit, push, merge and other state-changing git operations only with explicit approval, and the
-      commit message proposed first.
+      commit message proposed first. Syncing `main` into the person's own work branch is routine.
 - [ ] Risky, out-of-scope and outward-facing actions were asked about. An approval covered only what was
       asked, and any durable authorization is written in `AGENTS.md`.
 - [ ] A real decision was put as options with a recommendation, and asked.
@@ -4180,7 +4324,9 @@ person runs, and it is still that person's action.
 
 - **Rule:** a new project has the locations of the guide on project structure (section 2.1), under those
   names: the readme, `CHANGELOG.md`, `doc/` with `doc/wiki/`, `tests/` if it has code or scripts,
-  `.githooks/`, `.github/`, the ignore file, and `AGENTS.md`.
+  `.githooks/`, `.github/`, the ignore file, `.gitattributes` and `AGENTS.md`.
+- **Rule:** `.gitattributes` contains the line `* text=auto eol=lf`, so the changelog, the hooks and the
+  scripts keep Unix line endings on every platform (see project structure, section 2.2).
 - **Rule:** the changelog starts with a title line and no version heading. The first merge to `main`
   produces version `V0.1.0`: it is not a small change, and it is not a release (section 7).
 - **Rule:** the readme says what the project is and how to set it up, including the one command that
@@ -4206,7 +4352,11 @@ is the honest description of a project's first version: something exists, and no
 - **The local hooks,** in `.githooks/`: three small entry scripts and one shared script that stamps the
   build, drafts the commit message and warns. They need a runtime (here Python 3).
 - **The remote workflow,** `.github/workflows/versioning.yml`, and its logic in `.github/scripts/`, with
-  unit tests under `tests/`.
+  unit tests under `tests/`. It includes the scheduled run, three times a day (see project structure,
+  section 2.3).
+- **The schedule re-enabler,** `.github/workflows/reenable-schedule.yml` and its script: GitHub switches a
+  scheduled workflow off after 60 days without activity in the repository, and this one, which has no
+  schedule of its own, switches it back on at the next push or on request.
 - **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
   (section 6).
 - **The pull request template,** in `.github/`.
@@ -4219,8 +4369,9 @@ is the honest description of a project's first version: something exists, and no
    them).
 3. **Activate the hooks** with the one command in the readme.
 4. **Run the automation's tests** locally.
-5. **Confirm the workflow is enabled** and declares the permissions it needs in its own file: write access
-   to contents, issues and pull requests.
+5. **Confirm the workflow is enabled,** with its schedule, and declares the permissions it needs in its
+   own file: write access to contents, issues and pull requests. The re-enabler declares its own, narrower
+   permission (write access to actions).
 6. **Run the preflight** (section 2.3) once the project token (section 4) and the board (section 6) exist.
 
 #### 2.3 The preflight
@@ -4511,6 +4662,8 @@ exists and lists the tickets, and the tickets show Delivery *Merged*.
 
 #### 8.3 Rules
 
+- **Recommendation:** later changes to the automation are tried the same way, with throwaway tickets and
+  branches (see the guide on working and committing, section 4.4), never with real tickets.
 - **Rule:** run level 1 before the first real change, and fix every failure it reports.
 - **Rule:** check the result of the first merge, as in the guide on syncing and merging (section 5.2).
 - **Recommendation:** if something fails on the first real merge, correct the board by hand and fix the
@@ -4533,13 +4686,15 @@ A one-page summary of the guide. It adds no new rules.
 
 **Structure** (section 1)
 
-- [ ] The locations exist under the standard names. The changelog has a title and no version, and the
-      readme explains the setup and the command that activates the hooks.
+- [ ] The locations exist under the standard names, including `.gitattributes` with
+      `* text=auto eol=lf`. The changelog has a title and no version, and the readme explains the setup and
+      the command that activates the hooks.
 
 **Automation** (section 2)
 
 - [ ] The files are copied unchanged, the hook scripts are executable and activated, the tests pass, the
-      workflow is enabled with its permissions, and the manifest is in place and the check passes.
+      workflow is enabled with its schedule and its permissions, the schedule re-enabler is in place, and
+      the manifest is in place and the check passes.
 
 **Repository settings** (section 3)
 
@@ -4605,8 +4760,8 @@ explains it. It adds no new rules.
 
 ### Work
 
-5. **Change, build, test, log, commit.** Build locally before every commit, log each change as a specific
-   bullet, and commit through the editor so the message is drafted from the changelog (*Working and
+5. **Change, build, test, log, commit.** Build locally before every commit, add a fresh `### WIP-Build`
+   under the open version for each commit, log each change as a specific bullet, and commit through the editor so the message is drafted from the changelog (*Working and
    committing*, sections 1, 2, 4 and 5).
 6. **Update what the change affects:** find the row for each change in the checklist (*Working and
    committing*, section 3).
@@ -4618,8 +4773,8 @@ explains it. It adds no new rules.
 
 9. **Sync `main` into the branch** by merging, never by rebasing. Recompile, and retest in proportion
    (*Syncing and merging*, section 1).
-10. **Get ready:** tickets at *Review* with Risk revised, every `REF` backfilled (strongly recommended), test results recorded,
-    documentation updated (*Syncing and merging*, section 2).
+10. **Get ready:** tickets at *Review* with Risk revised, every `REF` backfilled (strongly recommended), test results worth keeping recorded
+    (strongly recommended), documentation updated (*Syncing and merging*, section 2).
 11. **Open the pull request:** a title that states the purpose, and a description that pastes the open
     version's changelog entries plus the tested build and the sync line (*Syncing and merging*, section 3).
 12. **Merge with a merge commit.** Do not delete the branch and do not close the tickets (*Syncing and
@@ -4660,7 +4815,7 @@ branching and merging.
 |---|---|---|
 | I changed something and have no ticket | Start a `REF` block with a UTC token, and backfill it before the pull request. | Starting work, section 4; Working and committing, section 6 |
 | a change serves several tickets | Describe it in full under one, mention the others, and give each of the others a block that points to it. | Working and committing, section 2.4 |
-| the hook did not stamp my commit, or I skipped the hooks | The automation fills in the build heading with the commit's hash and adds a note. Skipping is allowed but not hidden. | Working and committing, section 5 |
+| the hook did not stamp my commit, or I skipped the hooks | The automation fills in the build heading with the commit's hash and adds a note. Skipping is allowed but not hidden. | Starting work, section 5.1 |
 | an existing test fails and it is not my change | Raise a Bug ticket, mention it in my ticket, and do not hide or delete the test. | Working and committing, section 4 |
 | an earlier changelog entry is critically wrong | Create a correction ticket, log it in the current version, comment on the original ticket, and correct the old entry with a note. | Working and committing, section 2.5 |
 | I need an answer before I can go on | Set Waiting with a comment saying what is needed and from whom. | Working and committing, section 7 |
@@ -4674,6 +4829,7 @@ branching and merging.
 | `main` has nothing my branch lacks | No sync is needed. | Syncing and merging, section 1.1 |
 | I got a conflict while syncing | Resolve it on the branch, log it under my ticket, put the details in a comment, and rebuild and retest. | Syncing and merging, section 1.2 |
 | `main` moved after my sync | Sync again. | Syncing and merging, section 1.2 |
+| my push was rejected because someone else pushed to the branch | Fetch and merge `origin/<branch>`, resolve any conflict on the branch, rebuild, push. Never rebase or force. | Syncing and merging, section 1.4 |
 | I want to force a different version bump | Add `+V`, `+s` or `+m` after `WIP-Version` (never on a hotfix). | Branching, section 3.3 |
 | the advisory check is red | Sync again before merging. | Syncing and merging, section 4 |
 | I need to bypass a rule | Do it deliberately, say why, expect the Alert, then pull `main` and build and test it. | Syncing and merging, section 6 |
@@ -4710,7 +4866,7 @@ branching and merging.
 
 | If… | Then… | See |
 |---|---|---|
-| I am an assistant and the action is risky, outward-facing, or a commit, push or merge | Ask first, and propose the commit message. | Working with an assistant, section 3 |
+| I am an assistant and the action is risky, outward-facing, or a commit, push or merge into `main` or a shared branch | Ask first, and propose the commit message. Syncing `main` into the person's own branch is routine. | Working with an assistant, section 3 |
 | I am an assistant and there is a real choice to make | Present the options with a recommendation and ask. | Working with an assistant, section 3 |
 | I am starting a new project | Follow the bootstrap checklist. | New-project bootstrap, section 9 |
 
@@ -4734,11 +4890,11 @@ One value per ticket. Says what sort of ticket it is and why the change is made.
 | Value | Meaning | Version bump |
 |---|---|---|
 | **Feature** | New capability that did not exist before. | sub |
-| **Enhancement** | An improvement to something that already works: better performance, smarter behaviour, easier use. | sub |
-| **Change** | A change to existing behaviour that is neither an improvement nor a fix: a new default, a different threshold, an adjustment someone asked for. | mod |
+| **Enhancement** | An improvement to something that already works: better performance, smarter behavior, easier use. | sub |
+| **Change** | A change to existing behavior that is neither an improvement nor a fix: a new default, a different threshold, an adjustment someone asked for. | mod |
 | **Bug** | Something that behaves differently from what was intended, and the fix for it. | mod |
 | **Refactor** | Internal restructuring with no change in what the product does. | mod |
-| **Task** | Work that does not change the product's behaviour: testing, analysing, building, releasing, writing documentation, and creating a new tool. | mod |
+| **Task** | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
 | **Version** | Bookkeeping ticket for one version. It does no work and never counts toward a bump. | none |
 | **Alert** | An automatic check that needs a person to review something, such as a detected bypass or a stale planned version. It never counts toward a bump. | none |
 
@@ -4762,8 +4918,8 @@ version numbers or any automation. At least one is suggested on a work ticket; n
 | `documentation` | Wiki, readme, guides, comments and other written documentation. |
 | `tool` | Developer tooling and scripts that support the work. |
 | `process` | How the team works: git, changelog, versioning, hooks, the board, repository settings. |
-| `config` | Settings that tune how the product behaves (feature flags, pin assignments, service definitions, intervals). |
-| `content` | Data the product or its tests use (test fixtures, sample data, lookup tables, a database seed). |
+| `config` | Settings that tune how the product behaves: feature flags, pin assignments, intervals. |
+| `content` | Data the product or its tests use: test fixtures, sample data, lookup tables, a database seed. |
 | `build` | Build system, toolchain, compiling and releasing. |
 
 The list is the same for every project. Adding a value is a change to the standard, not something a
@@ -4911,7 +5067,8 @@ are not work tickets.
 ### Priority
 
 How urgent, by consequence rather than by deadline. A ticket with no priority is treated as *Normal*. The
-creator proposes it and the owner can change it at any time; *Critical* needs a comment saying why.
+creator proposes it and the owner can change it at any time; *Critical* needs a comment saying why (the
+Alerts the automation creates are *Critical* without one).
 
 | Value | Meaning |
 |---|---|
@@ -4990,7 +5147,7 @@ tickets have no dates.
 | Risk | proposed by the creator | none | set by the person who takes it |
 | Version, Build, Version# | yes | its own version; its last build | the version in which it was raised |
 | Start date, End date | yes | none | none |
-| Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass or a merge without changelog entries; none for stale planned versions |
+| Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog; none for stale planned versions |
 
 ---
 
@@ -5470,11 +5627,11 @@ shipped, which the Versions view relies on.
 
 #### Alert tickets
 
-A real check that a person must do, raised for a detected bypass, a merge without changelog entries, or
-stale planned versions. It has Priority *Critical*, Area `process` and Progress *ToDo* at creation. Every
-later move (*InProgress*, *Review*, *Completed*) is manual, and shipping a version never moves it. A bypass
-or a merge without entries is assigned to the person who pushed; an Alert for stale versions is unassigned
-until someone takes it. Size and Risk are set by whoever triages it. Alerts have no Attention.
+A real check that a person must do, raised for a detected bypass, a merge without changelog entries, a
+changelog the automation cannot read, or stale planned versions. It has Priority *Critical*, Area `process`
+and Progress *ToDo* at creation. Every later move (*InProgress*, *Review*, *Completed*) is manual, and
+shipping a version never moves it. A bypass, a merge without entries or an unreadable changelog is assigned
+to the person who pushed; an Alert for stale versions is unassigned until someone takes it. Size and Risk are set by whoever triages it. Alerts have no Attention.
 
 ### 6. How the model drives the automation
 

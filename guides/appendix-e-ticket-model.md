@@ -138,11 +138,11 @@ shipped, which the Versions view relies on.
 
 ### Alert tickets
 
-A real check that a person must do, raised for a detected bypass, a merge without changelog entries, or
-stale planned versions. It has Priority *Critical*, Area `process` and Progress *ToDo* at creation. Every
-later move (*InProgress*, *Review*, *Completed*) is manual, and shipping a version never moves it. A bypass
-or a merge without entries is assigned to the person who pushed; an Alert for stale versions is unassigned
-until someone takes it. Size and Risk are set by whoever triages it. Alerts have no Attention.
+A real check that a person must do, raised for a detected bypass, a merge without changelog entries, a
+changelog the automation cannot read, or stale planned versions. It has Priority *Critical*, Area `process`
+and Progress *ToDo* at creation. Every later move (*InProgress*, *Review*, *Completed*) is manual, and
+shipping a version never moves it. A bypass, a merge without entries or an unreadable changelog is assigned
+to the person who pushed; an Alert for stale versions is unassigned until someone takes it. Size and Risk are set by whoever triages it. Alerts have no Attention.
 
 ## 6. How the model drives the automation
 

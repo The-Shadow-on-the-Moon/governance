@@ -1,7 +1,27 @@
 # Changelog
 
 ## WIP-Version
-### Build 20261008215441 (branch project-views)
+### Build 20261008223645 (branch project-views)
+#### #109 — Fix contradictions and stale statements in the guides
+- guides/01-concepts-and-vocabulary.md, 05-working-and-committing.md (sections 4.2, 4.3, checklists), 06-syncing-and-merging.md (section 2.1), 07-issues-and-the-board-in-practice.md (section 3), 08-releases-hotfixes-and-retiring-branches.md (section 1.1 and the checklist), 03-project-structure.md (section 2.1), appendix-a-cheat-sheet-daily-flow.md: recording test results is now a strong recommendation everywhere, releases and hotfixes included; "recorded result" is defined (previously a rule in 05 section 4.3, a recommendation for the file, and mandatory in two checklists).
+- guides/03-project-structure.md (sections 5.3, 5.4), 07-issues-and-the-board-in-practice.md (section 5), appendix-e-ticket-model.md (section 5), appendix-c-ticket-fields-reference.md (Assignee row): the fourth Alert, "Changelog error on main: no version finalized", is described next to the other three, with its assignee and triage steps.
+- guides/01-concepts-and-vocabulary.md: the labels are the 14 Area labels and `dummy` (section 8); a hotfix version is assigned when the hotfix is finished (section 1); the heading of section 5 reads "The words for branches and tags".
+- guides/03-project-structure.md (section 4.3): the two-hour wait of the Delivery and Version rules next to the five-minute wait. guides/appendix-c-ticket-fields-reference.md: Alerts are Critical without a comment. guides/appendix-b-cheat-sheet-if-then.md: the skipped-hooks row points at Starting work, section 5.1. guides/03-project-structure.md (section 7.4): the placeholder stays when the change is described in a new block.
+- doc/wiki/Home.md: Appendix D and the ten guides are linked. AGENTS.md: commit messages and pull request descriptions carry no assistant attribution.
+#### #111 — Let an assistant sync main into the person's own branch without asking
+- guides/09-working-with-an-ai-assistant.md (sections 2.1, 3.1, 3.2 and the checklist), guides/appendix-b-cheat-sheet-if-then.md: syncing `main` into the person's own work branch is routine; "merge" in the ask-first rule means a merge into `main` or a shared branch; "syncing" is no longer something a durable authorization covers.
+#### #110 — Add missing guidance to the guides
+- guides/03-project-structure.md (new section 2.3), guides/01-concepts-and-vocabulary.md (glossary), guides/10-new-project-bootstrap.md (sections 2.1, 2.2 and the checklist): the scheduled run is defined, and the schedule and the re-enabler workflow are part of the bootstrap.
+- guides/03-project-structure.md (section 2.1, 2.2), guides/10-new-project-bootstrap.md (section 1 and the checklist): `.gitattributes` with `* text=auto eol=lf` is a rule, and the licence files are in the root table.
+- guides/05-working-and-committing.md (section 5.1, checklist), guides/appendix-a-cheat-sheet-daily-flow.md: a fresh `### WIP-Build` is added before each commit. guides/03-project-structure.md (section 7.3): builds in a version are newest first.
+- guides/05-working-and-committing.md (new section 4.4 and the automation row of section 3.2), guides/10-new-project-bootstrap.md (section 8.3): the procedure for trying an automation change with throwaway tickets.
+- guides/06-syncing-and-merging.md (new section 1.4 and the checklist), guides/appendix-b-cheat-sheet-if-then.md: what to do when a push to a shared branch is rejected.
+- guides/09-working-with-an-ai-assistant.md (new section 6.5): a template for a personal preferences file.
+#### #112 — Housekeeping found by the guidelines analysis
+- .gitignore: `.anchor` added.
+- guides/appendix-c-ticket-fields-reference.md: the descriptions of the labels `config` and `content` and of the Types Task, Enhancement and Change now read exactly as they do on GitHub (US spelling in those three, and the colon style; `config` no longer lists "service definitions"), so the guide and the repository agree.
+- guides/Developer-Guides-Complete.md rebuilt.
+- doc/wiki/Roles-and-Access.md, AGENTS.md: other members of the organization can read the repository through the organization's default permission; reading is not a role (the account `claudia-tsom` has no grant on the repository).### Build 20261008215441 (branch project-views)
 #### #108 — Analyze Guidelines
 - doc/Evaluation/Combined-eval.md: added section 5, how the tickets #109 to #113 address the findings: the decisions taken, a map from each finding to its ticket, the findings with no ticket and why, and the order of work.
 ### Build 20261008211150 (branch project-views)

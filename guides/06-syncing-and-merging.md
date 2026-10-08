@@ -95,6 +95,24 @@ A sync with no conflict and nothing adjusted needs no entry, because you made no
 > repository's merge setting still creates a merge commit when the pull request is merged, so the history
 > looks the same as for any other merge.
 
+### 1.4 When a push is rejected
+
+When two people work on the same branch, a push can be rejected because the other person pushed first.
+
+- **Rule:** fetch, merge the remote branch into yours (`origin/<branch>`), and push again. Never rebase and
+  never force the push.
+- **Rule:** a conflict in that merge is resolved on the branch as in section 1.2, then built and tested
+  before the push.
+- **Recommendation:** recompile after the merge, and retest in proportion to what the other person
+  changed.
+
+**Why.** Rebasing or forcing would rewrite commits the other person has already built on and tested (see
+the guide on branching and merging, section 4.3), and would leave their work pointing at commits that no
+longer exist.
+
+> **In GitHub.** `git fetch`, then `git merge origin/<branch-name>`. A plain `git pull` does the same
+> when git is set to merge on pull (`git config pull.rebase false`).
+
 
 ---
 
@@ -110,8 +128,8 @@ A sync with no conflict and nothing adjusted needs no entry, because you made no
   every change logged under a ticket or a `REF`.
 - ☐ **Every `REF` is backfilled** (a strong recommendation; guide on working and committing, section 6).
 - ☐ **The documentation your changes affect is updated** (guide on working and committing, section 3).
-- ☐ **Test results are recorded** in the ticket and in `tests/results/`, naming the build (guide on
-  working and committing, section 4).
+- ☐ **Test results worth keeping are recorded** in the ticket and in `tests/results/`, naming the build
+  (a strong recommendation; guide on working and committing, section 4).
 - ☐ **The tickets are at *Review*** (or already *Completed*) and their Risk is revised (a
   recommendation; guide on working and committing, section 7).
 - ☐ **The Type of each ticket is right.**
@@ -360,6 +378,7 @@ description.
       rebased).
 - [ ] Any conflict is resolved on the branch, logged under my ticket, with the details in a comment.
 - [ ] I recompiled, and retested in proportion.
+- [ ] If a push was rejected, I merged `origin/<branch>` and pushed again: no rebase, no force (section 1.4).
 
 **Get ready** (section 2)
 

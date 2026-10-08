@@ -55,6 +55,8 @@ behave differently depending on whose assistant did the work.
 - **Running scripts, tests and builds inside the project.**
 - **Following the procedures in these guides** for the person's task: creating a branch, writing
   changelog entries, staging, drafting a commit message, drafting a pull request description.
+- **Syncing `main` into the person's own work branch,** as in the guide on syncing and merging (section
+  1), and then recompiling. A sync changes only that branch, and nothing is shared until a push.
 - **Writing or updating tests alongside new logic,** and running the existing tests before calling a
   change done.
 - **Setting a ticket to *Review*** when its work is done (section 4).
@@ -85,9 +87,10 @@ says it did.
 ### 3.1 Ask first
 
 - **Any git operation that records or shares work, or can lose it:** commit, push, merge, reset, a
-  checkout that discards changes, branch or tag deletion, and force operations. For a commit, the
-  assistant proposes the commit message and waits for explicit approval. Creating or switching a branch
-  and fetching are routine and need no approval.
+  checkout that discards changes, branch or tag deletion, and force operations. A *merge* here means a
+  merge into `main` or into any shared branch. For a commit, the assistant proposes the commit message and
+  waits for explicit approval. Creating or switching a branch, fetching, and syncing `main` into the
+  person's own work branch are routine and need no approval.
 - **Risky or out-of-scope actions:** deleting files, changing anything outside the project, changing
   system or global settings, installing global packages, running commands that touch other projects, and
   anything destructive or hard to reverse.
@@ -106,8 +109,8 @@ says it did.
   The exception is a kind of action the person has authorized durably.
 - **Rule:** a durable authorization is recorded in the shared instructions file (section 6), for example
   "you may push my feature branches", so that it is written down and can be withdrawn.
-- **Rule:** a durable authorization may cover commits and pushes on the person's own feature branches, and
-  creating or syncing branches. It never covers anything on `main`, tags, releases, hotfix finalize,
+- **Rule:** a durable authorization may cover commits and pushes on the person's own feature branches. It
+  never covers anything on `main`, tags, releases, hotfix finalize,
   deleting or retiring branches, force pushes or skipping hooks: those are decided each time.
 - **Rule:** for a real decision, the assistant presents the options, recommends one, and asks.
 - **Rule:** the assistant never bypasses a rule on its own initiative: no skipping hooks, no force push,
@@ -248,6 +251,28 @@ This project
 is one people actually keep up to date, and an authorization written down with a date and a name is a
 decision that someone made and can see, and can take back.
 
+### 6.5 A starter text for personal preferences
+
+Optional. A personal file holds how one person likes to work with an assistant, across projects. It is not
+committed, and it never overrides the shared file or the rules in these guides; where they differ, the
+shared file and the guides win.
+
+```
+# Preferences (personal)
+
+Communication
+- <how short or detailed the replies should be; whether to summarise at the end>
+
+Autonomy
+- <what to do without asking; what to always ask about first>
+
+Tools and environment
+- <how the local environment is set up, and what must never be started, stopped or installed by the assistant>
+
+Style
+- <rules about wording in code comments, messages and documents>
+```
+
 > **In GitHub.** The file is `AGENTS.md` at the repository root, which many assistant tools look for on
 > their own. Personal preferences go in a separate file that is listed in the ignore file.
 
@@ -267,14 +292,15 @@ A one-page summary of the guide. It adds no new rules.
 **Without asking** (section 2)
 
 - [ ] Routine work was done without asking: read-only operations, edits inside the project, scripts,
-      tests and builds, the guides' procedures, tests with new logic, and *Review* when work is done.
+      tests and builds, the guides' procedures (including syncing `main` into the person's own work
+      branch), tests with new logic, and *Review* when work is done.
 - [ ] The report is concise and faithful: test failures are stated with their output, and skipped steps
       are named.
 
 **Asked first** (section 3)
 
 - [ ] Commit, push, merge and other state-changing git operations only with explicit approval, and the
-      commit message proposed first.
+      commit message proposed first. Syncing `main` into the person's own work branch is routine.
 - [ ] Risky, out-of-scope and outward-facing actions were asked about. An approval covered only what was
       asked, and any durable authorization is written in `AGENTS.md`.
 - [ ] A real decision was put as options with a recommendation, and asked.

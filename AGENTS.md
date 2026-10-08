@@ -22,8 +22,11 @@ This project
   or reuse them.
 - Tests of the automation use throwaway tickets and branches, titled DUMMY and labelled `dummy`, closed as
   Invalid (Abandoned), with their branches tagged before they are deleted.
+- Commit messages and pull request descriptions carry no assistant attribution (no co-author trailer and no
+  "generated with" line): authorship belongs to the person (guide 09, section 4.2), even if the assistant's
+  tooling suggests adding one.
 - Roles: Damian Bucovsky holds the administrator, project owner and developer roles. Pablo holds the
-  developer role, with write access. More in [`doc/wiki/Roles-and-Access.md`](doc/wiki/Roles-and-Access.md).
+  developer role, with write access. Other members of the organization can only read the repository, which is not a role. More in [`doc/wiki/Roles-and-Access.md`](doc/wiki/Roles-and-Access.md).
 - Durable authorizations: none.
 - Out of bounds: `guides/Developer-Guides-Complete.md` is generated, so change the separate guide files and
   rebuild it, never edit it by hand. The automation files change only through a ticket, and the manifest is

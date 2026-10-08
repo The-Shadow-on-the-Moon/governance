@@ -156,7 +156,7 @@ The steps:
 2. **Verify it.** Check the ticket's "done when" against the result. Verification can happen before the
    merge, on the build made on the branch (the most common case), or after it, on `main`; either is fine.
    Name the build you verified (the build, and the compile stamp where there is one). Check that the
-   changelog entries match what was done, and that test results are recorded.
+   changelog entries match what was done, and, where test results were recorded, that they name the build.
 3. **Decide the outcome.**
    - **It passes:** set Resolution to *Done* and Progress to *Completed* together, and close the issue.
      Add a comment saying what was verified and on which build.
@@ -245,8 +245,8 @@ covers who takes it and what to do with it.
 
 ### 5.1 Who takes an Alert
 
-- **A bypass, or a merge that landed without changelog entries:** the Alert is assigned to the person who
-  pushed, who triages it.
+- **A bypass, a merge that landed without changelog entries, or a changelog that could not be read:** the
+  Alert is assigned to the person who pushed, who triages it.
 - **Stale planned versions:** the Alert starts unassigned. Planned Version tickets belong to the project
   owner role (see the guide on project structure, section 10), so someone holding that role takes it.
 
@@ -255,6 +255,9 @@ covers who takes it and what to do with it.
 - **A bypass or a merge without entries:** the steps are in the guide on working and committing,
   section 6.2. Confirm that the result was built and tested, document what changed, comment, and move the
   Alert to *Review* for a human to complete.
+- **A changelog that could not be read:** no version was finalized. Correct `CHANGELOG.md` by hand (one
+  open `WIP-Version` heading, with at most one marker and no other text), run the finalize step again,
+  comment on the Alert with what was wrong, and move it to *Review*.
 - **Stale planned versions:** for each Version ticket the Alert lists, either set its Delivery to
   *Dropped* and close it with a comment saying what replaced it, or correct the number if it was a
   mistake. Then move the Alert to *Review*.

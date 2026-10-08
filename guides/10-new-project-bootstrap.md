@@ -24,7 +24,9 @@ person runs, and it is still that person's action.
 
 - **Rule:** a new project has the locations of the guide on project structure (section 2.1), under those
   names: the readme, `CHANGELOG.md`, `doc/` with `doc/wiki/`, `tests/` if it has code or scripts,
-  `.githooks/`, `.github/`, the ignore file, and `AGENTS.md`.
+  `.githooks/`, `.github/`, the ignore file, `.gitattributes` and `AGENTS.md`.
+- **Rule:** `.gitattributes` contains the line `* text=auto eol=lf`, so the changelog, the hooks and the
+  scripts keep Unix line endings on every platform (see project structure, section 2.2).
 - **Rule:** the changelog starts with a title line and no version heading. The first merge to `main`
   produces version `V0.1.0`: it is not a small change, and it is not a release (section 7).
 - **Rule:** the readme says what the project is and how to set it up, including the one command that
@@ -50,7 +52,11 @@ is the honest description of a project's first version: something exists, and no
 - **The local hooks,** in `.githooks/`: three small entry scripts and one shared script that stamps the
   build, drafts the commit message and warns. They need a runtime (here Python 3).
 - **The remote workflow,** `.github/workflows/versioning.yml`, and its logic in `.github/scripts/`, with
-  unit tests under `tests/`.
+  unit tests under `tests/`. It includes the scheduled run, three times a day (see project structure,
+  section 2.3).
+- **The schedule re-enabler,** `.github/workflows/reenable-schedule.yml` and its script: GitHub switches a
+  scheduled workflow off after 60 days without activity in the repository, and this one, which has no
+  schedule of its own, switches it back on at the next push or on request.
 - **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
   (section 6).
 - **The pull request template,** in `.github/`.
@@ -63,8 +69,9 @@ is the honest description of a project's first version: something exists, and no
    them).
 3. **Activate the hooks** with the one command in the readme.
 4. **Run the automation's tests** locally.
-5. **Confirm the workflow is enabled** and declares the permissions it needs in its own file: write access
-   to contents, issues and pull requests.
+5. **Confirm the workflow is enabled,** with its schedule, and declares the permissions it needs in its
+   own file: write access to contents, issues and pull requests. The re-enabler declares its own, narrower
+   permission (write access to actions).
 6. **Run the preflight** (section 2.3) once the project token (section 4) and the board (section 6) exist.
 
 ### 2.3 The preflight
@@ -355,6 +362,8 @@ exists and lists the tickets, and the tickets show Delivery *Merged*.
 
 ### 8.3 Rules
 
+- **Recommendation:** later changes to the automation are tried the same way, with throwaway tickets and
+  branches (see the guide on working and committing, section 4.4), never with real tickets.
 - **Rule:** run level 1 before the first real change, and fix every failure it reports.
 - **Rule:** check the result of the first merge, as in the guide on syncing and merging (section 5.2).
 - **Recommendation:** if something fails on the first real merge, correct the board by hand and fix the
@@ -377,13 +386,15 @@ A one-page summary of the guide. It adds no new rules.
 
 **Structure** (section 1)
 
-- [ ] The locations exist under the standard names. The changelog has a title and no version, and the
-      readme explains the setup and the command that activates the hooks.
+- [ ] The locations exist under the standard names, including `.gitattributes` with
+      `* text=auto eol=lf`. The changelog has a title and no version, and the readme explains the setup and
+      the command that activates the hooks.
 
 **Automation** (section 2)
 
 - [ ] The files are copied unchanged, the hook scripts are executable and activated, the tests pass, the
-      workflow is enabled with its permissions, and the manifest is in place and the check passes.
+      workflow is enabled with its schedule and its permissions, the schedule re-enabler is in place, and
+      the manifest is in place and the check passes.
 
 **Repository settings** (section 3)
 

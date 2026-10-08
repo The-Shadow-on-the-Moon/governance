@@ -83,13 +83,15 @@ branch they came through.
 | **readme** (root) | What the project is, how to build and use it. |
 | **`CHANGELOG.md`** (root) | The changelog (structure in section 7). |
 | **Source folders** | The project's own code. Project-specific, so this guide says nothing about them. |
-| **`tests/`** | Automated tests, for the product and for the automation scripts, and the recorded test results in `tests/results/`. Present when the project has code or scripts of its own. |
+| **`tests/`** | Automated tests, for the product and for the automation scripts, and any recorded test results in `tests/results/`. Present when the project has code or scripts of its own. |
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
 | **`.githooks/`** | The local git hooks. |
 | **`.github/`** | Server-side workflows and their scripts, and the pull request template. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
+| **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
+| **Licence files** (root) | The project's licence, when it has one. |
 
 ### 2.2 Rules
 
@@ -101,11 +103,15 @@ branch they came through.
 - **Rule:** the hooks are activated once per clone, with one command. A fresh clone has no hooks until
   that step is done. (The procedure is in the guide on starting work; this guide only states that the
   step exists.)
+- **Rule:** `.gitattributes` contains the line `* text=auto eol=lf`, so the changelog, the hooks and the
+  scripts keep Unix line endings on every platform.
 - **Recommendation:** keep personal and generated files out of the repository through the ignore file,
   so nobody commits the state of their own machine.
 
 **Why.**
 
+- *Line endings* because the hooks and the automation read the changelog byte for byte. A changelog saved
+  with Windows line endings once broke both, and rewrote the whole file on the next commit.
 - *Fixed names* mean any developer can open any project and know where to look, and tooling and guides
   can refer to a location without asking.
 - *The hooks and automation live in the repository* because the project's rules are only as reliable as
@@ -121,6 +127,33 @@ branch they came through.
 > a wiki is available (a wiki must first be initialized by creating a first page, and it may not be
 > offered for private repositories on every plan). Where it is not, `doc/wiki/` simply remains the
 > readable source in the repository.
+
+### 2.3 The scheduled run
+
+Most of the automation reacts to an event: a push, a pull request, a merge. Some things are not events.
+Nothing is sent when a person changes a field on the board, and nothing happens when a ticket simply goes
+quiet. The *scheduled run* covers them: the workflow also starts on a timer, three times a day, and on
+request. Each run sweeps the board and does the following, and the other guides refer to it by this name:
+
+- sets the Start and End dates of tickets that have started or ended;
+- raises *Watch* on tickets that have gone quiet or have waited too long, and *Caution* on tickets that
+  break a field rule (section 4.3);
+- sets Version# on every ticket that has a Version, including one that is only aimed at a version;
+- attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2).
+
+- **Rule:** the project keeps the schedule enabled.
+- **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
+  *Implemented* tickets), so a version that has just been finalized does not wait for the next run, and the
+  two never run at the same time: the second waits for the first.
+
+**Why.** Facts that no event announces are still facts the board depends on. A timer finds them without
+asking a person to remember, and without a person's edit having to trigger anything.
+
+> **In GitHub.** The schedule is the workflow's `schedule` trigger (three cron times a day, in UTC, which
+> cannot follow daylight saving). GitHub switches a scheduled workflow off after 60 days without activity
+> in the repository, so the project also has a small workflow with no schedule of its own that switches it
+> back on at the next push to any branch, or on request. It leaves a workflow that a person disabled by
+> hand alone.
 
 ---
 
@@ -403,7 +436,8 @@ state and lose where the ticket was.
     ticket; the automation's own flag comments do not count.
 - **Rule:** a broken rule is raised only if the ticket, meaning its issue or its board fields, has not
   changed for five minutes. Fixing a ticket takes several edits (for example *Completed*, *Done* and
-  closing the issue), and a ticket in the middle of them is not yet wrong.
+  closing the issue), and a ticket in the middle of them is not yet wrong. The two rules about Delivery and
+  Version (section 4.4) wait two hours, because a person may be in the middle of completing the ticket.
 - **Rule:** the automation sets an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or
   that has a lower open flag, and a higher level replaces a lower one. It never sets *Fine* or
   *Acknowledged*, and never lowers a level. A person may set any value by hand.
@@ -547,8 +581,8 @@ tickets that need attention.
 ### 5.3 Alert tickets
 
 An Alert is a real check that a person must do. The automation raises one when something needs a person
-to review it: a detected bypass, a merge that landed without changelog entries, or planned versions that
-can no longer happen. It is not the same as the Attention flag: an Alert is about a rule that was bypassed
+to review it: a detected bypass, a merge that landed without changelog entries, a changelog it cannot read
+(so no version was finalized), or planned versions that can no longer happen. It is not the same as the Attention flag: an Alert is about a rule that was bypassed
 and is a ticket of its own, while Attention is a flag on a work ticket whose own state needs a look.
 
 - **Rule:** an Alert has Priority *Critical*, Area `process` and Progress *ToDo* when it is created. Size
@@ -556,9 +590,9 @@ and is a ticket of its own, while Attention is a flag on a work ticket whose own
 - **Rule:** every move of an Alert after creation is manual: *InProgress* when someone starts, *Review*
   when they believe it is handled, *Completed* when a human verifies it. Shipping a version never moves
   it. A person closes it.
-- **Rule:** an Alert for a bypass or for a merge without changelog entries is assigned to the person who
-  pushed, because they know the context. An Alert for stale planned versions is unassigned until someone
-  takes it.
+- **Rule:** an Alert for a bypass, for a merge without changelog entries or for a changelog that could not
+  be read is assigned to the person who pushed, because they know the context. An Alert for stale planned
+  versions is unassigned until someone takes it.
 - For a bypass, the changelog also gets an entry that points at the Alert. What the person does with it
   is described in the guide on branching and merging, in the section on enforcement.
 
@@ -635,6 +669,11 @@ When a release is cut on this version, the automation sets Delivery to *Released
 A third kind of Alert, for a merge that landed without changelog entries, reads like the bypass Alert: it
 says that file changes reached `main` with no changelog entries, that the automation created the version
 and the changelog entry itself, and asks the person who pushed to document what changed.
+
+A fourth kind, for a changelog the automation could not read, is titled "Changelog error on main: no
+version finalized". It names the push and quotes the error (for example two open `WIP-Version` headings,
+or text after the heading that is not a marker), and asks the person who pushed to correct `CHANGELOG.md`
+by hand and then run the finalize step again.
 
 
 ---
@@ -758,8 +797,9 @@ section describes what the file contains and how it is structured.
   are no "Known bugs" or "Planned" sections.
 - **Rule:** every commit that changes files adds a build block with at least one ticket block or `REF`
   block.
-- **Rule:** the newest version comes first. Stamps and everything the automation writes are UTC (see the
-  guide on concepts, section 2).
+- **Rule:** the newest version comes first, and within a version the newest build comes first: the hook
+  stamps a `### WIP-Build` placeholder where it stands, so it is added above the earlier builds. Stamps and
+  everything the automation writes are UTC (see the guide on concepts, section 2).
 - **Rule:** the topmost finalized version heading is the single source of truth for the version (see the
   guide on branching and merging).
 - **Rule:** entries of commits already made are not edited, except to replace a placeholder (section
@@ -791,6 +831,9 @@ or ticket existed.
   points at the Alert ticket that was opened for it. The person triaging the Alert documents the
   change, either by replacing the generated note in place or, preferably, by describing it in a new block
   in the current version.
+
+When the change is described in a new block, the placeholder, a `REF` or an `AUTO-REF`, stays where it is:
+it is the record of how the change first appeared, and the new block is the description.
 
 The procedure for backfilling a `REF` is in the guide on working and committing, and the procedure for
 triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the board.

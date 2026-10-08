@@ -16,11 +16,11 @@ One value per ticket. Says what sort of ticket it is and why the change is made.
 | Value | Meaning | Version bump |
 |---|---|---|
 | **Feature** | New capability that did not exist before. | sub |
-| **Enhancement** | An improvement to something that already works: better performance, smarter behaviour, easier use. | sub |
-| **Change** | A change to existing behaviour that is neither an improvement nor a fix: a new default, a different threshold, an adjustment someone asked for. | mod |
+| **Enhancement** | An improvement to something that already works: better performance, smarter behavior, easier use. | sub |
+| **Change** | A change to existing behavior that is neither an improvement nor a fix: a new default, a different threshold, an adjustment someone asked for. | mod |
 | **Bug** | Something that behaves differently from what was intended, and the fix for it. | mod |
 | **Refactor** | Internal restructuring with no change in what the product does. | mod |
-| **Task** | Work that does not change the product's behaviour: testing, analysing, building, releasing, writing documentation, and creating a new tool. | mod |
+| **Task** | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
 | **Version** | Bookkeeping ticket for one version. It does no work and never counts toward a bump. | none |
 | **Alert** | An automatic check that needs a person to review something, such as a detected bypass or a stale planned version. It never counts toward a bump. | none |
 
@@ -44,8 +44,8 @@ version numbers or any automation. At least one is suggested on a work ticket; n
 | `documentation` | Wiki, readme, guides, comments and other written documentation. |
 | `tool` | Developer tooling and scripts that support the work. |
 | `process` | How the team works: git, changelog, versioning, hooks, the board, repository settings. |
-| `config` | Settings that tune how the product behaves (feature flags, pin assignments, service definitions, intervals). |
-| `content` | Data the product or its tests use (test fixtures, sample data, lookup tables, a database seed). |
+| `config` | Settings that tune how the product behaves: feature flags, pin assignments, intervals. |
+| `content` | Data the product or its tests use: test fixtures, sample data, lookup tables, a database seed. |
 | `build` | Build system, toolchain, compiling and releasing. |
 
 The list is the same for every project. Adding a value is a change to the standard, not something a
@@ -193,7 +193,8 @@ are not work tickets.
 ## Priority
 
 How urgent, by consequence rather than by deadline. A ticket with no priority is treated as *Normal*. The
-creator proposes it and the owner can change it at any time; *Critical* needs a comment saying why.
+creator proposes it and the owner can change it at any time; *Critical* needs a comment saying why (the
+Alerts the automation creates are *Critical* without one).
 
 | Value | Meaning |
 |---|---|
@@ -272,4 +273,4 @@ tickets have no dates.
 | Risk | proposed by the creator | none | set by the person who takes it |
 | Version, Build, Version# | yes | its own version; its last build | the version in which it was raised |
 | Start date, End date | yes | none | none |
-| Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass or a merge without changelog entries; none for stale planned versions |
+| Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog; none for stale planned versions |
