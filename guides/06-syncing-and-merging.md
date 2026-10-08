@@ -63,6 +63,18 @@ them on the branch. This is only one way it can happen; there are others.
 - **Recommendation:** in the entry, say what conflicted and how you resolved it. If it is easy to see what
   came from `main` (a ticket number in the log), name it, but do not go looking for it.
 
+**The changelog itself.** When several branches are open at once, each has its own open `## WIP-Version`
+at the top of `CHANGELOG.md`. After one of them lands, `main` has that version finalized in the same place,
+so the next branch to sync conflicts there. This is expected, and the resolution is always the same:
+
+1. Keep your own open `## WIP-Version` section on top, with your builds and entries exactly as you wrote
+   them.
+2. Keep every finalized version from `main` below it, exactly as `main` has it, newest first, with a blank
+   line between the sections.
+3. Take nothing of the other branch's entries into your open section, and leave the stamped builds alone.
+
+Resolving this conflict is bookkeeping and needs no entry of its own, unlike an adjustment to the code.
+
 **Why.**
 
 - *On the branch* so the resolution is a deliberate, visible, tested step, and not something done for the

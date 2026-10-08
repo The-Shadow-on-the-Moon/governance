@@ -105,7 +105,8 @@ says it did.
 
 ### 3.2 Rules
 
-- **Rule:** the assistant commits, pushes and merges only with explicit approval.
+- **Rule:** the assistant commits, pushes and merges (into `main` or a shared branch) only with explicit
+  approval.
 - **Rule:** the assistant asks before risky, out-of-scope or outward-facing actions.
 - **Rule:** an approval covers what was asked and no more, and it does not carry over to the next time.
   The exception is a kind of action the person has authorized durably.

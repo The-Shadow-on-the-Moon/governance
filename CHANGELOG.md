@@ -1,6 +1,13 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261008233338 (branch project-views)
+#### #113 — Keep each rule in one place in the guides, with tests against drift
+- A third sweep, of the rules against each other and of the process against realistic situations: every rule that says never, always or only was read for a conflict with another rule, the situations a team meets were walked through for a documented answer, the Version ticket description and the release and hotfix comments were checked against the code, and the saved views against guide 07.
+- guides/06-syncing-and-merging.md (section 1.2), guides/appendix-b-cheat-sheet-if-then.md: new, the conflict in `CHANGELOG.md` when several branches are open and one lands first (each has its own open `## WIP-Version` at the top): keep your open section on top and the finalized versions from `main` below it, and no entry is needed. Tried first in a throwaway repository: the sync conflicts exactly there, and the resolved file is read by the automation's changelog parser.
+- guides/03-project-structure.md (section 4.3): the rule that the issue is closed only at Completed or Abandoned, by a person, is for a work ticket; the automation closes a Version ticket at finalize (section 5.2 and the Health view already said so).
+- guides/05-working-and-committing.md (section 4.1): "the existing tests must pass" has the exception the same section gives, a failure the change did not cause. guides/09-working-with-an-ai-assistant.md (section 3.2): the approval rule for merges says into `main` or a shared branch, as section 3.1 does.
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
 ### Build 20261008231946 (branch project-views)
 #### #113 — Keep each rule in one place in the guides, with tests against drift
 - A second sweep, of the guides' own conventions and examples: the markers, the terms, the spelling, the markdown, the examples run through the real parsers, and the guides' claims about the automation checked against its code.

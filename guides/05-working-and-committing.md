@@ -199,7 +199,8 @@ rows, and a short checklist is one that gets used.
   developer, once, before the commit exists, and nothing else compiles it. For a project with nothing to
   compile, "build" means whatever check shows that the change works, such as a lint, a site build or a
   test run.
-- **Rule:** run the existing tests before considering a change done. They must pass.
+- **Rule:** run the existing tests before considering a change done. They must pass, except a failure
+  that your change did not cause (see below).
 - **Rule:** new or changed logic comes with tests (section 3).
 - **If an existing test fails:** the recommendation is to fix it before committing when your change
   caused it. When it did not, raise a Bug ticket, mention it in your ticket, and do not hide or delete

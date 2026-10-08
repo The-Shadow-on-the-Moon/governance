@@ -1418,8 +1418,9 @@ automation set the ticket's Version and Delivery from where the placeholder appe
   is the only change it makes to Progress. It never sets *Review* or *Completed*, and never moves a ticket out of *Review*,
   *Completed*, *Abandoned* or *Suspended*: when something looks wrong there, it raises Attention (below)
   and a person decides.
-- **Rule:** the GitHub issue is closed only when a ticket is *Completed* or *Abandoned*, by a person,
-  never by a closing keyword.
+- **Rule:** the GitHub issue of a work ticket is closed only when the ticket is *Completed* or
+  *Abandoned*, by a person, never by a closing keyword. (A Version ticket has no Progress: the automation
+  closes it at finalize, section 5.2.)
 
 *Why.* Progress is a judgment, so people make it. Only the developer knows whether work is finished: a
 ticket may be committed, pushed or even merged in several steps, and the board may be updated later. The
@@ -2592,7 +2593,8 @@ rows, and a short checklist is one that gets used.
   developer, once, before the commit exists, and nothing else compiles it. For a project with nothing to
   compile, "build" means whatever check shows that the change works, such as a lint, a site build or a
   test run.
-- **Rule:** run the existing tests before considering a change done. They must pass.
+- **Rule:** run the existing tests before considering a change done. They must pass, except a failure
+  that your change did not cause (see below).
 - **Rule:** new or changed logic comes with tests (section 3).
 - **If an existing test fails:** the recommendation is to fix it before committing when your change
   caused it. When it did not, raise a Bug ticket, mention it in your ticket, and do not hide or delete
@@ -2966,6 +2968,18 @@ them on the branch. This is only one way it can happen; there are others.
   set *Fine* (see the guide on issues and the board in practice, section 2.4).
 - **Recommendation:** in the entry, say what conflicted and how you resolved it. If it is easy to see what
   came from `main` (a ticket number in the log), name it, but do not go looking for it.
+
+**The changelog itself.** When several branches are open at once, each has its own open `## WIP-Version`
+at the top of `CHANGELOG.md`. After one of them lands, `main` has that version finalized in the same place,
+so the next branch to sync conflicts there. This is expected, and the resolution is always the same:
+
+1. Keep your own open `## WIP-Version` section on top, with your builds and entries exactly as you wrote
+   them.
+2. Keep every finalized version from `main` below it, exactly as `main` has it, newest first, with a blank
+   line between the sections.
+3. Take nothing of the other branch's entries into your open section, and leave the stamped builds alone.
+
+Resolving this conflict is bookkeeping and needs no entry of its own, unlike an adjustment to the code.
 
 **Why.**
 
@@ -4108,7 +4122,8 @@ says it did.
 
 #### 3.2 Rules
 
-- **Rule:** the assistant commits, pushes and merges only with explicit approval.
+- **Rule:** the assistant commits, pushes and merges (into `main` or a shared branch) only with explicit
+  approval.
 - **Rule:** the assistant asks before risky, out-of-scope or outward-facing actions.
 - **Rule:** an approval covers what was asked and no more, and it does not carry over to the next time.
   The exception is a kind of action the person has authorized durably.
@@ -4868,6 +4883,7 @@ branching and merging.
 | my branch is behind `main` | Merge `main` into it, recompile, and retest in proportion. | Syncing and merging, section 1 |
 | `main` has nothing my branch lacks | No sync is needed. | Syncing and merging, section 1.1 |
 | I got a conflict while syncing | Resolve it on the branch, log it under my ticket, put the details in a comment, and rebuild and retest. | Syncing and merging, section 1.2 |
+| the conflict is in `CHANGELOG.md`, at the top, because another branch landed first | Keep my open `WIP-Version` on top and `main`'s finalized versions below it, unchanged. No entry is needed. | Syncing and merging, section 1.2 |
 | `main` moved after my sync | Sync again. | Syncing and merging, section 1.2 |
 | my push was rejected because someone else pushed to the branch | Fetch and merge `origin/<branch>`, resolve any conflict on the branch, rebuild, push. Never rebase or force. | Syncing and merging, section 1.4 |
 | I want to force a different version bump | Add `+V`, `+s` or `+m` after `WIP-Version` (never on a hotfix). | Branching, section 3.3 |

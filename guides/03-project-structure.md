@@ -390,8 +390,9 @@ automation set the ticket's Version and Delivery from where the placeholder appe
   is the only change it makes to Progress. It never sets *Review* or *Completed*, and never moves a ticket out of *Review*,
   *Completed*, *Abandoned* or *Suspended*: when something looks wrong there, it raises Attention (below)
   and a person decides.
-- **Rule:** the GitHub issue is closed only when a ticket is *Completed* or *Abandoned*, by a person,
-  never by a closing keyword.
+- **Rule:** the GitHub issue of a work ticket is closed only when the ticket is *Completed* or
+  *Abandoned*, by a person, never by a closing keyword. (A Version ticket has no Progress: the automation
+  closes it at finalize, section 5.2.)
 
 *Why.* Progress is a judgment, so people make it. Only the developer knows whether work is finished: a
 ticket may be committed, pushed or even merged in several steps, and the board may be updated later. The

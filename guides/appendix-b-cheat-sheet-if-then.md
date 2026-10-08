@@ -22,6 +22,7 @@ branching and merging.
 | my branch is behind `main` | Merge `main` into it, recompile, and retest in proportion. | Syncing and merging, section 1 |
 | `main` has nothing my branch lacks | No sync is needed. | Syncing and merging, section 1.1 |
 | I got a conflict while syncing | Resolve it on the branch, log it under my ticket, put the details in a comment, and rebuild and retest. | Syncing and merging, section 1.2 |
+| the conflict is in `CHANGELOG.md`, at the top, because another branch landed first | Keep my open `WIP-Version` on top and `main`'s finalized versions below it, unchanged. No entry is needed. | Syncing and merging, section 1.2 |
 | `main` moved after my sync | Sync again. | Syncing and merging, section 1.2 |
 | my push was rejected because someone else pushed to the branch | Fetch and merge `origin/<branch>`, resolve any conflict on the branch, rebuild, push. Never rebase or force. | Syncing and merging, section 1.4 |
 | I want to force a different version bump | Add `+V`, `+s` or `+m` after `WIP-Version` (never on a hotfix). | Branching, section 3.3 |
