@@ -244,6 +244,59 @@ class GuideValueTests(unittest.TestCase):
         for name in ("03-project-structure.md", "10-new-project-bootstrap.md"):
             self.assertIn(f"`{line}`", self.guide(name), name)
 
+    def test_every_guide_defines_the_markers_it_uses(self):
+        import glob
+
+        names = sorted(glob.glob(os.path.join(ROOT, "guides", "[0-1][0-9]-*.md"))) + [os.path.join(ROOT, "guides", "README.md")]
+        self.assertEqual(len(names), 11)
+        for name in names:
+            with open(name, encoding="utf-8") as handle:
+                text = handle.read()
+            for marker in ("Rule", "Recommendation", "Strong recommendation", "In GitHub"):
+                self.assertIn(f"- **{marker}**:", text, f"{os.path.basename(name)}: {marker}")
+
+    def test_the_examples_of_the_changelog_are_valid_changelogs(self):
+        import re
+
+        parser = self.automation("changelog")
+        checked = 0
+        for name in sorted(os.listdir(os.path.join(ROOT, "guides"))):
+            if not name.endswith(".md") or name == "Developer-Guides-Complete.md":
+                continue
+            for block in re.findall(r"```[a-z]*\n(.*?)```", self.guide(name), re.S):
+                if not re.search(r"^## (WIP-Version|V\d)", block, re.M):
+                    continue
+                if re.search(r"^#{2,4} .*\S {3,}\S", block, re.M):
+                    continue  # the legend of the structure, which is annotated on purpose
+                parser.parse("# Changelog\n\n" + block.strip("\n") + "\n")
+                checked += 1
+        self.assertGreaterEqual(checked, 5)
+
+    def test_the_glossary_lists_the_same_values_as_the_board(self):
+        import re
+
+        glossary = self.guide("01-concepts-and-vocabulary.md")
+        bootstrap = self.guide("10-new-project-bootstrap.md")
+        table = bootstrap.split("| Field | Kind | Values |", 1)[1].split("Type is the issue type", 1)[0]
+        rows = dict(re.findall(r"^\| (Status|Origin|Attention|Delivery) \| single select \| (.*?) \|$", table, re.M))
+        row_of = {"Status": "Progress", "Origin": "Origin", "Attention": "Attention", "Delivery": "Delivery"}
+        for field, values in rows.items():
+            entry = re.search(r"^\| \*\*" + row_of[field] + r"\*\* \| (.*?) \|", glossary, re.M).group(1)
+            for value in values.split(", "):
+                value = re.sub(r" \(.*\)$", "", value)
+                self.assertIn(f"*{value}*", entry, f"{field}: {value}")
+
+    def test_the_guides_use_their_own_words(self):
+        import re
+
+        for name in sorted(os.listdir(os.path.join(ROOT, "guides"))):
+            if not name.endswith(".md") or name == "Developer-Guides-Complete.md":
+                continue
+            text = self.guide(name)
+            self.assertNotIn("that one release", text, name)  # a release is a version declared one; the marker is for a version
+            self.assertNotIn("feature branch", text, name)  # the guides say work branch
+            self.assertEqual(len(re.findall(r"merge request", text)), 1 if name.startswith("02-") else 0, name)
+
     def test_every_board_value_in_the_bootstrap_is_defined_in_the_fields_reference(self):
         import re
 

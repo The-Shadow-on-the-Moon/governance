@@ -10,6 +10,8 @@ project structure, and the steps it follows are in the other guides.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -108,8 +110,8 @@ says it did.
 - **Rule:** an approval covers what was asked and no more, and it does not carry over to the next time.
   The exception is a kind of action the person has authorized durably.
 - **Rule:** a durable authorization is recorded in the shared instructions file (section 6), for example
-  "you may push my feature branches", so that it is written down and can be withdrawn.
-- **Rule:** a durable authorization may cover commits and pushes on the person's own feature branches. It
+  "you may push my work branches", so that it is written down and can be withdrawn.
+- **Rule:** a durable authorization may cover commits and pushes on the person's own work branches. It
   never covers anything on `main`, tags, releases, hotfix finalize,
   deleting or retiring branches, force pushes or skipping hooks: those are decided each time.
 - **Rule:** for a real decision, the assistant presents the options, recommends one, and asks.

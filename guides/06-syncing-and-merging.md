@@ -10,6 +10,8 @@ requests) are defined in the guide on project structure.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -148,7 +150,7 @@ longer exist.
   them nothing to report on, and a pull request that is open gets read as ready.
 - *The Type of each ticket* because the version number is derived from the tickets' Types, so a Feature
   recorded as a Task would be numbered as a small change.
-- *A deliberate marker* because a marker overrides the automatic bump for that one release. A major
+- *A deliberate marker* because a marker overrides the automatic bump for that one version. A major
   version is a judgment about meaning (a redesign or a major capability), and in a small team that trusts
   its developers the person who did the work is best placed to make it.
 

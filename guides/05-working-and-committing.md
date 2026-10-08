@@ -10,6 +10,8 @@ guide on starting work.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -282,12 +284,14 @@ heading, above the builds already stamped, and write that commit's ticket blocks
 commit of a branch uses the placeholder opened in the guide on starting work; every later commit needs its
 own.
 
+The new commit's entries go under the new placeholder, above the build that is already stamped:
+
 ```
 ## WIP-Version
-### WIP-Build                              the new commit's entries go here
+### WIP-Build
 #### #201 — Add CSV export to the reports page
 - reports page: the Export button now keeps the report's column order.
-### Build 20261006091200 (branch csv-export)   the earlier commit, already stamped
+### Build 20261006091200 (branch csv-export)
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
 ```

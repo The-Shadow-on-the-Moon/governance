@@ -13,7 +13,7 @@ that work with them, and it is meant to apply unchanged to any project.
 | [`tools/`](tools/) | `combine.py` rebuilds the combined copy from the separate files. `xref_check.py` checks that every cross-reference between the guides points at a section that exists. |
 | [`tests/`](tests/) | Tests for the tools and for the automation. They also fail if the combined copy is out of date, a cross-reference is broken, or an automation file differs from the manifest. |
 | [`.githooks/`](.githooks/) | The local hooks: they stamp the build, draft the commit message and warn. |
-| [`.github/`](.github/) | The versioning workflow and its scripts (`scripts/`), the manifest of the automation files, the wiki-sync workflow and the pull request template. |
+| [`.github/`](.github/) | The versioning workflow and its scripts (`scripts/`), the manifest of the automation files, the wiki-sync workflow, the workflow that switches the schedule back on after GitHub disables it for inactivity, and the pull request template. |
 | [`doc/wiki/`](doc/wiki/Home.md) | The wiki pages, copied to the repository's wiki by a workflow. |
 
 ## Working on the guides

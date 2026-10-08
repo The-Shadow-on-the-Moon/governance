@@ -1,6 +1,16 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261008231946 (branch project-views)
+#### #113 — Keep each rule in one place in the guides, with tests against drift
+- A second sweep, of the guides' own conventions and examples: the markers, the terms, the spelling, the markdown, the examples run through the real parsers, and the guides' claims about the automation checked against its code.
+- All guides (the "How to read it" list of each, and guides/README.md): the marker "Strong recommendation", used in eight places, is defined.
+- guides/01-concepts-and-vocabulary.md (section 1, glossary), 02-branching-and-merging-strategy.md, 04-starting-work.md, 06-syncing-and-merging.md: a release is a version declared one, and a marker applies to "that one version" (it said "that one release", against guide 01's own definition); guides/02-branching-and-merging-strategy.md: "pull request" for "merge request"; guides/09-working-with-an-ai-assistant.md: "work branches" for "feature branches"; guides/10-new-project-bootstrap.md: "build stamp" for "build timestamp".
+- guides/03-project-structure.md (sections 4.2, 4.3, 10.2), guides/appendix-e-ticket-model.md, doc/wiki/Ticket-Model.md: a person also sets Dropped, on a planned Version ticket (section 5.2 already said so).
+- guides/05-working-and-committing.md (section 5.1): the changelog example added with #110 had notes after its headings and did not parse; the notes are now a sentence above it.
+- doc/wiki/Automation.md: the refusals of the hotfix step (branch not named for the release, no ticket entry, number outside 1 to 9, version already finalized) and of the retire step (wrong confirmation, comment not short and in kebab-case) that the code makes and the page did not list. README.md: the schedule re-enabler workflow is in the `.github/` row.
+- tests/test_tools.py: 4 new tests, every guide defines the markers it uses, the changelog examples in the guides parse with the automation's own parser, the glossary lists the same values as the board, and the guides do not use "that one release", "feature branch" or "merge request" for their own terms; 13 tests in `GuideValueTests`.
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
 ### Build 20261008230718 (branch project-views)
 #### #113 — Keep each rule in one place in the guides, with tests against drift
 - A sweep of every guide, the appendices, the wiki and the readmes for rules stated in more than one place (a scan of repeated passages, a scan of repeated numbers and counts, and a check that every cross-reference points at a section about the topic named).

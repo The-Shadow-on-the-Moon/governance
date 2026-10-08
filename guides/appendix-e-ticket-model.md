@@ -23,7 +23,7 @@ code has shipped).
 | **Waiting** | Is it waiting for someone's input? | board field | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
 | **Resolution** | How did it end? | board field | a person |
-| **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed* and *Implemented*) |
+| **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Version#, Start date, End date | a person, except Build, Version#, the real Version and the dates |
 
 Two principles decide who sets a field. **Judgment belongs to people, facts belong to the automation**:

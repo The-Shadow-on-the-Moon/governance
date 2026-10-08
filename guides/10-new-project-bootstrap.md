@@ -10,6 +10,8 @@ rules about versions and branches are in the guide on branching and merging.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -286,7 +288,7 @@ every run, and a view that is created again loses them, so make them again.
 
 - **Rule:** the board has exactly these fields with these values. The built-in Status values of a new
   board are replaced with the ones above.
-- **Rule:** Build is a text field, not a number, because a build timestamp is too large for a number
+- **Rule:** Build is a text field, not a number, because a build stamp is too large for a number
   field.
 - **Rule:** the board is linked to the repository, and the preflight checks the fields and their values.
 - **Rule:** the saved views are the ones in `.github/views.json`, created by `views.py`, and a view is changed
@@ -295,7 +297,7 @@ every run, and a view that is created again loses them, so make them again.
   them, so that every project gets the same board.
 
 **Why.** The automation reads and writes these fields by name, so a board that differs breaks it, and a
-build timestamp stored in a number field is rejected by the hosting service.
+build stamp stored in a number field is rejected by the hosting service.
 
 > **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
 > fields are added in the project's settings, and the saved views are views of the project. A new board has

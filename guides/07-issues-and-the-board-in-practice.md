@@ -10,6 +10,8 @@ the guide on working and committing; this guide does not repeat them.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 

@@ -10,6 +10,8 @@ rules about branches in the guide on branching and merging.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -170,7 +172,7 @@ The steps:
 ### 4.1 Rules
 
 - **Rule:** a branch has at most one open `WIP-Version` heading, at the top of the changelog.
-- **Rule:** a marker is only for forcing the version bump. It applies to that one release, and it is not
+- **Rule:** a marker is only for forcing the version bump. It applies to that one version, and it is not
   allowed on a hotfix branch.
 - **Rule:** the ticket heading uses the ticket's number and its exact title.
 - **Recommendation:** open the entry when you start the work, not at the end.

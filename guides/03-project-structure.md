@@ -10,6 +10,8 @@ appendix, and the design of a ticket as a whole, with its life from creation to 
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -338,7 +340,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Waiting** | Is it waiting for someone's input? | one | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | one | the automation raises *Watch*, *Caution* and *AtRisk*; a person sets *Fine* or *Acknowledged* |
 | **Resolution** | How did it end? | one | a person |
-| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker and *Implemented*, which a person sets) |
+| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker, *Implemented*, and *Dropped* on a planned Version ticket, which a person sets) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | text, text, number | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
@@ -470,8 +472,8 @@ are worth keeping: they answer later questions such as "did we already decide no
 
 - **Rule:** Delivery says where a ticket's delivered work is: *Committed* (an optional personal marker, set by
   hand), *Pushed*, *Merged*, *Implemented* (the work is in effect and involved no file change, set by a
-  person), *Released*, or *Dropped*. Apart from *Committed* and *Implemented* it is set by the automation, and
-  people only correct a mistake.
+  person), *Released*, or *Dropped*. Apart from *Committed*, *Implemented* and *Dropped* on a planned Version
+  ticket (which a person marks, section 5.2) it is set by the automation, and people only correct a mistake.
 - **Rule:** *Implemented* is for a ticket that changed no file (a setting, a secret, a check that was run). A
   person sets it, together with Version, when the work is in effect. A ticket with changelog entries never
   needs it, because the automation sets *Merged*.
@@ -983,7 +985,7 @@ it is a judgment (is the work done, is it verified, how urgent is it), a person 
 | *Completed* and *Done* | sets, after verifying | sets, after verifying | | |
 | *Abandoned*, *Suspended* and the abandon reasons | proposes | decides | | |
 | Version (the target) | | sets | | overwrites it with the real version |
-| Delivery (except *Committed* and *Implemented*), Build, Version#, Start and End dates | | | | sets |
+| Delivery (except *Committed*, *Implemented* and *Dropped* on a planned Version ticket), Build, Version#, Start and End dates | | | | sets |
 | Delivery *Implemented*, with its Version | sets | may change | | attaches the ticket to its Version ticket |
 
 *Completed* and *Done* may be set by the developer or the project owner, whoever verified the result. The

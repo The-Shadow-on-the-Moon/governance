@@ -7,6 +7,8 @@ or come back to it when a word is unclear. The rules that use these words are in
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -34,7 +36,8 @@ Four words that are easy to confuse. Each answers a different question.
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
   Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
   exception and has no `V` (`Version 2.4.1`).
-- The word *release* is used only for the tag. A stamp embedded at compile time is a *compile stamp*.
+- A *release* is a version that has been declared one, and the tag marks it; a version that was not declared a
+  release is simply a version. A stamp embedded at compile time is a *compile stamp*.
 
 **Why.** The version says where in the history something is, the build says which commit, and the compile
 stamp says which binary. Only the last one can tell you, when a device or a deployed copy misbehaves, exactly
@@ -97,7 +100,7 @@ with where it is explained. Nothing here is new: it collects what the other guid
 |---|---|---|
 | **Changelog** | The file in the repository that records every change to files, grouped by version, then build, then ticket. | project structure, section 7 |
 | **Open version** | The `## WIP-Version` heading on a branch: the version being worked on. It has no number until the branch merges. | starting work, section 4 |
-| **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one release. | branching and merging, section 3.3 |
+| **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one version. | branching and merging, section 3.3 |
 | **Finalized version** | A `## V2.4.1 — 2026-10-05 14:32 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
 | **`WIP-Build`** | The placeholder build heading for the commit being made. The local hook replaces it at commit time. | starting work, section 5 |
 | **Build heading** | `### Build 20261005143045 (branch <name>)`: one commit's worth of changes, stamped with the UTC time of the commit. If a commit was made without the hook, the automation writes a form that also carries the commit's hash. | project structure, section 7 |

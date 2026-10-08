@@ -8,6 +8,8 @@ procedural guides (starting work, syncing, merging, releases) point back to.
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides. Departing from it is
   legitimate when there is a reason.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -234,7 +236,7 @@ is defined in *Concepts*.)
   | `## WIP-Version +m` | mod bump |
 
 - **Rule:** a major bump is never automatic. Only `+V` produces one.
-- **Rule:** a marker applies to that one release only. The next `WIP-Version` heading is plain
+- **Rule:** a marker applies to that one version only. The next `WIP-Version` heading is plain
   again unless it carries a marker of its own.
 - **Rule:** any other text after `WIP-Version` is an error, never guessed at. A changelog with such an
   error, or with two open headings, that reaches `main` stops the run without a version and raises a
@@ -251,9 +253,9 @@ is defined in *Concepts*.)
 
 **Why.**
 
-- *Tickets, not the merge request,* carry the bump because the tickets are where the nature of each
+- *Tickets, not the pull request,* carry the bump because the tickets are where the nature of each
   change is already recorded, as a Type. A branch may hold a feature and a fix together (see
-  section 1.2), which a single label on the merge request cannot express.
+  section 1.2), which a single label on the pull request cannot express.
 - *The highest Type wins* so that a feature never ends up hidden inside what looks like a fix.
 - *The default is mod* because the safest assumption about a change with no Type is that it is small.
 - *Major is only ever human-declared* because "this is a redesign" is a judgment about meaning, not

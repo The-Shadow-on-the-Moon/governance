@@ -13,6 +13,8 @@ Each topic says what to do and why. Statements are marked:
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -215,6 +217,8 @@ or come back to it when a word is unclear. The rules that use these words are in
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -242,7 +246,8 @@ Four words that are easy to confuse. Each answers a different question.
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
   Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
   exception and has no `V` (`Version 2.4.1`).
-- The word *release* is used only for the tag. A stamp embedded at compile time is a *compile stamp*.
+- A *release* is a version that has been declared one, and the tag marks it; a version that was not declared a
+  release is simply a version. A stamp embedded at compile time is a *compile stamp*.
 
 **Why.** The version says where in the history something is, the build says which commit, and the compile
 stamp says which binary. Only the last one can tell you, when a device or a deployed copy misbehaves, exactly
@@ -305,7 +310,7 @@ with where it is explained. Nothing here is new: it collects what the other guid
 |---|---|---|
 | **Changelog** | The file in the repository that records every change to files, grouped by version, then build, then ticket. | project structure, section 7 |
 | **Open version** | The `## WIP-Version` heading on a branch: the version being worked on. It has no number until the branch merges. | starting work, section 4 |
-| **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one release. | branching and merging, section 3.3 |
+| **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one version. | branching and merging, section 3.3 |
 | **Finalized version** | A `## V2.4.1 — 2026-10-05 14:32 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
 | **`WIP-Build`** | The placeholder build heading for the commit being made. The local hook replaces it at commit time. | starting work, section 5 |
 | **Build heading** | `### Build 20261005143045 (branch <name>)`: one commit's worth of changes, stamped with the UTC time of the commit. If a commit was made without the hook, the automation writes a form that also carries the commit's hash. | project structure, section 7 |
@@ -504,6 +509,8 @@ procedural guides (starting work, syncing, merging, releases) point back to.
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides. Departing from it is
   legitimate when there is a reason.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -730,7 +737,7 @@ is defined in *Concepts*.)
   | `## WIP-Version +m` | mod bump |
 
 - **Rule:** a major bump is never automatic. Only `+V` produces one.
-- **Rule:** a marker applies to that one release only. The next `WIP-Version` heading is plain
+- **Rule:** a marker applies to that one version only. The next `WIP-Version` heading is plain
   again unless it carries a marker of its own.
 - **Rule:** any other text after `WIP-Version` is an error, never guessed at. A changelog with such an
   error, or with two open headings, that reaches `main` stops the run without a version and raises a
@@ -747,9 +754,9 @@ is defined in *Concepts*.)
 
 **Why.**
 
-- *Tickets, not the merge request,* carry the bump because the tickets are where the nature of each
+- *Tickets, not the pull request,* carry the bump because the tickets are where the nature of each
   change is already recorded, as a Type. A branch may hold a feature and a fix together (see
-  section 1.2), which a single label on the merge request cannot express.
+  section 1.2), which a single label on the pull request cannot express.
 - *The highest Type wins* so that a feature never ends up hidden inside what looks like a fix.
 - *The default is mod* because the safest assumption about a change with no Type is that it is small.
 - *Major is only ever human-declared* because "this is a redesign" is a judgment about meaning, not
@@ -1031,6 +1038,8 @@ appendix, and the design of a ticket as a whole, with its life from creation to 
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -1359,7 +1368,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Waiting** | Is it waiting for someone's input? | one | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | one | the automation raises *Watch*, *Caution* and *AtRisk*; a person sets *Fine* or *Acknowledged* |
 | **Resolution** | How did it end? | one | a person |
-| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker and *Implemented*, which a person sets) |
+| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker, *Implemented*, and *Dropped* on a planned Version ticket, which a person sets) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | text, text, number | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
@@ -1491,8 +1500,8 @@ are worth keeping: they answer later questions such as "did we already decide no
 
 - **Rule:** Delivery says where a ticket's delivered work is: *Committed* (an optional personal marker, set by
   hand), *Pushed*, *Merged*, *Implemented* (the work is in effect and involved no file change, set by a
-  person), *Released*, or *Dropped*. Apart from *Committed* and *Implemented* it is set by the automation, and
-  people only correct a mistake.
+  person), *Released*, or *Dropped*. Apart from *Committed*, *Implemented* and *Dropped* on a planned Version
+  ticket (which a person marks, section 5.2) it is set by the automation, and people only correct a mistake.
 - **Rule:** *Implemented* is for a ticket that changed no file (a setting, a secret, a check that was run). A
   person sets it, together with Version, when the work is in effect. A ticket with changelog entries never
   needs it, because the automation sets *Merged*.
@@ -2004,7 +2013,7 @@ it is a judgment (is the work done, is it verified, how urgent is it), a person 
 | *Completed* and *Done* | sets, after verifying | sets, after verifying | | |
 | *Abandoned*, *Suspended* and the abandon reasons | proposes | decides | | |
 | Version (the target) | | sets | | overwrites it with the real version |
-| Delivery (except *Committed* and *Implemented*), Build, Version#, Start and End dates | | | | sets |
+| Delivery (except *Committed*, *Implemented* and *Dropped* on a planned Version ticket), Build, Version#, Start and End dates | | | | sets |
 | Delivery *Implemented*, with its Version | sets | may change | | attaches the ticket to its Version ticket |
 
 *Completed* and *Done* may be set by the developer or the project owner, whoever verified the result. The
@@ -2090,6 +2099,8 @@ rules about branches in the guide on branching and merging.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -2250,7 +2261,7 @@ The steps:
 #### 4.1 Rules
 
 - **Rule:** a branch has at most one open `WIP-Version` heading, at the top of the changelog.
-- **Rule:** a marker is only for forcing the version bump. It applies to that one release, and it is not
+- **Rule:** a marker is only for forcing the version bump. It applies to that one version, and it is not
   allowed on a hotfix branch.
 - **Rule:** the ticket heading uses the ticket's number and its exact title.
 - **Recommendation:** open the entry when you start the work, not at the end.
@@ -2392,6 +2403,8 @@ guide on starting work.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -2664,12 +2677,14 @@ heading, above the builds already stamped, and write that commit's ticket blocks
 commit of a branch uses the placeholder opened in the guide on starting work; every later commit needs its
 own.
 
+The new commit's entries go under the new placeholder, above the build that is already stamped:
+
 ```
 ## WIP-Version
-### WIP-Build                              the new commit's entries go here
+### WIP-Build
 #### #201 — Add CSV export to the reports page
 - reports page: the Export button now keeps the report's column order.
-### Build 20261006091200 (branch csv-export)   the earlier commit, already stamped
+### Build 20261006091200 (branch csv-export)
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
 ```
@@ -2899,6 +2914,8 @@ requests) are defined in the guide on project structure.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -3037,7 +3054,7 @@ longer exist.
   them nothing to report on, and a pull request that is open gets read as ready.
 - *The Type of each ticket* because the version number is derived from the tickets' Types, so a Feature
   recorded as a Task would be numbered as a small change.
-- *A deliberate marker* because a marker overrides the automatic bump for that one release. A major
+- *A deliberate marker* because a marker overrides the automatic bump for that one version. A major
   version is a judgment about meaning (a redesign or a major capability), and in a small team that trusts
   its developers the person who did the work is best placed to make it.
 
@@ -3308,6 +3325,8 @@ the guide on working and committing; this guide does not repeat them.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -3766,6 +3785,8 @@ on project structure.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -3992,6 +4013,8 @@ project structure, and the steps it follows are in the other guides.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -4090,8 +4113,8 @@ says it did.
 - **Rule:** an approval covers what was asked and no more, and it does not carry over to the next time.
   The exception is a kind of action the person has authorized durably.
 - **Rule:** a durable authorization is recorded in the shared instructions file (section 6), for example
-  "you may push my feature branches", so that it is written down and can be withdrawn.
-- **Rule:** a durable authorization may cover commits and pushes on the person's own feature branches. It
+  "you may push my work branches", so that it is written down and can be withdrawn.
+- **Rule:** a durable authorization may cover commits and pushes on the person's own work branches. It
   never covers anything on `main`, tags, releases, hotfix finalize,
   deleting or retiring branches, force pushes or skipping hooks: those are decided each time.
 - **Rule:** for a real decision, the assistant presents the options, recommends one, and asks.
@@ -4325,6 +4348,8 @@ rules about versions and branches are in the guide on branching and merging.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -4601,7 +4626,7 @@ every run, and a view that is created again loses them, so make them again.
 
 - **Rule:** the board has exactly these fields with these values. The built-in Status values of a new
   board are replaced with the ones above.
-- **Rule:** Build is a text field, not a number, because a build timestamp is too large for a number
+- **Rule:** Build is a text field, not a number, because a build stamp is too large for a number
   field.
 - **Rule:** the board is linked to the repository, and the preflight checks the fields and their values.
 - **Rule:** the saved views are the ones in `.github/views.json`, created by `views.py`, and a view is changed
@@ -4610,7 +4635,7 @@ every run, and a view that is created again loses them, so make them again.
   them, so that every project gets the same board.
 
 **Why.** The automation reads and writes these fields by name, so a board that differs breaks it, and a
-build timestamp stored in a number field is rejected by the hosting service.
+build stamp stored in a number field is rejected by the hosting service.
 
 > **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
 > fields are added in the project's settings, and the saved views are views of the project. A new board has
@@ -5499,7 +5524,7 @@ code has shipped).
 | **Waiting** | Is it waiting for someone's input? | board field | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
 | **Resolution** | How did it end? | board field | a person |
-| **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed* and *Implemented*) |
+| **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Version#, Start date, End date | a person, except Build, Version#, the real Version and the dates |
 
 Two principles decide who sets a field. **Judgment belongs to people, facts belong to the automation**:

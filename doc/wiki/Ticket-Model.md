@@ -15,7 +15,7 @@ Each field answers one question, and the fields are kept separate on purpose.
 | **Waiting** | Is it waiting for someone's input? | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | the automation raises flags, a person closes them |
 | **Resolution** | How did it end? | a person |
-| **Delivery** | Where is the delivered work? | the automation (a person sets *Committed* and *Implemented*) |
+| **Delivery** | Where is the delivered work? | the automation (a person sets *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | a person may aim it, the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | the automation |
