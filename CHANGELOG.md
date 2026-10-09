@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.10.0 — 2026-10-09 08:30 UTC
 ### Build 20261009082114 (branch project-views)
 #### #108 — Analyze Guidelines
 - doc/Evaluation/Project-eval.md and doc/Evaluation/Combined-eval.md: the evaluation file is renamed and neither file names the tool that wrote it; the earlier entry of this changelog that lists the file uses the new name.
