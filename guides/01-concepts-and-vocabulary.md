@@ -205,7 +205,7 @@ Nothing here is new: it collects what the other guides define.
 | **Fail open** | When a check cannot run or hits an error, work continues and the check says so. | branching and merging, section 6 |
 | **Bypass** | Going around a rule on purpose. It is allowed, and it is detected and recorded afterwards as an Alert. | branching and merging, section 6 |
 | **Dry run** | Running a step so that it prints every write it would make, without making any. | new-project bootstrap, section 8 |
-| **Trial** | Trying a change to the automation on throwaway material: a ticket titled `DUMMY ...` with the label `dummy`, a throwaway branch and their tags, so that no real ticket, version or tag is touched. | working and committing, section 4.4 |
+| **Trial** | Trying a change to the automation on throwaway material: a ticket titled `DUMMY ...` with the label `dummy`, a throwaway branch and their tags, so that no real ticket, version or tag is touched. The release, hotfix-finish and retire runs of a trial are started with the input `trial` ticked, which puts their tags under `test/`. | working and committing, section 4.4 |
 | **Regression checks** | The checks that show a version still does what the one before it did. They are run to verify a version before it is declared a release. | releases and hotfixes, section 1.1 |
 | **Project token** | The credential, stored as a secret, that lets the automation write to the board. | new-project bootstrap, section 4 |
 | **Manifest** | The file that lists the version of the standard a project follows and a hash of each automation file. | new-project bootstrap, section 2.4 |

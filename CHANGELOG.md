@@ -1,6 +1,10 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261009081149 (branch project-views)
+#### #114 — Keep the tags made by trials under a test/ level
+- guides/01-concepts-and-vocabulary.md: the glossary entry Trial names the input `trial` and the `test/` level. guides/Developer-Guides-Complete.md rebuilt.
+
 ### Build 20261009080055 (branch project-views)
 #### #114 — Keep the tags made by trials under a test/ level
 - .github/workflows/versioning.yml: a boolean input `trial` (default off, no guard) for the manual runs, passed to the release, hotfix and retire jobs as `TRIAL`.
