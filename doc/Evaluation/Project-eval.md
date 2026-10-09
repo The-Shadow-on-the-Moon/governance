@@ -89,5 +89,5 @@ The live saved views against `views.json`, the token's expiry date, and the `adv
 
 ## Notes outside the review
 
-- **Global preferences conflict with the standard here.** The user's global `CLAUDE.md` changelog format has "Known bugs" and "Planned" sections. The standard (03 §7.3) forbids them, and the repo follows the standard, as the handoff note says.
+- **Global preferences conflict with the standard here.** The user's global instructions file changelog format has "Known bugs" and "Planned" sections. The standard (03 §7.3) forbids them, and the repo follows the standard, as the handoff note says.
 - **Other evaluation files.** `doc/Evaluation/Copilot-eval.md` and `Gemini-eval.md` appeared untracked during the session. They were not read, so this review is independent of them.

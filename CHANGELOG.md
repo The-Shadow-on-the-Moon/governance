@@ -1,6 +1,10 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261009082114 (branch project-views)
+#### #108 — Analyze Guidelines
+- doc/Evaluation/Project-eval.md and doc/Evaluation/Combined-eval.md: the evaluation file is renamed and neither file names the tool that wrote it; the earlier entry of this changelog that lists the file uses the new name.
+
 ### Build 20261009081149 (branch project-views)
 #### #114 — Keep the tags made by trials under a test/ level
 - guides/01-concepts-and-vocabulary.md: the glossary entry Trial names the input `trial` and the `test/` level. guides/Developer-Guides-Complete.md rebuilt.
@@ -141,7 +145,7 @@
 - doc/Evaluation/Combined-eval.md: added section 5, how the tickets #109 to #113 address the findings: the decisions taken, a map from each finding to its ticket, the findings with no ticket and why, and the order of work.
 ### Build 20261008211150 (branch project-views)
 #### #108 — Analyze Guidelines
-- doc/Evaluation/Claude-eval.md, Gemini-eval.md, Copilot-eval.md: added; three independent evaluations of the guides for coherence, consistency and completeness (the Claude one also checks the project against the guides).
+- doc/Evaluation/Project-eval.md, Gemini-eval.md, Copilot-eval.md: added; three independent evaluations of the guides for coherence, consistency and completeness (the Project-eval.md one also checks the project against the guides).
 - doc/Evaluation/Combined-eval.md: added; the three compared, with what to address, what is irrelevant or incorrect (and why), and how to fix each item.
 
 ## V0.9.0 — 2026-10-08 20:36 UTC

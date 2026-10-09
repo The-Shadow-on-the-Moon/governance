@@ -1,16 +1,16 @@
 # Combined evaluation of the guides and the project
 
-Date: 2026-10-08. Sources: `Claude-eval.md`, `Gemini-eval.md`, `Copilot-eval.md`. Every finding below was checked against the guides, the code or the live GitHub state where possible. Analysis only: nothing has been changed.
+Date: 2026-10-08. Sources: `Project-eval.md`, `Gemini-eval.md`, `Copilot-eval.md`. Every finding below was checked against the guides, the code or the live GitHub state where possible. Analysis only: nothing has been changed.
 
 ## How the three evaluations compare
 
 | | Scope | Verdict | Quality |
 |---|---|---|---|
-| Claude | Guides (all files) and the project: tests, repo settings, board, tickets, pull requests, history | Several real contradictions and gaps; the project follows the guides closely, with a few deviations | Concrete and checked against code and live data |
+| Project evaluation | Guides (all files) and the project: tests, repo settings, board, tickets, pull requests, history | Several real contradictions and gaps; the project follows the guides closely, with a few deviations | Concrete and checked against code and live data |
 | Gemini | Combined guide file only | "High / Very High" | Two real gaps. Most other findings are "check that…" prompts that turned out fine |
 | Copilot | Combined guide file only | "Strong", no major contradictions | Generic. Mostly editorial or out of scope. The "no contradictions" verdict is wrong |
 
-Neither Gemini nor Copilot looked at the project, so only Claude's evaluation covers whether the project follows its own guides.
+Neither Gemini nor Copilot looked at the project, so only the project evaluation covers whether the project follows its own guides.
 
 ## 1. Address: guide defects (confirmed)
 
@@ -18,24 +18,24 @@ Ordered by importance. "Fix" says what to change; each fix is a small documentat
 
 | # | Finding | Source | Fix |
 |---|---|---|---|
-| G1 | **Test-result rule contradicts itself.** 05 §4.2 says "nothing more is prescribed", 05 §4.3 makes recording a Rule, the file location is only a Recommendation, yet checklists 05 §8 and 06 §2.1 treat the file as mandatory. "Recorded test result" is never defined. | Claude | Decide the intent, then make every place say it. Suggested: results are required only when the person verifies or reviews a ticket and when a release is verified (08 §1.1); routine unit-test runs need no stored file. Define "recorded result". Make `tests/results/` a Rule only for those cases, and align 05 §4.2, 05 §4.3, 05 §8, 06 §2.1, 07 §3 and 03 §2.1. |
-| G2 | **Alert causes listed as three, automation raises four.** The changelog-error Alert (02 §3.3, `alerts.changelog_error_alert`) is missing from 03 §5.3 and §5.4, Appendix E §5, guide 07 §5 and Appendix C. | Claude | Add the fourth cause to those places, with its assignee rule and triage steps ("correct `CHANGELOG.md`, then re-run finalize", from the Alert's own text). |
-| G3 | **Scheduled run is never defined.** Version#, the Implemented attach, Watch flags and field rules all depend on it. Only Appendix C says "three a day". 03 and 07 use the term undefined; bootstrap 10 §2.1 doesn't list the schedule or the `reenable-schedule.yml` workflow (needed because GitHub disables schedules after 60 days of inactivity); the glossary has no entry. | Claude | Add a short "scheduled run" section in guide 03 (what it does, how often, why it exists), a glossary entry in guide 01, and add the schedule and the re-enable workflow to the bootstrap guide's list and checklist. |
-| G4 | **Guide 01 says the only labels are the 14 Area labels.** The standard also requires `dummy` (10 §5.2, Appendix C, 07 §7.1). | Claude | Reword guide 01 §8: "the 14 Area labels plus the `dummy` marker label". |
-| G5 | **Five-minute versus two-hour wait.** 03 §4.3 says five minutes with no exception; 03 §4.4 and Appendix C say two hours for the Delivery and Version rules. | Claude | State both in 03 §4.3: five minutes by default, two hours for the Delivery and Version rules. |
+| G1 | **Test-result rule contradicts itself.** 05 §4.2 says "nothing more is prescribed", 05 §4.3 makes recording a Rule, the file location is only a Recommendation, yet checklists 05 §8 and 06 §2.1 treat the file as mandatory. "Recorded test result" is never defined. | Project evaluation | Decide the intent, then make every place say it. Suggested: results are required only when the person verifies or reviews a ticket and when a release is verified (08 §1.1); routine unit-test runs need no stored file. Define "recorded result". Make `tests/results/` a Rule only for those cases, and align 05 §4.2, 05 §4.3, 05 §8, 06 §2.1, 07 §3 and 03 §2.1. |
+| G2 | **Alert causes listed as three, automation raises four.** The changelog-error Alert (02 §3.3, `alerts.changelog_error_alert`) is missing from 03 §5.3 and §5.4, Appendix E §5, guide 07 §5 and Appendix C. | Project evaluation | Add the fourth cause to those places, with its assignee rule and triage steps ("correct `CHANGELOG.md`, then re-run finalize", from the Alert's own text). |
+| G3 | **Scheduled run is never defined.** Version#, the Implemented attach, Watch flags and field rules all depend on it. Only Appendix C says "three a day". 03 and 07 use the term undefined; bootstrap 10 §2.1 doesn't list the schedule or the `reenable-schedule.yml` workflow (needed because GitHub disables schedules after 60 days of inactivity); the glossary has no entry. | Project evaluation | Add a short "scheduled run" section in guide 03 (what it does, how often, why it exists), a glossary entry in guide 01, and add the schedule and the re-enable workflow to the bootstrap guide's list and checklist. |
+| G4 | **Guide 01 says the only labels are the 14 Area labels.** The standard also requires `dummy` (10 §5.2, Appendix C, 07 §7.1). | Project evaluation | Reword guide 01 §8: "the 14 Area labels plus the `dummy` marker label". |
+| G5 | **Five-minute versus two-hour wait.** 03 §4.3 says five minutes with no exception; 03 §4.4 and Appendix C say two hours for the Delivery and Version rules. | Project evaluation | State both in 03 §4.3: five minutes by default, two hours for the Delivery and Version rules. |
 | G6 | **`WIP-Build` must be re-added before every commit.** The hook only stamps an existing placeholder. Guide 04 introduces it once; guide 05 never says to add a fresh one for each later commit. | Gemini (confirmed in `hooks.py`) | In 05 §1/§2 and checklist 05 §8: "before each commit that logs a change, add a `### WIP-Build` block under the open version". Add one line to Appendix A. |
-| G7 | **Assistant and merging is ambiguous.** 09 §3.1 requires approval for any "merge", but syncing `main` into a branch is a merge that guides 04 and 06 treat as routine. 09 §3.2 implies syncing is gated. | Claude | In 09 §2.1 list "syncing `main` into the person's branch" as routine, and keep merging into `main` as ask-first. Align 09 §3.2. |
-| G8 | **Appendix C: "Critical needs a comment"**, but automation-created Alerts and hotfix tickets are Critical. | Claude | Add "except Alerts, which the automation creates as Critical". |
-| G9 | **Hotfix version assignment.** Guide 01 §1 says a version is assigned "when a branch merges into main"; a hotfix version is assigned at finish. | Claude | Add "or, for a hotfix, when it is finished". |
-| G10 | **Wrong cross-reference in Appendix B** for the skipped-hooks fallback ("Working and committing §5"). It's in guide 04 §5.1. | Claude | Change the "See" column. `xref_check` can't catch this because the section exists. |
-| G11 | **Root contents table is incomplete.** 03 §2.2 says the root holds only what the table lists; `LICENSE*` and `.gitattributes` aren't in it. | Claude | Add rows for licence files and for `.gitattributes`. |
-| G12 | **Bootstrap omits `.gitattributes`.** Windows line endings broke the hooks and parser once (ticket #14). | Claude | Add `.gitattributes` with `* text=auto eol=lf` to guide 10 §1 and the checklist. |
-| G13 | **Trialling automation changes isn't a procedure.** The DUMMY-ticket convention is only in Appendix C and `AGENTS.md`. | Claude | Add a short subsection to guide 05 §3.2 (or 10 §8) covering the title, label, closing as Invalid, and tagging branches before deleting. |
-| G14 | **Build blocks within a version: order is not stated.** | Claude | Add "newest build first" to 03 §7.3. |
+| G7 | **Assistant and merging is ambiguous.** 09 §3.1 requires approval for any "merge", but syncing `main` into a branch is a merge that guides 04 and 06 treat as routine. 09 §3.2 implies syncing is gated. | Project evaluation | In 09 §2.1 list "syncing `main` into the person's branch" as routine, and keep merging into `main` as ask-first. Align 09 §3.2. |
+| G8 | **Appendix C: "Critical needs a comment"**, but automation-created Alerts and hotfix tickets are Critical. | Project evaluation | Add "except Alerts, which the automation creates as Critical". |
+| G9 | **Hotfix version assignment.** Guide 01 §1 says a version is assigned "when a branch merges into main"; a hotfix version is assigned at finish. | Project evaluation | Add "or, for a hotfix, when it is finished". |
+| G10 | **Wrong cross-reference in Appendix B** for the skipped-hooks fallback ("Working and committing §5"). It's in guide 04 §5.1. | Project evaluation | Change the "See" column. `xref_check` can't catch this because the section exists. |
+| G11 | **Root contents table is incomplete.** 03 §2.2 says the root holds only what the table lists; `LICENSE*` and `.gitattributes` aren't in it. | Project evaluation | Add rows for licence files and for `.gitattributes`. |
+| G12 | **Bootstrap omits `.gitattributes`.** Windows line endings broke the hooks and parser once (ticket #14). | Project evaluation | Add `.gitattributes` with `* text=auto eol=lf` to guide 10 §1 and the checklist. |
+| G13 | **Trialling automation changes isn't a procedure.** The DUMMY-ticket convention is only in Appendix C and `AGENTS.md`. | Project evaluation | Add a short subsection to guide 05 §3.2 (or 10 §8) covering the title, label, closing as Invalid, and tagging branches before deleting. |
+| G14 | **Build blocks within a version: order is not stated.** | Project evaluation | Add "newest build first" to 03 §7.3. |
 | G15 | **Push rejected on a shared branch.** Guide 06 doesn't say to merge `origin/<branch>` and never rebase. | Gemini | Add a note to 06 §1: fetch, merge the remote branch, rebuild, push. |
 | G16 | **`AUTO-REF` after a new-block triage.** Only implied that it stays. | Gemini (partly covered) | One sentence in 03 §7.4: the generated entry stays as the record, same as `REF`. |
 | G17 | **Template for personal assistant-preference files.** 09 §6.1 only says they exist. | Copilot | Add a short optional template to 09 §6, flagged as optional. |
-| G18 | **Smaller edits.** Fix guide 01 §5's heading ("Branches and tags' words"). Add Appendix D and the individual guides to the wiki Home. Add a note about tool-attribution trailers to `AGENTS.md`. | Claude | Direct edits. |
+| G18 | **Smaller edits.** Fix guide 01 §5's heading ("Branches and tags' words"). Add Appendix D and the individual guides to the wiki Home. Add a note about tool-attribution trailers to `AGENTS.md`. | Project evaluation | Direct edits. |
 
 ### Structural recommendation (the root cause of G2, G5 and G8)
 
