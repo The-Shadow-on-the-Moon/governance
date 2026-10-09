@@ -28,7 +28,7 @@
     ".github/scripts/versions.py": "5a2072e8c657a8a16fc9beaaf51e4152b7a4b5fa247551eb46c69348e2b5f2ee",
     ".github/scripts/views.py": "346ddf8fa039e56ebf3f9c436d1fefaef3d89d9dc8f46e3c5a3f3783549639a3",
     ".github/scripts/watch.py": "e06c0b8b1385c4239a1385857750b53f26cfa96d48fe09ed6a3d2a61973364de",
-    ".github/views.json": "050c160229c43a41f89b2e868995f969b9e49e9f23c199e16fb0dd6e898db4ba",
+    ".github/views.json": "a3dda44d3873848ddb45f8f61ce2071087c5208d2b73b5a2b0744cdde6faa760",
     ".github/workflows/reenable-schedule.yml": "f8c9ef98131c533702201b3b0d9295ad2fa39e976d75c5083d093295dafc3b41",
     ".github/workflows/versioning.yml": "ac8f046fe85d307ab8757eaa7f1fa128e09b932359428d97fdb74ea9a1928f75",
     "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
@@ -49,7 +49,7 @@
     "tests/test_retire.py": "a92a7e0ff5d6558655b9af7dce043ca46f4cf0f55681d7e1449f8727e8621440",
     "tests/test_skipped_hooks.py": "286251211eaccd9d668f389676068dc2895f53c39424ab4404cc944ecd64b9fe",
     "tests/test_version_numbers.py": "20ac3f6cbf854e96a96ad689733e69a87e8c569e76d8529e48fa9fcd0e29a2eb",
-    "tests/test_views.py": "0c483db7637559a46453bc41106f1735fcba4e9c142728588838d41ebf209d0d",
+    "tests/test_views.py": "a6bb8038ff244f8d958166096384ba8d1cbbe50755e318ac4781eac1c89b6627",
     "tests/test_watch.py": "afbbf5bc4f57f9236cfa254c02606357cc9b269fa6397fe016306fc54fcba77a",
     "tests/test_workflow.py": "b7834864b2830901af88e8f0ea1030b716a94db8ee99b24fbab0fb54281694c6"
   },

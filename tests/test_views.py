@@ -88,6 +88,26 @@ class HealthViewTests(unittest.TestCase):
         self.assertEqual(fields[fields.index("Delivery") + 1], "Version")
 
 
+class FilterLengthTests(unittest.TestCase):
+    """GitHub refuses a view filter longer than 512 characters (a 422, found when the Health clause for shipped
+    work grew), and the script adds its own suffix to what the file says."""
+
+    MAXIMUM = 512
+
+    def test_no_view_gets_a_filter_longer_than_github_accepts(self):
+        entries = views.load_definition(os.path.join(ROOT, ".github", "views.json"))
+        self.assertGreaterEqual(len(entries), 5)
+        for entry in entries:
+            really = views.effective_filter(entry.get("filter"), bool(entry.get("include_test_tickets")),
+                                            bool(entry.get("include_pull_requests")))
+            self.assertLessEqual(len(really), self.MAXIMUM, f"{entry['name']}: {len(really)} characters")
+
+    def test_the_health_filter_keeps_room_to_grow(self):
+        entries = views.load_definition(os.path.join(ROOT, ".github", "views.json"))
+        health = next(entry for entry in entries if entry["name"] == "Health")
+        self.assertLessEqual(len(views.effective_filter(health["filter"])), self.MAXIMUM - 10)
+
+
 class DefinitionTests(unittest.TestCase):
     def load(self, data):
         with tempfile.TemporaryDirectory() as folder:

@@ -29,7 +29,7 @@
     {
       "name": "Health",
       "layout": "table",
-      "filter": "attention:Watch,Caution,AtRisk OR waiting:\"Needs input\" OR status:Review OR (type:Alert AND is:open) OR (status:Completed no:resolution) OR (is:open has:resolution) OR (is:open has:end-date) OR (is:closed has:waiting) OR (origin:Backfilled no:ref) OR (status:Completed,Abandoned AND is:open) OR (is:closed AND -status:Completed,Abandoned AND -type:Version) OR (status:Completed no:delivery AND -type:Version AND -type:Alert) OR (delivery:Implemented,Merged,Released no:version AND -status:Abandoned)",
+      "filter": "attention:Watch,Caution,AtRisk OR has:waiting OR status:Review OR (type:Alert AND is:open) OR (status:Completed no:resolution) OR (is:open has:resolution) OR (is:open has:end-date) OR (origin:Backfilled no:ref) OR (status:Completed,Abandoned AND is:open) OR (is:closed AND -status:Completed,Abandoned AND -type:Version) OR (status:Completed no:delivery AND -type:Version AND -type:Alert) OR (delivery:Implemented,Merged,Released no:version AND -status:Abandoned)",
       "sort_by": [["Priority", "asc"]],
       "visible_fields": ["Title", "Assignees", "Status", "Type", "Attention", "Waiting", "Resolution", "Delivery", "Version", "End date", "REF", "Priority"]
     },

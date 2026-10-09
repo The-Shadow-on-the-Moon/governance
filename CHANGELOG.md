@@ -1,6 +1,11 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261009023256 (branch project-views)
+#### #115 — Show Released work with no Version in the Health view
+- .github/views.json: GitHub refused the Health view of the previous build (422, a filter is at most 512 characters, and the script adds ` AND is:issue AND -label:dummy`; it was 531). The filter says `has:waiting` where it said `waiting:"Needs input"` and has no separate `(is:closed has:waiting)` clause, because the Waiting field has the one value and `has:waiting` lists the same tickets, open or closed. The filter is 462 characters, 494 with the ending. The Health and Versions views were recreated on the board with `views.py --apply`; the other three were not touched.
+- tests/test_views.py: 2 new tests, no view gets a filter longer than 512 characters and Health keeps 10 characters of room. doc/wiki/Board-Views.md: the Health row, the row for Waiting and a note on the limit.
+- .github/automation-manifest.json: regenerated for `views.json` and `tests/test_views.py` (standard V0.10.0).
 ### Build 20261009005906 (branch project-views)
 #### #117 — Make the preflight read the repository settings
 - .github/scripts/preflight.py: `check_settings` and `check_protection` added. The preflight compares the repository response it already fetches with the bootstrap guide (merge commits allowed, squash and rebase merging off, head branches not deleted automatically, default branch `main`, issues and projects enabled, the wiki enabled when `.github/workflows/wiki-sync.yml` exists) and reads the protection of `main` through the project token (a pull request required, branch up to date, administrator bypass left open). A difference is a warning and never a failed check; a setting the response lacks, a protection the plan does not offer and one the token cannot read are skipped. `run` takes an optional `root`.
