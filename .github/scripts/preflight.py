@@ -4,7 +4,9 @@ It checks, in order, that the repository is reachable with the permissions neede
 project token works, which board belongs to the repository (and stores its number in a
 repository variable), and that the board has the fields and values the automation needs.
 When a check fails it says which one and why, and the steps that depend on it are skipped.
-See the guide on the new-project bootstrap, section 2.3.
+It also warns, and only warns, about a repository setting that differs from the bootstrap guide
+(merge methods, branch deletion, default branch, issues, projects, the wiki and the protection of
+main); a setting it cannot read is skipped. See the guide on the new-project bootstrap, sections 2.3 and 3.
 """
 import os
 import sys
@@ -15,6 +17,18 @@ from github_api import Client, GitHubError
 
 BOARD_VARIABLE = "BOARD_NUMBER"
 EXPIRY_WARNING_DAYS = 14
+DEFAULT_BRANCH = "main"
+WIKI_SYNC_WORKFLOW = os.path.join(".github", "workflows", "wiki-sync.yml")
+
+# The repository settings of the bootstrap guide (section 3) that the repository response carries.
+EXPECTED_SETTINGS = (
+    ("allow_merge_commit", True, "merge commits must be allowed"),
+    ("allow_squash_merge", False, "squash merging must be off, because merge commits are the only merge method"),
+    ("allow_rebase_merge", False, "rebase merging must be off, because merge commits are the only merge method"),
+    ("delete_branch_on_merge", False, "head branches must not be deleted automatically: a branch is tagged first and deleted second"),
+    ("has_issues", True, "issues must be enabled"),
+    ("has_projects", True, "projects must be enabled"),
+)
 
 TEXT, NUMBER, DATE, SELECT = "TEXT", "NUMBER", "DATE", "SINGLE_SELECT"
 
@@ -65,6 +79,7 @@ class Report:
     checks: list = field(default_factory=list)
     board: Board = None
     warnings: list = field(default_factory=list)
+    repository: dict = None  # what GET /repos/{repo} returned, for the settings check
 
     @property
     def ok(self):
@@ -93,6 +108,7 @@ def check_repository(repo_client, report, project_client=None):
         info = repo_client.request("GET", f"/repos/{repo_client.repo}")
     except GitHubError as error:
         return report.add(name, False, f"cannot reach {repo_client.repo}: {error}")
+    report.repository = info if isinstance(info, dict) else {}
     if (info.get("permissions") or {}).get("push"):
         return report.add(name, True, f"{repo_client.repo} is reachable with write access")
     # The workflow's own token does not report its rights (the workflow declares them instead),
@@ -107,6 +123,54 @@ def check_repository(repo_client, report, project_client=None):
                                           "token (the workflow token declares its own rights)")
         return report.add(name, False, "neither the workflow token nor the project token reports write access to the repository")
     return report.add(name, False, "the workflow token does not report write access and there is no project token to confirm it")
+
+
+def _state(value):
+    return "on" if value else "off"
+
+
+def check_settings(report, wiki_sync=False):
+    """Warn about a repository setting that differs from the bootstrap guide (section 3).
+
+    It reads the repository the access check already fetched. A setting the response does not carry
+    is skipped without a warning, and a mismatch is only ever a warning: the check fails open.
+    """
+    info = report.repository or {}
+    for key, wanted, why in EXPECTED_SETTINGS:
+        if key in info and bool(info[key]) != wanted:
+            report.warnings.append(f"repository setting {key} is {_state(info[key])}: {why} (bootstrap guide, section 3)")
+    if info.get("default_branch") not in (None, DEFAULT_BRANCH):
+        report.warnings.append(f"the default branch is {info['default_branch']}, not {DEFAULT_BRANCH} (bootstrap guide, section 3)")
+    if wiki_sync and info.get("has_wiki") is False:
+        report.warnings.append("repository setting has_wiki is off, but the repository has the wiki-sync workflow: "
+                               "the wiki must be enabled and initialized (bootstrap guide, section 3)")
+
+
+def check_protection(report, project_client):
+    """Warn about the protection of main, read through the project token (an administrator's).
+
+    Protection is a recommendation where the plan offers it. A refusal other than "not protected" (no
+    permission, or a plan without protection) is skipped without a warning.
+    """
+    if project_client is None or not project_client.token:
+        return
+    try:
+        rules = project_client.request("GET", f"/repos/{project_client.repo}/branches/{DEFAULT_BRANCH}/protection")
+    except GitHubError as error:
+        if error.status == 404:
+            report.warnings.append(f"the branch {DEFAULT_BRANCH} has no protection: the guide recommends requiring a pull request "
+                                   "and an up-to-date branch where the plan offers it (bootstrap guide, section 3)")
+        return
+    if not isinstance(rules, dict) or "required_pull_request_reviews" not in rules and "required_status_checks" not in rules \
+            and "enforce_admins" not in rules:
+        return
+    if "required_pull_request_reviews" not in rules:
+        report.warnings.append(f"the protection of {DEFAULT_BRANCH} does not require a pull request (bootstrap guide, section 3)")
+    if not (rules.get("required_status_checks") or {}).get("strict"):
+        report.warnings.append(f"the protection of {DEFAULT_BRANCH} does not require the branch to be up to date (bootstrap guide, section 3)")
+    if (rules.get("enforce_admins") or {}).get("enabled"):
+        report.warnings.append(f"the protection of {DEFAULT_BRANCH} applies to administrators too: the guides leave the "
+                               "administrator bypass open (bootstrap guide, section 3)")
 
 
 def check_token(project_client, report):
@@ -188,10 +252,13 @@ def check_fields(project_client, board, report):
     return report.add(name, True, f"all {len(REQUIRED_FIELDS)} fields and their values are present")
 
 
-def run(repo_client, project_client, store=True):
+def run(repo_client, project_client, store=True, root=None):
     """Run every check in order and return the report. Dependent checks are skipped on failure."""
     report = Report()
     check_repository(repo_client, report, project_client)
+    root = root if root is not None else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+    check_settings(report, wiki_sync=os.path.exists(os.path.join(root, WIKI_SYNC_WORKFLOW)))
+    check_protection(report, project_client)
     if check_token(project_client, report):
         board = find_board(project_client, report, store)
         if board and check_fields(project_client, board, report):

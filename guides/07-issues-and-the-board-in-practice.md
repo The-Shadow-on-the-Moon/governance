@@ -378,7 +378,7 @@ automation's Attention flag already catches stale tickets, long waits and broken
    - A backfilled ticket has its REF.
    - The issue is closed only at *Completed* or *Abandoned*.
    - A *Completed* work ticket has a Delivery, and a ticket with Delivery *Merged*, *Implemented* or *Released*
-     has a Version.
+     has a Version (an *Abandoned* ticket is left out of this one, because the sweeps never attach it).
 5. **Labels:** the Area list and `dummy` are fixed. Remove strays and duplicates.
 6. **Planned Version tickets:** closed if dropped, and none left behind for versions already passed.
 7. **Branches:** merged branches not yet retired (a week or two up to about a month), and parked branches

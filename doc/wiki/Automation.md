@@ -24,7 +24,7 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 | Three times a day (08:17, 16:17 and 20:17 UTC; 4am, noon and 4pm ET in summer time, an hour earlier in winter), or on request with mode `scheduled` | The preflight, then attaching *Implemented* tickets to their versions, setting Version# from Version, the date sweep, the Watch flags and the Caution flags for field rules. It never commits. |
 | On request with mode `finalize` | The preflight and the finalize step, as a dry run unless told otherwise. Safe to repeat. |
 
-The preflight checks that the repository is reachable (the workflow's own token does not report its rights, so write access is confirmed through the project token), that `PROJECT_TOKEN` works (and warns two weeks before it expires), which board belongs to the repository (its number is kept in the repository variable `BOARD_NUMBER`) and that the board has every field and value the automation needs.
+The preflight checks that the repository is reachable (the workflow's own token does not report its rights, so write access is confirmed through the project token), that `PROJECT_TOKEN` works (and warns two weeks before it expires), which board belongs to the repository (its number is kept in the repository variable `BOARD_NUMBER`) and that the board has every field and value the automation needs. It also warns, and only warns, about a repository setting that differs from the bootstrap guide: merge commits allowed and squash and rebase merging off, head branches not deleted automatically, the default branch `main`, issues and projects enabled, the wiki enabled when the repository has the wiki-sync workflow, and the protection of `main` (a pull request required, the branch up to date, the administrator bypass left open), the last read through the project token. A setting the response lacks, and protection that the plan does not offer or the token cannot read, are skipped without a warning.
 
 The finalize step decides the bump from the tickets' Types or the marker, renames the open `WIP-Version` heading in a commit of its own, sets Delivery, Version, Build and Version# on each ticket, and creates and closes the Version ticket with the tickets as sub-issues. If the board cannot be updated, the version is still finalized.
 
@@ -58,7 +58,7 @@ All in `.github/scripts/`, with a test file for each in `tests/`. Each can be ru
 
 | Script | What it does |
 |---|---|
-| `preflight.py` | The first step of every run: repository, token, board and its fields. |
+| `preflight.py` | The first step of every run: repository, token, board and its fields, and warnings about repository settings. |
 | `finalize.py` | The finalize step, and the sweep of *Implemented* tickets that goes with it. |
 | `bypass.py` | Bypass detection after a push to `main`, and the stale-version check (`stale`). |
 | `advisory.py` | The advisory check on a pull request. |

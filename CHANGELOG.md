@@ -1,6 +1,20 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261009005906 (branch project-views)
+#### #117 — Make the preflight read the repository settings
+- .github/scripts/preflight.py: `check_settings` and `check_protection` added. The preflight compares the repository response it already fetches with the bootstrap guide (merge commits allowed, squash and rebase merging off, head branches not deleted automatically, default branch `main`, issues and projects enabled, the wiki enabled when `.github/workflows/wiki-sync.yml` exists) and reads the protection of `main` through the project token (a pull request required, branch up to date, administrator bypass left open). A difference is a warning and never a failed check; a setting the response lacks, a protection the plan does not offer and one the token cannot read are skipped. `run` takes an optional `root`.
+- .github/scripts/implemented.py: the module description names the scheduled run (it said "at every finalize, and on a manual run").
+- tests/test_preflight.py: 10 new tests (matching settings give no warning, each mismatch its own warning, a missing key is skipped, the default branch, the wiki only when the repository syncs to it, protection absent, unreadable, weaker than the guide, unrecognised, and no token); the fake project client answers the protection path; 30 tests.
+- guides/10-new-project-bootstrap.md (sections 2.3, 3.2, 8.1): the preflight list and the settings Rule say what is read and what is not (the default permission of the workflow token and the roles), that a mismatch is only a warning, and why. doc/wiki/Automation.md: the preflight paragraph and the script table.
+- .github/automation-manifest.json: regenerated for `preflight.py`, `implemented.py` and `tests/test_preflight.py` (standard V0.10.0: the open version holds Enhancements, which bump the sub version; check it against the changelog after the finalize).
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
+#### #115 — Show Released work with no Version in the Health view
+- .github/views.json: the Health clause for shipped work is `(delivery:Implemented,Merged,Released no:version AND -status:Abandoned)`: it lists *Released* tickets too (it left them out, though the rule and the field rule cover them) and leaves *Abandoned* ones out, as the field rule does, because the sweeps never attach them. The filter is 499 characters (468 before; the longest the board has accepted is 468).
+- tests/test_views.py: the test of that clause follows. doc/wiki/Board-Views.md: the Health row and the explanation of the clause.
+- guides/03-project-structure.md (section 4.4) and guides/07-issues-and-the-board-in-practice.md (section 7.1): the rule says *Abandoned* tickets are left out of the Version rule, which the field rule and the wiki already said and the guides did not.
+- .github/automation-manifest.json: regenerated for `views.json` and `tests/test_views.py` (standard V0.10.0).
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
 ### Build 20261009003524 (branch project-views)
 #### #116 — Fix gaps and conflicts found by the repeated sweeps of the guides
 - guides/02-branching-and-merging-strategy.md (section 6.5): "never hide a bypass" is a Rule, not a Recommendation. Guide 06 and Appendix A treated it as one, and a pointer added to guide 06 section 6.3 during #113 had made that Rule point at a Recommendation.

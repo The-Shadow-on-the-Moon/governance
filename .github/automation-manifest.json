@@ -17,8 +17,8 @@
     ".github/scripts/finalize.py": "85bca3c51d8451089c29f8986cedf853d20909dbe2bd1a2351416925d00590ef",
     ".github/scripts/github_api.py": "a0840a3e7429f244f521d203341bcbcbb020dbfbe5fb3e120169e6258a61aa4a",
     ".github/scripts/hotfix.py": "74c09c39d699fec097d4c1cb7d68ab10f371256b53d7f3f1d18f282e340c8658",
-    ".github/scripts/implemented.py": "e77705987d74e93a3f8a2340aac07f4aa1474e056a5fb1de370964130a63f82d",
-    ".github/scripts/preflight.py": "1cc7dd7c2e106c59d8d3a21cc82d0befb617dcd0a36475b3fd92356b9c268be2",
+    ".github/scripts/implemented.py": "5d1f341a9c9d4caf45243c296347e2f7005ff00f854df8e1b7583c5bc59cfc1e",
+    ".github/scripts/preflight.py": "5f25d94f7353a40490191a5c2379969f397a2662af20e3bd805ccf0eb3de61e4",
     ".github/scripts/push_step.py": "847bf285594a2891b749dbd91baf9235f7d89282e77f321e7eb4a704c0744317",
     ".github/scripts/reenable_schedule.py": "9438330149099df19b8e8561218282c552000baeae8db54a7f5763da7e0c1897",
     ".github/scripts/release.py": "299294db7cf3378f7554b3dce8ad9a1ac226d1909fdcadeb0b474453dee05b16",
@@ -28,7 +28,7 @@
     ".github/scripts/versions.py": "5a2072e8c657a8a16fc9beaaf51e4152b7a4b5fa247551eb46c69348e2b5f2ee",
     ".github/scripts/views.py": "346ddf8fa039e56ebf3f9c436d1fefaef3d89d9dc8f46e3c5a3f3783549639a3",
     ".github/scripts/watch.py": "e06c0b8b1385c4239a1385857750b53f26cfa96d48fe09ed6a3d2a61973364de",
-    ".github/views.json": "e755ce30527b927909e32b4f9e16bdf747127acef8f9e570590b318d8e8d5116",
+    ".github/views.json": "050c160229c43a41f89b2e868995f969b9e49e9f23c199e16fb0dd6e898db4ba",
     ".github/workflows/reenable-schedule.yml": "f8c9ef98131c533702201b3b0d9295ad2fa39e976d75c5083d093295dafc3b41",
     ".github/workflows/versioning.yml": "ac8f046fe85d307ab8757eaa7f1fa128e09b932359428d97fdb74ea9a1928f75",
     "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
@@ -41,7 +41,7 @@
     "tests/test_hotfix.py": "7a383cfacb0ba7d6b42d3b886939c7b48d052f670359da7c8921642fa12b159e",
     "tests/test_implemented.py": "7379f33e7e30739ff460888d48a8f55d1f78dc7e28003d26454331d5fe3503d9",
     "tests/test_manifest.py": "c7885dbd402e2610299b12a5f503149aba55d3cb6c054b6f959a9705bf7c0693",
-    "tests/test_preflight.py": "beed2a3da343d2c1ee522c6c8f80a625a845f2bb79cf24a4605389afb101e03e",
+    "tests/test_preflight.py": "b722e840637d58bdc946da9d6d453bd307298d3d07700f68b23339c33bbbe830",
     "tests/test_pull_request_items.py": "0c4cb122e8bcd29c739c0b311bc625736c7a23595ab9fbb5cdebbc0aae78859c",
     "tests/test_push_step.py": "aaeb385f664d138486113f4821dd859283242cace7df3e2a0d1a6a1706e7a183",
     "tests/test_reenable_schedule.py": "1fbead3e5978ae387b5a99115289ab80f5a3f18c939ca85c7e437039e2e1ad40",
@@ -49,9 +49,9 @@
     "tests/test_retire.py": "a92a7e0ff5d6558655b9af7dce043ca46f4cf0f55681d7e1449f8727e8621440",
     "tests/test_skipped_hooks.py": "286251211eaccd9d668f389676068dc2895f53c39424ab4404cc944ecd64b9fe",
     "tests/test_version_numbers.py": "20ac3f6cbf854e96a96ad689733e69a87e8c569e76d8529e48fa9fcd0e29a2eb",
-    "tests/test_views.py": "a0f7fd5105a19c6e34d49d4c3c2b3ed9b6819ddbef861a386534537ef08a762f",
+    "tests/test_views.py": "0c483db7637559a46453bc41106f1735fcba4e9c142728588838d41ebf209d0d",
     "tests/test_watch.py": "afbbf5bc4f57f9236cfa254c02606357cc9b269fa6397fe016306fc54fcba77a",
     "tests/test_workflow.py": "b7834864b2830901af88e8f0ea1030b716a94db8ee99b24fbab0fb54281694c6"
   },
-  "standard": "V0.9.0"
+  "standard": "V0.10.0"
 }

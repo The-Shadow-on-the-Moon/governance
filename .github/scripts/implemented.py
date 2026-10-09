@@ -1,10 +1,11 @@
 """Attach the tickets with Delivery "Implemented" to their Version tickets.
 
 A ticket that changed no file has nothing in the changelog for the finalize step to find. A person
-sets its Delivery to Implemented, with the Version it belongs to. At every finalize, and on a manual
-run, this sweep looks at the Implemented tickets that are not yet sub-issues of any Version ticket:
+sets its Delivery to Implemented, with the Version it belongs to. At every finalize, at every scheduled
+run and on a manual run, this sweep looks at the Implemented tickets that are not yet sub-issues of any
+Version ticket:
 
-- a blank Version gets the version being finalized;
+- a blank Version gets the version being finalized (at a scheduled run, the latest finalized version);
 - a Version that is already finalized is kept, and the ticket is attached to that version's ticket;
 - a Version that is not finalized yet makes the ticket wait, quietly while a higher version is not finalized
   either; but when a higher version is already finalized, the aimed number was passed and can no longer

@@ -80,8 +80,8 @@ class HealthViewTests(unittest.TestCase):
     def test_it_lists_completed_work_without_a_delivery_but_not_version_or_alert_tickets(self):
         self.assertIn("(status:Completed no:delivery AND -type:Version AND -type:Alert)", self.health()["filter"])
 
-    def test_it_lists_implemented_and_merged_tickets_without_a_version(self):
-        self.assertIn("(delivery:Implemented,Merged no:version)", self.health()["filter"])
+    def test_it_lists_shipped_tickets_without_a_version_but_not_abandoned_ones(self):
+        self.assertIn("(delivery:Implemented,Merged,Released no:version AND -status:Abandoned)", self.health()["filter"])
 
     def test_it_shows_the_version_next_to_the_delivery(self):
         fields = self.health()["visible_fields"]

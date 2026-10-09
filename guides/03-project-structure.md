@@ -526,7 +526,7 @@ ticket planned for a later version that ships earlier fixes itself.
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
 | A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names the version it belongs to. Pure analysis, a setting or a check that was run counts: the Delivery is never left blank. |
 | A work ticket is *Completed* | Delivery is set: *Merged* if files changed, *Implemented* if none did. (A ticket that came to nothing is *Abandoned*, not *Completed*. Version and Alert tickets are not work tickets.) |
-| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. |
+| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
 | A work ticket breaks one of these rules | The automation raises *Caution* in Attention, with a comment. |

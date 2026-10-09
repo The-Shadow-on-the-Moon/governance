@@ -23,6 +23,14 @@ def board_fields(missing=(), drop_value=None):
     return nodes
 
 
+GOOD_SETTINGS = {"permissions": {"push": True}, "allow_merge_commit": True, "allow_squash_merge": False,
+                 "allow_rebase_merge": False, "delete_branch_on_merge": False, "default_branch": "main",
+                 "has_issues": True, "has_projects": True, "has_wiki": True}
+GOOD_PROTECTION = {"required_pull_request_reviews": {"required_approving_review_count": 0},
+                   "required_status_checks": {"strict": True, "contexts": ["advisory"]},
+                   "enforce_admins": {"enabled": False}}
+
+
 class FakeRepoClient:
     repo = "owner/repo"
     token = "t"
@@ -40,8 +48,10 @@ class FakeProjectClient:
     repo = "owner/repo"
 
     def __init__(self, token="p", boards=None, variable=None, fields=None, viewer_error=None, store_error=None, expiry=None,
-                 push=True, request_error=None):
+                 push=True, request_error=None, protection=None):
         self.token, self.expiry, self.push, self.request_error = token, expiry, push, request_error
+        self.protection = GOOD_PROTECTION if protection is None else protection
+        self.asked_protection = False
         self.boards = [{"id": "P7", "number": 7, "title": "Governance"}] if boards is None else boards
         self.variable, self.fields = variable, fields if fields is not None else board_fields()
         self.viewer_error, self.store_error = viewer_error, store_error
@@ -57,6 +67,11 @@ class FakeProjectClient:
         return {"node": {"fields": {"nodes": self.fields}}}
 
     def request(self, method, path, body=None):
+        if path.endswith("/protection"):
+            self.asked_protection = True
+            if isinstance(self.protection, Exception):
+                raise self.protection
+            return self.protection
         if self.request_error:
             raise self.request_error
         return {"permissions": {"push": self.push}}
@@ -71,6 +86,11 @@ class FakeProjectClient:
         if self.store_error:
             raise self.store_error
         self.stored[name] = value
+
+
+def quiet_project(**kwargs):
+    """A project client whose token has a distant expiry, so that no token warning gets in the way."""
+    return FakeProjectClient(expiry=datetime.now(timezone.utc) + timedelta(days=90), **kwargs)
 
 
 class PreflightTests(unittest.TestCase):
@@ -188,6 +208,82 @@ class PreflightTests(unittest.TestCase):
                 node["dataType"] = preflight.NUMBER
         report = preflight.run(FakeRepoClient(), FakeProjectClient(fields=fields))
         self.assertIn("field Build is NUMBER, expected TEXT", report.checks[-1].message)
+
+    def test_settings_that_match_the_guide_give_no_warning(self):
+        project = quiet_project()
+        report = preflight.run(FakeRepoClient(dict(GOOD_SETTINGS)), project)
+        self.assertTrue(report.ok, report.render())
+        self.assertEqual(report.warnings, [])
+        self.assertTrue(project.asked_protection)
+
+    def test_each_setting_that_differs_gives_its_own_warning(self):
+        for key, wanted in (("allow_merge_commit", False), ("allow_squash_merge", True), ("allow_rebase_merge", True),
+                            ("delete_branch_on_merge", True), ("has_issues", False), ("has_projects", False)):
+            info = dict(GOOD_SETTINGS)
+            info[key] = wanted
+            report = preflight.run(FakeRepoClient(info), quiet_project())
+            self.assertTrue(report.ok, key)  # a warning never fails the preflight
+            self.assertEqual(len(report.warnings), 1, key)
+            self.assertIn(key, report.warnings[0])
+            self.assertIn("bootstrap guide, section 3", report.warnings[0])
+
+    def test_a_setting_the_response_lacks_is_skipped(self):
+        report = preflight.run(FakeRepoClient({"permissions": {"push": True}}), quiet_project())
+        self.assertEqual(report.warnings, [])
+
+    def test_another_default_branch_gives_a_warning(self):
+        info = dict(GOOD_SETTINGS, default_branch="master")
+        report = preflight.run(FakeRepoClient(info), quiet_project())
+        self.assertEqual(len(report.warnings), 1)
+        self.assertIn("master", report.warnings[0])
+
+    def test_the_wiki_is_checked_only_when_the_repository_syncs_to_it(self):
+        import tempfile
+
+        info = dict(GOOD_SETTINGS, has_wiki=False)
+        with tempfile.TemporaryDirectory() as root:
+            report = preflight.run(FakeRepoClient(info), quiet_project(), root=root)
+            self.assertEqual(report.warnings, [])
+            os.makedirs(os.path.join(root, ".github", "workflows"))
+            with open(os.path.join(root, preflight.WIKI_SYNC_WORKFLOW), "w", encoding="utf-8") as handle:
+                handle.write("name: wiki\n")
+            report = preflight.run(FakeRepoClient(info), quiet_project(), root=root)
+            self.assertEqual(len(report.warnings), 1)
+            self.assertIn("has_wiki", report.warnings[0])
+
+    def test_a_branch_without_protection_gives_a_warning(self):
+        report = preflight.run(FakeRepoClient(dict(GOOD_SETTINGS)), quiet_project(protection=GitHubError(404, "Branch not protected")))
+        self.assertTrue(report.ok)
+        self.assertEqual(len(report.warnings), 1)
+        self.assertIn("no protection", report.warnings[0])
+
+    def test_protection_that_cannot_be_read_is_skipped(self):
+        for error in (GitHubError(403, "Resource not accessible"), GitHubError(500, "boom")):
+            report = preflight.run(FakeRepoClient(dict(GOOD_SETTINGS)), quiet_project(protection=error))
+            self.assertEqual(report.warnings, [], error)
+
+    def test_protection_that_differs_from_the_guide_names_each_difference(self):
+        weak = {"required_status_checks": {"strict": False}, "enforce_admins": {"enabled": True}}
+        report = preflight.run(FakeRepoClient(dict(GOOD_SETTINGS)), quiet_project(protection=weak))
+        self.assertTrue(report.ok)
+        text = " ".join(report.warnings)
+        self.assertIn("does not require a pull request", text)
+        self.assertIn("up to date", text)
+        self.assertIn("administrators too", text)
+        self.assertEqual(len(report.warnings), 3)
+
+    def test_an_unrecognised_protection_answer_is_skipped_and_no_token_asks_nothing(self):
+        report = preflight.run(FakeRepoClient(dict(GOOD_SETTINGS)), quiet_project(protection={"something": "else"}))
+        self.assertEqual(report.warnings, [])
+        project = quiet_project(token="")
+        preflight.run(FakeRepoClient(dict(GOOD_SETTINGS)), project)
+        self.assertFalse(project.asked_protection)
+
+    def test_the_settings_show_in_the_rendered_report(self):
+        info = dict(GOOD_SETTINGS, allow_squash_merge=True)
+        report = preflight.run(FakeRepoClient(info), quiet_project())
+        self.assertIn("[warning] repository setting allow_squash_merge is on", report.render())
+        self.assertIn("preflight: passed", report.render())
 
     def test_main_needs_the_repository(self):
         saved = os.environ.pop("GITHUB_REPOSITORY", None)

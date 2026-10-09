@@ -1563,7 +1563,7 @@ ticket planned for a later version that ships earlier fixes itself.
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
 | A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names the version it belongs to. Pure analysis, a setting or a check that was run counts: the Delivery is never left blank. |
 | A work ticket is *Completed* | Delivery is set: *Merged* if files changed, *Implemented* if none did. (A ticket that came to nothing is *Abandoned*, not *Completed*. Version and Alert tickets are not work tickets.) |
-| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. |
+| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
 | A work ticket breaks one of these rules | The automation raises *Caution* in Attention, with a comment. |
@@ -3716,7 +3716,7 @@ automation's Attention flag already catches stale tickets, long waits and broken
    - A backfilled ticket has its REF.
    - The issue is closed only at *Completed* or *Abandoned*.
    - A *Completed* work ticket has a Delivery, and a ticket with Delivery *Merged*, *Implemented* or *Released*
-     has a Version.
+     has a Version (an *Abandoned* ticket is left out of this one, because the sweeps never attach it).
 5. **Labels:** the Area list and `dummy` are fixed. Remove strays and duplicates.
 6. **Planned Version tickets:** closed if dropped, and none left behind for versions already passed.
 7. **Branches:** merged branches not yet retired (a week or two up to about a month), and parked branches
@@ -4450,6 +4450,11 @@ anything else:
    number in a repository variable, so that nothing needs the number typed in;
 4. that the board has **the fields and values** the automation needs.
 
+It also compares the **repository settings** it can read with section 3 of this guide: the merge methods,
+automatic branch deletion, the default branch, issues and projects, the wiki (when the repository syncs to
+it) and the protection of `main`. A setting that differs is a warning in the report and never a failed check,
+and a setting it cannot read is skipped.
+
 When a check fails, the automation says exactly which one and why, and skips the steps that depend on it.
 The version is still finalized, and the board can be corrected afterwards. If the repository has no board,
 or more than one, it stops at step 3 and asks the administrator to say which.
@@ -4511,7 +4516,10 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 - **Rule:** the default branch is `main`, Actions is enabled, and the workflow declares the permissions it
   needs.
 - **Rule:** the board is linked to the repository, so that the preflight can identify it.
-- **Rule:** the preflight also reads these settings and reports any that do not match.
+- **Rule:** the preflight also reads the settings it can see (the merge methods, automatic branch
+  deletion, the default branch, issues, projects, the wiki and the protection of `main`) and warns about any
+  that do not match. It cannot read the default permission of the workflow token or the collaborators'
+  roles, so those are checked by the administrator. A mismatch is a warning and never stops a run.
 - **Recommendation:** use branch protection where it is available, with the administrator bypass left open.
 
 **Why.**
@@ -4521,8 +4529,9 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 - *The administrator bypass stays open* because a bypass is allowed, with an Alert as its record (see the
   guide on branching and merging, section 6).
 - *The board linked to the repository* is how the automation finds it.
-- *The preflight checks the settings* so that this part of the bootstrap is verified and not just trusted,
-  and so that a setting changed later is noticed.
+- *The preflight checks the settings it can read* so that this part of the bootstrap is verified and not
+  just trusted, and so that a setting changed later is noticed. It only warns, because the guides never
+  block work on a setting: the warning is the record, and the administrator decides.
 
 > **In GitHub.** The merge methods and the head-branch setting are under the repository's general
 > settings, in the pull request section. Branch protection is under branches or rules. The default
@@ -4714,8 +4723,8 @@ clean up. So the setup is proved in two levels, neither of which leaves anything
 
 #### 8.1 Level 1: without side effects
 
-1. **Run the preflight.** It confirms the repository, the project token, the board and its fields, and the
-   repository settings.
+1. **Run the preflight.** It confirms the repository, the project token, the board and its fields, and warns
+   about any repository setting it can read that differs from section 3.
 2. **Run the automation's tests.**
 3. **Run the finalize step in dry-run mode.** It prints every write it would make, such as the heading
    rename, the ticket updates and the Version ticket, without making any.
