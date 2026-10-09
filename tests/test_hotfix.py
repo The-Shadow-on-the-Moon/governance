@@ -155,6 +155,21 @@ class FinishTests(HotfixRepo):
         self.assertNotIn("Delivery-Merged", [v.get("singleSelectOptionId") for v in sets.values()])
         self.assertEqual(sets[("I90", "F-Delivery")], {"singleSelectOptionId": "Delivery-Released"})  # the Version ticket
 
+    def test_a_trial_hotfix_starts_from_the_trial_base_tag_and_tags_under_test(self):
+        self.git("tag", "test/released/V1.25.0", "released/V1.25.0")
+        self.git("tag", "-d", "released/V1.25.0")
+        self.start(base="test/released/V1.25.0")
+        repo, project = FakeRepo(), FakeProject()
+        hotfix.finish(self.dir, repo, project, board(), V("V1.25.0-HF1"), BRANCH, NOW, False, trial=True)
+        self.assertEqual([name for name, _ in repo.created_tags], ["test/released/V1.25.0-HF1"])
+        self.assertIn("Tag: `test/released/V1.25.0-HF1`", repo.comments[-1][1])
+
+    def test_a_trial_hotfix_needs_the_trial_base_tag(self):
+        self.start()  # the real base tag exists, the trial one does not
+        with self.assertRaises(hotfix.HotfixError) as caught:
+            hotfix.finish(self.dir, FakeRepo(), FakeProject(), board(), V("V1.25.0-HF1"), BRANCH, NOW, True, trial=True)
+        self.assertIn("test/released/V1.25.0", str(caught.exception))
+
     def test_a_second_hotfix_starts_from_the_first(self):
         self.start()
         self.finish()

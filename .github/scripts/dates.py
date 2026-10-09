@@ -17,6 +17,7 @@ import sys
 import finalize
 import preflight
 import versions
+import failures
 from github_api import Client, GitHubError
 
 STARTED = ("InProgress", "Review", "Completed", "Suspended", "Abandoned")
@@ -87,6 +88,7 @@ def main(argv=None):
         sweep(run, project_client, report.board, versions.utc_now().strftime("%Y-%m-%d"))
     except GitHubError as error:
         run.log.append(f"date sweep stopped: {error}")
+        failures.record(f"date sweep stopped: {error}")
     for line in run.log or ["no dates to set or clear"]:
         print(("would: " if run.dry_run else "did: ") + line)
     return 0

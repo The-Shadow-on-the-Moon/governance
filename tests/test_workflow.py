@@ -39,6 +39,92 @@ class WorkflowTests(unittest.TestCase):
         for trigger in ("pull_request:", "push:", "workflow_dispatch:", "- '**'"):
             self.assertIn(trigger, text)
 
+    def test_it_also_starts_on_issue_events_and_comments(self):
+        text = workflow()
+        self.assertRegex(text, r"(?m)^  issues:\n    types: \[edited, closed, reopened, assigned, labeled\]\n")
+        self.assertRegex(text, r"(?m)^  issue_comment:\n    types: \[created, edited\]\n")
+
+    def conditions_guard(self):
+        text = workflow()
+        job = text[text.index("\n  conditions:\n"):text.index("\n  release:\n")]
+        lines = job.split("\n")
+        start = next(i for i, line in enumerate(lines) if line.startswith("    if: >-"))
+        block = []
+        for line in lines[start + 1:]:
+            if not line.startswith("      "):
+                break
+            block.append(line)
+        return job, " ".join(line.strip() for line in block), block
+
+    def test_only_the_team_can_start_the_refresh_by_an_event(self):
+        job, expression, block = self.conditions_guard()
+        self.assertEqual({len(line) - len(line.lstrip()) for line in block}, {6})  # one indent, so the block folds into one line
+        self.assertEqual(expression.count("("), expression.count(")"))
+        self.assertEqual(expression.count("'") % 2, 0)
+        # an issue the team wrote, or a comment by the team
+        self.assertIn("github.event_name == 'issues'", expression)
+        self.assertIn("github.event.issue.author_association", expression)
+        self.assertIn("github.event.comment.author_association", expression)
+        self.assertEqual(expression.count('fromJSON(\'["OWNER","MEMBER","COLLABORATOR"]\')'), 2)
+        for stranger in ("NONE", "CONTRIBUTOR", "FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER", "MANNEQUIN"):
+            self.assertNotIn(stranger, expression.replace("github-actions", ""))
+        # the tick of a box: an edit of a comment the bot wrote (only someone with write access can edit another's comment)
+        self.assertIn("github.event.action == 'edited' && github.event.comment.user.type == 'Bot'", expression)
+        # not the comments of pull requests, and still the request by hand
+        self.assertIn("!github.event.issue.pull_request", expression)
+        self.assertIn("github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions'", expression)
+
+    def test_no_other_job_starts_on_an_issue_event(self):
+        text = workflow()
+        for job in ("advisory", "branch", "main", "scheduled", "release", "hotfix", "retire"):
+            body = text[text.index(f"\n  {job}:\n"):]
+            condition = body[:body.index("\n    runs-on:")]
+            self.assertNotIn("'issues'", condition, job)
+            self.assertNotIn("'issue_comment'", condition, job)
+
+    def test_no_event_text_reaches_a_shell_command(self):
+        lines = workflow().split("\n")
+        for number, line in enumerate(lines):
+            if re.match(r"\s+run:", line):
+                indent = len(line) - len(line.lstrip())
+                body = [line]
+                for later in lines[number + 1:]:
+                    if later.strip() and len(later) - len(later.lstrip()) <= indent:
+                        break
+                    body.append(later)
+                for text in body:
+                    self.assertNotIn("github.event.", text, f"line {number + 1}")
+                    self.assertNotIn("github.head_ref", text, f"line {number + 1}")
+
+    def test_no_script_writes_a_comment_or_an_issue_with_the_personal_token(self):
+        # an event started by the personal token would start the workflow again: a loop. The workflow token starts none.
+        scripts = os.path.join(ROOT, ".github", "scripts")
+        pattern = re.compile(r"project_client\.(comment|close_issue|create_issue|add_sub_issue|edit_comment)\b"
+                             r"|project_client\.request\(\s*[\"'](POST|PATCH|PUT|DELETE)[\"'][^)]*(issues|comments)")
+        for name in sorted(os.listdir(scripts)):
+            if name.endswith(".py"):
+                with open(os.path.join(scripts, name), encoding="utf-8") as handle:
+                    self.assertIsNone(pattern.search(handle.read()), name)
+
+    def test_every_job_that_writes_to_the_board_ends_with_the_status_step(self):
+        text = workflow()
+        for job, nxt in (("main", "scheduled"), ("scheduled", "conditions"), ("conditions", "release")):
+            body = text[text.index(f"\n  {job}:\n"):text.index(f"\n  {nxt}:\n")]
+            self.assertIn("board_status.py", body, job)
+            self.assertGreater(body.index("board_status.py"), body.index("conditions.py"), job)
+            step = body[body.index("End red if a board write failed"):]
+            self.assertIn("if: always()", step.split("run:")[0], job)
+            self.assertIn('--job-status "${{ job.status }}"', step, job)
+            self.assertEqual(step.count("- name:"), 0, f"{job}: it is the last step")
+
+    def test_the_trial_input_is_explicit_off_by_default_and_reaches_the_three_manual_runs(self):
+        text = workflow()
+        self.assertRegex(text, r"(?m)^      trial:\n        description: '[^\n]*test/[^\n]*'\n        type: boolean\n        default: false\n")
+        for job, nxt in (("release", "hotfix"), ("hotfix", "retire"), ("retire", None)):
+            start = text.index(f"\n  {job}:\n")
+            body = text[start:text.index(f"\n  {nxt}:\n")] if nxt else text[start:]
+            self.assertIn("TRIAL: ${{ inputs.trial }}", body, job)
+
     def test_declares_its_own_permissions(self):
         text = workflow()
         self.assertRegex(text, r"(?m)^permissions:\n  contents: write\n  issues: write\n  pull-requests: write\n")
@@ -58,7 +144,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertLess(main.index("bypass.py stale"), main.index("version_numbers.py"))
         self.assertLess(main.index("version_numbers.py"), main.index("dates.py"))
         self.assertLess(main.index("dates.py"), main.index("watch.py"))
-        self.assertLess(main.index("watch.py"), main.index("field_rules.py"))
+        self.assertLess(main.index("watch.py"), main.index("conditions.py"))
+        self.assertNotIn("field_rules.py", main)
 
     def test_uses_the_project_token_and_skips_its_own_commits(self):
         text = workflow()
@@ -103,14 +190,14 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("mode:", text)
         self.assertIn("- finalize", text)
         self.assertIn("- scheduled", text)
-        scheduled = text[text.index("  scheduled:"):text.index("  release:")]
+        scheduled = text[text.index("  scheduled:"):text.index("  conditions:")]
         self.assertIn("github.event_name == 'schedule'", scheduled)
         self.assertIn("inputs.mode == 'scheduled'", scheduled)
 
     def test_the_scheduled_job_runs_the_checks_in_order_and_never_commits(self):
         text = workflow()
-        scheduled = text[text.index("  scheduled:"):text.index("  release:")]
-        order = ["preflight.py", "implemented.py", "version_numbers.py", "dates.py", "watch.py", "field_rules.py"]
+        scheduled = text[text.index("  scheduled:"):text.index("  conditions:")]
+        order = ["preflight.py", "implemented.py", "version_numbers.py", "dates.py", "watch.py", "conditions.py"]
         positions = [scheduled.index(name) for name in order]
         self.assertEqual(positions, sorted(positions))
         for forbidden in ("git push", "git commit", "finalize.py", "bypass.py"):
@@ -119,9 +206,23 @@ class WorkflowTests(unittest.TestCase):
 
     def test_the_main_and_scheduled_jobs_share_one_concurrency_group_and_never_cancel_a_run(self):
         text = workflow()
-        for job in (text[text.index("  main:"):text.index("  scheduled:")], text[text.index("  scheduled:"):text.index("  release:")]):
+        for job in (text[text.index("  main:"):text.index("  scheduled:")], text[text.index("  scheduled:"):text.index("  conditions:")],
+                    text[text.index("  conditions:"):text.index("  release:")]):
             self.assertIn("concurrency:\n      group: versioning-board\n      cancel-in-progress: false\n", job)
-        self.assertEqual(text.count("group: versioning-board"), 2)
+        self.assertEqual(text.count("group: versioning-board"), 3)
+
+    def test_the_conditions_are_refreshed_after_a_merge_on_the_schedule_and_on_request(self):
+        text = workflow()
+        main = text[text.index("  main:"):text.index("  scheduled:")]
+        self.assertLess(main.index("watch.py"), main.index("conditions.py"))  # after finalize and every sweep
+        self.assertIn("- conditions", text)
+        job = text[text.index("  conditions:"):text.index("  release:")]
+        self.assertIn("github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions'", job)
+        self.assertLess(job.index("preflight.py"), job.index("implemented.py"))  # a ticket waiting for its Version is attached first
+        self.assertLess(job.index("implemented.py"), job.index("conditions.py"))
+        self.assertIn("DRY_RUN: ${{ inputs.dry_run }}", job)
+        for forbidden in ("git push", "git commit", "finalize.py", "bypass.py"):
+            self.assertNotIn(forbidden, job)
 
     def test_the_finalize_job_only_runs_for_its_own_mode(self):
         text = workflow()

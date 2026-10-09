@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 sys.path.insert(0, os.path.join(ROOT, ".github", "scripts"))
 
+import condition_comments  # noqa: E402
 import finalize  # noqa: E402
 import implemented  # noqa: E402
 import preflight  # noqa: E402
@@ -112,6 +113,8 @@ class SweepTests(unittest.TestCase):
         self.assertEqual(number, 50)
         self.assertTrue(text.startswith("<!-- attention:caution passed=V0.3.5 -->"))
         self.assertIn("V0.4.0 is already finalized", text)
+        self.assertIn("<!-- condition:passed-version -->", text)
+        self.assertEqual(condition_comments.state(text), "open")
         self.assertEqual((repo.subs, added), ([], {}))  # never attached or moved by itself
 
     def test_the_caution_is_not_raised_twice(self):

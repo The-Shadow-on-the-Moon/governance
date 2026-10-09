@@ -17,6 +17,7 @@ import implemented
 import preflight
 import versions
 from versions import Version
+import failures
 from github_api import Client, GitHubError
 
 CHANGELOG = "CHANGELOG.md"
@@ -150,6 +151,7 @@ def record_version_ticket(run, repo_client, project_client, board, version, when
                     run.do(f"{title}: set {name} to {text}", project_client.set_project_field, board.id, item_id, board.fields[name]["id"], value)
         except GitHubError as error:
             run.log.append(f"{title}: board fields skipped: {error}")
+            failures.record(f"{title}: board fields skipped: {error}")
     run.do(f"{title}: close", repo_client.close_issue, number)
     return number
 
@@ -217,6 +219,7 @@ def finalize(root, repo_client, project_client=None, board=None, now=None, pull_
                 update_ticket(run, project_client, board, number, version, builds.get(number))
             except GitHubError as error:
                 run.log.append(f"#{number}: board update skipped: {error}")
+                failures.record(f"#{number}: board update skipped: {error}")
     ticket = record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, listing)
     if board is not None and project_client is not None:
         try:
@@ -224,6 +227,7 @@ def finalize(root, repo_client, project_client=None, board=None, now=None, pull_
             implemented.sweep(run, repo_client, project_client, board, finalized, (version, ticket), now)
         except GitHubError as error:
             run.log.append(f"Implemented tickets: sweep skipped: {error}")
+            failures.record(f"Implemented tickets: sweep skipped: {error}")
     return run
 
 

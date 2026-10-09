@@ -10,6 +10,8 @@ guide on starting work.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -27,7 +29,7 @@ change in the changelog, commit.
 - **Rule:** every commit builds. Compiling is done locally by the developer, and nothing else compiles
   the code.
 - **Rule:** every commit that changes files adds a build block to the changelog, with at least one ticket
-  block or `REF` block.
+  block or `REF` block (the changelog's rules are in the guide on project structure, section 7.3).
 - **Recommendation:** commit when a logical step is complete and verified, not only at the end of the day.
 - **Recommendation:** do not mix unrelated changes in one commit.
 
@@ -174,7 +176,7 @@ condition is given.
 | **Tests** | ☐ Changelog bullet<br>☐ Build and run<br>☐ Ticket<br>☐ Test procedure document *(if what it describes changed)* |
 | **Documentation** (readme, wiki, records, comments) | ☐ Changelog bullet<br>☐ Ticket<br>☐ Wiki `Home` and links *(if a page is added, renamed or removed)*<br>☐ Date in the file name *(if it is a record)* |
 | **Build, tooling, config files** | ☐ Changelog bullet<br>☐ Build locally<br>☐ Ticket<br>☐ Tests *(if scripts have logic)*<br>☐ Readme *(if setup or build changed)*<br>☐ Readme and wiki variable list *(if people must apply new settings)* |
-| **Hooks, automation, process rules** | ☐ Changelog bullet<br>☐ Tests for the scripts<br>☐ Build locally<br>☐ Ticket<br>☐ Every page that states a changed rule *(if a rule changed)*<br>☐ Readme setup text *(if hook setup changed)*<br>☐ Guides and board setup *(if what the automation reads or writes changed)* |
+| **Hooks, automation, process rules** | ☐ Changelog bullet<br>☐ Tests for the scripts<br>☐ Build locally<br>☐ Ticket<br>☐ Try it with a throwaway ticket and branch *(if it writes to the board, the tags or the repository; section 4.4)*<br>☐ Every page that states a changed rule *(if a rule changed)*<br>☐ Readme setup text *(if hook setup changed)*<br>☐ Guides and board setup *(if what the automation reads or writes changed)* |
 | **Settings** (repository or board, no file changes) | ☐ Ticket records it, not the changelog<br>☐ Delivery *Implemented* and Version, when the work is in effect<br>☐ The page that states the rule *(if a documented rule changed)* |
 
 The wiki's known-issues page lists only the critical or very important limitations, as a summary. The
@@ -197,7 +199,8 @@ rows, and a short checklist is one that gets used.
   developer, once, before the commit exists, and nothing else compiles it. For a project with nothing to
   compile, "build" means whatever check shows that the change works, such as a lint, a site build or a
   test run.
-- **Rule:** run the existing tests before considering a change done. They must pass.
+- **Rule:** run the existing tests before considering a change done. They must pass, except a failure
+  that your change did not cause (see below).
 - **Rule:** new or changed logic comes with tests (section 3).
 - **If an existing test fails:** the recommendation is to fix it before committing when your change
   caused it. When it did not, raise a Bug ticket, mention it in your ticket, and do not hide or delete
@@ -208,17 +211,22 @@ commit gets.
 
 ### 4.2 Testing
 
-Testing helps, and the higher the risk of a change, the more it helps. Nothing more is prescribed. After
-a sync that brought in changes, recompiling is a rule and retesting is a strong recommendation (see the
-guide on branching and merging, section 4.5).
+Testing helps, and the higher the risk of a change, the more it helps. How much to test is the
+developer's judgment, and recording results is a strong recommendation (section 4.3). After a sync that
+brought in changes, recompiling is a rule and retesting is a strong recommendation (see the guide on
+branching and merging, section 4.5).
 
 ### 4.3 Recording results
 
-- **Rule:** keep every recorded test result in the ticket, as a comment, and also store it in the
-  repository. No recorded result is thrown away.
-- **Rule:** a recorded result names the build it applies to and, where the product has one, the compile
-  stamp of what was tested. The build named is the one the tests ran against, which always comes before
-  the commit that stores the result.
+A *recorded result* is the outcome of a test run that you write down: what was run, on which build, and
+whether it passed. The routine run before each commit (section 4.1) is not one unless you write it down.
+
+- **Strong recommendation:** record the results of a test run that matters: a review, a verification, a
+  regression run for a release, or a run that found a problem. Keep each one in the ticket, as a comment,
+  and also store it in the repository. Do not throw a recorded result away.
+- **Strong recommendation:** a recorded result names the build it applies to and, where the product has
+  one, the compile stamp of what was tested. The build named is the one the tests ran against, which always
+  comes before the commit that stores the result.
 - **Recommendation:** store each result as a markdown file under `tests/results/`, named
   `<date>_<build>_<subject>.md`, with the date in your own local time (for example `2026-10-06_20261006091200_csv-export.md`), so the files sort
   by date and show the build at a glance.
@@ -233,6 +241,49 @@ result will be needed, so none is discarded.
 > `tests/results/`, committed like any other change, so they appear in the changelog entry as their own
 > bullet.
 
+### 4.4 Trying an automation change
+
+A change to the hooks, the workflow or a rule the automation applies can only be proved for real by
+running it against the board, the tags and the repository. Do that with throwaway material, so that no
+real ticket, version or tag is touched.
+
+The steps:
+
+1. **Create a throwaway ticket** titled `DUMMY ...` (what is being tried), with the label `dummy` and a
+   Size. The saved views leave it out, so it never mixes with real work.
+2. **Work on a throwaway branch** named `dummy-...`, started from the branch under test. It is never
+   merged into `main`. If the trial needs a pull request, title it `DUMMY ...` and close it unmerged.
+3. **Run the trial** and check what the automation did: the build heading, the ticket's fields, the
+   comments, the Alerts.
+4. **Close it down.** Close the ticket as *Abandoned* with Resolution *Invalid* and a comment saying what
+   was proved. Close any pull request. Retire the branch as abandoned with the input **trial** ticked,
+   tagging it first (a short comment in the tag such as `dummy-test`). Mark any Version ticket the trial
+   made as *Dropped*, and delete any release tag it made.
+
+- **Rule:** a trial uses throwaway tickets, branches and tags only, and never merges into `main`.
+- **Rule:** every release, hotfix-finish and retire run that is a trial is started with the input
+  **trial** ticked, so that its tag goes under `test/`. The run does not guess, and does not refuse a
+  trial that forgot the box.
+- **Recommendation:** leave nothing behind: the trial's tickets are closed, its branches are retired and
+  its tags are removed or are the retirement tags of step 4 (under `test/`).
+
+> **Warning: the trial box.** When you start the release, hotfix-finish or retire run to *test* the
+> automation, tick the input **trial**. Nothing else tells the run that it is a test.
+> - **What happens when you tick it:** the tag is made under `test/` (`test/released/V9.9.9`,
+>   `test/released/V9.9.9-HF1`, `test/abandoned/2026-10-06_dummy-x_dummy-test`), the checks look for `test/`
+>   tags instead of real ones (a trial hotfix starts from `test/released/V…`), and the real tags are not
+>   touched. The dry run shows the name it would make: read it before the real run.
+> - **What happens when you forget it:** nothing stops the run. The tag is made in the real namespace
+>   (`released/V9.9.9`, `abandoned/…_dummy-…`), where it answers "everything released" or "everything
+>   abandoned" wrongly. Put it right at once: create the same tag under `test/` on the same commit, then
+>   delete the wrong one (`git push origin --delete <tag-name>`), and for a release also put the Version
+>   ticket and its tickets back (section 1.1 of the guide on releases).
+> - **When it is not a trial,** leave it unticked, which is the default.
+
+**Why.** An automation that writes to shared records has to be tried on shared records, and a mistake
+there is visible to everyone. The `dummy` label and the retirement tags (under `test/`) keep the trial out of the working
+views and out of every real tag list while leaving a record of what was tried.
+
 
 ---
 
@@ -243,6 +294,24 @@ result will be needed, so none is discarded.
 Stage by logical change, with each change's changelog entry in the same commit. When you commit, two
 hooks run: one stamps the build in the staged changelog, and one drafts the commit message from the
 entries you wrote.
+
+The hook stamps a `### WIP-Build` placeholder that is already there; it does not add one. So before each
+commit that logs a change, put a fresh `### WIP-Build` heading directly under the open `## WIP-Version`
+heading, above the builds already stamped, and write that commit's ticket blocks under it. The first
+commit of a branch uses the placeholder opened in the guide on starting work; every later commit needs its
+own.
+
+The new commit's entries go under the new placeholder, above the build that is already stamped:
+
+```
+## WIP-Version
+### WIP-Build
+#### #201 — Add CSV export to the reports page
+- reports page: the Export button now keeps the report's column order.
+### Build 20261006091200 (branch csv-export)
+#### #201 — Add CSV export to the reports page
+- reports page: added an Export button that downloads the current report as CSV.
+```
 
 ### 5.2 The message
 
@@ -400,8 +469,8 @@ where the work actually shipped, instead of when someone got round to documentin
   for the day.
 - **Recommendation:** move a ticket to *Review* before the merge, once the work is done and ready to merge.
   The automation then has nothing to change when the version is finalized.
-- **Recommendation:** deal with an Attention flag on your ticket when you see it, and close it only after
-  deciding. A flag closed without acting is not raised again for the same situation, so nothing will remind you.
+- **Recommendation:** deal with an Attention flag on your ticket when you see it, as set out in the guide
+  on issues and the board in practice, section 2.4.
 - **Recommendation:** comment on decisions and scope changes as they happen, not afterwards.
 - **Recommendation:** when you correct a Size, say why.
 
@@ -413,7 +482,8 @@ is done, the pull request lands it, and the version records it.
 ### 7.3 Before moving a ticket to Review
 
 - ☐ The changelog entries are complete.
-- ☐ Tests and their results are recorded (section 4).
+- ☐ The tests that matter and their results are recorded, naming the build (section 4; a strong
+  recommendation).
 - ☐ The documentation the change affects is updated (section 3).
 - ☐ Risk is revised.
 
@@ -435,15 +505,17 @@ syncing and merging.
 - [ ] Earlier entries are untouched, except a placeholder replaced or a critical correction made by the
       procedure (sections 2.5 and 6).
 - [ ] Built locally, and the existing tests pass (section 4).
-- [ ] Test results are recorded in the ticket and in `tests/results/`, naming the build (section 4).
+- [ ] Any test result worth keeping is recorded in the ticket and in `tests/results/`, naming the build
+      (section 4; a strong recommendation).
+- [ ] A fresh `### WIP-Build` was added under the open `## WIP-Version` for this commit's entries.
 - [ ] The change and its entry are staged together, committed through the editor, and the drafted message
       names every ticket (section 5).
 - [ ] No squash and no rebase. Any amend was allowed under the rule (section 5).
 
 **Before moving a ticket to Review**
 
-- [ ] The changelog entries are complete, tests and results are recorded, the documentation is updated,
-      and Risk is revised (section 7).
+- [ ] The changelog entries are complete, the results worth keeping are recorded, the documentation is
+      updated, and Risk is revised (section 7).
 - [ ] Waiting is set, with a comment, if I need input. Size is corrected if it was wrong.
 
 **Before opening the pull request**

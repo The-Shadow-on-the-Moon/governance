@@ -14,6 +14,7 @@ import sys
 
 import finalize
 import preflight
+import failures
 from github_api import Client, GitHubError
 from versions import Version, VersionError
 
@@ -80,6 +81,7 @@ def main(argv=None):
         sweep(run, project_client, report.board)
     except GitHubError as error:
         run.log.append(f"Version# sweep stopped: {error}")
+        failures.record(f"Version# sweep stopped: {error}")
     for line in run.log or ["no Version# to set"]:
         print(line if "is not a version" in line else ("would: " if run.dry_run else "did: ") + line)
     return 0

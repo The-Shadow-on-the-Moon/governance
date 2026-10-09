@@ -1,10 +1,11 @@
 """Attach the tickets with Delivery "Implemented" to their Version tickets.
 
 A ticket that changed no file has nothing in the changelog for the finalize step to find. A person
-sets its Delivery to Implemented, with the Version it belongs to. At every finalize, and on a manual
-run, this sweep looks at the Implemented tickets that are not yet sub-issues of any Version ticket:
+sets its Delivery to Implemented, with the Version it belongs to. At every finalize, at every scheduled
+run and on a manual run, this sweep looks at the Implemented tickets that are not yet sub-issues of any
+Version ticket:
 
-- a blank Version gets the version being finalized;
+- a blank Version gets the version being finalized (at a scheduled run, the latest finalized version);
 - a Version that is already finalized is kept, and the ticket is attached to that version's ticket;
 - a Version that is not finalized yet makes the ticket wait, quietly while a higher version is not finalized
   either; but when a higher version is already finalized, the aimed number was passed and can no longer
@@ -15,6 +16,8 @@ The ticket keeps Delivery Implemented and gets no Build. A comment on each Versi
 tickets were added, because its description is written once. See the guide on project structure
 (section 5.2) and appendix C.
 """
+import condition_comments
+import failures
 from versions import Version
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
@@ -72,10 +75,11 @@ def flag_passed(run, repo_client, project_client, board, ticket, aimed, latest):
     run.do(f"#{number}: waits for {aimed}, which was passed ({latest} is finalized): set Attention to Caution", project_client.set_project_field,
            board.id, ticket["item"], field["id"], {"singleSelectOptionId": field["options"]["Caution"]})
     run.do(f"#{number}: comment on the passed version", repo_client.comment, number,
-           f"{marker}\nAttention: Caution. This ticket is Implemented and aimed at {aimed}, but {latest} is already finalized and {aimed} was "
-           f"never released, so it can no longer happen and the ticket would wait for ever. Set its Version to the version it belongs to "
-           f"(for example {latest}), or clear the Version: a blank Version gets the latest finalized version. The next scheduled run then "
-           "attaches it to that version's ticket. Then set Attention to Fine, or to Acknowledged if it is handled elsewhere, and say what you decided.")
+           condition_comments.decorate(
+               f"{marker}\nAttention: Caution. This ticket is Implemented and aimed at {aimed}, but {latest} is already finalized and {aimed} was "
+               f"never released, so it can no longer happen and the ticket would wait for ever. Set its Version to the version it belongs to "
+               f"(for example {latest}), or clear the Version: a blank Version gets the latest finalized version. The next scheduled run then "
+               "attaches it to that version's ticket. Then tick a box below.", "passed-version"))
 
 
 def sweep(run, repo_client, project_client, board, finalized, current, now):
@@ -168,6 +172,7 @@ def main(argv=None):
         run = scheduled_sweep(root, repo_client, project_client, report.board, versions.utc_now(), "--dry-run" in args)
     except GitHubError as error:
         print(f"Implemented sweep stopped: {error}")
+        failures.record(f"Implemented sweep stopped: {error}")
         return 0
     for line in run.log or ["no Implemented tickets waiting"]:
         print(("would: " if run.dry_run else "did: ") + line)

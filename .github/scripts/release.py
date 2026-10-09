@@ -33,8 +33,16 @@ class ReleaseError(RuntimeError):
     pass
 
 
-def tag_name(version):
-    return f"released/{version}"
+TRIAL_LEVEL = "test/"  # a trial keeps its tags under this level, so the real namespaces stay true
+
+
+def is_trial(env=None):
+    """Whether the manual run is a trial: the workflow input `trial` is passed as TRIAL=true."""
+    return (env if env is not None else os.environ).get("TRIAL", "").strip().lower() == "true"
+
+
+def tag_name(version, trial=False):
+    return f"{TRIAL_LEVEL if trial else ''}released/{version}"
 
 
 def finalized_versions(root):
@@ -81,7 +89,7 @@ def releasable_tickets(project_client, board, version):
         after = page["pageInfo"]["endCursor"]
 
 
-def release(root, repo_client, project_client, board, version=None, now=None, dry_run=False):
+def release(root, repo_client, project_client, board, version=None, now=None, dry_run=False, trial=False):
     """Release `version` (the latest finalized one if None). Returns the Runner; raises ReleaseError on a refusal."""
     run = finalize.Runner(dry_run)
     now = now or versions.utc_now()
@@ -91,7 +99,7 @@ def release(root, repo_client, project_client, board, version=None, now=None, dr
     version = version or finals[0]
     if version not in finals:
         raise ReleaseError(f"{version} is not a finalized version of this changelog, so it cannot be released")
-    tag = tag_name(version)
+    tag = tag_name(version, trial)
     if tag_exists(repo_client, tag):
         raise ReleaseError(f"{version} already has the release tag {tag}: a version has at most one")
     sha = finalize_commit(root, version)
@@ -135,7 +143,7 @@ def main(argv=None):
     asked = os.environ.get("VERSION", "").strip()
     try:
         version = Version.parse(asked) if asked else None
-        run = release(root, repo_client, project_client, report.board, version, dry_run="--dry-run" in args)
+        run = release(root, repo_client, project_client, report.board, version, dry_run="--dry-run" in args, trial=is_trial())
     except (ReleaseError, ValueError) as error:
         print(f"release refused: {error}")
         return 1

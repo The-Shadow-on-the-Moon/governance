@@ -18,6 +18,7 @@ import sys
 
 import changelog
 import checks
+import condition_comments
 import finalize
 import preflight
 from github_api import Client, GitHubError
@@ -106,9 +107,10 @@ def handle_push(root, repo_client, project_client, board, before, after, dry_run
             if flag:
                 run.do(f"#{number}: comment on the new work",
                        repo_client.comment, number,
-                       f"<!-- attention:caution -->\nAttention: Caution. New work arrived on this ticket, which is {status}: build {stamp} (branch {branch}). "
-                       "Decide whether it belongs to this ticket (reopen it), is separate work (create a ticket for it), "
-                       "or was only an adjustment, then set Attention to Fine or Acknowledged.")
+                       condition_comments.decorate(
+                           f"<!-- attention:caution -->\nAttention: Caution. New work arrived on this ticket, which is {status}: build {stamp} (branch {branch}). "
+                           "Decide whether it belongs to this ticket (reopen it), is separate work (create a ticket for it), "
+                           "or was only an adjustment, then tick a box below.", "new-work-on-finished-ticket"))
         except (GitHubError, KeyError) as error:
             run.log.append(f"#{number}: board update skipped: {error}")
     return run

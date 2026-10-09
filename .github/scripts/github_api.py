@@ -140,6 +140,36 @@ class Client:
                  "input:{projectId:$p,itemId:$i,fieldId:$f}){projectV2Item{id}}}")
         return self.graphql(query, {"p": project_id, "i": item_id, "f": field_id})
 
+    def create_field(self, project_id, name, data_type, options=()):
+        """Create a board field of `data_type` (TEXT, NUMBER, DATE or SINGLE_SELECT); `options` is [(name, color)]
+        for a single-select field. Returns the new field's id and name."""
+        query = ("mutation($p:ID!,$n:String!,$t:ProjectV2CustomFieldType!,$o:[ProjectV2SingleSelectFieldOptionInput!]){"
+                 "createProjectV2Field(input:{projectId:$p,name:$n,dataType:$t,singleSelectOptions:$o})"
+                 "{projectV2Field{... on ProjectV2Field{id name} ... on ProjectV2SingleSelectField{id name}}}}")
+        variables = {"p": project_id, "n": name, "t": data_type}
+        if data_type == "SINGLE_SELECT":
+            variables["o"] = [{"name": option, "color": color, "description": ""} for option, color in options]
+        return self.graphql(query, variables)["createProjectV2Field"]["projectV2Field"]
+
+    def set_project_description(self, project_id, text):
+        """Set the project's short description (the board's "last checked" stamp lives there)."""
+        query = ("mutation($p:ID!,$d:String!){updateProjectV2(input:{projectId:$p,shortDescription:$d})"
+                 "{projectV2{id shortDescription}}}")
+        return self.graphql(query, {"p": project_id, "d": text})["updateProjectV2"]["projectV2"]
+
+    def list_comments(self, number):
+        """The comments of an issue, oldest first, as GitHub returns them (id, body, user, created_at)."""
+        found, page = [], 1
+        while True:
+            chunk = self.request("GET", self.repo_path(f"/issues/{number}/comments?per_page=100&page={page}"))
+            found += chunk
+            if len(chunk) < 100:
+                return found
+            page += 1
+
+    def edit_comment(self, comment_id, body):
+        return self.request("PATCH", self.repo_path(f"/issues/comments/{comment_id}"), {"body": body})
+
     # Project (board) views
     def project_views(self, project_id):
         """The board's views as GraphQL returns them: id, number, name, layout, filter, grouping, sorting, visible fields."""

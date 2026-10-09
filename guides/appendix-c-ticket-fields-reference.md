@@ -16,11 +16,11 @@ One value per ticket. Says what sort of ticket it is and why the change is made.
 | Value | Meaning | Version bump |
 |---|---|---|
 | **Feature** | New capability that did not exist before. | sub |
-| **Enhancement** | An improvement to something that already works: better performance, smarter behaviour, easier use. | sub |
-| **Change** | A change to existing behaviour that is neither an improvement nor a fix: a new default, a different threshold, an adjustment someone asked for. | mod |
+| **Enhancement** | An improvement to something that already works: better performance, smarter behavior, easier use. | sub |
+| **Change** | A change to existing behavior that is neither an improvement nor a fix: a new default, a different threshold, an adjustment someone asked for. | mod |
 | **Bug** | Something that behaves differently from what was intended, and the fix for it. | mod |
 | **Refactor** | Internal restructuring with no change in what the product does. | mod |
-| **Task** | Work that does not change the product's behaviour: testing, analysing, building, releasing, writing documentation, and creating a new tool. | mod |
+| **Task** | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
 | **Version** | Bookkeeping ticket for one version. It does no work and never counts toward a bump. | none |
 | **Alert** | An automatic check that needs a person to review something, such as a detected bypass or a stale planned version. It never counts toward a bump. | none |
 
@@ -44,8 +44,8 @@ version numbers or any automation. At least one is suggested on a work ticket; n
 | `documentation` | Wiki, readme, guides, comments and other written documentation. |
 | `tool` | Developer tooling and scripts that support the work. |
 | `process` | How the team works: git, changelog, versioning, hooks, the board, repository settings. |
-| `config` | Settings that tune how the product behaves (feature flags, pin assignments, service definitions, intervals). |
-| `content` | Data the product or its tests use (test fixtures, sample data, lookup tables, a database seed). |
+| `config` | Settings that tune how the product behaves: feature flags, pin assignments, intervals. |
+| `content` | Data the product or its tests use: test fixtures, sample data, lookup tables, a database seed. |
 | `build` | Build system, toolchain, compiling and releasing. |
 
 The list is the same for every project. Adding a value is a change to the standard, not something a
@@ -63,7 +63,8 @@ new step, a test of a rule). It is the only label besides the 14 Area labels.
 Set by a person when the test ticket is created. A test ticket is titled `DUMMY ...` and is closed as
 *Abandoned*, with Resolution *Invalid*, when the test is over. Every saved view of the board except All excludes the
 label (`-label:dummy`), so test tickets never appear among real work. It never affects version numbers or
-any automation, and it is not part of Area.
+any automation, and it is not part of Area. The tags a trial makes are kept apart in the same way, under
+`test/` (guide on branching and merging, section 2.2), by ticking the input **trial** on the run.
 
 ## Origin and REF
 
@@ -94,10 +95,9 @@ Where the work is.
 | **Abandoned** | Dropped, not expected to return. | a person |
 
 The path is *ToDo, OnDeck, InProgress, Review, Completed*. *Suspended* and *Abandoned* are exits from any
-open state. A reviewer may send work back from *Review* to *InProgress*. The automation never sets
-*Review* or *Completed*, and never moves a ticket out of *Review*, *Completed*, *Abandoned* or
-*Suspended*: it raises Attention instead. An assistant may set *Review* when work is done and
-never *Completed*. The GitHub issue is closed only at *Completed* or *Abandoned*, by a person.
+open state. What the automation may and may not do to Progress, and when the issue is closed, is set out in
+*Project structure*, section 4.3; what an assistant may set is in *Working with an AI assistant*,
+section 4.1.
 
 ## Waiting
 
@@ -107,8 +107,8 @@ Blank by default.
 |---|---|
 | **Needs input** | The ticket is waiting for someone's feedback, an answer to a question, or a verification. |
 
-Set by a person together with a comment that says what is needed and from whom. Applies to open tickets
-only. Cleared when the answer arrives, and always when the ticket becomes *Completed* or *Abandoned*.
+Set by a person together with a comment that says what is needed and from whom. When it is cleared is in
+*Project structure*, section 4.3.
 
 ## Attention
 
@@ -118,34 +118,15 @@ Version and Alert tickets have no Attention.
 | Value | Colour | Meaning | Set by |
 |---|---|---|---|
 | *(blank)* | none | Nothing has affected it. | n/a |
-| **Fine** | green | Looked at: nothing is wrong, or it was put right. | a person |
-| **Acknowledged** | purple | Looked at: something has to be done, and it is handled elsewhere (another ticket, or this ticket moved back to *ToDo*, *OnDeck*, *InProgress* or *Suspended*). The comment says where. | a person |
+| **Fine** | green | Looked at: nothing is wrong, or it was put right. | a person, or the automation from the box ticked in its comment |
+| **Acknowledged** | purple | Looked at: something has to be done, and it is handled elsewhere (another ticket, or this ticket moved back to *ToDo*, *OnDeck*, *InProgress* or *Suspended*). A reply says where. | a person, or the automation from the box ticked in its comment |
 | **Watch** | yellow | An open flag, the lowest level. | the automation |
 | **Caution** | orange | An open flag, the middle level. | the automation |
 | **AtRisk** | red | An open flag, the highest level. Reserved: no rule uses it yet. | the automation |
 
 A level says how serious something looks, not what it is. The comment the automation adds says why.
-These are the causes it uses today, with the level each starts at:
-
-| Level | Raised when |
-|---|---|
-| **Caution** | New work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and whose earlier work was already pushed or delivered, recognised by a recorded Build older than the one being pushed (or by Delivery *Implemented*; never for its first push), or a field rule is broken (for example *Completed* without Resolution *Done*, an open ticket with a Resolution or an End date, Waiting on a closed ticket, a backfilled ticket with no REF, or an issue open or closed in the wrong state), or an *Implemented* ticket is aimed at a version that was passed (not finalized while a higher version is, so it could never be attached). |
-| **Watch** | A ticket has had no activity at *Review* for a week, at *OnDeck* or *InProgress* for a month, or at *Suspended* for six months, or has been waiting for input for two weeks. |
-
-Activity means a comment, a change to a field, or a new build that mentions the ticket; the automation's
-own flag comments do not count.
-
-A broken field rule is raised only if the ticket, meaning its issue or its board fields, has not changed
-for five minutes, because fixing one takes several edits (two hours for the Delivery and Version rules, which a
-person may be in the middle of completing).
-
-The automation sets an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or that has a
-lower open flag, and a higher level replaces a lower one. It never sets *Fine* or *Acknowledged* and never
-lowers a level. A person may set any value by hand. Each raise adds one comment saying why (and which
-build, for new work). A flag is raised when a situation begins and not again while it goes on: time
-alone never raises it a second time. After a person closed it, it is raised again only if the situation
-reappears (new work with a later build; a change of Progress followed by the ticket becoming stale there;
-or a broken rule put right and then broken again). Setting the field changes nothing else on the ticket.
+Setting the field changes nothing else on the ticket. The causes the automation uses, the idle times and
+waits, and when a flag is raised again are set out once, in *Project structure*, section 4.3.
 
 ## Resolution
 
@@ -160,8 +141,8 @@ How a ticket ended. Blank while the ticket is open.
 | **Superseded** | Replaced by a different approach or ticket: the work was real, but something else took its place. | *Abandoned* |
 | **Obsolete** | No longer relevant because the thing it was about changed or was removed. | *Abandoned* |
 
-Set by the person making the move to *Completed* or *Abandoned*. An abandoned ticket also gets a comment
-that links any related ticket. Cleared when the ticket becomes open again.
+Set by the person making the move to *Completed* or *Abandoned*. When it is set and cleared is in *Project
+structure*, section 4.3.
 
 ## Delivery
 
@@ -177,23 +158,16 @@ Where the ticket's delivered work is: a fact about the work, independent of Prog
 | **Released** | The version containing it has been declared a release. | the automation, when a release is cut |
 | **Dropped** | The code or version was planned or pushed but will never be delivered. | the automation when a branch is abandoned; a person for a planned version |
 
-Rules: *Committed* is never required and is overwritten by *Pushed* at the next push; nobody else can see a
-local commit, so the team cannot rely on it. Delivery can move back: new work pushed on a ticket that is
-*Merged*, *Implemented*, *Released* or *Dropped* returns it to *Pushed*. Hotfix tickets skip *Merged* and go straight to
-*Released* when the hotfix is finished. When a release is cut, every ticket merged up to and including that
-version becomes *Released* (a ticket merged or implemented), whatever its Progress or Resolution, unless newer work has moved its Delivery back to *Pushed*. A suspended branch is not dropped: its code
-is kept, so *Pushed* stays. A ticket that produces no file change stays blank until its work is in effect. Then a person
-sets *Implemented* and its Version. At every finalize and every scheduled run (three a day), and on a manual run, the automation attaches
-*Implemented* tickets that no Version ticket has yet: a blank Version gets the version being finalized (at a scheduled run, the
-latest finalized version), a finalized version is kept, and a later version waits. It never sets *Merged* or a Build on such a ticket.
-A *Completed* work ticket must have a Delivery (*Merged* if files changed, *Implemented* if none did), and a ticket whose Delivery is
-*Merged*, *Implemented* or *Released* must have a Version; the automation flags either gap with *Caution*. Version and Alert tickets
-are not work tickets.
+The rules for Delivery (when it moves back, what *Committed* and *Implemented* are for, and the two
+Delivery and Version rules a *Completed* ticket must meet) are in *Project structure*, sections 4.3 and 4.4.
+How *Implemented* tickets are attached to their Version tickets is in section 5.2 of the same guide, and
+what a release does to Delivery is in *Releases, hotfixes and retiring branches*, section 1.1.
 
 ## Priority
 
 How urgent, by consequence rather than by deadline. A ticket with no priority is treated as *Normal*. The
-creator proposes it and the owner can change it at any time; *Critical* needs a comment saying why.
+creator proposes it and the owner can change it at any time; *Critical* needs a comment saying why (the
+Alerts the automation creates are *Critical* without one).
 
 | Value | Meaning |
 |---|---|
@@ -253,6 +227,14 @@ The automation cannot be told when a person changes Progress, so the dates are f
 run and a scheduled run; a date is accurate to the day it was noticed, in UTC. Version and Alert
 tickets have no dates.
 
+## Fix
+
+Text. The ids of the rules that span fields (*Project structure*, section 4.4) that the ticket breaks now,
+separated by spaces; empty when none. Only the automation writes it: the refresh recomputes the set from
+the ticket's other fields and writes it when it changed, so nobody sets or clears it. A person fixes the
+cause, and the id goes at the next refresh. A text field filters only by `has:fix` and `no:fix`. A Version
+ticket has none.
+
 ---
 
 ## Which fields apply to which tickets
@@ -272,4 +254,5 @@ tickets have no dates.
 | Risk | proposed by the creator | none | set by the person who takes it |
 | Version, Build, Version# | yes | its own version; its last build | the version in which it was raised |
 | Start date, End date | yes | none | none |
-| Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass or a merge without changelog entries; none for stale planned versions |
+| Fix | yes | none | yes (the Delivery rules do not apply) |
+| Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog; none for stale planned versions |

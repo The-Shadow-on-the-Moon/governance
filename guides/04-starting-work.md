@@ -10,6 +10,8 @@ rules about branches in the guide on branching and merging.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -114,8 +116,8 @@ request, and unlike a ticket number it stays true however many tickets the branc
 - **Rule:** a hotfix branch starts from the release tag being patched, not from `main`. A further
   hotfix for the same release starts from the tag of the latest hotfix, so that it includes the earlier
   fixes.
-- **Rule:** it is named `hotfix-v<major>-<sub>-<mod>-<description>`, with the version's dots written as
-  hyphens (for example `hotfix-v1-25-0-fix-sensor-timeout`).
+- **Rule:** it is named as set out in the guide on branching and merging, section 2.1 (for example
+  `hotfix-v1-25-0-fix-sensor-timeout`).
 
 The details of finishing a hotfix are in the guide on releases and hotfixes.
 
@@ -170,7 +172,7 @@ The steps:
 ### 4.1 Rules
 
 - **Rule:** a branch has at most one open `WIP-Version` heading, at the top of the changelog.
-- **Rule:** a marker is only for forcing the version bump. It applies to that one release, and it is not
+- **Rule:** a marker is only for forcing the version bump. It applies to that one version, and it is not
   allowed on a hotfix branch.
 - **Rule:** the ticket heading uses the ticket's number and its exact title.
 - **Recommendation:** open the entry when you start the work, not at the end.
@@ -235,10 +237,9 @@ The steps:
    reads right: the ticket's title as the summary for one ticket, "Multiple tickets" for several, or the
    first bullet if there is only a `REF`.
 4. **Push the branch.** The remote automation sets Delivery to *Pushed* on the tickets in your changelog
-   entries, and moves a ticket still at *ToDo* or *OnDeck* to *InProgress*. If one of them is *Completed*, *Abandoned*, *Review* or *Suspended* and earlier work on it was
-   already pushed or delivered (recognised by its recorded Build, so a Delivery set by hand does not count), it also raises *Caution* in Attention, with a comment, because new work has
-   arrived on it. The first push of a ticket raises nothing, even if the ticket is already at *Review* (see
-   the guide on project structure, section 4.3).
+   entries, and moves a ticket still at *ToDo* or *OnDeck* to *InProgress*. If new work arrives on a ticket
+   that looked finished, it also raises *Caution* in Attention, with a comment; the first push of a ticket
+   raises nothing. When exactly it does this is in the guide on project structure, section 4.3.
 5. **Check the ticket.** Delivery shows *Pushed*. The Start date appears after the automation's next
    sweep.
 

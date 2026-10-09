@@ -128,6 +128,22 @@ class ReleaseTests(Folder):
             self.run_release([], V("V0.9.0"))
         self.assertIn("not a finalized version", str(caught.exception))
 
+    def test_a_trial_makes_its_tag_under_test_and_leaves_the_real_one_alone(self):
+        repo, project = FakeRepo(TICKETS, ["released/V0.5.0"]), FakeProject([node(1, "Merged", "V0.5.0")])
+        run = release.release(self.folder(LOG), repo, project, board(), None, NOW, False, trial=True)
+        self.assertEqual([name for name, _ in repo.created], ["test/released/V0.5.0"])  # a real tag of the version does not block it
+        self.assertIn("Tag: `test/released/V0.5.0`", repo.comments[0][1])
+
+    def test_a_run_without_the_trial_input_makes_the_real_tag_even_for_a_trial_version(self):
+        repo, project = FakeRepo(TICKETS, ["test/released/V0.5.0"]), FakeProject([node(1, "Merged", "V0.5.0")])
+        release.release(self.folder(LOG), repo, project, board(), None, NOW, False)
+        self.assertEqual([name for name, _ in repo.created], ["released/V0.5.0"])
+
+    def test_the_trial_input_is_read_from_the_environment(self):
+        for value, expected in (("true", True), ("True", True), ("false", False), ("", False), ("1", False)):
+            self.assertEqual(release.is_trial({"TRIAL": value}), expected, value)
+        self.assertFalse(release.is_trial({}))
+
     def test_a_version_has_at_most_one_release_tag(self):
         with self.assertRaises(release.ReleaseError) as caught:
             self.run_release([], tags=["released/V0.5.0"])

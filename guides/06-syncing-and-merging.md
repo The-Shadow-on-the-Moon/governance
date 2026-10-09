@@ -10,6 +10,8 @@ requests) are defined in the guide on project structure.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -61,6 +63,18 @@ them on the branch. This is only one way it can happen; there are others.
 - **Recommendation:** in the entry, say what conflicted and how you resolved it. If it is easy to see what
   came from `main` (a ticket number in the log), name it, but do not go looking for it.
 
+**The changelog itself.** When several branches are open at once, each has its own open `## WIP-Version`
+at the top of `CHANGELOG.md`. After one of them lands, `main` has that version finalized in the same place,
+so the next branch to sync conflicts there. This is expected, and the resolution is always the same:
+
+1. Keep your own open `## WIP-Version` section on top, with your builds and entries exactly as you wrote
+   them.
+2. Keep every finalized version from `main` below it, exactly as `main` has it, newest first, with a blank
+   line between the sections.
+3. Take nothing of the other branch's entries into your open section, and leave the stamped builds alone.
+
+Resolving this conflict is bookkeeping and needs no entry of its own, unlike an adjustment to the code.
+
 **Why.**
 
 - *On the branch* so the resolution is a deliberate, visible, tested step, and not something done for the
@@ -95,6 +109,24 @@ A sync with no conflict and nothing adjusted needs no entry, because you made no
 > repository's merge setting still creates a merge commit when the pull request is merged, so the history
 > looks the same as for any other merge.
 
+### 1.4 When a push is rejected
+
+When two people work on the same branch, a push can be rejected because the other person pushed first.
+
+- **Rule:** fetch, merge the remote branch into yours (`origin/<branch>`), and push again. Never rebase and
+  never force the push.
+- **Rule:** a conflict in that merge is resolved on the branch as in section 1.2, then built and tested
+  before the push.
+- **Recommendation:** recompile after the merge, and retest in proportion to what the other person
+  changed.
+
+**Why.** Rebasing or forcing would rewrite commits the other person has already built on and tested (see
+the guide on branching and merging, section 4.3), and would leave their work pointing at commits that no
+longer exist.
+
+> **In GitHub.** `git fetch`, then `git merge origin/<branch-name>`. A plain `git pull` does the same
+> when git is set to merge on pull (`git config pull.rebase false`).
+
 
 ---
 
@@ -110,8 +142,8 @@ A sync with no conflict and nothing adjusted needs no entry, because you made no
   every change logged under a ticket or a `REF`.
 - ☐ **Every `REF` is backfilled** (a strong recommendation; guide on working and committing, section 6).
 - ☐ **The documentation your changes affect is updated** (guide on working and committing, section 3).
-- ☐ **Test results are recorded** in the ticket and in `tests/results/`, naming the build (guide on
-  working and committing, section 4).
+- ☐ **Test results worth keeping are recorded** in the ticket and in `tests/results/`, naming the build
+  (a strong recommendation; guide on working and committing, section 4).
 - ☐ **The tickets are at *Review*** (or already *Completed*) and their Risk is revised (a
   recommendation; guide on working and committing, section 7).
 - ☐ **The Type of each ticket is right.**
@@ -130,7 +162,7 @@ A sync with no conflict and nothing adjusted needs no entry, because you made no
   them nothing to report on, and a pull request that is open gets read as ready.
 - *The Type of each ticket* because the version number is derived from the tickets' Types, so a Feature
   recorded as a Task would be numbered as a small change.
-- *A deliberate marker* because a marker overrides the automatic bump for that one release. A major
+- *A deliberate marker* because a marker overrides the automatic bump for that one version. A major
   version is a judgment about meaning (a redesign or a major capability), and in a small team that trusts
   its developers the person who did the work is best placed to make it.
 
@@ -312,10 +344,10 @@ both are detected afterwards (see the guide on branching and merging, section 6.
 
 ### 6.3 Rules
 
-- **Recommendation:** a bypass is legitimate when there is a reason. Treat the Alert as the other half of
-  the decision, not as a penalty.
+The rules about bypassing, including that a bypass is legitimate when there is a reason and that it is
+never hidden, are in the guide on branching and merging, section 6.5. What this guide adds:
+
 - **Recommendation:** after a bypass, build and test `main` at once.
-- **Rule:** never hide a bypass.
 
 **Why.** The system accepts that rules will sometimes be bypassed, and has a way to recover afterwards,
 instead of a wall that gets forced through anyway (see the guide on branching and merging, section 6).
@@ -337,9 +369,8 @@ After a merge the branch still exists, and what to do with it is the developer's
 
 ### 7.1 Rules
 
-- **Recommendation:** do not wait too long to retire a branch whose work is merged. For a small team that
-  does not work on the project full time, anything from a week or two up to about a month is reasonable
-  (see the guide on branching and merging, section 1.5).
+- **Recommendation:** do not wait too long to retire a branch whose work is merged (how long is too long
+  is in the guide on branching and merging, section 1.5).
 - **Recommendation:** if you continue a branch, make that a deliberate choice, not a default.
 
 **Why.** A branch left open and forgotten hides an unmade decision, and it falls behind `main`, which makes
@@ -360,6 +391,7 @@ description.
       rebased).
 - [ ] Any conflict is resolved on the branch, logged under my ticket, with the details in a comment.
 - [ ] I recompiled, and retested in proportion.
+- [ ] If a push was rejected, I merged `origin/<branch>` and pushed again: no rebase, no force (section 1.4).
 
 **Get ready** (section 2)
 

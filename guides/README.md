@@ -11,6 +11,8 @@ Each topic says what to do and why. Statements are marked:
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -64,6 +66,29 @@ situations on a page each.
 - **The standard is the same for every project,** so any developer can open any project and know where to
   look.
 
+## Where a rule lives
+
+Each rule is set out in one place. Everywhere else only summarizes it and points there, so a rule is changed
+in one place. Checklists and cheat sheets add no rules.
+
+| The rule about | Lives in |
+|---|---|
+| Branch types, names, tags | *Branching and merging*, sections 1 and 2 |
+| How the version number is decided | *Branching and merging*, section 3.3 |
+| Syncing, landing, bypass and enforcement | *Branching and merging*, sections 4 to 6 |
+| Ticket fields: the rules, Attention causes, idle times and waits | *Project structure*, section 4 |
+| Version and Alert tickets | *Project structure*, section 5 |
+| The scheduled run | *Project structure*, section 2.3 |
+| The changelog's structure | *Project structure*, section 7 |
+| The value of every field and who sets it | *Appendix C* |
+| Who is responsible for what | *Project structure*, section 10 |
+| Test results | *Working and committing*, section 4 |
+| What an assistant may do | *Working with an AI assistant* |
+| Setting up a project | *New-project bootstrap* |
+
+The automation's own values (idle times, waits, Alert kinds, labels) are checked against these places by the
+tests in `tests/test_tools.py`.
+
 ## Roles
 
 Developer, project owner and administrator are roles, not people. One person may hold several, and in a
@@ -76,4 +101,7 @@ roles (see *Project structure*, section 10.6).
 - The project is hosted on GitHub, in an organization, with issues, a project board and workflows.
 - Compiling and testing are done by the developer, locally. There is no continuous integration.
 - The local hooks and the workflow come with the standard, and the hooks need their runtime (Python 3).
-- The tool-neutral text applies on any platform. The "In GitHub" blocks name the GitHub specifics.
+- The tool-neutral text applies on any platform. The "In GitHub" blocks name the GitHub specifics. Two
+  places name GitHub outside the blocks, because they are about GitHub itself: the fixed file names of
+  the project structure (such as `.github/`), and the whole bootstrap guide, which sets up a GitHub
+  repository (the glossary has a section of GitHub names, marked as such in its title).

@@ -34,13 +34,13 @@ def branch_prefix(version):
     return f"hotfix-v{version.major}-{version.sub}-{version.mod}-"
 
 
-def base_tag(version):
+def base_tag(version, trial=False):
     """The tag the hotfix starts from: the release, or the previous hotfix of that release."""
     base = Version(version.major, version.sub, version.mod)
-    return release.tag_name(base if version.hotfix == 1 else Version(version.major, version.sub, version.mod, version.hotfix - 1))
+    return release.tag_name(base if version.hotfix == 1 else Version(version.major, version.sub, version.mod, version.hotfix - 1), trial)
 
 
-def check(root, repo_client, version, branch):
+def check(root, repo_client, version, branch, trial=False):
     """Refuse a hotfix that does not follow the rules. Returns the open section of the changelog."""
     if not 1 <= version.hotfix <= 9:
         raise HotfixError("a hotfix version needs a number from 1 to 9 (V1.25.0-HF1); a release that would need a tenth "
@@ -58,10 +58,10 @@ def check(root, repo_client, version, branch):
         raise HotfixError("the open version has no ticket entry: a hotfix is finished with its tickets in the changelog")
     if version in [s.version for s in sections if s.kind == "final"]:
         raise HotfixError(f"{version} is already a finalized version in the changelog")
-    tag = release.tag_name(version)
+    tag = release.tag_name(version, trial)
     if release.tag_exists(repo_client, tag):
         raise HotfixError(f"{version} already has the release tag {tag}: a version has at most one")
-    base = base_tag(version)
+    base = base_tag(version, trial)
     code, tag_sha = checks.git(root, "rev-parse", "-q", "--verify", f"refs/tags/{base}^{{commit}}")
     if code != 0:
         raise HotfixError(f"the tag {base} is not in this clone (a hotfix starts from it, and it must exist)")
@@ -70,14 +70,14 @@ def check(root, repo_client, version, branch):
     return wip
 
 
-def finish(root, repo_client, project_client, board, version, branch, now=None, dry_run=False, push=True):
+def finish(root, repo_client, project_client, board, version, branch, now=None, dry_run=False, push=True, trial=False):
     """Finish the hotfix. Returns the Runner; raises HotfixError on a refusal."""
     run = finalize.Runner(dry_run)
     now = now or versions.utc_now()
-    wip = check(root, repo_client, version, branch)
+    wip = check(root, repo_client, version, branch, trial)
     when = versions.heading_time(now)
     path = os.path.join(root, CHANGELOG)
-    tag = release.tag_name(version)
+    tag = release.tag_name(version, trial)
     tickets = wip.ticket_numbers()
     types = {n: repo_client.issue_type(n) for n in tickets}
     titles = {b.number: b.title for b in wip.blocks() if b.kind == "ticket"}
@@ -130,7 +130,8 @@ def main(argv=None):
     print(report.render())
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
     try:
-        run = finish(root, repo_client, project_client, report.board, Version.parse(asked), branch, dry_run="--dry-run" in args)
+        run = finish(root, repo_client, project_client, report.board, Version.parse(asked), branch, dry_run="--dry-run" in args,
+                     trial=release.is_trial())
     except (HotfixError, ValueError) as error:
         print(f"hotfix finish refused: {error}")
         return 1

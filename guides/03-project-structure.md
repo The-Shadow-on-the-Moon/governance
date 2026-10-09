@@ -10,6 +10,8 @@ appendix, and the design of a ticket as a whole, with its life from creation to 
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -83,13 +85,15 @@ branch they came through.
 | **readme** (root) | What the project is, how to build and use it. |
 | **`CHANGELOG.md`** (root) | The changelog (structure in section 7). |
 | **Source folders** | The project's own code. Project-specific, so this guide says nothing about them. |
-| **`tests/`** | Automated tests, for the product and for the automation scripts, and the recorded test results in `tests/results/`. Present when the project has code or scripts of its own. |
+| **`tests/`** | Automated tests, for the product and for the automation scripts, and any recorded test results in `tests/results/`. Present when the project has code or scripts of its own. |
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
 | **`.githooks/`** | The local git hooks. |
 | **`.github/`** | Server-side workflows and their scripts, and the pull request template. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
+| **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
+| **Licence files** (root) | The project's licence, when it has one. |
 
 ### 2.2 Rules
 
@@ -101,11 +105,15 @@ branch they came through.
 - **Rule:** the hooks are activated once per clone, with one command. A fresh clone has no hooks until
   that step is done. (The procedure is in the guide on starting work; this guide only states that the
   step exists.)
+- **Rule:** `.gitattributes` contains the line `* text=auto eol=lf`, so the changelog, the hooks and the
+  scripts keep Unix line endings on every platform.
 - **Recommendation:** keep personal and generated files out of the repository through the ignore file,
   so nobody commits the state of their own machine.
 
 **Why.**
 
+- *Line endings* because the hooks and the automation read the changelog byte for byte. A changelog saved
+  with Windows line endings once broke both, and rewrote the whole file on the next commit.
 - *Fixed names* mean any developer can open any project and know where to look, and tooling and guides
   can refer to a location without asking.
 - *The hooks and automation live in the repository* because the project's rules are only as reliable as
@@ -121,6 +129,40 @@ branch they came through.
 > a wiki is available (a wiki must first be initialized by creating a first page, and it may not be
 > offered for private repositories on every plan). Where it is not, `doc/wiki/` simply remains the
 > readable source in the repository.
+
+### 2.3 The scheduled run
+
+Most of the automation reacts to an event: a push, a pull request, a merge. Some things are not events.
+Nothing is sent when a person changes a field on the board, and nothing happens when a ticket simply goes
+quiet. The *scheduled run* covers them: the workflow also starts on a timer, three times a day, and on
+request. Each run sweeps the board and does the following, and the other guides refer to it by this name:
+
+- sets the Start and End dates of tickets that have started or ended;
+- raises *Watch* on tickets that have gone quiet or have waited too long (section 4.3);
+- sets Version# on every ticket that has a Version, including one that is only aimed at a version;
+- attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2);
+- refreshes the Fix field of every ticket (section 4.3), always after the attaching, so that an *Implemented*
+  ticket that is waiting for its Version is not shown as broken.
+
+- **Rule:** the project keeps the schedule enabled.
+- **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
+  *Implemented* tickets), so a version that has just been finalized does not wait for the next run, and the
+  two never run at the same time: the second waits for the first.
+- **Rule:** the Fix field is also refreshed, for the whole board, when the team closes, reopens, edits,
+  assigns or labels an issue it wrote, comments on an issue, or ticks a box in a comment the automation
+  wrote, so that a ticket just corrected stops showing without waiting for the timer. Nothing else starts
+  it: a comment or an issue from anyone outside the team starts nothing, and no text of an event ever
+  reaches a command. A change to a board field alone starts no workflow (GitHub has no such trigger), so it
+  shows at the next of these runs.
+
+**Why.** Facts that no event announces are still facts the board depends on. A timer finds them without
+asking a person to remember, and without a person's edit having to trigger anything.
+
+> **In GitHub.** The schedule is the workflow's `schedule` trigger (three cron times a day, in UTC, which
+> cannot follow daylight saving). GitHub switches a scheduled workflow off after 60 days without activity
+> in the repository, so the project also has a small workflow with no schedule of its own that switches it
+> back on at the next push to any branch, or on request. It leaves a workflow that a person disabled by
+> hand alone.
 
 ---
 
@@ -303,12 +345,13 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | one; text | a person |
 | **Progress** | Where is the work? | one | a person; the automation only advances *ToDo* and *OnDeck* to *InProgress* |
 | **Waiting** | Is it waiting for someone's input? | one | a person |
-| **Attention** | Has the ticket's state been looked at, and is it sound? | one | the automation raises *Watch*, *Caution* and *AtRisk*; a person sets *Fine* or *Acknowledged* |
+| **Attention** | Has the ticket's state been looked at, and is it sound? | one | the automation raises *Watch*, *Caution* and *AtRisk*; a person ticks *Fine* or *Handled elsewhere* in its comment, which sets *Fine* or *Acknowledged* |
 | **Resolution** | How did it end? | one | a person |
-| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker and *Implemented*, which a person sets) |
+| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker, *Implemented*, and *Dropped* on a planned Version ticket, which a person sets) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | text, text, number | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
+| **Fix** | Which of the rules that span fields do its fields break? | text (rule ids) | the automation |
 
 ### 4.3 The idea of each field
 
@@ -355,8 +398,9 @@ automation set the ticket's Version and Delivery from where the placeholder appe
   is the only change it makes to Progress. It never sets *Review* or *Completed*, and never moves a ticket out of *Review*,
   *Completed*, *Abandoned* or *Suspended*: when something looks wrong there, it raises Attention (below)
   and a person decides.
-- **Rule:** the GitHub issue is closed only when a ticket is *Completed* or *Abandoned*, by a person,
-  never by a closing keyword.
+- **Rule:** the GitHub issue of a work ticket is closed only when the ticket is *Completed* or
+  *Abandoned*, by a person, never by a closing keyword. (A Version ticket has no Progress: the automation
+  closes it at finalize, section 5.2.)
 
 *Why.* Progress is a judgment, so people make it. Only the developer knows whether work is finished: a
 ticket may be committed, pushed or even merged in several steps, and the board may be updated later. The
@@ -383,15 +427,15 @@ state and lose where the ticket was.
   automation. A level records how serious something looks, not what it is: the comment the automation
   adds says why, so new causes can be added without new values. *AtRisk* is reserved, and no rule uses
   it yet.
-- **Rule:** *Fine* and *Acknowledged* close a flag, and are set by a person after looking. *Fine* means
-  nothing is wrong, or it has been put right. *Acknowledged* means something has to be done and it is
-  handled elsewhere: in another ticket, or on this one, moved back to *ToDo*, *OnDeck*, *InProgress* or
-  *Suspended*. A comment says what was decided and, for *Acknowledged*, where it is handled.
+- **Rule:** *Fine* and *Acknowledged* close a flag, and are decided by a person after looking, by ticking
+  one of the two boxes in the automation's comment (or by setting the value by hand). *Fine* means
+  nothing is wrong, or it has been put right. *Acknowledged* (the box *Handled elsewhere*) means something
+  has to be done and it is handled elsewhere: in another ticket, or on this one, moved back to *ToDo*,
+  *OnDeck*, *InProgress* or *Suspended*. A reply says where it is handled.
 - **Rule:** these are the causes the automation uses today, with the level each starts at:
   - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
     whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
-    *Released* or *Dropped*), or a rule in section 4.4 is broken (for example *Completed* without
-    Resolution *Done*, or without a Delivery). Earlier work is recognised by the ticket's recorded Build: a Build older than the
+    *Released* or *Dropped*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
     one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
     Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
     never raises it: a ticket moved to *Review* before its first push has no earlier work. A *Caution* is also
@@ -401,18 +445,22 @@ state and lose where the ticket was.
     *InProgress* for a month, or at *Suspended* for six months, or a ticket that has been waiting for
     input for two weeks. Activity means a comment, a change to a field, or a new build that mentions the
     ticket; the automation's own flag comments do not count.
-- **Rule:** a broken rule is raised only if the ticket, meaning its issue or its board fields, has not
-  changed for five minutes. Fixing a ticket takes several edits (for example *Completed*, *Done* and
-  closing the issue), and a ticket in the middle of them is not yet wrong.
-- **Rule:** the automation sets an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or
-  that has a lower open flag, and a higher level replaces a lower one. It never sets *Fine* or
-  *Acknowledged*, and never lowers a level. A person may set any value by hand.
+- **Rule:** a rule of section 4.4 that is broken is not an Attention flag: it is listed in the ticket's Fix
+  field (below), which clears by itself when the fields agree again, so there is nothing for a person to
+  decide or close.
+- **Rule:** the automation raises an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or
+  that has a lower open flag, and a higher level replaces a lower one. It sets *Fine* or *Acknowledged*
+  only from the boxes: when every comment of the ticket is ticked it sets *Fine*, or *Acknowledged* if any
+  ticked box was *Handled elsewhere*; while some stay open it shows the highest level among them. It never
+  changes a value a person set by hand, and never touches *AtRisk*.
 - **Rule:** each time it raises a flag, the automation adds one comment saying why and, for new work,
-  which build.
+  which build, with a hidden marker `<!-- condition:<id> -->` (the id is in the table of guide 07, section
+  2.5) and the two boxes. Each open condition has its own comment, so that several can be cleared one by one.
+  If the lines of the boxes are edited away, the automation puts them back unticked and says so.
 - **Rule:** a flag is raised when a situation begins, and not again while the same situation goes on,
   however long that is. Time alone never raises it a second time. After a person closed a flag, it is
-  raised again only if the situation reappears: new work arrives (a later build); or the ticket changes
-  Progress and then becomes stale there; or a broken rule is put right and then broken again.
+  raised again only if the situation reappears: new work arrives (a later build), or the ticket changes
+  Progress and then becomes stale there.
 
 *Why.* The automation can see that something does not add up, but only a person knows what is true, so it
 asks instead of guessing, and the answer is recorded in the field. Because the closing values are
@@ -436,13 +484,18 @@ are worth keeping: they answer later questions such as "did we already decide no
 
 - **Rule:** Delivery says where a ticket's delivered work is: *Committed* (an optional personal marker, set by
   hand), *Pushed*, *Merged*, *Implemented* (the work is in effect and involved no file change, set by a
-  person), *Released*, or *Dropped*. Apart from *Committed* and *Implemented* it is set by the automation, and
-  people only correct a mistake.
+  person), *Released*, or *Dropped*. Apart from *Committed*, *Implemented* and *Dropped* on a planned Version
+  ticket (which a person marks, section 5.2) it is set by the automation, and people only correct a mistake.
 - **Rule:** *Implemented* is for a ticket that changed no file (a setting, a secret, a check that was run). A
   person sets it, together with Version, when the work is in effect. A ticket with changelog entries never
   needs it, because the automation sets *Merged*.
 - **Rule:** Delivery depends only on the work, never on Progress or Resolution. It can move back: new work
   pushed on a ticket that is already *Merged*, *Implemented*, *Released* or *Dropped* returns it to *Pushed*.
+- **Rule:** *Committed* is never required, and the next push overwrites it with *Pushed*; nobody else can
+  see a local commit, so the team cannot rely on it. A suspended branch is not dropped, because its code is
+  kept: *Pushed* stays, and only an abandoned branch sets *Dropped*.
+- **Rule:** a hotfix ticket skips *Merged* and goes straight to *Released* when the hotfix is finished, and
+  a release marks the tickets as *Released* as set out in the guide on releases and hotfixes, section 1.1.
 
 *Why.* Where the code is, is a fact the automation can see, and mixing it with anyone's judgment would
 make it unreliable. A ticket whose code has shipped but is not yet verified is *Merged* or *Released* and
@@ -471,6 +524,24 @@ nothing in the repository shows that a secret was stored or a setting changed.
 change can be risky, and a large one can wait. One Version field that the automation corrects means a
 ticket planned for a later version that ships earlier fixes itself.
 
+**Fix.**
+
+- **Rule:** Fix holds the ids of the rules of section 4.4 that the ticket's fields break now, separated by
+  spaces, and is empty when none is broken. Only the automation writes it. A refresh recomputes the set
+  from the ticket's other fields, so it needs no wait: a ticket in the middle of an edit shows and then
+  clears at the next refresh.
+- **Rule:** a rule that stays broken for two hours without the ticket changing also gets one comment, without
+  boxes, so that the person is notified; when the rule stops being broken the comment is edited to say
+  "✅ fixed on" and the date. A rule that breaks again gets a new comment.
+- **Rule:** nobody sets or clears Fix, and it has no *Fine* or *Acknowledged*: a person fixes the cause, and
+  the id goes. The rules and their ids are the list in `conditions.py`; a new rule is a new entry there.
+- **Rule:** the refresh runs after a merge to `main`, on every scheduled run, on request and on the events
+  of section 2.3. A change to a board field alone starts no workflow, so it shows at the next of those.
+
+*Why.* An inconsistency is not a judgment: it is true or false from the other fields. Showing it as a stored
+set that is recomputed means two broken rules both have to be fixed before the ticket drops out, with no flag
+to forget to close.
+
 ### 4.4 Rules that span fields
 
 | When | Then |
@@ -484,10 +555,10 @@ ticket planned for a later version that ships earlier fixes itself.
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
 | A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names the version it belongs to. Pure analysis, a setting or a check that was run counts: the Delivery is never left blank. |
 | A work ticket is *Completed* | Delivery is set: *Merged* if files changed, *Implemented* if none did. (A ticket that came to nothing is *Abandoned*, not *Completed*. Version and Alert tickets are not work tickets.) |
-| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. |
+| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the attaching that runs before every refresh for *Implemented*); a ticket still without one after that is a step that failed, and Fix shows it. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
-| A work ticket breaks one of these rules | The automation raises *Caution* in Attention, with a comment. |
+| A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
 > **In GitHub.** Type is the native issue type. Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start
@@ -524,7 +595,7 @@ of them are complete. A Version ticket does no work and is never verified.
   Build holds the last build of the version.
 - **Rule:** at every finalize, and on a manual run, the automation also attaches the tickets with Delivery
   *Implemented* that are not yet sub-issues of any Version ticket, by their Version: a blank Version gets
-  the version being finalized, an already finalized version is kept and the ticket is attached to that
+  the version being finalized (at a scheduled run, the latest finalized version), an already finalized version is kept and the ticket is attached to that
   version's ticket, and a later version makes the ticket wait. Such a ticket keeps Delivery *Implemented*
   and gets no Build. A comment on the Version ticket says which tickets were added, because its description
   is written once.
@@ -547,8 +618,8 @@ tickets that need attention.
 ### 5.3 Alert tickets
 
 An Alert is a real check that a person must do. The automation raises one when something needs a person
-to review it: a detected bypass, a merge that landed without changelog entries, or planned versions that
-can no longer happen. It is not the same as the Attention flag: an Alert is about a rule that was bypassed
+to review it: a detected bypass, a merge that landed without changelog entries, a changelog it cannot read
+(so no version was finalized), or planned versions that can no longer happen. It is not the same as the Attention flag: an Alert is about a rule that was bypassed
 and is a ticket of its own, while Attention is a flag on a work ticket whose own state needs a look.
 
 - **Rule:** an Alert has Priority *Critical*, Area `process` and Progress *ToDo* when it is created. Size
@@ -556,9 +627,9 @@ and is a ticket of its own, while Attention is a flag on a work ticket whose own
 - **Rule:** every move of an Alert after creation is manual: *InProgress* when someone starts, *Review*
   when they believe it is handled, *Completed* when a human verifies it. Shipping a version never moves
   it. A person closes it.
-- **Rule:** an Alert for a bypass or for a merge without changelog entries is assigned to the person who
-  pushed, because they know the context. An Alert for stale planned versions is unassigned until someone
-  takes it.
+- **Rule:** an Alert for a bypass, for a merge without changelog entries or for a changelog that could not
+  be read is assigned to the person who pushed, because they know the context. An Alert for stale planned
+  versions is unassigned until someone takes it.
 - For a bypass, the changelog also gets an entry that points at the Alert. What the person does with it
   is described in the guide on branching and merging, in the section on enforcement.
 
@@ -635,6 +706,11 @@ When a release is cut on this version, the automation sets Delivery to *Released
 A third kind of Alert, for a merge that landed without changelog entries, reads like the bypass Alert: it
 says that file changes reached `main` with no changelog entries, that the automation created the version
 and the changelog entry itself, and asks the person who pushed to document what changed.
+
+A fourth kind, for a changelog the automation could not read, is titled "Changelog error on main: no
+version finalized". It names the push and quotes the error (for example two open `WIP-Version` headings,
+or text after the heading that is not a marker), and asks the person who pushed to correct `CHANGELOG.md`
+by hand and then run the finalize step again.
 
 
 ---
@@ -758,12 +834,13 @@ section describes what the file contains and how it is structured.
   are no "Known bugs" or "Planned" sections.
 - **Rule:** every commit that changes files adds a build block with at least one ticket block or `REF`
   block.
-- **Rule:** the newest version comes first. Stamps and everything the automation writes are UTC (see the
-  guide on concepts, section 2).
+- **Rule:** the newest version comes first, and within a version the newest build comes first: the hook
+  stamps a `### WIP-Build` placeholder where it stands, so it is added above the earlier builds. Stamps and
+  everything the automation writes are UTC (see the guide on concepts, section 2).
 - **Rule:** the topmost finalized version heading is the single source of truth for the version (see the
   guide on branching and merging).
-- **Rule:** entries of commits already made are not edited, except to replace a placeholder (section
-  7.4) or to make a critical correction (see the guide on working and committing).
+- **Rule:** entries of commits already made are not edited (the two exceptions, a placeholder replaced
+  and a critical correction, are in the guide on working and committing, sections 2.3 and 2.5).
 - **Rule:** the commit message is drafted from the entries just written, so each ticket's title and
   bullets are written once.
 - **Rule:** a hotfix version's heading lives only on its hotfix branch. The link between a hotfix and
@@ -791,6 +868,9 @@ or ticket existed.
   points at the Alert ticket that was opened for it. The person triaging the Alert documents the
   change, either by replacing the generated note in place or, preferably, by describing it in a new block
   in the current version.
+
+When the change is described in a new block, the placeholder, a `REF` or an `AUTO-REF`, stays where it is:
+it is the record of how the change first appeared, and the new block is the description.
 
 The procedure for backfilling a `REF` is in the guide on working and committing, and the procedure for
 triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the board.
@@ -834,20 +914,13 @@ merging; if the two ever differ, that guide is the reference.
 - `main` is the one integration line. Every other branch is named in kebab-case, with no `/`.
 - A branch is a **work branch** (starts from `main` and merges back), a **hotfix branch** (starts from a
   release tag and never merges), or a **parked branch** (finished work deliberately kept off `main`).
-- A hotfix branch is named `hotfix-v<major>-<sub>-<mod>-<description>`, with the version's dots written
-  as hyphens.
 
 ### 8.2 Tags
 
-| Namespace | Format | Applied when |
-|---|---|---|
-| `archived/` | `archived/<yyyy-mm-dd>_<branch>[_<comment>]` | a merged branch is retired |
-| `suspended/` | `suspended/<yyyy-mm-dd>_<branch>[_<comment>]` | a branch is set aside to resume later |
-| `abandoned/` | `abandoned/<yyyy-mm-dd>_<branch>[_<comment>]` | a branch is discarded |
-| `released/` | `released/V<major>.<sub>.<mod>` or `released/V<major>.<sub>.<mod>-HF<n>` | a version, or a finished hotfix, is declared a release |
-
-The date is the UTC date of the branch's last commit when it is tagged. The optional comment is short and
-in kebab-case.
+A tag is in one of four namespaces: `archived/`, `suspended/` and `abandoned/` for a branch that is
+retired, and `released/` for a version, or a finished hotfix, declared a release. A tag made while testing
+the automation is put under `test/` in front of its namespace. The formats, with their reasons, are in the
+guide on branching and merging, section 2.2.
 
 ### 8.3 How they fit in the map
 
@@ -943,7 +1016,7 @@ it is a judgment (is the work done, is it verified, how urgent is it), a person 
 | *Completed* and *Done* | sets, after verifying | sets, after verifying | | |
 | *Abandoned*, *Suspended* and the abandon reasons | proposes | decides | | |
 | Version (the target) | | sets | | overwrites it with the real version |
-| Delivery (except *Committed* and *Implemented*), Build, Version#, Start and End dates | | | | sets |
+| Delivery (except *Committed*, *Implemented* and *Dropped* on a planned Version ticket), Build, Version#, Start and End dates | | | | sets |
 | Delivery *Implemented*, with its Version | sets | may change | | attaches the ticket to its Version ticket |
 
 *Completed* and *Done* may be set by the developer or the project owner, whoever verified the result. The

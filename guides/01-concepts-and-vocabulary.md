@@ -7,6 +7,8 @@ or come back to it when a word is unclear. The rules that use these words are in
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -18,7 +20,7 @@ Four words that are easy to confuse. Each answers a different question.
 
 | | What it is | Assigned | Lives in | Identifies |
 |---|---|---|---|---|
-| **Version** | `V<major>.<sub>.<mod>`, with `-HF<n>` added for a hotfix | when a branch merges into `main` | the topmost finalized heading of the changelog | a position in the history |
+| **Version** | `V<major>.<sub>.<mod>`, with `-HF<n>` added for a hotfix | when a branch merges into `main`; for a hotfix, when it is finished | the topmost finalized heading of the changelog | a position in the history |
 | **Build** | a UTC timestamp, `yyyymmddhhmmss` | when a commit is made, by the local hook | a build heading in the changelog | one commit's worth of changes |
 | **Compile stamp** | a UTC timestamp, `yyyymmddhhmmss` | every time the product is compiled | inside the compiled product | exactly what was compiled |
 | **Release** | a version declared a release | deliberately, after verifying it | a tag `released/V…` | a version that is fit to be used |
@@ -29,12 +31,13 @@ Four words that are easy to confuse. Each answers a different question.
 - **Rule:** a product that is compiled carries a compile stamp, generated afresh on every compile and
   embedded in the product itself. It is a UTC timestamp and needs no lookup and no git command. It is
   unique in practice, even for repeated compiles of the same commit, though its resolution is one second.
-- **Rule:** a recorded test result names the build it applies to and, where the product has one, the
-  compile stamp of what was tested (see the guide on working and committing, section 4).
+- A recorded test result names the build, and the compile stamp where there is one, of what was tested
+  (the guide on working and committing, section 4.3, sets this out).
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
   Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
   exception and has no `V` (`Version 2.4.1`).
-- The word *release* is used only for the tag. A stamp embedded at compile time is a *compile stamp*.
+- A *release* is a version that has been declared one, and the tag marks it; a version that was not declared a
+  release is simply a version. A stamp embedded at compile time is a *compile stamp*.
 
 **Why.** The version says where in the history something is, the build says which commit, and the compile
 stamp says which binary. Only the last one can tell you, when a device or a deployed copy misbehaves, exactly
@@ -97,10 +100,11 @@ with where it is explained. Nothing here is new: it collects what the other guid
 |---|---|---|
 | **Changelog** | The file in the repository that records every change to files, grouped by version, then build, then ticket. | project structure, section 7 |
 | **Open version** | The `## WIP-Version` heading on a branch: the version being worked on. It has no number until the branch merges. | starting work, section 4 |
-| **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one release. | branching and merging, section 3.3 |
+| **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one version. | branching and merging, section 3.3 |
 | **Finalized version** | A `## V2.4.1 — 2026-10-05 14:32 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
 | **`WIP-Build`** | The placeholder build heading for the commit being made. The local hook replaces it at commit time. | starting work, section 5 |
 | **Build heading** | `### Build 20261005143045 (branch <name>)`: one commit's worth of changes, stamped with the UTC time of the commit. If a commit was made without the hook, the automation writes a form that also carries the commit's hash. | project structure, section 7 |
+| **Build block** | A build heading with the ticket blocks under it: everything one commit added to the changelog. | working and committing, section 1 |
 | **Ticket block** | `#### #123 — title` with the bullets under it: the changes belonging to one ticket. | working and committing, section 2 |
 | **Bullet** | One concrete change, starting with the file or component. | working and committing, section 2 |
 | **`REF`** | A placeholder block for a change made without a ticket, named by a token and a short reason. | project structure, section 7.4 |
@@ -132,6 +136,8 @@ design of a ticket as a whole. Nothing here is new: it collects what the other g
 | **Verification** | A person checking the result, after which the ticket is *Completed* with Resolution *Done*. | issues and the board, section 3 |
 | **Waiting** | A flag that an open ticket is waiting for someone's input. | fields reference |
 | **Attention** | A field saying whether a ticket's state has been looked at and is sound: blank, *Fine*, *Acknowledged*, *Watch*, *Caution* or *AtRisk*. The automation raises the last three, and a person closes the flag with *Fine* or *Acknowledged*. | project structure, section 4.3 |
+| **Condition** | Something about a ticket that the board draws attention to, of one of three natures: *decide* (a person must judge it), *follow-up* (a queue) or *fix* (the fields contradict each other). Each nature has its own view. | issues and the board, section 2.5 |
+| **Fix** | The field that lists the rules a ticket's fields break now. Only the automation writes it, and an id goes when the fields agree again. | project structure, section 4.3 |
 | **Resolution** | How a ticket ended: *Done*, or a reason for abandoning it. | fields reference |
 | **Delivery** | Where the ticket's delivered work is: *Committed*, *Pushed*, *Merged*, *Implemented*, *Released* or *Dropped*. | fields reference |
 | **Priority, Size, Risk** | How urgent, how big in effort, and how likely to go wrong. | fields reference |
@@ -146,7 +152,7 @@ design of a ticket as a whole. Nothing here is new: it collects what the other g
 
 ---
 
-## 5. Branches and tags' words
+## 5. The words for branches and tags
 
 "Branching and merging" below means the guide on branching and merging. Nothing here is new: it collects
 what the other guides define.
@@ -166,7 +172,8 @@ what the other guides define.
 | **Suspended** | The outcome for a branch set aside to be picked up later. It can be recovered from its tag. | branching and merging, section 1.5 |
 | **Abandoned** | The outcome for a branch whose work is discarded. It too can be recovered from its tag. | branching and merging, section 1.5 |
 | **Recover** | Recreating a suspended or abandoned branch from its tag. The tag stays as history. | starting work, section 3.4 |
-| **Tag namespaces** | `archived/`, `suspended/`, `abandoned/` and `released/`, each with a fixed format. | branching and merging, section 2.2 |
+| **Tag namespaces** | `archived/`, `suspended/`, `abandoned/` and `released/`, each with a fixed format; the tags of a trial go under `test/` in front of them. | branching and merging, section 2.2 |
+| **Kebab-case** | Lowercase words separated by hyphens, as in `csv-export`: the style of every branch name. | branching and merging, section 2.1 |
 | **Release tag** | A `released/V…` tag on a version declared a release. It only indicates the version, and a mistaken one can be removed. | releases and hotfixes, section 1 |
 | **Hotfix version** | A version with `-HF<n>` after it, such as `V1.25.0-HF1`, counted separately for each released version. | branching and merging, section 1.3 |
 
@@ -189,6 +196,7 @@ Nothing here is new: it collects what the other guides define.
 | **Durable authorization** | An approval for a kind of action that is recorded in the shared instructions file, so the assistant need not ask each time. | working with an assistant, section 3 |
 | **Local automation** | The git hooks and scripts that run on a developer's machine. | project structure, section 10 |
 | **Remote automation** | The workflow that runs on the hosting service. | project structure, section 10 |
+| **Scheduled run** | The workflow's runs on a timer (three a day) and on request. It sweeps the board for what no event announces: dates, stale and waiting tickets, broken field rules, Version# and *Implemented* tickets. A small workflow switches the schedule back on if GitHub turns it off for inactivity. | project structure, section 2.3 |
 | **Hook** | A small script git runs at a set moment, such as before a commit. The hooks stamp the build, draft the message and warn. | working and committing, section 5 |
 | **Workflow** | The hosting service's automation. It finalizes versions, tags, updates the board and raises Alerts. | new-project bootstrap, section 2 |
 | **Finalize** | The automation's step at merge: it renames the open version to the real one, updates the tickets and creates the Version ticket. | syncing and merging, section 5 |
@@ -197,6 +205,8 @@ Nothing here is new: it collects what the other guides define.
 | **Fail open** | When a check cannot run or hits an error, work continues and the check says so. | branching and merging, section 6 |
 | **Bypass** | Going around a rule on purpose. It is allowed, and it is detected and recorded afterwards as an Alert. | branching and merging, section 6 |
 | **Dry run** | Running a step so that it prints every write it would make, without making any. | new-project bootstrap, section 8 |
+| **Trial** | Trying a change to the automation on throwaway material: a ticket titled `DUMMY ...` with the label `dummy`, a throwaway branch and their tags, so that no real ticket, version or tag is touched. The release, hotfix-finish and retire runs of a trial are started with the input `trial` ticked, which puts their tags under `test/`. | working and committing, section 4.4 |
+| **Regression checks** | The checks that show a version still does what the one before it did. They are run to verify a version before it is declared a release. | releases and hotfixes, section 1.1 |
 | **Project token** | The credential, stored as a secret, that lets the automation write to the board. | new-project bootstrap, section 4 |
 | **Manifest** | The file that lists the version of the standard a project follows and a hash of each automation file. | new-project bootstrap, section 2.4 |
 
@@ -266,7 +276,7 @@ other guides define.
 | **Organization** | The account that owns the repository and the board. The standard needs one, because issue types are an organization feature. | new-project bootstrap, section 5 |
 | **Issue** | A ticket. | project structure, section 3 |
 | **Issue type** | The native single value on an issue that says what sort of ticket it is. It carries the Type. | fields reference |
-| **Label** | A tag on an issue. The only labels are the 14 Area labels. | fields reference |
+| **Label** | A tag on an issue. The only labels are the 14 Area labels and the marker label `dummy`. | fields reference |
 | **Sub-issue** | An issue attached to another, which has one parent. | project structure, section 5 |
 | **Closing keyword** | A word such as *Closes*, *Fixes* or *Resolves* followed by a ticket number, which closes the ticket automatically when the pull request merges. The process never uses one. | syncing and merging, section 3 |
 | **Pull request** | The proposal to merge a branch into `main`. | project structure, section 6 |
@@ -274,7 +284,7 @@ other guides define.
 | **"Update branch" button** | A button on a pull request that merges `main` into the branch on the server. | syncing and merging, section 1 |
 | **Project (board)** | The board of all tickets, with its fields and saved views, linked to the repository. | project structure, section 4 |
 | **Field** | A column of the board: single select, text, number or date. | new-project bootstrap, section 6 |
-| **View** | A saved way of looking at the board, with a filter, grouping and sorting, such as Board or Health. | issues and the board, section 2 |
+| **View** | A saved way of looking at the board, with a filter, grouping and sorting, such as Board or Fix. | issues and the board, section 2 |
 | **Actions, workflow** | The hosting service's automation, run on a push, on a pull request or on request. | new-project bootstrap, section 2 |
 | **Secret** | A stored value a workflow can use but nobody can read back, such as the project token. | new-project bootstrap, section 4 |
 | **Repository variable** | A stored non-secret value a workflow can read, such as the board's number. | new-project bootstrap, section 2.3 |

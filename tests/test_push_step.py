@@ -8,6 +8,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 sys.path.insert(0, os.path.join(ROOT, ".github", "scripts"))
 
 import checks  # noqa: E402
+import condition_comments  # noqa: E402
 import preflight  # noqa: E402
 import push_step  # noqa: E402
 
@@ -164,6 +165,8 @@ class HandlePushTests(GitRepo):
             self.assertNotIn(("I201", "F-Status"), sets)  # never moved out of its state
             self.assertEqual(sets[("I201", "F-Delivery")], {"singleSelectOptionId": "Delivery-Pushed"})
             self.assertIn(f"which is {status}: build 20261006090000 (branch feature)", repo.comments[0][1])
+            self.assertIn("<!-- condition:new-work-on-finished-ticket -->", repo.comments[0][1])
+            self.assertEqual(condition_comments.state(repo.comments[0][1]), "open")
 
     def test_the_first_push_of_a_finished_ticket_raises_nothing(self):
         # A ticket moved to Review before its first push is the normal flow: no earlier work was delivered.

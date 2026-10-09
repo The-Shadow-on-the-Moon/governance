@@ -2,10 +2,13 @@ name: Versioning
 
 # On a pull request: the pull request is put on the board (a failure there never fails the run), then the advisory check.
 # On a push to another branch: the preflight, the fallback for skipped hooks, then the push step (Delivery, Progress, Build, Attention).
-# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the Version# sweep, the date sweep, the Watch flags and the Caution flags for field rules.
+# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the Version# sweep, the date sweep, the Watch flags and the refresh of the Fix field.
 # Three times a day (08:17, 16:17 and 20:17 UTC: 4am, noon and 4pm ET in summer time, an hour earlier in winter) and on request with mode "scheduled":
-#   the preflight, the Implemented tickets, the Version# sweep, the date sweep and the flags. The scheduled run never commits to a branch.
+#   the preflight, the Implemented tickets, the Version# sweep, the date sweep, the Watch flags and the refresh of the Fix field. The scheduled run never commits to a branch.
 # The main job and the scheduled job share one concurrency group, so a merge and a scheduled run never overlap (the second waits).
+# On an issue event (edited, closed, reopened, assigned, labeled) of an issue the team wrote, and on a comment by the team or the tick of a box in the
+#   automation's own comment: the same as mode "conditions" below, for the whole board, so a closed issue or a tick shows at once.
+# On request with mode "conditions": the preflight, the attaching of the Implemented tickets (so that a ticket waiting for its Version is not shown as broken) and the refresh of the Fix field (what each ticket breaks, see conditions.py), a dry run unless told otherwise.
 # On request with mode "finalize": the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
 # On request with mode "release", "hotfix" or "retire": the preflight and that step, as a dry run unless told otherwise.
 #   A hotfix is finished from its own branch (start the workflow from that branch).
@@ -16,6 +19,10 @@ on:
   push:
     branches:
       - '**'
+  issues:
+    types: [edited, closed, reopened, assigned, labeled]
+  issue_comment:
+    types: [created, edited]
   schedule:
     - cron: '17 8 * * *'
     - cron: '17 16 * * *'
@@ -28,6 +35,7 @@ on:
         options:
           - finalize
           - scheduled
+          - conditions
           - release
           - hotfix
           - retire
@@ -60,6 +68,10 @@ on:
         description: 'retire: an optional short comment for the tag, in kebab-case'
         type: string
         required: false
+      trial:
+        description: 'release, hotfix and retire: tick it ONLY when testing the automation with throwaway material; the tag is then made under test/ (test/released/..., test/abandoned/...) and the real namespaces stay untouched. Left unticked, a real tag is made.'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -215,14 +227,25 @@ jobs:
             python3 .github/scripts/watch.py
           fi
 
-      - name: Flag broken field rules
+      - name: Refresh the conditions
         env:
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
         run: |
           if [ "$DRY_RUN" = "true" ]; then
-            python3 .github/scripts/field_rules.py --dry-run
+            python3 .github/scripts/conditions.py --dry-run
           else
-            python3 .github/scripts/field_rules.py
+            python3 .github/scripts/conditions.py
+          fi
+
+      - name: End red if a board write failed, otherwise stamp the board
+        if: always()
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/board_status.py --job-status "${{ job.status }}" --dry-run
+          else
+            python3 .github/scripts/board_status.py --job-status "${{ job.status }}"
           fi
 
   scheduled:
@@ -276,12 +299,75 @@ jobs:
             python3 .github/scripts/watch.py
           fi
 
-      - name: Flag broken field rules
+      - name: Refresh the conditions
         run: |
           if [ "$DRY_RUN" = "true" ]; then
-            python3 .github/scripts/field_rules.py --dry-run
+            python3 .github/scripts/conditions.py --dry-run
           else
-            python3 .github/scripts/field_rules.py
+            python3 .github/scripts/conditions.py
+          fi
+
+      - name: End red if a board write failed, otherwise stamp the board
+        if: always()
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/board_status.py --job-status "${{ job.status }}" --dry-run
+          else
+            python3 .github/scripts/board_status.py --job-status "${{ job.status }}"
+          fi
+
+  conditions:
+    # On request, or on an event of an issue the team wrote or of a comment by the team. The repository is public and its secrets are
+    # available to this job, so a stranger's comment must never start it. The bot's own comments (those with the checkboxes) are
+    # written by github-actions[bot], which GitHub does not call a collaborator, and only someone with write access can edit another
+    # user's comment, so an edit of a bot comment is the team ticking a box. No event text reaches a shell command.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions')
+      || (github.event_name == 'issues'
+      && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
+      || (github.event_name == 'issue_comment' && !github.event.issue.pull_request
+      && (contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      || (github.event.action == 'edited' && github.event.comment.user.type == 'Bot')))
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-board
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Attach Implemented tickets to their versions
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/implemented.py --dry-run
+          else
+            python3 .github/scripts/implemented.py
+          fi
+
+      - name: Refresh the conditions
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/conditions.py --dry-run
+          else
+            python3 .github/scripts/conditions.py
+          fi
+
+      - name: End red if a board write failed, otherwise stamp the board
+        if: always()
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/board_status.py --job-status "${{ job.status }}" --dry-run
+          else
+            python3 .github/scripts/board_status.py --job-status "${{ job.status }}"
           fi
 
   release:
@@ -295,6 +381,7 @@ jobs:
       PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
       DRY_RUN: ${{ inputs.dry_run }}
       VERSION: ${{ inputs.version }}
+      TRIAL: ${{ inputs.trial }}
     steps:
       - name: Checkout the ref the run was started from
         uses: actions/checkout@v7
@@ -323,6 +410,7 @@ jobs:
       PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
       DRY_RUN: ${{ inputs.dry_run }}
       VERSION: ${{ inputs.version }}
+      TRIAL: ${{ inputs.trial }}
       BRANCH: ${{ github.ref_name }}
     steps:
       - name: Checkout the hotfix branch
@@ -362,6 +450,7 @@ jobs:
       OUTCOME: ${{ inputs.outcome }}
       CONFIRM: ${{ inputs.confirm }}
       COMMENT: ${{ inputs.comment }}
+      TRIAL: ${{ inputs.trial }}
     steps:
       - name: Checkout the ref the run was started from
         uses: actions/checkout@v7

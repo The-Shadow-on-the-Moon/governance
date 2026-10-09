@@ -19,8 +19,8 @@ explains it. It adds no new rules.
 
 ## Work
 
-5. **Change, build, test, log, commit.** Build locally before every commit, log each change as a specific
-   bullet, and commit through the editor so the message is drafted from the changelog (*Working and
+5. **Change, build, test, log, commit.** Build locally before every commit, add a fresh `### WIP-Build`
+   under the open version for each commit, log each change as a specific bullet, and commit through the editor so the message is drafted from the changelog (*Working and
    committing*, sections 1, 2, 4 and 5).
 6. **Update what the change affects:** find the row for each change in the checklist (*Working and
    committing*, section 3).
@@ -32,8 +32,8 @@ explains it. It adds no new rules.
 
 9. **Sync `main` into the branch** by merging, never by rebasing. Recompile, and retest in proportion
    (*Syncing and merging*, section 1).
-10. **Get ready:** tickets at *Review* with Risk revised, every `REF` backfilled (strongly recommended), test results recorded,
-    documentation updated (*Syncing and merging*, section 2).
+10. **Get ready:** tickets at *Review* with Risk revised, every `REF` backfilled (strongly recommended), test results worth keeping recorded
+    (strongly recommended), documentation updated (*Syncing and merging*, section 2).
 11. **Open the pull request:** a title that states the purpose, and a description that pastes the open
     version's changelog entries plus the tested build and the sync line (*Syncing and merging*, section 3).
 12. **Merge with a merge commit.** Do not delete the branch and do not close the tickets (*Syncing and

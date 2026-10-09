@@ -10,8 +10,11 @@ rules about versions and branches are in the guide on branching and merging.
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the person decides.
-- **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
-  tool-neutral.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
+- **In GitHub**: how the step looks with GitHub and plain git. Unlike the other guides, this one is about
+  setting up a GitHub repository, so its text names GitHub features (workflows, the project token, issue
+  types) outside the blocks as well.
 
 **Roles, and responsible, not necessarily manual.** Developer, project owner and administrator are roles.
 One person may hold several, and in a small team they often do. Where this guide names a role, it means
@@ -24,7 +27,9 @@ person runs, and it is still that person's action.
 
 - **Rule:** a new project has the locations of the guide on project structure (section 2.1), under those
   names: the readme, `CHANGELOG.md`, `doc/` with `doc/wiki/`, `tests/` if it has code or scripts,
-  `.githooks/`, `.github/`, the ignore file, and `AGENTS.md`.
+  `.githooks/`, `.github/`, the ignore file, `.gitattributes` and `AGENTS.md`.
+- **Rule:** `.gitattributes` contains the line `* text=auto eol=lf`, so the changelog, the hooks and the
+  scripts keep Unix line endings on every platform (see project structure, section 2.2).
 - **Rule:** the changelog starts with a title line and no version heading. The first merge to `main`
   produces version `V0.1.0`: it is not a small change, and it is not a release (section 7).
 - **Rule:** the readme says what the project is and how to set it up, including the one command that
@@ -50,9 +55,16 @@ is the honest description of a project's first version: something exists, and no
 - **The local hooks,** in `.githooks/`: three small entry scripts and one shared script that stamps the
   build, drafts the commit message and warns. They need a runtime (here Python 3).
 - **The remote workflow,** `.github/workflows/versioning.yml`, and its logic in `.github/scripts/`, with
-  unit tests under `tests/`.
+  unit tests under `tests/`. It includes the scheduled run, three times a day (see project structure,
+  section 2.3).
+- **The schedule re-enabler,** `.github/workflows/reenable-schedule.yml` and its script: GitHub switches a
+  scheduled workflow off after 60 days without activity in the repository, and this one, which has no
+  schedule of its own, switches it back on at the next push or on request.
 - **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
   (section 6).
+- **The board's fields,** the script `.github/scripts/fields.py` that creates the ones a board lacks
+  (section 6), and **the conditions,** `.github/scripts/conditions.py`: the list of what the board draws
+  attention to and the refresh of the Fix field (see project structure, section 4.3).
 - **The pull request template,** in `.github/`.
 - **Optionally,** a workflow that copies the wiki pages to the hosting wiki.
 
@@ -63,8 +75,9 @@ is the honest description of a project's first version: something exists, and no
    them).
 3. **Activate the hooks** with the one command in the readme.
 4. **Run the automation's tests** locally.
-5. **Confirm the workflow is enabled** and declares the permissions it needs in its own file: write access
-   to contents, issues and pull requests.
+5. **Confirm the workflow is enabled,** with its schedule, and declares the permissions it needs in its
+   own file: write access to contents, issues and pull requests. The re-enabler declares its own, narrower
+   permission (write access to actions).
 6. **Run the preflight** (section 2.3) once the project token (section 4) and the board (section 6) exist.
 
 ### 2.3 The preflight
@@ -77,6 +90,11 @@ anything else:
 3. which **board belongs to the repository**: it identifies the board from the repository and stores its
    number in a repository variable, so that nothing needs the number typed in;
 4. that the board has **the fields and values** the automation needs.
+
+It also compares the **repository settings** it can read with section 3 of this guide: the merge methods,
+automatic branch deletion, the default branch, issues and projects, the wiki (when the repository syncs to
+it) and the protection of `main`. A setting that differs is a warning in the report and never a failed check,
+and a setting it cannot read is skipped.
 
 When a check fails, the automation says exactly which one and why, and skips the steps that depend on it.
 The version is still finalized, and the board can be corrected afterwards. If the repository has no board,
@@ -139,7 +157,10 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 - **Rule:** the default branch is `main`, Actions is enabled, and the workflow declares the permissions it
   needs.
 - **Rule:** the board is linked to the repository, so that the preflight can identify it.
-- **Rule:** the preflight also reads these settings and reports any that do not match.
+- **Rule:** the preflight also reads the settings it can see (the merge methods, automatic branch
+  deletion, the default branch, issues, projects, the wiki and the protection of `main`) and warns about any
+  that do not match. It cannot read the default permission of the workflow token or the collaborators'
+  roles, so those are checked by the administrator. A mismatch is a warning and never stops a run.
 - **Recommendation:** use branch protection where it is available, with the administrator bypass left open.
 
 **Why.**
@@ -149,8 +170,9 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 - *The administrator bypass stays open* because a bypass is allowed, with an Alert as its record (see the
   guide on branching and merging, section 6).
 - *The board linked to the repository* is how the automation finds it.
-- *The preflight checks the settings* so that this part of the bootstrap is verified and not just trusted,
-  and so that a setting changed later is noticed.
+- *The preflight checks the settings it can read* so that this part of the bootstrap is verified and not
+  just trusted, and so that a setting changed later is noticed. It only warns, because the guides never
+  block work on a setting: the warning is the record, and the administrator decides.
 
 > **In GitHub.** The merge methods and the head-branch setting are under the repository's general
 > settings, in the pull request section. Branch protection is under branches or rules. The default
@@ -167,8 +189,10 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 The automation writes to the board: it sets Delivery, Version, Build, the dates and the Attention flags,
 advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to an organization's board,
 so the project keeps its own token, stored as a secret. The same token lets the preflight store the board's
-number in a repository variable. Without it the automation still versions, and only the board steps are
-skipped, with a clear message.
+number in a repository variable. Without it the automation still versions, and the board steps are
+skipped, with a clear message; the run then ends red once its other steps are done, so that GitHub sends
+its failure notice, because a green run with a stale board looks like a healthy one. A run that did write to
+the board ends by writing "Board checked" and the UTC time to the project's description.
 
 ### 4.2 The steps
 
@@ -262,11 +286,16 @@ fields reference*.
 | Build | text | |
 | Version# | number | |
 | Start date, End date | date | |
+| Fix | text | |
 
 Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
-script can create.
+script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
+(the colours of the table, gray otherwise), as a dry run until it is given `--apply`, with the project token.
+It never changes a field that exists: one of the wrong type, or lacking a value, is listed for the
+administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
+the automation is switched on, because the preflight requires every field in the table.
 
-**Saved views:** All, Backlog, Board, Health and Versions (see the guide on issues and the board in practice,
+**Saved views:** All, Backlog, Board, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
 run until it is given `--apply` and needs the project token; run it once the fields exist.
 
@@ -279,16 +308,16 @@ every run, and a view that is created again loses them, so make them again.
 
 - **Rule:** the board has exactly these fields with these values. The built-in Status values of a new
   board are replaced with the ones above.
-- **Rule:** Build is a text field, not a number, because a build timestamp is too large for a number
+- **Rule:** Build is a text field, not a number, because a build stamp is too large for a number
   field.
 - **Rule:** the board is linked to the repository, and the preflight checks the fields and their values.
 - **Rule:** the saved views are the ones in `.github/views.json`, created by `views.py`, and a view is changed
   by changing the file and running the script again.
-- **Recommendation:** create the fields with a script, or start from a template board that already has
+- **Recommendation:** create the fields with `fields.py`, or start from a template board that already has
   them, so that every project gets the same board.
 
 **Why.** The automation reads and writes these fields by name, so a board that differs breaks it, and a
-build timestamp stored in a number field is rejected by the hosting service.
+build stamp stored in a number field is rejected by the hosting service.
 
 > **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
 > fields are added in the project's settings, and the saved views are views of the project. A new board has
@@ -322,6 +351,9 @@ build timestamp stored in a number field is rejected by the hosting service.
 - **Rule:** the first merge is a real change, logged and merged by pull request like any other, so that
   the first version comes from the normal flow.
 - **Recommendation:** make that first change the initial structure of the project.
+- **Rule:** create the ticket for that first change only after the issue types, the labels and the board exist
+  (sections 5 and 6): a ticket needs a Type, an Area and its board fields, and the first version needs a ticket
+  to attach to.
 
 **Why.** A first version that comes from the normal flow proves the flow works, and it avoids a bypass
 Alert on the very first push. An empty repository starts with a single commit made by the hosting service,
@@ -339,8 +371,8 @@ clean up. So the setup is proved in two levels, neither of which leaves anything
 
 ### 8.1 Level 1: without side effects
 
-1. **Run the preflight.** It confirms the repository, the project token, the board and its fields, and the
-   repository settings.
+1. **Run the preflight.** It confirms the repository, the project token, the board and its fields, and warns
+   about any repository setting it can read that differs from section 3.
 2. **Run the automation's tests.**
 3. **Run the finalize step in dry-run mode.** It prints every write it would make, such as the heading
    rename, the ticket updates and the Version ticket, without making any.
@@ -355,6 +387,8 @@ exists and lists the tickets, and the tickets show Delivery *Merged*.
 
 ### 8.3 Rules
 
+- **Recommendation:** later changes to the automation are tried the same way, with throwaway tickets and
+  branches (see the guide on working and committing, section 4.4), never with real tickets.
 - **Rule:** run level 1 before the first real change, and fix every failure it reports.
 - **Rule:** check the result of the first merge, as in the guide on syncing and merging (section 5.2).
 - **Recommendation:** if something fails on the first real merge, correct the board by hand and fix the
@@ -377,13 +411,15 @@ A one-page summary of the guide. It adds no new rules.
 
 **Structure** (section 1)
 
-- [ ] The locations exist under the standard names. The changelog has a title and no version, and the
-      readme explains the setup and the command that activates the hooks.
+- [ ] The locations exist under the standard names, including `.gitattributes` with
+      `* text=auto eol=lf`. The changelog has a title and no version, and the readme explains the setup and
+      the command that activates the hooks.
 
 **Automation** (section 2)
 
 - [ ] The files are copied unchanged, the hook scripts are executable and activated, the tests pass, the
-      workflow is enabled with its permissions, and the manifest is in place and the check passes.
+      workflow is enabled with its schedule and its permissions, the schedule re-enabler is in place, and
+      the manifest is in place and the check passes.
 
 **Repository settings** (section 3)
 
@@ -406,15 +442,16 @@ A one-page summary of the guide. It adds no new rules.
 
 **The board** (section 6)
 
-- [ ] The fields and values are exactly the standard's, Build is text, and the built-in Status values are
-      replaced.
-- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Health, Versions) and `views.py`
+- [ ] The fields and values are exactly the standard's (`fields.py` creates a missing one), Build is text,
+      and the built-in Status values are replaced.
+- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Decide, Follow up, Fix, Versions) and `views.py`
       reports them up to date.
 - [ ] On the All view, the sort is *Created, ascending* and *Show hierarchy* is off (both by hand).
 
 **The first version and the roles** (section 7)
 
-- [ ] The first change goes by pull request (the initial structure).
+- [ ] The first change goes by pull request (the initial structure), with its ticket made after the issue
+      types, the labels and the board exist.
 - [ ] The roles are recorded in `AGENTS.md`.
 
 **Proof** (section 8)

@@ -8,6 +8,8 @@ procedural guides (starting work, syncing, merging, releases) point back to.
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
 - **Recommendation**: good practice with reasons, but the developer decides. Departing from it is
   legitimate when there is a reason.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
 - **In GitHub**: how the topic looks with GitHub and plain git. Everything outside these blocks is
   tool-neutral.
 
@@ -140,6 +142,7 @@ version would break pure kebab-case, hence the hyphens.
 | `abandoned/` | `abandoned/<yyyy-mm-dd>_<branch>[_<comment>]` | a branch is discarded |
 | `released/` | `released/V<major>.<sub>.<mod>` | a version on `main` is deliberately declared a release |
 | `released/` | `released/V<major>.<sub>.<mod>-HF<n>` | a hotfix is finished |
+| `test/` | `test/` in front of any of the above | the automation is being tried with throwaway material |
 
 Where:
 
@@ -148,6 +151,9 @@ Where:
 - `<comment>` is optional and kebab-case. Keep it very short. For a longer note, make the tag an
   annotated tag and put the note in its message.
 - Versions are written without padding: `V2.0.0`, not `V02.00.00`.
+- A tag made while *testing the automation* has the same form behind the level `test/`:
+  `test/abandoned/2026-10-06_dummy-retire-test_dummy-test`, `test/released/V9.9.9`,
+  `test/released/V9.9.9-HF1`. Real tags are never given this level.
 - The hotfix number `<n>` is a single digit, starting at 1, counted separately for each released
   version being fixed: `V1.25.0-HF1`, `V1.25.0-HF2`, and independently `V1.26.0-HF1`. If a release would
   need a tenth hotfix, the fix is finished on `main` and that version is released instead. This is
@@ -162,6 +168,8 @@ suspended/2026-03-14_offline-sync_waiting-on-api
 abandoned/2026-03-14_dark-theme_dropped-for-redesign
 released/V2.4.0
 released/V2.4.0-HF1
+test/released/V9.9.9
+test/abandoned/2026-03-14_dummy-retire-check_dummy-test
 ```
 
 **Why.**
@@ -178,6 +186,11 @@ released/V2.4.0-HF1
 - *`released/` is separate from the version itself* because not every version is a release. A
   version is created by every merge; a release is a deliberate decision about which versions
   actually shipped.
+- *Trials have their own level* because the point of the namespaces is that one prefix answers one
+  question. A tag left by a trial in `released/` or `abandoned/` would make "everything released" and
+  "everything abandoned" wrong; under `test/` it is kept (the trial's commits stay reachable) and out of
+  every real answer. The level is chosen by the person who starts the run, with the input **trial**
+  (guide on working and committing, section 4.4).
 - *The hotfix number is one digit* because no release is expected to need more than nine hotfixes,
   and a fixed width keeps version numbers easy to encode and sort.
 
@@ -234,7 +247,7 @@ is defined in *Concepts*.)
   | `## WIP-Version +m` | mod bump |
 
 - **Rule:** a major bump is never automatic. Only `+V` produces one.
-- **Rule:** a marker applies to that one release only. The next `WIP-Version` heading is plain
+- **Rule:** a marker applies to that one version only. The next `WIP-Version` heading is plain
   again unless it carries a marker of its own.
 - **Rule:** any other text after `WIP-Version` is an error, never guessed at. A changelog with such an
   error, or with two open headings, that reaches `main` stops the run without a version and raises a
@@ -251,9 +264,9 @@ is defined in *Concepts*.)
 
 **Why.**
 
-- *Tickets, not the merge request,* carry the bump because the tickets are where the nature of each
+- *Tickets, not the pull request,* carry the bump because the tickets are where the nature of each
   change is already recorded, as a Type. A branch may hold a feature and a fix together (see
-  section 1.2), which a single label on the merge request cannot express.
+  section 1.2), which a single label on the pull request cannot express.
 - *The highest Type wins* so that a feature never ends up hidden inside what looks like a fix.
 - *The default is mod* because the safest assumption about a change with no Type is that it is small.
 - *Major is only ever human-declared* because "this is a redesign" is a judgment about meaning, not
@@ -489,6 +502,8 @@ a breach:
 
 - Rebasing instead of merging (section 4.3).
 - Recompiling and retesting after a sync (section 4.5).
+- Hiding a bypass, for example by rewriting history on a branch (section 6.5). On `main` the branch
+  protection forbids rewriting history.
 
 Skipped local checks are only partly detectable. If a commit made on a developer's machine changed the
 changelog but still has its build placeholder when it is pushed, the local checks were skipped, and the
@@ -503,7 +518,7 @@ Naming them tells the developer where the safeguard is their own care.
 - **Recommendation:** a bypass is legitimate when there is a reason. Do it deliberately, say why in the
   commit or ticket, and expect the Alert. Treat the Alert as the other half of the decision, not as a
   penalty.
-- **Recommendation:** never hide a bypass, for example by editing history. The record is what makes it
+- **Rule:** never hide a bypass, for example by editing history. The record is what makes it
   recoverable.
 
 > **In GitHub.** The warnings are the advisory check on the pull request and the local git hooks, which

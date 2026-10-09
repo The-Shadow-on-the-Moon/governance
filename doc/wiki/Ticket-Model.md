@@ -10,15 +10,16 @@ Each field answers one question, and the fields are kept separate on purpose.
 |---|---|---|
 | **Type** | What sort of ticket is this, and why is the change being made? | a person (the automation for Version and Alert tickets) |
 | **Area** | What kind of work does it involve? | a person |
-| **Origin**, **REF** | Was it created after the work, and which changelog placeholder did it replace? | a person |
+| **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | a person |
 | **Progress** | Where is the work? | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
 | **Waiting** | Is it waiting for someone's input? | a person |
-| **Attention** | Has its state been looked at, and is it sound? | the automation raises flags, a person closes them |
+| **Attention** | Has the ticket's state been looked at, and is it sound? | the automation raises flags, a person closes them |
 | **Resolution** | How did it end? | a person |
-| **Delivery** | Where is the delivered work? | the automation (a person sets *Committed* and *Implemented*) |
+| **Delivery** | Where is the delivered work? | the automation (a person sets *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | a person may aim it, the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | the automation |
+| **Fix** | Which of the rules that span fields do its fields break? | the automation |
 
 Judgment belongs to people and facts belong to the automation.
 
