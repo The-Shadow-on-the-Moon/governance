@@ -58,7 +58,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertLess(main.index("bypass.py stale"), main.index("version_numbers.py"))
         self.assertLess(main.index("version_numbers.py"), main.index("dates.py"))
         self.assertLess(main.index("dates.py"), main.index("watch.py"))
-        self.assertLess(main.index("watch.py"), main.index("field_rules.py"))
+        self.assertLess(main.index("watch.py"), main.index("conditions.py"))
+        self.assertNotIn("field_rules.py", main)
 
     def test_uses_the_project_token_and_skips_its_own_commits(self):
         text = workflow()
@@ -110,7 +111,7 @@ class WorkflowTests(unittest.TestCase):
     def test_the_scheduled_job_runs_the_checks_in_order_and_never_commits(self):
         text = workflow()
         scheduled = text[text.index("  scheduled:"):text.index("  conditions:")]
-        order = ["preflight.py", "implemented.py", "version_numbers.py", "dates.py", "watch.py", "field_rules.py", "conditions.py"]
+        order = ["preflight.py", "implemented.py", "version_numbers.py", "dates.py", "watch.py", "conditions.py"]
         positions = [scheduled.index(name) for name in order]
         self.assertEqual(positions, sorted(positions))
         for forbidden in ("git push", "git commit", "finalize.py", "bypass.py"):
@@ -127,11 +128,12 @@ class WorkflowTests(unittest.TestCase):
     def test_the_conditions_are_refreshed_after_a_merge_on_the_schedule_and_on_request(self):
         text = workflow()
         main = text[text.index("  main:"):text.index("  scheduled:")]
-        self.assertLess(main.index("field_rules.py"), main.index("conditions.py"))  # after finalize and every sweep
+        self.assertLess(main.index("watch.py"), main.index("conditions.py"))  # after finalize and every sweep
         self.assertIn("- conditions", text)
         job = text[text.index("  conditions:"):text.index("  release:")]
         self.assertIn("github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions'", job)
-        self.assertLess(job.index("preflight.py"), job.index("conditions.py"))
+        self.assertLess(job.index("preflight.py"), job.index("implemented.py"))  # a ticket waiting for its Version is attached first
+        self.assertLess(job.index("implemented.py"), job.index("conditions.py"))
         self.assertIn("DRY_RUN: ${{ inputs.dry_run }}", job)
         for forbidden in ("git push", "git commit", "finalize.py", "bypass.py"):
             self.assertNotIn(forbidden, job)

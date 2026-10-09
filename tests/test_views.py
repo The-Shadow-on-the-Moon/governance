@@ -70,27 +70,45 @@ class FilterTests(unittest.TestCase):
         self.assertEqual(views.effective_filter("(a:1 OR b:2)"), "(a:1 OR b:2) AND is:issue AND -label:dummy")
 
 
-class HealthViewTests(unittest.TestCase):
-    """The real definition file: Health shows finished work that has no Delivery or no Version."""
+class ConditionViewsTests(unittest.TestCase):
+    """The real definition file: one view for each nature of condition (Decide, Follow up, Fix), and no Health."""
 
-    def health(self):
-        entries = views.load_definition(os.path.join(ROOT, ".github", "views.json"))
-        return next(entry for entry in entries if entry["name"] == "Health")
+    def entries(self):
+        return views.load_definition(os.path.join(ROOT, ".github", "views.json"))
 
-    def test_it_lists_completed_work_without_a_delivery_but_not_version_or_alert_tickets(self):
-        self.assertIn("(status:Completed no:delivery AND -type:Version AND -type:Alert)", self.health()["filter"])
+    def view(self, name):
+        return next(entry for entry in self.entries() if entry["name"] == name)
 
-    def test_it_lists_shipped_tickets_without_a_version_but_not_abandoned_ones(self):
-        self.assertIn("(delivery:Implemented,Merged,Released no:version AND -status:Abandoned)", self.health()["filter"])
+    def test_the_views_are_these_seven_in_this_order(self):
+        self.assertEqual([entry["name"] for entry in self.entries()],
+                         ["All", "Backlog", "Board", "Decide", "Follow up", "Fix", "Versions"])
 
-    def test_it_shows_the_version_next_to_the_delivery(self):
-        fields = self.health()["visible_fields"]
+    def test_decide_lists_the_open_attention_flags_and_the_open_alerts(self):
+        self.assertEqual(self.view("Decide")["filter"], "attention:Watch,Caution,AtRisk OR (type:Alert AND is:open)")
+
+    def test_follow_up_lists_what_waits_for_an_answer_or_a_verification(self):
+        self.assertEqual(self.view("Follow up")["filter"], "has:waiting OR status:Review")
+
+    def test_fix_lists_the_tickets_the_refresh_found_broken_and_nothing_else(self):
+        self.assertEqual(self.view("Fix")["filter"], "has:fix")
+
+    def test_fix_shows_the_rules_first_and_the_version_next_to_the_delivery(self):
+        fields = self.view("Fix")["visible_fields"]
+        self.assertEqual(fields[:3], ["Title", "Assignees", "Fix"])
         self.assertEqual(fields[fields.index("Delivery") + 1], "Version")
+
+    def test_every_field_a_view_shows_is_a_field_of_the_board_or_a_built_in_one(self):
+        known = set(preflight.REQUIRED_FIELDS) | {"Title", "Assignees", "Type", "Labels", "Parent issue", "Sub-issues progress",
+                                                  "Created", "Updated", "Closed", "Repository", "Milestone", "Reviewers"}
+        for entry in self.entries():
+            for name in entry.get("visible_fields", []):
+                self.assertIn(name, known, f"{entry['name']}: {name}")
 
 
 class FilterLengthTests(unittest.TestCase):
-    """GitHub refuses a view filter longer than 512 characters (a 422, found when the Health clause for shipped
-    work grew), and the script adds its own suffix to what the file says."""
+    """GitHub refuses a view filter longer than 512 characters (a 422, found when the old Health view grew), and the
+    script adds its own suffix to what the file says. The views hold one short clause each, so a new condition never
+    reaches the limit."""
 
     MAXIMUM = 512
 
@@ -102,10 +120,12 @@ class FilterLengthTests(unittest.TestCase):
                                             bool(entry.get("include_pull_requests")))
             self.assertLessEqual(len(really), self.MAXIMUM, f"{entry['name']}: {len(really)} characters")
 
-    def test_the_health_filter_keeps_room_to_grow(self):
+    def test_every_view_keeps_room_to_grow(self):
         entries = views.load_definition(os.path.join(ROOT, ".github", "views.json"))
-        health = next(entry for entry in entries if entry["name"] == "Health")
-        self.assertLessEqual(len(views.effective_filter(health["filter"])), self.MAXIMUM - 10)
+        for entry in entries:
+            really = views.effective_filter(entry.get("filter"), bool(entry.get("include_test_tickets")),
+                                            bool(entry.get("include_pull_requests")))
+            self.assertLessEqual(len(really), self.MAXIMUM - 100, f"{entry['name']}: {len(really)} characters")
 
 
 class DefinitionTests(unittest.TestCase):

@@ -136,6 +136,8 @@ design of a ticket as a whole. Nothing here is new: it collects what the other g
 | **Verification** | A person checking the result, after which the ticket is *Completed* with Resolution *Done*. | issues and the board, section 3 |
 | **Waiting** | A flag that an open ticket is waiting for someone's input. | fields reference |
 | **Attention** | A field saying whether a ticket's state has been looked at and is sound: blank, *Fine*, *Acknowledged*, *Watch*, *Caution* or *AtRisk*. The automation raises the last three, and a person closes the flag with *Fine* or *Acknowledged*. | project structure, section 4.3 |
+| **Condition** | Something about a ticket that the board draws attention to, of one of three natures: *decide* (a person must judge it), *follow-up* (a queue) or *fix* (the fields contradict each other). Each nature has its own view. | issues and the board, section 2.5 |
+| **Fix** | The field that lists the rules a ticket's fields break now. Only the automation writes it, and an id goes when the fields agree again. | project structure, section 4.3 |
 | **Resolution** | How a ticket ended: *Done*, or a reason for abandoning it. | fields reference |
 | **Delivery** | Where the ticket's delivered work is: *Committed*, *Pushed*, *Merged*, *Implemented*, *Released* or *Dropped*. | fields reference |
 | **Priority, Size, Risk** | How urgent, how big in effort, and how likely to go wrong. | fields reference |
@@ -282,7 +284,7 @@ other guides define.
 | **"Update branch" button** | A button on a pull request that merges `main` into the branch on the server. | syncing and merging, section 1 |
 | **Project (board)** | The board of all tickets, with its fields and saved views, linked to the repository. | project structure, section 4 |
 | **Field** | A column of the board: single select, text, number or date. | new-project bootstrap, section 6 |
-| **View** | A saved way of looking at the board, with a filter, grouping and sorting, such as Board or Health. | issues and the board, section 2 |
+| **View** | A saved way of looking at the board, with a filter, grouping and sorting, such as Board or Fix. | issues and the board, section 2 |
 | **Actions, workflow** | The hosting service's automation, run on a push, on a pull request or on request. | new-project bootstrap, section 2 |
 | **Secret** | A stored value a workflow can use but nobody can read back, such as the project token. | new-project bootstrap, section 4 |
 | **Repository variable** | A stored non-secret value a workflow can read, such as the board's number. | new-project bootstrap, section 2.3 |

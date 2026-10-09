@@ -138,11 +138,11 @@ quiet. The *scheduled run* covers them: the workflow also starts on a timer, thr
 request. Each run sweeps the board and does the following, and the other guides refer to it by this name:
 
 - sets the Start and End dates of tickets that have started or ended;
-- raises *Watch* on tickets that have gone quiet or have waited too long, and *Caution* on tickets that
-  break a field rule (section 4.3);
+- raises *Watch* on tickets that have gone quiet or have waited too long (section 4.3);
 - sets Version# on every ticket that has a Version, including one that is only aimed at a version;
 - attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2);
-- refreshes the Fix field of every ticket (section 4.3).
+- refreshes the Fix field of every ticket (section 4.3), always after the attaching, so that an *Implemented*
+  ticket that is waiting for its Version is not shown as broken.
 
 - **Rule:** the project keeps the schedule enabled.
 - **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
@@ -428,8 +428,7 @@ state and lose where the ticket was.
 - **Rule:** these are the causes the automation uses today, with the level each starts at:
   - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
     whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
-    *Released* or *Dropped*), or a rule in section 4.4 is broken (for example *Completed* without
-    Resolution *Done*, or without a Delivery). Earlier work is recognised by the ticket's recorded Build: a Build older than the
+    *Released* or *Dropped*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
     one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
     Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
     never raises it: a ticket moved to *Review* before its first push has no earlier work. A *Caution* is also
@@ -439,10 +438,9 @@ state and lose where the ticket was.
     *InProgress* for a month, or at *Suspended* for six months, or a ticket that has been waiting for
     input for two weeks. Activity means a comment, a change to a field, or a new build that mentions the
     ticket; the automation's own flag comments do not count.
-- **Rule:** a broken rule is raised only if the ticket, meaning its issue or its board fields, has not
-  changed for five minutes. Fixing a ticket takes several edits (for example *Completed*, *Done* and
-  closing the issue), and a ticket in the middle of them is not yet wrong. The two rules about Delivery and
-  Version (section 4.4) wait two hours, because a person may be in the middle of completing the ticket.
+- **Rule:** a rule of section 4.4 that is broken is not an Attention flag: it is listed in the ticket's Fix
+  field (below), which clears by itself when the fields agree again, so there is nothing for a person to
+  decide or close.
 - **Rule:** the automation sets an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or
   that has a lower open flag, and a higher level replaces a lower one. It never sets *Fine* or
   *Acknowledged*, and never lowers a level. A person may set any value by hand.
@@ -450,8 +448,8 @@ state and lose where the ticket was.
   which build.
 - **Rule:** a flag is raised when a situation begins, and not again while the same situation goes on,
   however long that is. Time alone never raises it a second time. After a person closed a flag, it is
-  raised again only if the situation reappears: new work arrives (a later build); or the ticket changes
-  Progress and then becomes stale there; or a broken rule is put right and then broken again.
+  raised again only if the situation reappears: new work arrives (a later build), or the ticket changes
+  Progress and then becomes stale there.
 
 *Why.* The automation can see that something does not add up, but only a person knows what is true, so it
 asks instead of guessing, and the answer is recorded in the field. Because the closing values are
@@ -543,10 +541,10 @@ to forget to close.
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
 | A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names the version it belongs to. Pure analysis, a setting or a check that was run counts: the Delivery is never left blank. |
 | A work ticket is *Completed* | Delivery is set: *Merged* if files changed, *Implemented* if none did. (A ticket that came to nothing is *Abandoned*, not *Completed*. Version and Alert tickets are not work tickets.) |
-| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. An *Abandoned* ticket is left out, because the sweeps never attach it. |
+| Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the attaching that runs before every refresh for *Implemented*); a ticket still without one after that is a step that failed, and Fix shows it. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
-| A work ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field and raises *Caution* in Attention, with a comment. |
+| A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
 > **In GitHub.** Type is the native issue type. Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start

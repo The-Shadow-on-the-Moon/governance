@@ -293,7 +293,7 @@ It never changes a field that exists: one of the wrong type, or lacking a value,
 administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
 the automation is switched on, because the preflight requires every field in the table.
 
-**Saved views:** All, Backlog, Board, Health and Versions (see the guide on issues and the board in practice,
+**Saved views:** All, Backlog, Board, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
 run until it is given `--apply` and needs the project token; run it once the fields exist.
 
@@ -442,7 +442,7 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] The fields and values are exactly the standard's (`fields.py` creates a missing one), Build is text,
       and the built-in Status values are replaced.
-- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Health, Versions) and `views.py`
+- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Decide, Follow up, Fix, Versions) and `views.py`
       reports them up to date.
 - [ ] On the All view, the sort is *Created, ascending* and *Show hierarchy* is off (both by hand).
 

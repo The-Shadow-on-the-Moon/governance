@@ -160,15 +160,11 @@ class GuideValueTests(unittest.TestCase):
         for phrase in ("a week at *Review*", "about a month", "six months", "two weeks"):
             self.assertIn(phrase, housekeeping, phrase)
 
-    def test_the_waits_before_a_flag_agree_with_the_automation(self):
-        from datetime import timedelta
-
-        rules = self.automation("field_rules")
-        self.assertEqual(rules.QUIET, timedelta(minutes=5))
-        self.assertEqual({wait for wait in rules.WAIT.values()}, {timedelta(hours=2)})
+    def test_a_broken_rule_is_shown_without_a_wait(self):
         text = self.guide("03-project-structure.md")
-        self.assertIn("five minutes", text)
-        self.assertIn("two hours", text)
+        self.assertIn("needs no wait", text)
+        for phrase in ("five minutes", "two hours"):
+            self.assertNotIn(phrase, text, phrase)
 
     def test_the_fields_reference_does_not_repeat_the_attention_rules(self):
         reference = self.guide("appendix-c-ticket-fields-reference.md")
@@ -352,6 +348,29 @@ class GuideValueTests(unittest.TestCase):
         self.assertGreaterEqual(len(re.findall(r"^\| ", section, re.M)), 12)
         self.assertEqual(len(conditions.FIX_RULES), 10)
         self.assertIn("Fix field", section)  # the rule table says the broken rule is listed in Fix
+
+    def test_the_conditions_table_of_the_guide_is_the_registry(self):
+        import re
+
+        conditions = self.automation("conditions")
+        section = self.guide("07-issues-and-the-board-in-practice.md").split("### 2.5 The conditions the board shows", 1)[1]
+        section = section.split("- **Decide** conditions", 1)[0]
+        rows = re.findall(r"^\| `([a-z-]+)` \| (.*?) \| (Decide|Follow up|Fix) \| (.*?) \|$", section, re.M)
+        view = {"decide": "Decide", "follow-up": "Follow up", "fix": "Fix"}
+        self.assertEqual(rows, [(c.id, c.name, view[c.nature], c.cleared_by) for c in conditions.CONDITIONS])
+
+    def test_the_views_of_the_definition_are_the_ones_the_guides_name(self):
+        import json
+
+        names = [view["name"] for view in json.loads(self.read(".github", "views.json"))["views"]]
+        word = {5: "five", 6: "six", 7: "seven", 8: "eight"}[len(names)]
+        board = self.guide("07-issues-and-the-board-in-practice.md")
+        self.assertIn(f"The board has {word} saved views", board)
+        for name in names:
+            self.assertIn(f"- **{name}:**", board, name)
+        bootstrap = self.guide("10-new-project-bootstrap.md")
+        self.assertIn(", ".join(names[:-1]) + " and " + names[-1] + " (see the guide on issues", bootstrap)
+        self.assertIn("(" + ", ".join(names) + ")", bootstrap)
 
     def test_every_board_value_in_the_bootstrap_is_defined_in_the_fields_reference(self):
         import re

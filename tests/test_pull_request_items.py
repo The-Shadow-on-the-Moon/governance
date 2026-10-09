@@ -9,7 +9,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 sys.path.insert(0, os.path.join(ROOT, ".github", "scripts"))
 
 import dates  # noqa: E402
-import field_rules  # noqa: E402
+import conditions  # noqa: E402
 import implemented  # noqa: E402
 import preflight  # noqa: E402
 import version_numbers  # noqa: E402
@@ -42,8 +42,8 @@ class SweepsSkipItemsThatAreNotIssues(unittest.TestCase):
     def test_the_watch_sweep(self):
         self.assertEqual(watch.board_tickets(FakeProject(), board()), [])
 
-    def test_the_field_rule_sweep(self):
-        self.assertEqual(field_rules.board_tickets(FakeProject(), board()), [])
+    def test_the_refresh_of_the_conditions(self):
+        self.assertEqual(conditions.board_tickets(FakeProject(), board()), [])
 
     def test_the_implemented_sweep(self):
         self.assertEqual(implemented.unattached(FakeProject(), board()), [])

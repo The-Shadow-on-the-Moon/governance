@@ -64,26 +64,31 @@ somebody else did.
 3. **Waiting.** Tickets marked *Needs input*. Has the answer arrived? If so, clear it. If a ticket has waited
    a long time (the automation flags two weeks), ask again or decide without the answer.
 4. **Review.** Tickets awaiting verification. Verify them (section 3).
-5. **InProgress.** Yours should tell the truth. A ticket nobody has touched for about a month should be
+5. **Fix.** Tickets whose fields contradict each other (section 2.5). Correct the field; the ticket drops out
+   by itself.
+6. **InProgress.** Yours should tell the truth. A ticket nobody has touched for about a month should be
    updated, suspended or abandoned.
-6. **OnDeck.** What is next. Pick one.
-7. **ToDo.** Anything new that has not been triaged goes through section 1.
+7. **OnDeck.** What is next. Pick one.
+8. **ToDo.** Anything new that has not been triaged goes through section 1.
 
-Items 1 to 4 are the things that need a person, and one view, *Health* (section 2.2), lists them together.
+Items 1 to 5 are the things that need a person, and three views list them (section 2.2): *Decide* (items 1
+and 2), *Follow up* (items 3 and 4) and *Fix* (item 5).
 
 ### 2.2 Saved views
 
-The board has five saved views, in this order:
+The board has seven saved views, in this order:
 
 - **All:** every item on the board, test tickets and pull requests included, with all its fields and in
   ticket-number order, with no gap in the numbers, for finding anything and for audit.
 - **Backlog:** a board of the tickets at *ToDo*, *OnDeck* and *Suspended*, the most urgent first.
 - **Board:** the active work, with the columns *OnDeck*, *InProgress* and *Review* and a row for each Version,
   so you see what each version holds and where each ticket is.
-- **Health:** everything that needs a person, or whose fields break a rule: tickets with an open Attention flag,
-  tickets marked *Needs input*, tickets at *Review*, open Alerts, and the field-consistency checks of
-  section 7.1 (for example *Completed* without Resolution *Done*, or a ticket whose issue is closed at any
-  Progress but *Completed* or *Abandoned*). Start a work session here.
+- **Decide:** what the automation noticed and a person must judge: tickets with an open Attention flag
+  (*Watch*, *Caution* or *AtRisk*) and open Alerts. Start a work session here.
+- **Follow up:** the ordinary queues: tickets marked *Needs input*, and tickets at *Review* awaiting
+  verification.
+- **Fix:** tickets whose fields contradict each other. The refresh lists the broken rules in each ticket's
+  Fix field and this view shows every ticket that has any (section 2.5).
 - **Versions:** the work tickets grouped by their Version ticket (the group reads "Version 0.7.0"), with Delivery,
   Build and Resolution, to see what each version holds and whether it shipped. Tickets only aimed at a version,
   which have no Version ticket yet, are in a group of their own, ordered by version.
@@ -116,7 +121,8 @@ that shows false states makes the next person start from zero.
 ### 2.4 Attention flags
 
 What the field is, and when the automation raises it, is in the guide on project structure (section 4.3).
-This section is what to do with an open flag.
+This section is what to do with an open flag. A broken field rule is not a flag: it shows in *Fix* and needs
+nothing but the correction (section 2.5).
 
 The steps:
 
@@ -128,7 +134,6 @@ The steps:
    - *A stale ticket:* update it, complete it if the work is in fact done and verified, suspend it, or
      abandon it.
    - *A long wait:* ask again, or decide without the answer, and clear Waiting.
-   - *A broken field rule:* correct the field.
 3. **Act,** and comment on what you decided.
 4. **Close the flag.** Set *Fine* if nothing is wrong or you put it right. Set *Acknowledged* if
    something still has to be done and it is handled elsewhere, and say where in the comment: another
@@ -146,6 +151,43 @@ The steps:
 **Why.** The automation cannot know what a person meant, so it points and a person decides. Setting
 *Fine* or *Acknowledged* is the decision being recorded, and the comment says which and why, so the next
 person does not have to ask.
+
+### 2.5 The conditions the board shows
+
+Everything the board draws attention to is a *condition*, and each has one of three natures, which is also
+the view it shows in. The list below is the registry in `conditions.py`; a new condition is one new entry
+there.
+
+| Id | Name | View | Cleared by |
+|---|---|---|---|
+| `stale` | Stale | Decide | a person decides (Fine or Acknowledged) |
+| `waited-too-long` | Waited too long | Decide | a person decides (Fine or Acknowledged) |
+| `new-work-on-finished-ticket` | New work on a finished ticket | Decide | a person decides (Fine or Acknowledged) |
+| `passed-version` | Aimed at a passed version | Decide | a person decides (Fine or Acknowledged) |
+| `open-alert` | Open Alert | Decide | a person, through InProgress, Review and Completed |
+| `waiting` | Waiting | Follow up | a person, when it is answered; always at Completed or Abandoned |
+| `review` | Review | Follow up | a person: Completed with Done, or back to InProgress |
+| `completed-without-done` | Completed without Done | Fix | nobody: it goes when the fields agree again |
+| `abandoned-without-reason` | Abandoned without a reason | Fix | nobody: it goes when the fields agree again |
+| `open-with-resolution` | Open with a Resolution | Fix | nobody: it goes when the fields agree again |
+| `open-with-end-date` | Open with an End date | Fix | nobody: it goes when the fields agree again |
+| `waiting-on-closed` | Waiting on a closed ticket | Fix | nobody: it goes when the fields agree again |
+| `backfilled-without-ref` | Backfilled without a REF | Fix | nobody: it goes when the fields agree again |
+| `completed-without-delivery` | Completed without a Delivery | Fix | nobody: it goes when the fields agree again |
+| `shipped-without-version` | Shipped without a Version | Fix | nobody: it goes when the fields agree again |
+| `issue-open` | Issue still open | Fix | nobody: it goes when the fields agree again |
+| `issue-closed` | Issue closed too soon | Fix | nobody: it goes when the fields agree again |
+
+- **Decide** conditions are judgments: a person looks, acts and closes the flag (section 2.4).
+- **Follow up** conditions are queues that people set and clear in the course of the work.
+- **Fix** conditions are not judgments. A rule that spans fields (guide on project structure, section 4.4) is
+  true or false from the ticket's other fields, so the refresh lists the broken ones in the ticket's Fix
+  field and removes each when it stops being true. Nobody closes it: correct the field. A ticket with two
+  broken rules keeps both ids until both are put right.
+- The refresh runs after a merge to `main`, on every scheduled run and on request, and an *Implemented*
+  ticket waiting for its Version is attached just before it, so it is not shown as broken. A change to a
+  board field alone starts no run: if Fix still shows a ticket you have just corrected, it goes at the next
+  refresh, or ask for one (the workflow mode `conditions`).
 
 
 ---
@@ -362,8 +404,9 @@ in creation order, which is then the order the versions shipped.
 ### 7.1 A regular board review
 
 Go through these regularly. Each item has its own rule elsewhere, so this section is the list. The
-automation's Attention flag already catches stale tickets, long waits and broken field rules (section
-2.4). This review is for the rest, and for tickets whose flag was closed without a decision.
+automation's Attention flag already catches stale tickets and long waits (section 2.4), and the *Fix* view
+lists broken field rules at any time (section 2.5). This review is for the rest, and for tickets whose flag
+was closed without a decision.
 
 1. **Stale tickets:** no activity for about a month at *InProgress* or *OnDeck*, or a week at *Review*. Update,
    suspend or abandon them, or verify the ones at *Review* (sections 2 and 3).
@@ -371,14 +414,8 @@ automation's Attention flag already catches stale tickets, long waits and broken
 3. **Tickets that have waited a long time** (the automation flags two weeks): ask again, or decide
    without the answer.
 4. **Field consistency,** using the cross-field rules (see the guide on project structure, section 4.4). The
-   *Health* view lists the tickets that break them:
-   - *Completed* has Resolution *Done*, and *Abandoned* has a reason.
-   - Open tickets have no Resolution and no End date.
-   - Waiting is only on open tickets.
-   - A backfilled ticket has its REF.
-   - The issue is closed only at *Completed* or *Abandoned*.
-   - A *Completed* work ticket has a Delivery, and a ticket with Delivery *Merged*, *Implemented* or *Released*
-     has a Version (an *Abandoned* ticket is left out of this one, because the sweeps never attach it).
+   *Fix* view lists the tickets that break them, and each ticket's Fix field names the rules (section 2.5).
+   There should be none: correct each.
 5. **Labels:** the Area list and `dummy` are fixed. Remove strays and duplicates.
 6. **Planned Version tickets:** closed if dropped, and none left behind for versions already passed.
 7. **Branches:** merged branches not yet retired (a week or two up to about a month), and parked branches
@@ -392,16 +429,17 @@ automation's Attention flag already catches stale tickets, long waits and broken
 - **Rule:** someone holding the project owner role runs the board review, and someone holding the
   administrator role checks the board configuration.
 - **Recommendation:** do the board review regularly.
-- **Recommendation:** start the review in the *Health* view, which lists the consistency checks of item 4
-  together with the tickets that need a person, so that the review is a quick look.
+- **Recommendation:** start the review in the *Fix* view, which lists every ticket that breaks a rule, and
+  then look at *Decide*, so that the review is a quick look.
 
 **Why.** Each rule is applied by a person at the moment they act, and nothing checks the whole board. The
 review is where drift is caught: a ticket left in a state that stopped being true, a field that no longer
 agrees with another, or a branch nobody decided about. A suspension that never ends is an unmade decision,
 and so is a branch parked for months.
 
-> **In GitHub.** The *Health* view is one filter that joins the checks with `OR`, for example
-> `(status:Completed no:resolution) OR (is:open has:resolution)`.
+> **In GitHub.** Each condition view is one short filter: *Fix* is `has:fix`, because the refresh writes the
+> broken rules into a field and no filter has to repeat them. A view filter may be at most 512 characters,
+> and a filter that repeated every rule had reached that limit.
 
 
 ---
@@ -421,8 +459,8 @@ A one-page summary of the guide. It adds no new rules.
 
 **Each work session** (section 2)
 
-- [ ] I looked at the Health view first, taking Alerts first, then Attention flags, Waiting and Review, and then
-      InProgress, OnDeck and ToDo.
+- [ ] I looked at *Decide* first (Alerts, then Attention flags), then *Follow up* (Waiting and Review) and *Fix*,
+      and then InProgress, OnDeck and ToDo.
 - [ ] Each open Attention flag on my tickets was decided and closed with *Fine* or *Acknowledged* and a
       comment, and not just dismissed.
 - [ ] I cleared Waiting where the answer arrived.
