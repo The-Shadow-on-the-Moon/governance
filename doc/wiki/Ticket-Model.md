@@ -19,6 +19,7 @@ Each field answers one question, and the fields are kept separate on purpose.
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | a person may aim it, the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | the automation |
+| **Fix** | Which of the rules that span fields do its fields break? | the automation |
 
 Judgment belongs to people and facts belong to the automation.
 

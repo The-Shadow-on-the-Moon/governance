@@ -32,24 +32,29 @@ EXPECTED_SETTINGS = (
 
 TEXT, NUMBER, DATE, SELECT = "TEXT", "NUMBER", "DATE", "SINGLE_SELECT"
 
-# The fields and values the automation reads or writes (appendix C).
+# The board's fields and their values, exactly as the bootstrap guide (section 6) lists them. The preflight
+# checks them, `fields.py` creates the missing ones, and a test compares this table with the guide.
 REQUIRED_FIELDS = {
     "Status": (SELECT, ["ToDo", "OnDeck", "InProgress", "Review", "Completed", "Suspended", "Abandoned"]),
     "Origin": (SELECT, ["Backfilled", "Backdated"]),
+    "REF": (TEXT, None),
     "Waiting": (SELECT, ["Needs input"]),
     "Attention": (SELECT, ["Fine", "Acknowledged", "Watch", "Caution", "AtRisk"]),
     "Resolution": (SELECT, ["Done", "Duplicate", "Invalid", "WontFix", "Superseded", "Obsolete"]),
     "Delivery": (SELECT, ["Committed", "Pushed", "Merged", "Implemented", "Released", "Dropped"]),
-    "Priority": (SELECT, ["Critical"]),
-    "Size": (SELECT, []),
-    "Risk": (SELECT, []),
-    "REF": (TEXT, None),
+    "Priority": (SELECT, ["Critical", "Urgent", "High", "Normal", "Low", "Wishlist"]),
+    "Size": (SELECT, ["XS", "S", "M", "L", "XL"]),
+    "Risk": (SELECT, ["1 Very low", "2 Low", "3 Medium", "4 High", "5 Very high"]),
     "Version": (TEXT, None),
     "Build": (TEXT, None),
     "Version#": (NUMBER, None),
     "Start date": (DATE, None),
     "End date": (DATE, None),
+    "Fix": (TEXT, None),
 }
+
+# The colours the guide gives to options (every other option is gray).
+OPTION_COLORS = {"Fine": "GREEN", "Acknowledged": "PURPLE", "Watch": "YELLOW", "Caution": "ORANGE", "AtRisk": "RED"}
 
 LINKED_BOARDS = ("query($o:String!,$n:String!){repository(owner:$o,name:$n){"
                  "projectsV2(first:20){nodes{id number title}}}}")
@@ -80,6 +85,7 @@ class Report:
     board: Board = None
     warnings: list = field(default_factory=list)
     repository: dict = None  # what GET /repos/{repo} returned, for the settings check
+    candidate: Board = None  # the board that was identified, even when its fields are not right (fields.py needs it)
 
     @property
     def ok(self):
@@ -261,6 +267,7 @@ def run(repo_client, project_client, store=True, root=None):
     check_protection(report, project_client)
     if check_token(project_client, report):
         board = find_board(project_client, report, store)
+        report.candidate = board
         if board and check_fields(project_client, board, report):
             report.board = board
         elif not board:

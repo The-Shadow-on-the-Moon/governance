@@ -20,7 +20,7 @@ blank, *Fine*, *Acknowledged* or *Watch* (a higher level replaces a lower one, n
 raised when a rule becomes broken and not again while it stays broken: after a person closed it, it comes
 back only when a rule that was not named in the last flag is broken. The rules named are kept in a hidden
 marker in the comment. Version and Alert tickets have no Attention. Appendix C, section 4.3.
-`--dry-run` only reports.
+The rules themselves, and the Fix field that shows them live, are in `conditions.py`. `--dry-run` only reports.
 """
 import os
 import re
@@ -30,86 +30,14 @@ from datetime import timedelta
 import finalize
 import preflight
 import versions
+from conditions import (CLOSED, ITEMS, OPEN, REASONS, SHIPPED, board_tickets,  # noqa: F401 (re-exported: the rules live in conditions.py)
+                        broken_rules as violations)
 from github_api import Client, GitHubError
 from watch import FLAG_MARKER, NO_ATTENTION, parse_time
 
-OPEN = ("ToDo", "OnDeck", "InProgress", "Review", "Suspended")
-CLOSED = ("Completed", "Abandoned")
-SHIPPED = ("Merged", "Implemented", "Released")
-REASONS = ("Duplicate", "Invalid", "WontFix", "Superseded", "Obsolete")
 QUIET = timedelta(minutes=5)
 WAIT = {"completed-without-delivery": timedelta(hours=2), "shipped-without-version": timedelta(hours=2)}  # rules that wait longer than QUIET
 RULES_MARKER = re.compile(r"<!-- attention:caution rules=(\S*) -->")
-
-ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
-         "pageInfo{hasNextPage endCursor} nodes{id updatedAt "
-         "content{... on Issue{number state updatedAt issueType{name} comments(last:30){nodes{body}}}} "
-         "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
-         "resolution:fieldValueByName(name:\"Resolution\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
-         "waiting:fieldValueByName(name:\"Waiting\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
-         "delivery:fieldValueByName(name:\"Delivery\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
-         "origin:fieldValueByName(name:\"Origin\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
-         "attention:fieldValueByName(name:\"Attention\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
-         "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}} "
-         "ref:fieldValueByName(name:\"REF\"){... on ProjectV2ItemFieldTextValue{text}} "
-         "end:fieldValueByName(name:\"End date\"){... on ProjectV2ItemFieldDateValue{date}}}}}}}")
-
-
-def board_tickets(project_client, board):
-    found, after = [], None
-    while True:
-        page = project_client.graphql(ITEMS, {"id": board.id, "after": after})["node"]["items"]
-        for node in page["nodes"]:
-            content = node.get("content") or {}
-            if not content.get("number"):
-                continue
-
-            def name(key):
-                return (node.get(key) or {}).get("name")
-
-            found.append({"item": node["id"], "number": content["number"], "item_updated": node["updatedAt"],
-                          "issue_updated": content["updatedAt"], "state": content["state"],
-                          "type": (content.get("issueType") or {}).get("name"),
-                          "comments": (content.get("comments") or {}).get("nodes") or [],
-                          "status": name("status"), "delivery": name("delivery"), "resolution": name("resolution"), "waiting": name("waiting"),
-                          "origin": name("origin"), "attention": name("attention"),
-                          "ref": (node.get("ref") or {}).get("text") or "",
-                          "version": (node.get("version") or {}).get("text") or "",
-                          "end": (node.get("end") or {}).get("date")})
-        if not page["pageInfo"]["hasNextPage"]:
-            return found
-        after = page["pageInfo"]["endCursor"]
-
-
-def violations(ticket):
-    """The broken rules of a ticket as {rule id: explanation}."""
-    status, broken = ticket["status"], {}
-    if not status:
-        return broken
-    if status == "Completed" and ticket["resolution"] != "Done":
-        broken["completed-without-done"] = "it is Completed but its Resolution is not Done"
-    if status == "Abandoned" and ticket["resolution"] not in REASONS:
-        broken["abandoned-without-reason"] = "it is Abandoned but its Resolution is not one of the abandon reasons"
-    if status in OPEN and ticket["resolution"]:
-        broken["open-with-resolution"] = f"it is open ({status}) but has the Resolution {ticket['resolution']}"
-    if status in OPEN and ticket["end"]:
-        broken["open-with-end-date"] = f"it is open ({status}) but has the End date {ticket['end']}"
-    if status in CLOSED and ticket["waiting"]:
-        broken["waiting-on-closed"] = f"it is {status} but Waiting is still set"
-    if ticket["origin"] == "Backfilled" and not ticket["ref"]:
-        broken["backfilled-without-ref"] = "its Origin is Backfilled but its REF is blank"
-    if status == "Completed" and not ticket["delivery"] and ticket["type"] not in NO_ATTENTION:
-        broken["completed-without-delivery"] = ("it is Completed but its Delivery is blank (set Implemented if no file changed, "
-                                                "Merged if files did, or set Abandoned with a reason if nothing came of it)")
-    if (ticket["delivery"] in SHIPPED and not ticket["version"].strip() and status != "Abandoned"
-            and ticket["type"] not in NO_ATTENTION):
-        broken["shipped-without-version"] = (f"its Delivery is {ticket['delivery']} but its Version is blank (the scheduled run or the "
-                                             "finalize step should have set it: set the Version of the version it belongs to)")
-    if status in CLOSED and ticket["state"] == "OPEN":
-        broken["issue-open"] = f"it is {status} but its issue is still open"
-    if status not in CLOSED and ticket["state"] == "CLOSED":
-        broken["issue-closed"] = f"its issue is closed but it is {status}"
-    return broken
 
 
 def last_change(ticket):

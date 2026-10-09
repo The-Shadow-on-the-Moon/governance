@@ -323,6 +323,36 @@ class GuideValueTests(unittest.TestCase):
                 self.assertIn(re.sub(r"[()]", "", risk), risks, title)
         self.assertGreaterEqual(checked, 12)
 
+    def test_the_board_the_preflight_requires_is_the_table_of_the_bootstrap_guide(self):
+        import re
+
+        preflight = self.automation("preflight")
+        bootstrap = self.guide("10-new-project-bootstrap.md")
+        table = bootstrap.split("| Field | Kind | Values |", 1)[1].split("Type is the issue type", 1)[0]
+        kinds = {"single select": "SINGLE_SELECT", "text": "TEXT", "number": "NUMBER", "date": "DATE"}
+        from_guide, colours = {}, {}
+        for names, kind, values in re.findall(r"^\| (.*?) \| (single select|text|number|date) \|(.*?)\|$", table, re.M):
+            listed = []
+            for value in [v.strip() for v in values.strip().split(", ") if v.strip()]:
+                match = re.match(r"(.*?) \((\w+)\)$", value)
+                if match:
+                    value, colours[match.group(1)] = match.group(1), match.group(2).upper()
+                listed.append(value)
+            for name in [n.strip() for n in names.split(",")]:
+                from_guide[name] = (kinds[kind], listed or None)
+        self.assertEqual(from_guide, dict(preflight.REQUIRED_FIELDS))
+        self.assertEqual(colours, preflight.OPTION_COLORS)
+        self.assertEqual(list(from_guide), list(preflight.REQUIRED_FIELDS))
+
+    def test_the_registry_and_the_automation_agree_on_the_ten_rules_of_the_guide(self):
+        import re
+
+        conditions = self.automation("conditions")
+        section = self.guide("03-project-structure.md").split("### 4.4 Rules that span fields", 1)[1].split("> **In GitHub.**", 1)[0]
+        self.assertGreaterEqual(len(re.findall(r"^\| ", section, re.M)), 12)
+        self.assertEqual(len(conditions.FIX_RULES), 10)
+        self.assertIn("Fix field", section)  # the rule table says the broken rule is listed in Fix
+
     def test_every_board_value_in_the_bootstrap_is_defined_in_the_fields_reference(self):
         import re
 

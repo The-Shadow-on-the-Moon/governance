@@ -141,7 +141,8 @@ request. Each run sweeps the board and does the following, and the other guides 
 - raises *Watch* on tickets that have gone quiet or have waited too long, and *Caution* on tickets that
   break a field rule (section 4.3);
 - sets Version# on every ticket that has a Version, including one that is only aimed at a version;
-- attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2).
+- attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2);
+- refreshes the Fix field of every ticket (section 4.3).
 
 - **Rule:** the project keeps the schedule enabled.
 - **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
@@ -344,6 +345,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | text, text, number | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
+| **Fix** | Which of the rules that span fields do its fields break? | text (rule ids) | the automation |
 
 ### 4.3 The idea of each field
 
@@ -513,6 +515,21 @@ nothing in the repository shows that a secret was stored or a setting changed.
 change can be risky, and a large one can wait. One Version field that the automation corrects means a
 ticket planned for a later version that ships earlier fixes itself.
 
+**Fix.**
+
+- **Rule:** Fix holds the ids of the rules of section 4.4 that the ticket's fields break now, separated by
+  spaces, and is empty when none is broken. Only the automation writes it. A refresh recomputes the set
+  from the ticket's other fields, so it needs no wait: a ticket in the middle of an edit shows and then
+  clears at the next refresh.
+- **Rule:** nobody sets or clears Fix, and it has no *Fine* or *Acknowledged*: a person fixes the cause, and
+  the id goes. The rules and their ids are the list in `conditions.py`; a new rule is a new entry there.
+- **Rule:** the refresh runs after a merge to `main`, on every scheduled run and on request (section 2.3).
+  A change to a board field alone starts no workflow, so it shows at the next of those.
+
+*Why.* An inconsistency is not a judgment: it is true or false from the other fields. Showing it as a stored
+set that is recomputed means two broken rules both have to be fixed before the ticket drops out, with no flag
+to forget to close.
+
 ### 4.4 Rules that span fields
 
 | When | Then |
@@ -529,7 +546,7 @@ ticket planned for a later version that ships earlier fixes itself.
 | Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
-| A work ticket breaks one of these rules | The automation raises *Caution* in Attention, with a comment. |
+| A work ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field and raises *Caution* in Attention, with a comment. |
 
 > **In GitHub.** Type is the native issue type. Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start

@@ -2,10 +2,11 @@ name: Versioning
 
 # On a pull request: the pull request is put on the board (a failure there never fails the run), then the advisory check.
 # On a push to another branch: the preflight, the fallback for skipped hooks, then the push step (Delivery, Progress, Build, Attention).
-# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the Version# sweep, the date sweep, the Watch flags and the Caution flags for field rules.
+# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the Version# sweep, the date sweep, the Watch flags, the Caution flags for field rules and the refresh of the Fix field.
 # Three times a day (08:17, 16:17 and 20:17 UTC: 4am, noon and 4pm ET in summer time, an hour earlier in winter) and on request with mode "scheduled":
-#   the preflight, the Implemented tickets, the Version# sweep, the date sweep and the flags. The scheduled run never commits to a branch.
+#   the preflight, the Implemented tickets, the Version# sweep, the date sweep, the flags and the refresh of the Fix field. The scheduled run never commits to a branch.
 # The main job and the scheduled job share one concurrency group, so a merge and a scheduled run never overlap (the second waits).
+# On request with mode "conditions": the preflight and the refresh of the Fix field (what each ticket breaks, see conditions.py), a dry run unless told otherwise.
 # On request with mode "finalize": the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
 # On request with mode "release", "hotfix" or "retire": the preflight and that step, as a dry run unless told otherwise.
 #   A hotfix is finished from its own branch (start the workflow from that branch).
@@ -28,6 +29,7 @@ on:
         options:
           - finalize
           - scheduled
+          - conditions
           - release
           - hotfix
           - retire
@@ -225,6 +227,16 @@ jobs:
             python3 .github/scripts/field_rules.py
           fi
 
+      - name: Refresh the conditions
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/conditions.py --dry-run
+          else
+            python3 .github/scripts/conditions.py
+          fi
+
   scheduled:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'scheduled')
     runs-on: ubuntu-latest
@@ -282,6 +294,41 @@ jobs:
             python3 .github/scripts/field_rules.py --dry-run
           else
             python3 .github/scripts/field_rules.py
+          fi
+
+      - name: Refresh the conditions
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/conditions.py --dry-run
+          else
+            python3 .github/scripts/conditions.py
+          fi
+
+  conditions:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: versioning-board
+      cancel-in-progress: false
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Preflight
+        run: python3 .github/scripts/preflight.py
+
+      - name: Refresh the conditions
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 .github/scripts/conditions.py --dry-run
+          else
+            python3 .github/scripts/conditions.py
           fi
 
   release:

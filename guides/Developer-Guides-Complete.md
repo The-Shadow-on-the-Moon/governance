@@ -1178,7 +1178,8 @@ request. Each run sweeps the board and does the following, and the other guides 
 - raises *Watch* on tickets that have gone quiet or have waited too long, and *Caution* on tickets that
   break a field rule (section 4.3);
 - sets Version# on every ticket that has a Version, including one that is only aimed at a version;
-- attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2).
+- attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2);
+- refreshes the Fix field of every ticket (section 4.3).
 
 - **Rule:** the project keeps the schedule enabled.
 - **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
@@ -1381,6 +1382,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
 | **Version**, **Build**, **Version#** | Which version and build? | text, text, number | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
+| **Fix** | Which of the rules that span fields do its fields break? | text (rule ids) | the automation |
 
 #### 4.3 The idea of each field
 
@@ -1550,6 +1552,21 @@ nothing in the repository shows that a secret was stored or a setting changed.
 change can be risky, and a large one can wait. One Version field that the automation corrects means a
 ticket planned for a later version that ships earlier fixes itself.
 
+**Fix.**
+
+- **Rule:** Fix holds the ids of the rules of section 4.4 that the ticket's fields break now, separated by
+  spaces, and is empty when none is broken. Only the automation writes it. A refresh recomputes the set
+  from the ticket's other fields, so it needs no wait: a ticket in the middle of an edit shows and then
+  clears at the next refresh.
+- **Rule:** nobody sets or clears Fix, and it has no *Fine* or *Acknowledged*: a person fixes the cause, and
+  the id goes. The rules and their ids are the list in `conditions.py`; a new rule is a new entry there.
+- **Rule:** the refresh runs after a merge to `main`, on every scheduled run and on request (section 2.3).
+  A change to a board field alone starts no workflow, so it shows at the next of those.
+
+*Why.* An inconsistency is not a judgment: it is true or false from the other fields. Showing it as a stored
+set that is recomputed means two broken rules both have to be fixed before the ticket drops out, with no flag
+to forget to close.
+
 #### 4.4 Rules that span fields
 
 | When | Then |
@@ -1566,7 +1583,7 @@ ticket planned for a later version that ships earlier fixes itself.
 | Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the next scheduled run for *Implemented*); a ticket still without one two hours after its last change is flagged. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
-| A work ticket breaks one of these rules | The automation raises *Caution* in Attention, with a comment. |
+| A work ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field and raises *Caution* in Attention, with a comment. |
 
 > **In GitHub.** Type is the native issue type. Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start
@@ -4424,6 +4441,9 @@ is the honest description of a project's first version: something exists, and no
   schedule of its own, switches it back on at the next push or on request.
 - **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
   (section 6).
+- **The board's fields,** the script `.github/scripts/fields.py` that creates the ones a board lacks
+  (section 6), and **the conditions,** `.github/scripts/conditions.py`: the list of what the board draws
+  attention to and the refresh of the Fix field (see project structure, section 4.3).
 - **The pull request template,** in `.github/`.
 - **Optionally,** a workflow that copies the wiki pages to the hosting wiki.
 
@@ -4643,9 +4663,14 @@ fields reference*.
 | Build | text | |
 | Version# | number | |
 | Start date, End date | date | |
+| Fix | text | |
 
 Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
-script can create.
+script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
+(the colours of the table, gray otherwise), as a dry run until it is given `--apply`, with the project token.
+It never changes a field that exists: one of the wrong type, or lacking a value, is listed for the
+administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
+the automation is switched on, because the preflight requires every field in the table.
 
 **Saved views:** All, Backlog, Board, Health and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
@@ -4665,7 +4690,7 @@ every run, and a view that is created again loses them, so make them again.
 - **Rule:** the board is linked to the repository, and the preflight checks the fields and their values.
 - **Rule:** the saved views are the ones in `.github/views.json`, created by `views.py`, and a view is changed
   by changing the file and running the script again.
-- **Recommendation:** create the fields with a script, or start from a template board that already has
+- **Recommendation:** create the fields with `fields.py`, or start from a template board that already has
   them, so that every project gets the same board.
 
 **Why.** The automation reads and writes these fields by name, so a board that differs breaks it, and a
@@ -4794,8 +4819,8 @@ A one-page summary of the guide. It adds no new rules.
 
 **The board** (section 6)
 
-- [ ] The fields and values are exactly the standard's, Build is text, and the built-in Status values are
-      replaced.
+- [ ] The fields and values are exactly the standard's (`fields.py` creates a missing one), Build is text,
+      and the built-in Status values are replaced.
 - [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Health, Versions) and `views.py`
       reports them up to date.
 - [ ] On the All view, the sort is *Created, ascending* and *Show hierarchy* is off (both by hand).
@@ -5179,6 +5204,14 @@ The automation cannot be told when a person changes Progress, so the dates are f
 run and a scheduled run; a date is accurate to the day it was noticed, in UTC. Version and Alert
 tickets have no dates.
 
+### Fix
+
+Text. The ids of the rules that span fields (*Project structure*, section 4.4) that the ticket breaks now,
+separated by spaces; empty when none. Only the automation writes it: the refresh recomputes the set from
+the ticket's other fields and writes it when it changed, so nobody sets or clears it. A person fixes the
+cause, and the id goes at the next refresh. A text field filters only by `has:fix` and `no:fix`. A Version
+ticket has none.
+
 ---
 
 ### Which fields apply to which tickets
@@ -5198,6 +5231,7 @@ tickets have no dates.
 | Risk | proposed by the creator | none | set by the person who takes it |
 | Version, Build, Version# | yes | its own version; its last build | the version in which it was raised |
 | Start date, End date | yes | none | none |
+| Fix | yes | none | yes (the Delivery rules do not apply) |
 | Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog; none for stale planned versions |
 
 ---
@@ -5564,6 +5598,7 @@ code has shipped).
 | **Attention** | Has the ticket's state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
 | **Resolution** | How did it end? | board field | a person |
 | **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
+| **Fix** | Which of the rules that span fields do its fields break? | board field | the automation |
 | **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Version#, Start date, End date | a person, except Build, Version#, the real Version and the dates |
 
 Two principles decide who sets a field. **Judgment belongs to people, facts belong to the automation**:

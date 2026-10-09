@@ -62,6 +62,9 @@ is the honest description of a project's first version: something exists, and no
   schedule of its own, switches it back on at the next push or on request.
 - **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
   (section 6).
+- **The board's fields,** the script `.github/scripts/fields.py` that creates the ones a board lacks
+  (section 6), and **the conditions,** `.github/scripts/conditions.py`: the list of what the board draws
+  attention to and the refresh of the Fix field (see project structure, section 4.3).
 - **The pull request template,** in `.github/`.
 - **Optionally,** a workflow that copies the wiki pages to the hosting wiki.
 
@@ -281,9 +284,14 @@ fields reference*.
 | Build | text | |
 | Version# | number | |
 | Start date, End date | date | |
+| Fix | text | |
 
 Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
-script can create.
+script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
+(the colours of the table, gray otherwise), as a dry run until it is given `--apply`, with the project token.
+It never changes a field that exists: one of the wrong type, or lacking a value, is listed for the
+administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
+the automation is switched on, because the preflight requires every field in the table.
 
 **Saved views:** All, Backlog, Board, Health and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
@@ -303,7 +311,7 @@ every run, and a view that is created again loses them, so make them again.
 - **Rule:** the board is linked to the repository, and the preflight checks the fields and their values.
 - **Rule:** the saved views are the ones in `.github/views.json`, created by `views.py`, and a view is changed
   by changing the file and running the script again.
-- **Recommendation:** create the fields with a script, or start from a template board that already has
+- **Recommendation:** create the fields with `fields.py`, or start from a template board that already has
   them, so that every project gets the same board.
 
 **Why.** The automation reads and writes these fields by name, so a board that differs breaks it, and a
@@ -432,8 +440,8 @@ A one-page summary of the guide. It adds no new rules.
 
 **The board** (section 6)
 
-- [ ] The fields and values are exactly the standard's, Build is text, and the built-in Status values are
-      replaced.
+- [ ] The fields and values are exactly the standard's (`fields.py` creates a missing one), Build is text,
+      and the built-in Status values are replaced.
 - [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Health, Versions) and `views.py`
       reports them up to date.
 - [ ] On the All view, the sort is *Created, ascending* and *Show hierarchy* is off (both by hand).

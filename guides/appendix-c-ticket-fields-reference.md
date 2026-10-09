@@ -226,6 +226,14 @@ The automation cannot be told when a person changes Progress, so the dates are f
 run and a scheduled run; a date is accurate to the day it was noticed, in UTC. Version and Alert
 tickets have no dates.
 
+## Fix
+
+Text. The ids of the rules that span fields (*Project structure*, section 4.4) that the ticket breaks now,
+separated by spaces; empty when none. Only the automation writes it: the refresh recomputes the set from
+the ticket's other fields and writes it when it changed, so nobody sets or clears it. A person fixes the
+cause, and the id goes at the next refresh. A text field filters only by `has:fix` and `no:fix`. A Version
+ticket has none.
+
 ---
 
 ## Which fields apply to which tickets
@@ -245,4 +253,5 @@ tickets have no dates.
 | Risk | proposed by the creator | none | set by the person who takes it |
 | Version, Build, Version# | yes | its own version; its last build | the version in which it was raised |
 | Start date, End date | yes | none | none |
+| Fix | yes | none | yes (the Delivery rules do not apply) |
 | Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog; none for stale planned versions |
