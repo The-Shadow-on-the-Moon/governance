@@ -44,9 +44,12 @@ class WorkflowTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^  issues:\n    types: \[edited, closed, reopened, assigned, labeled\]\n")
         self.assertRegex(text, r"(?m)^  issue_comment:\n    types: \[created, edited\]\n")
 
-    def conditions_guard(self):
+    def job(self, name, next_name):
         text = workflow()
-        job = text[text.index("\n  conditions:\n"):text.index("\n  release:\n")]
+        return text[text.index(f"\n  {name}:\n"):text.index(f"\n  {next_name}:\n")]
+
+    def folded(self, job):
+        """The folded `if: >-` expression of a job as one line, and the indents of its lines."""
         lines = job.split("\n")
         start = next(i for i, line in enumerate(lines) if line.startswith("    if: >-"))
         block = []
@@ -54,29 +57,47 @@ class WorkflowTests(unittest.TestCase):
             if not line.startswith("      "):
                 break
             block.append(line)
-        return job, " ".join(line.strip() for line in block), block
+        return " ".join(line.strip() for line in block), block
 
-    def test_only_the_team_can_start_the_refresh_by_an_event(self):
-        job, expression, block = self.conditions_guard()
+    def test_the_team_job_decides_who_may_start_the_refresh_by_the_senders_permission(self):
+        job = self.job("team", "advisory")
+        expression, block = self.folded(job)
         self.assertEqual({len(line) - len(line.lstrip()) for line in block}, {6})  # one indent, so the block folds into one line
         self.assertEqual(expression.count("("), expression.count(")"))
         self.assertEqual(expression.count("'") % 2, 0)
-        # an issue the team wrote, or a comment by the team
-        self.assertIn("github.event_name == 'issues'", expression)
-        self.assertIn("github.event.issue.author_association", expression)
-        self.assertIn("github.event.comment.author_association", expression)
-        self.assertEqual(expression.count('fromJSON(\'["OWNER","MEMBER","COLLABORATOR"]\')'), 2)
-        for stranger in ("NONE", "CONTRIBUTOR", "FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER", "MANNEQUIN"):
-            self.assertNotIn(stranger, expression.replace("github-actions", ""))
-        # the tick of a box: an edit of a comment the bot wrote (only someone with write access can edit another's comment)
-        self.assertIn("github.event.action == 'edited' && github.event.comment.user.type == 'Bot'", expression)
-        # not the comments of pull requests, and still the request by hand
-        self.assertIn("!github.event.issue.pull_request", expression)
         self.assertIn("github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions'", expression)
+        self.assertIn("github.event_name == 'issues'", expression)
+        self.assertIn("github.event_name == 'issue_comment' && !github.event.issue.pull_request", expression)
+        # the person is asked about by permission, never by the association in the payload (it hides private members)
+        self.assertIn('gh api "repos/$REPOSITORY/collaborators/$SENDER/permission"', job)
+        self.assertIn("admin|write)", job)
+        self.assertNotIn("author_association ==", job)
+        self.assertNotIn("contains(", job)
+        # it prints the association the payload carried, so the cause of a refusal can be read in the log
+        self.assertIn("ASSOCIATION: ${{ github.event.issue.author_association }}", job)
+        self.assertIn("association in the payload", job)
+        # no secret but the workflow token, and no concurrency group (a stranger's run must not take a real run's place)
+        self.assertNotIn("PROJECT_TOKEN", job)
+        self.assertNotIn("concurrency:", job)
+        self.assertEqual(job.count("secrets."), 1)
+        self.assertIn("allowed: ${{ steps.who.outputs.allowed }}", job)
+
+    def test_the_conditions_job_runs_only_when_the_team_job_allowed_it(self):
+        job = self.job("conditions", "release")
+        expression, _ = self.folded(job) if "if: >-" in job else (None, None)
+        self.assertIsNone(expression)
+        self.assertIn("    needs: team\n", job)
+        self.assertIn("    if: ${{ always() && needs.team.outputs.allowed == 'true' }}\n", job)
+        # the secrets are on the steps that use them, not on the job, and the checkout needs none
+        header = job[:job.index("    steps:")]
+        self.assertNotIn("PROJECT_TOKEN", header)
+        self.assertNotIn("secrets.", header)
+        steps = job[job.index("    steps:"):]
+        self.assertEqual(steps.count("PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}"), 4)
 
     def test_no_other_job_starts_on_an_issue_event(self):
         text = workflow()
-        for job in ("advisory", "branch", "main", "scheduled", "release", "hotfix", "retire"):
+        for job in ("advisory", "branch", "main", "scheduled", "conditions", "release", "hotfix", "retire"):
             body = text[text.index(f"\n  {job}:\n"):]
             condition = body[:body.index("\n    runs-on:")]
             self.assertNotIn("'issues'", condition, job)
@@ -217,7 +238,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertLess(main.index("watch.py"), main.index("conditions.py"))  # after finalize and every sweep
         self.assertIn("- conditions", text)
         job = text[text.index("  conditions:"):text.index("  release:")]
-        self.assertIn("github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions'", job)
+        self.assertIn("needs: team", job)  # a start on request is allowed by the job team, which allows mode conditions
         self.assertLess(job.index("preflight.py"), job.index("implemented.py"))  # a ticket waiting for its Version is attached first
         self.assertLess(job.index("implemented.py"), job.index("conditions.py"))
         self.assertIn("DRY_RUN: ${{ inputs.dry_run }}", job)

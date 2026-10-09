@@ -148,11 +148,13 @@ request. Each run sweeps the board and does the following, and the other guides 
 - **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
   *Implemented* tickets), so a version that has just been finalized does not wait for the next run, and the
   two never run at the same time: the second waits for the first.
-- **Rule:** the Fix field is also refreshed, for the whole board, when the team closes, reopens, edits,
-  assigns or labels an issue it wrote, comments on an issue, or ticks a box in a comment the automation
-  wrote, so that a ticket just corrected stops showing without waiting for the timer. Nothing else starts
-  it: a comment or an issue from anyone outside the team starts nothing, and no text of an event ever
-  reaches a command. A change to a board field alone starts no workflow (GitHub has no such trigger), so it
+- **Rule:** the Fix field is also refreshed, for the whole board, when someone with write access closes,
+  reopens, edits, assigns or labels an issue, comments on an issue, or ticks a box in a comment the
+  automation wrote, so that a ticket just corrected stops showing without waiting for the timer. Nothing
+  else starts it: an event caused by anyone without write access starts no refresh (the automation asks the
+  repository for the person's permission, because the label an event carries for its author hides the
+  members of an organization who keep their membership private), and no text of an event ever reaches a
+  command. A change to a board field alone starts no workflow (GitHub has no such trigger), so it
   shows at the next of these runs.
 
 **Why.** Facts that no event announces are still facts the board depends on. A timer finds them without

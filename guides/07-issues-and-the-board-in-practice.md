@@ -197,7 +197,8 @@ there.
   field and removes each when it stops being true. Nobody closes it: correct the field. A ticket with two
   broken rules keeps both ids until both are put right.
 - The refresh runs after a merge to `main`, on every scheduled run, on request, and when the team closes,
-  reopens, edits, assigns or labels an issue it wrote, comments, or ticks a box in the automation's comment.
+  reopens, edits, assigns or labels an issue, comments, or ticks a box in the automation's comment (and
+  you have write access).
   An *Implemented* ticket waiting for its Version is attached just before it, so it is not shown as broken.
   A change to a board field alone starts no run: if Fix still shows a ticket you have just corrected, it
   goes when you close the issue, or at the next refresh, or ask for one (the workflow mode `conditions`).
