@@ -142,6 +142,7 @@ version would break pure kebab-case, hence the hyphens.
 | `abandoned/` | `abandoned/<yyyy-mm-dd>_<branch>[_<comment>]` | a branch is discarded |
 | `released/` | `released/V<major>.<sub>.<mod>` | a version on `main` is deliberately declared a release |
 | `released/` | `released/V<major>.<sub>.<mod>-HF<n>` | a hotfix is finished |
+| `test/` | `test/` in front of any of the above | the automation is being tried with throwaway material |
 
 Where:
 
@@ -150,6 +151,9 @@ Where:
 - `<comment>` is optional and kebab-case. Keep it very short. For a longer note, make the tag an
   annotated tag and put the note in its message.
 - Versions are written without padding: `V2.0.0`, not `V02.00.00`.
+- A tag made while *testing the automation* has the same form behind the level `test/`:
+  `test/abandoned/2026-10-06_dummy-retire-test_dummy-test`, `test/released/V9.9.9`,
+  `test/released/V9.9.9-HF1`. Real tags are never given this level.
 - The hotfix number `<n>` is a single digit, starting at 1, counted separately for each released
   version being fixed: `V1.25.0-HF1`, `V1.25.0-HF2`, and independently `V1.26.0-HF1`. If a release would
   need a tenth hotfix, the fix is finished on `main` and that version is released instead. This is
@@ -164,6 +168,8 @@ suspended/2026-03-14_offline-sync_waiting-on-api
 abandoned/2026-03-14_dark-theme_dropped-for-redesign
 released/V2.4.0
 released/V2.4.0-HF1
+test/released/V9.9.9
+test/abandoned/2026-03-14_dummy-retire-check_dummy-test
 ```
 
 **Why.**
@@ -180,6 +186,11 @@ released/V2.4.0-HF1
 - *`released/` is separate from the version itself* because not every version is a release. A
   version is created by every merge; a release is a deliberate decision about which versions
   actually shipped.
+- *Trials have their own level* because the point of the namespaces is that one prefix answers one
+  question. A tag left by a trial in `released/` or `abandoned/` would make "everything released" and
+  "everything abandoned" wrong; under `test/` it is kept (the trial's commits stay reachable) and out of
+  every real answer. The level is chosen by the person who starts the run, with the input **trial**
+  (guide on working and committing, section 4.4).
 - *The hotfix number is one digit* because no release is expected to need more than nine hotfixes,
   and a fixed width keeps version numbers easy to encode and sort.
 

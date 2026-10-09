@@ -160,6 +160,15 @@ class GuideValueTests(unittest.TestCase):
         for phrase in ("a week at *Review*", "about a month", "six months", "two weeks"):
             self.assertIn(phrase, housekeeping, phrase)
 
+    def test_the_guides_say_how_a_trial_is_tagged_and_what_happens_when_the_box_is_forgotten(self):
+        trials = self.guide("05-working-and-committing.md")
+        for phrase in ("Warning: the trial box", "What happens when you tick it", "What happens when you forget it", "test/released/V9.9.9"):
+            self.assertIn(phrase, trials, phrase)
+        self.assertIn("test/", self.guide("02-branching-and-merging-strategy.md"))
+        self.assertIn("**trial**", self.guide("08-releases-hotfixes-and-retiring-branches.md"))
+        with open(os.path.join(ROOT, "AGENTS.md"), encoding="utf-8") as handle:
+            self.assertIn("`trial`", handle.read())
+
     def test_a_broken_rule_is_shown_without_a_wait_and_commented_after_one(self):
         text = self.guide("03-project-structure.md")
         self.assertIn("needs no wait", text)

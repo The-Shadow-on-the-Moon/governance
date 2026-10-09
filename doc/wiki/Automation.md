@@ -99,6 +99,8 @@ In the Actions tab, run the *Versioning* workflow with a mode and the dry run on
 | `hotfix` | the hotfix branch itself | `version`: the hotfix version, for example `V1.25.0-HF1` |
 | `retire` | `main` (or a branch, to try a change) | `branch`, `outcome` (archived, suspended or abandoned), `confirm` (the branch name again) and an optional `comment` for the tag |
 
+`release`, `hotfix` and `retire` also take the boolean input `trial` (default off). Tick it when the run is a test of the automation: the tag is then made under `test/` (`test/released/V9.9.9`, `test/released/V9.9.9-HF1`, `test/abandoned/<date>_<branch>`), a trial hotfix starts from `test/released/V…`, and the real tags are not touched. The run does not guess that it is a trial and does not refuse a trial that forgot the box: it makes a real tag, which must then be recreated under `test/` and the wrong one deleted. The dry run shows the tag name. From the command line add `-f trial=true`.
+
 The same from the command line: `gh workflow run versioning.yml --ref <branch> -f mode=release -f dry_run=false`.
 
 ## The release step

@@ -1,6 +1,14 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261009080055 (branch project-views)
+#### #114 — Keep the tags made by trials under a test/ level
+- .github/workflows/versioning.yml: a boolean input `trial` (default off, no guard) for the manual runs, passed to the release, hotfix and retire jobs as `TRIAL`.
+- .github/scripts/release.py: `is_trial` reads `TRIAL`; `tag_name` and `release` take `trial` and make `test/released/V…`. .github/scripts/hotfix.py: `base_tag`, `check` and `finish` take `trial` (a trial hotfix starts from `test/released/V…` and tags `test/released/V…-HF<n>`). .github/scripts/retire.py: `tag_for` and `retire` take `trial` (`test/<outcome>/<date>_<branch>`), and a finished hotfix is recognised by a `test/` release tag too.
+- tests/test_release.py, test_hotfix.py, test_retire.py, test_workflow.py and test_tools.py: the `test/` tags, a real tag of the version not blocking a trial, a trial hotfix needing its trial base tag, the input in the workflow, and the guides carrying the warning.
+- guides/02-branching-and-merging-strategy.md section 2.2 (the `test/` level, examples, the reason), guides/03-project-structure.md section 8.2, guides/05-working-and-committing.md section 4.4 (the rule and a warning: what happens when the box is ticked and when it is forgotten), guides/08-releases-hotfixes-and-retiring-branches.md (rules, steps and checklists), guides/01-concepts-and-vocabulary.md, guides/appendix-c-ticket-fields-reference.md, AGENTS.md and doc/wiki/Automation.md say so.
+- .github/automation-manifest.json regenerated; guides/Developer-Guides-Complete.md rebuilt.
+
 ### Build 20261009043032 (branch project-views)
 #### #120 — Refresh the conditions on the events that change them
 - .github/workflows/versioning.yml: the workflow also starts on `issues` (edited, closed, reopened, assigned, labeled) and `issue_comment` (created, edited); the job of mode `conditions` runs for them only when the issue was written by the team (OWNER, MEMBER, COLLABORATOR), or the comment was by the team, or it is an edit of a comment written by a bot (the tick of a box), never for a pull request, and no job other than `conditions` starts on them. A test checks the guard, that no `run:` step uses event text, and that no script writes a comment or an issue with the personal token (an event it started would start the workflow again).

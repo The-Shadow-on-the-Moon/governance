@@ -117,6 +117,14 @@ class WorkflowTests(unittest.TestCase):
             self.assertIn('--job-status "${{ job.status }}"', step, job)
             self.assertEqual(step.count("- name:"), 0, f"{job}: it is the last step")
 
+    def test_the_trial_input_is_explicit_off_by_default_and_reaches_the_three_manual_runs(self):
+        text = workflow()
+        self.assertRegex(text, r"(?m)^      trial:\n        description: '[^\n]*test/[^\n]*'\n        type: boolean\n        default: false\n")
+        for job, nxt in (("release", "hotfix"), ("hotfix", "retire"), ("retire", None)):
+            start = text.index(f"\n  {job}:\n")
+            body = text[start:text.index(f"\n  {nxt}:\n")] if nxt else text[start:]
+            self.assertIn("TRIAL: ${{ inputs.trial }}", body, job)
+
     def test_declares_its_own_permissions(self):
         text = workflow()
         self.assertRegex(text, r"(?m)^permissions:\n  contents: write\n  issues: write\n  pull-requests: write\n")

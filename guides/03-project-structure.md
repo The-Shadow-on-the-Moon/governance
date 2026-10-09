@@ -918,8 +918,9 @@ merging; if the two ever differ, that guide is the reference.
 ### 8.2 Tags
 
 A tag is in one of four namespaces: `archived/`, `suspended/` and `abandoned/` for a branch that is
-retired, and `released/` for a version, or a finished hotfix, declared a release. The formats, with their
-reasons, are in the guide on branching and merging, section 2.2.
+retired, and `released/` for a version, or a finished hotfix, declared a release. A tag made while testing
+the automation is put under `test/` in front of its namespace. The formats, with their reasons, are in the
+guide on branching and merging, section 2.2.
 
 ### 8.3 How they fit in the map
 

@@ -116,6 +116,19 @@ class RetireTests(Repo):
         self.assertEqual(repo.deleted, ["heads/csv-export"])
         self.assertTrue(run.log[0].startswith("tag") and run.log[1].startswith("delete"))  # tag first, delete second
 
+    def test_a_trial_tags_under_test_and_a_real_run_does_not(self):
+        sha = self.branch("dummy-retire-test")
+        repo = FakeRepo()
+        retire.retire(self.dir, repo, FakeProject(), board(), "dummy-retire-test", "abandoned", "dummy-retire-test", "dummy-test", False, True)
+        self.assertEqual(repo.created, [("test/abandoned/2026-10-06_dummy-retire-test_dummy-test", sha)])
+        self.assertEqual(retire.tag_for("archived", "x", __import__("datetime").datetime(2026, 10, 6)), "archived/2026-10-06_x")
+
+    def test_a_finished_trial_hotfix_is_deleted_without_a_tag_too(self):
+        self.branch("hotfix-v1-25-0-fix-sensor", text=WORK.format(branch="hotfix"))
+        self.git("tag", "test/released/V1.25.0-HF1", "origin/hotfix-v1-25-0-fix-sensor")
+        _, repo, _ = self.retire("hotfix-v1-25-0-fix-sensor", "archived")
+        self.assertEqual((repo.created, repo.deleted), ([], ["heads/hotfix-v1-25-0-fix-sensor"]))
+
     def test_a_comment_is_added_to_the_tag(self):
         self.branch("old-idea")
         _, repo, _ = self.retire("old-idea", "suspended", comment="waiting-for-hardware")

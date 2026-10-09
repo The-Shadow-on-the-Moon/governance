@@ -68,6 +68,10 @@ on:
         description: 'retire: an optional short comment for the tag, in kebab-case'
         type: string
         required: false
+      trial:
+        description: 'release, hotfix and retire: tick it ONLY when testing the automation with throwaway material; the tag is then made under test/ (test/released/..., test/abandoned/...) and the real namespaces stay untouched. Left unticked, a real tag is made.'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -377,6 +381,7 @@ jobs:
       PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
       DRY_RUN: ${{ inputs.dry_run }}
       VERSION: ${{ inputs.version }}
+      TRIAL: ${{ inputs.trial }}
     steps:
       - name: Checkout the ref the run was started from
         uses: actions/checkout@v7
@@ -405,6 +410,7 @@ jobs:
       PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
       DRY_RUN: ${{ inputs.dry_run }}
       VERSION: ${{ inputs.version }}
+      TRIAL: ${{ inputs.trial }}
       BRANCH: ${{ github.ref_name }}
     steps:
       - name: Checkout the hotfix branch
@@ -444,6 +450,7 @@ jobs:
       OUTCOME: ${{ inputs.outcome }}
       CONFIRM: ${{ inputs.confirm }}
       COMMENT: ${{ inputs.comment }}
+      TRIAL: ${{ inputs.trial }}
     steps:
       - name: Checkout the ref the run was started from
         uses: actions/checkout@v7

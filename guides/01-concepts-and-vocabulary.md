@@ -172,7 +172,7 @@ what the other guides define.
 | **Suspended** | The outcome for a branch set aside to be picked up later. It can be recovered from its tag. | branching and merging, section 1.5 |
 | **Abandoned** | The outcome for a branch whose work is discarded. It too can be recovered from its tag. | branching and merging, section 1.5 |
 | **Recover** | Recreating a suspended or abandoned branch from its tag. The tag stays as history. | starting work, section 3.4 |
-| **Tag namespaces** | `archived/`, `suspended/`, `abandoned/` and `released/`, each with a fixed format. | branching and merging, section 2.2 |
+| **Tag namespaces** | `archived/`, `suspended/`, `abandoned/` and `released/`, each with a fixed format; the tags of a trial go under `test/` in front of them. | branching and merging, section 2.2 |
 | **Kebab-case** | Lowercase words separated by hyphens, as in `csv-export`: the style of every branch name. | branching and merging, section 2.1 |
 | **Release tag** | A `released/V…` tag on a version declared a release. It only indicates the version, and a mistaken one can be removed. | releases and hotfixes, section 1 |
 | **Hotfix version** | A version with `-HF<n>` after it, such as `V1.25.0-HF1`, counted separately for each released version. | branching and merging, section 1.3 |

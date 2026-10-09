@@ -63,7 +63,8 @@ new step, a test of a rule). It is the only label besides the 14 Area labels.
 Set by a person when the test ticket is created. A test ticket is titled `DUMMY ...` and is closed as
 *Abandoned*, with Resolution *Invalid*, when the test is over. Every saved view of the board except All excludes the
 label (`-label:dummy`), so test tickets never appear among real work. It never affects version numbers or
-any automation, and it is not part of Area.
+any automation, and it is not part of Area. The tags a trial makes are kept apart in the same way, under
+`test/` (guide on branching and merging, section 2.2), by ticking the input **trial** on the run.
 
 ## Origin and REF
 

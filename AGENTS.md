@@ -16,12 +16,13 @@ This project
   the changelog and correct it through a ticket if it differs.
 - A release, a hotfix finish and a branch retirement are done only by the workflow's manual runs (see the wiki page
   on the automation), never by hand with git, and only when the administrator or developer asks: run the dry run
-  first and say what it would do.
+  first and say what it would do. When the run is a test of the automation, tick its input `trial`, so the
+  tag goes under `test/`; nothing else tells the run, and it does not refuse a trial that forgot the box.
 - Flag comments (they start with `<!-- attention:`) and commits whose message starts with `Finalize `,
   `Flag bypass` or `Fill in a build heading` are written by the automation, which recognises them: do not edit
   or reuse them.
 - Tests of the automation use throwaway tickets and branches, titled DUMMY and labelled `dummy`, closed as
-  Invalid (Abandoned), with their branches tagged before they are deleted.
+  Invalid (Abandoned), with their branches tagged (under `test/`, with the input `trial` ticked) before they are deleted.
 - Commit messages and pull request descriptions carry no assistant attribution (no co-author trailer and no
   "generated with" line): authorship belongs to the person (guide 09, section 4.2), even if the assistant's
   tooling suggests adding one.

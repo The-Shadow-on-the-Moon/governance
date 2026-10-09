@@ -51,6 +51,8 @@ The steps:
 - **Rule:** the tag goes on the commit where the version was finalized, not simply on the current tip of
   `main`.
 - **Rule:** only a finalized version can be released, and each version has at most one release tag.
+- **Rule:** a release made to test the automation is started with the input **trial** ticked, and its tag
+  is `test/released/V…` (see the warning in the guide on working and committing, section 4.4).
 - **A mistaken release tag may be deleted and redone.** A release tag is only an indicator that makes a
   version easy to find. Every change that lands on `main` produces its own version, so a version is the
   version whatever any tag says, and a tag on the wrong commit, or on a version that was not meant to be a
@@ -92,7 +94,9 @@ procedure.
 6. **Verify the hotfix** the same way as any release (section 1.1).
 7. **Run the hotfix-finalize step** with the explicit version, for example `V1.25.0-HF1`. It renames the
    heading to that version, tags `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets'
-   Delivery straight to *Released*, because a hotfix is never merged and so skips *Merged*.
+   Delivery straight to *Released*, because a hotfix is never merged and so skips *Merged*. For a trial,
+   tick **trial**: the tag is `test/released/V1.25.0-HF1` and the hotfix must start from
+   `test/released/V1.25.0`.
 8. **Check the result:** the heading, the tag, the Version ticket and the tickets.
 9. **Tell the project owner** that the hotfix has been released.
 
@@ -166,6 +170,8 @@ The steps:
   branch's last commit.
 - **Rule:** if a tag with that name already exists, add a short comment to make it unique. The retire step
   refuses a name that already exists.
+- **Rule:** retiring a branch made for a trial is started with the input **trial** ticked, and the tag is
+  `test/<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]`.
 - **Rule:** *archived* is only for a branch whose work is fully merged.
 - **Recommendation:** for *suspended* and *abandoned*, add a short comment to the tag name saying why, in
   kebab-case. A longer note goes in an annotated tag.
@@ -193,7 +199,7 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] It is verified: the regression checks are run, and the results are recorded with the build (a
       strong recommendation).
 - [ ] Its tickets are completed (a recommendation).
-- [ ] The release step is run with that version, and the project owner is told.
+- [ ] The release step is run with that version (with **trial** ticked only for a test), and the project owner is told.
 - [ ] The tag is on the commit where the version was finalized, the Version ticket shows *Released* with
       its comment, and the tickets show *Released*.
 - [ ] If the release was a mistake: the tag is deleted, and the Version ticket and its tickets are back to
@@ -219,7 +225,7 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] For *archived*, all commits are reachable from `main`. For *suspended* or *abandoned*, any open pull
       request is closed with a comment.
 - [ ] The tickets are updated: *Suspended*, or *Abandoned* with a Resolution, and a comment.
-- [ ] The retire step is run (tag first, then delete) and confirmed.
+- [ ] The retire step is run (tag first, then delete) and confirmed; for a trial, with **trial** ticked.
 - [ ] The tag exists, the branch is gone, and my local copy is deleted.
 
 **In one line:** release, hotfix, retire: verify, tag, check.

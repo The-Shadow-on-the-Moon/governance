@@ -385,7 +385,7 @@ what the other guides define.
 | **Suspended** | The outcome for a branch set aside to be picked up later. It can be recovered from its tag. | branching and merging, section 1.5 |
 | **Abandoned** | The outcome for a branch whose work is discarded. It too can be recovered from its tag. | branching and merging, section 1.5 |
 | **Recover** | Recreating a suspended or abandoned branch from its tag. The tag stays as history. | starting work, section 3.4 |
-| **Tag namespaces** | `archived/`, `suspended/`, `abandoned/` and `released/`, each with a fixed format. | branching and merging, section 2.2 |
+| **Tag namespaces** | `archived/`, `suspended/`, `abandoned/` and `released/`, each with a fixed format; the tags of a trial go under `test/` in front of them. | branching and merging, section 2.2 |
 | **Kebab-case** | Lowercase words separated by hyphens, as in `csv-export`: the style of every branch name. | branching and merging, section 2.1 |
 | **Release tag** | A `released/V…` tag on a version declared a release. It only indicates the version, and a mistaken one can be removed. | releases and hotfixes, section 1 |
 | **Hotfix version** | A version with `-HF<n>` after it, such as `V1.25.0-HF1`, counted separately for each released version. | branching and merging, section 1.3 |
@@ -652,6 +652,7 @@ version would break pure kebab-case, hence the hyphens.
 | `abandoned/` | `abandoned/<yyyy-mm-dd>_<branch>[_<comment>]` | a branch is discarded |
 | `released/` | `released/V<major>.<sub>.<mod>` | a version on `main` is deliberately declared a release |
 | `released/` | `released/V<major>.<sub>.<mod>-HF<n>` | a hotfix is finished |
+| `test/` | `test/` in front of any of the above | the automation is being tried with throwaway material |
 
 Where:
 
@@ -660,6 +661,9 @@ Where:
 - `<comment>` is optional and kebab-case. Keep it very short. For a longer note, make the tag an
   annotated tag and put the note in its message.
 - Versions are written without padding: `V2.0.0`, not `V02.00.00`.
+- A tag made while *testing the automation* has the same form behind the level `test/`:
+  `test/abandoned/2026-10-06_dummy-retire-test_dummy-test`, `test/released/V9.9.9`,
+  `test/released/V9.9.9-HF1`. Real tags are never given this level.
 - The hotfix number `<n>` is a single digit, starting at 1, counted separately for each released
   version being fixed: `V1.25.0-HF1`, `V1.25.0-HF2`, and independently `V1.26.0-HF1`. If a release would
   need a tenth hotfix, the fix is finished on `main` and that version is released instead. This is
@@ -674,6 +678,8 @@ suspended/2026-03-14_offline-sync_waiting-on-api
 abandoned/2026-03-14_dark-theme_dropped-for-redesign
 released/V2.4.0
 released/V2.4.0-HF1
+test/released/V9.9.9
+test/abandoned/2026-03-14_dummy-retire-check_dummy-test
 ```
 
 **Why.**
@@ -690,6 +696,11 @@ released/V2.4.0-HF1
 - *`released/` is separate from the version itself* because not every version is a release. A
   version is created by every merge; a release is a deliberate decision about which versions
   actually shipped.
+- *Trials have their own level* because the point of the namespaces is that one prefix answers one
+  question. A tag left by a trial in `released/` or `abandoned/` would make "everything released" and
+  "everything abandoned" wrong; under `test/` it is kept (the trial's commits stay reachable) and out of
+  every real answer. The level is chosen by the person who starts the run, with the input **trial**
+  (guide on working and committing, section 4.4).
 - *The hotfix number is one digit* because no release is expected to need more than nine hotfixes,
   and a fixed width keeps version numbers easy to encode and sort.
 
@@ -1957,8 +1968,9 @@ merging; if the two ever differ, that guide is the reference.
 #### 8.2 Tags
 
 A tag is in one of four namespaces: `archived/`, `suspended/` and `abandoned/` for a branch that is
-retired, and `released/` for a version, or a finished hotfix, declared a release. The formats, with their
-reasons, are in the guide on branching and merging, section 2.2.
+retired, and `released/` for a version, or a finished hotfix, declared a release. A tag made while testing
+the automation is put under `test/` in front of its namespace. The formats, with their reasons, are in the
+guide on branching and merging, section 2.2.
 
 #### 8.3 How they fit in the map
 
@@ -2690,17 +2702,33 @@ The steps:
 3. **Run the trial** and check what the automation did: the build heading, the ticket's fields, the
    comments, the Alerts.
 4. **Close it down.** Close the ticket as *Abandoned* with Resolution *Invalid* and a comment saying what
-   was proved. Close any pull request. Retire the branch as abandoned, tagging it first (a short comment in
-   the tag such as `dummy-test`). Mark any Version ticket the trial made as *Dropped*, and delete any
-   release tag it made.
+   was proved. Close any pull request. Retire the branch as abandoned with the input **trial** ticked,
+   tagging it first (a short comment in the tag such as `dummy-test`). Mark any Version ticket the trial
+   made as *Dropped*, and delete any release tag it made.
 
 - **Rule:** a trial uses throwaway tickets, branches and tags only, and never merges into `main`.
+- **Rule:** every release, hotfix-finish and retire run that is a trial is started with the input
+  **trial** ticked, so that its tag goes under `test/`. The run does not guess, and does not refuse a
+  trial that forgot the box.
 - **Recommendation:** leave nothing behind: the trial's tickets are closed, its branches are retired and
-  its tags are removed or are the retirement tags of step 4.
+  its tags are removed or are the retirement tags of step 4 (under `test/`).
+
+> **Warning: the trial box.** When you start the release, hotfix-finish or retire run to *test* the
+> automation, tick the input **trial**. Nothing else tells the run that it is a test.
+> - **What happens when you tick it:** the tag is made under `test/` (`test/released/V9.9.9`,
+>   `test/released/V9.9.9-HF1`, `test/abandoned/2026-10-06_dummy-x_dummy-test`), the checks look for `test/`
+>   tags instead of real ones (a trial hotfix starts from `test/released/V…`), and the real tags are not
+>   touched. The dry run shows the name it would make: read it before the real run.
+> - **What happens when you forget it:** nothing stops the run. The tag is made in the real namespace
+>   (`released/V9.9.9`, `abandoned/…_dummy-…`), where it answers "everything released" or "everything
+>   abandoned" wrongly. Put it right at once: create the same tag under `test/` on the same commit, then
+>   delete the wrong one (`git push origin --delete <tag-name>`), and for a release also put the Version
+>   ticket and its tickets back (section 1.1 of the guide on releases).
+> - **When it is not a trial,** leave it unticked, which is the default.
 
 **Why.** An automation that writes to shared records has to be tried on shared records, and a mistake
-there is visible to everyone. The `dummy` label and the retirement tags keep the trial out of the working
-views while leaving a record of what was tried.
+there is visible to everyone. The `dummy` label and the retirement tags (under `test/`) keep the trial out of the working
+views and out of every real tag list while leaving a record of what was tried.
 
 
 ---
@@ -3931,6 +3959,8 @@ The steps:
 - **Rule:** the tag goes on the commit where the version was finalized, not simply on the current tip of
   `main`.
 - **Rule:** only a finalized version can be released, and each version has at most one release tag.
+- **Rule:** a release made to test the automation is started with the input **trial** ticked, and its tag
+  is `test/released/V…` (see the warning in the guide on working and committing, section 4.4).
 - **A mistaken release tag may be deleted and redone.** A release tag is only an indicator that makes a
   version easy to find. Every change that lands on `main` produces its own version, so a version is the
   version whatever any tag says, and a tag on the wrong commit, or on a version that was not meant to be a
@@ -3972,7 +4002,9 @@ procedure.
 6. **Verify the hotfix** the same way as any release (section 1.1).
 7. **Run the hotfix-finalize step** with the explicit version, for example `V1.25.0-HF1`. It renames the
    heading to that version, tags `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets'
-   Delivery straight to *Released*, because a hotfix is never merged and so skips *Merged*.
+   Delivery straight to *Released*, because a hotfix is never merged and so skips *Merged*. For a trial,
+   tick **trial**: the tag is `test/released/V1.25.0-HF1` and the hotfix must start from
+   `test/released/V1.25.0`.
 8. **Check the result:** the heading, the tag, the Version ticket and the tickets.
 9. **Tell the project owner** that the hotfix has been released.
 
@@ -4046,6 +4078,8 @@ The steps:
   branch's last commit.
 - **Rule:** if a tag with that name already exists, add a short comment to make it unique. The retire step
   refuses a name that already exists.
+- **Rule:** retiring a branch made for a trial is started with the input **trial** ticked, and the tag is
+  `test/<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]`.
 - **Rule:** *archived* is only for a branch whose work is fully merged.
 - **Recommendation:** for *suspended* and *abandoned*, add a short comment to the tag name saying why, in
   kebab-case. A longer note goes in an annotated tag.
@@ -4073,7 +4107,7 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] It is verified: the regression checks are run, and the results are recorded with the build (a
       strong recommendation).
 - [ ] Its tickets are completed (a recommendation).
-- [ ] The release step is run with that version, and the project owner is told.
+- [ ] The release step is run with that version (with **trial** ticked only for a test), and the project owner is told.
 - [ ] The tag is on the commit where the version was finalized, the Version ticket shows *Released* with
       its comment, and the tickets show *Released*.
 - [ ] If the release was a mistake: the tag is deleted, and the Version ticket and its tickets are back to
@@ -4099,7 +4133,7 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] For *archived*, all commits are reachable from `main`. For *suspended* or *abandoned*, any open pull
       request is closed with a comment.
 - [ ] The tickets are updated: *Suspended*, or *Abandoned* with a Resolution, and a comment.
-- [ ] The retire step is run (tag first, then delete) and confirmed.
+- [ ] The retire step is run (tag first, then delete) and confirmed; for a trial, with **trial** ticked.
 - [ ] The tag exists, the branch is gone, and my local copy is deleted.
 
 **In one line:** release, hotfix, retire: verify, tag, check.
@@ -5108,7 +5142,8 @@ new step, a test of a rule). It is the only label besides the 14 Area labels.
 Set by a person when the test ticket is created. A test ticket is titled `DUMMY ...` and is closed as
 *Abandoned*, with Resolution *Invalid*, when the test is over. Every saved view of the board except All excludes the
 label (`-label:dummy`), so test tickets never appear among real work. It never affects version numbers or
-any automation, and it is not part of Area.
+any automation, and it is not part of Area. The tags a trial makes are kept apart in the same way, under
+`test/` (guide on branching and merging, section 2.2), by ticking the input **trial** on the run.
 
 ### Origin and REF
 

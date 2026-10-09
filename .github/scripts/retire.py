@@ -19,19 +19,20 @@ import checks
 import finalize
 import preflight
 import push_step
+import release
 from github_api import Client, GitHubError
 
 OUTCOMES = ("archived", "suspended", "abandoned")
 COMMENT = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
-HOTFIX_TAG = re.compile(r"^released/V\d+\.\d+\.\d+-HF\d$")
+HOTFIX_TAG = re.compile(r"^(test/)?released/V\d+\.\d+\.\d+-HF\d$")
 
 
 class RetireError(RuntimeError):
     pass
 
 
-def tag_for(outcome, branch, when, comment=""):
-    return f"{outcome}/{when:%Y-%m-%d}_{branch}" + (f"_{comment}" if comment else "")
+def tag_for(outcome, branch, when, comment="", trial=False):
+    return f"{release.TRIAL_LEVEL if trial else ''}{outcome}/{when:%Y-%m-%d}_{branch}" + (f"_{comment}" if comment else "")
 
 
 def tip(root, branch):
@@ -58,7 +59,7 @@ def open_pull_requests(repo_client, branch):
     return repo_client.request("GET", repo_client.repo_path(f"/pulls?state=open&head={owner}:{branch}"))
 
 
-def retire(root, repo_client, project_client, board, branch, outcome, confirm, comment="", dry_run=False):
+def retire(root, repo_client, project_client, board, branch, outcome, confirm, comment="", dry_run=False, trial=False):
     """Retire the branch. Returns the Runner; raises RetireError on a refusal."""
     run = finalize.Runner(dry_run)
     if outcome not in OUTCOMES:
@@ -76,7 +77,7 @@ def retire(root, repo_client, project_client, board, branch, outcome, confirm, c
         raise RetireError("an archived branch must be fully merged: its last commit is not on main (suspend or abandon it instead)")
     if outcome != "archived" and open_pull_requests(repo_client, branch):
         raise RetireError("the branch still has an open pull request: close it with a comment saying why first")
-    tag = tag_for(outcome, branch, commit_date(root, sha), comment)
+    tag = tag_for(outcome, branch, commit_date(root, sha), comment, trial)
     if not hotfix_done:
         try:
             repo_client.request("GET", repo_client.repo_path(f"/git/ref/tags/{tag}"))
@@ -123,7 +124,7 @@ def main(argv=None):
     print(report.render())
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
     try:
-        run = retire(root, repo_client, project_client, report.board, branch, outcome, confirm, comment, "--dry-run" in args)
+        run = retire(root, repo_client, project_client, report.board, branch, outcome, confirm, comment, "--dry-run" in args, release.is_trial())
     except RetireError as error:
         print(f"retire refused: {error}")
         return 1

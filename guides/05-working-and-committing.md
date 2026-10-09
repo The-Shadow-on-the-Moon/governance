@@ -256,17 +256,33 @@ The steps:
 3. **Run the trial** and check what the automation did: the build heading, the ticket's fields, the
    comments, the Alerts.
 4. **Close it down.** Close the ticket as *Abandoned* with Resolution *Invalid* and a comment saying what
-   was proved. Close any pull request. Retire the branch as abandoned, tagging it first (a short comment in
-   the tag such as `dummy-test`). Mark any Version ticket the trial made as *Dropped*, and delete any
-   release tag it made.
+   was proved. Close any pull request. Retire the branch as abandoned with the input **trial** ticked,
+   tagging it first (a short comment in the tag such as `dummy-test`). Mark any Version ticket the trial
+   made as *Dropped*, and delete any release tag it made.
 
 - **Rule:** a trial uses throwaway tickets, branches and tags only, and never merges into `main`.
+- **Rule:** every release, hotfix-finish and retire run that is a trial is started with the input
+  **trial** ticked, so that its tag goes under `test/`. The run does not guess, and does not refuse a
+  trial that forgot the box.
 - **Recommendation:** leave nothing behind: the trial's tickets are closed, its branches are retired and
-  its tags are removed or are the retirement tags of step 4.
+  its tags are removed or are the retirement tags of step 4 (under `test/`).
+
+> **Warning: the trial box.** When you start the release, hotfix-finish or retire run to *test* the
+> automation, tick the input **trial**. Nothing else tells the run that it is a test.
+> - **What happens when you tick it:** the tag is made under `test/` (`test/released/V9.9.9`,
+>   `test/released/V9.9.9-HF1`, `test/abandoned/2026-10-06_dummy-x_dummy-test`), the checks look for `test/`
+>   tags instead of real ones (a trial hotfix starts from `test/released/V…`), and the real tags are not
+>   touched. The dry run shows the name it would make: read it before the real run.
+> - **What happens when you forget it:** nothing stops the run. The tag is made in the real namespace
+>   (`released/V9.9.9`, `abandoned/…_dummy-…`), where it answers "everything released" or "everything
+>   abandoned" wrongly. Put it right at once: create the same tag under `test/` on the same commit, then
+>   delete the wrong one (`git push origin --delete <tag-name>`), and for a release also put the Version
+>   ticket and its tickets back (section 1.1 of the guide on releases).
+> - **When it is not a trial,** leave it unticked, which is the default.
 
 **Why.** An automation that writes to shared records has to be tried on shared records, and a mistake
-there is visible to everyone. The `dummy` label and the retirement tags keep the trial out of the working
-views while leaving a record of what was tried.
+there is visible to everyone. The `dummy` label and the retirement tags (under `test/`) keep the trial out of the working
+views and out of every real tag list while leaving a record of what was tried.
 
 
 ---
