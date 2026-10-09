@@ -34,7 +34,7 @@
     ".github/scripts/watch.py": "e826f9b2b4e59d14017a59171399b5d5ea3244ba1b6b330b38fbeb539e28f9ad",
     ".github/views.json": "f225ea4f5c254176f020bd6c9ab5a7bd883d899d361ded750ed5c4f045fc4376",
     ".github/workflows/reenable-schedule.yml": "f8c9ef98131c533702201b3b0d9295ad2fa39e976d75c5083d093295dafc3b41",
-    ".github/workflows/versioning.yml": "ea1dfd62814334074e5220276fbf87805e476dcc18c18e99f4b62c285c7d017a",
+    ".github/workflows/versioning.yml": "cc51392644a09aa54a4319e0f745bf50441ae41fa2a03f30c237a2a0a22abc44",
     "tests/test_automation_library.py": "d3a9e2010787f71d9ef93694fd2a24d06fd0e5772829a5251b99677e7b585d9f",
     "tests/test_board_pull_requests.py": "dd19aed809d59017dc0f4ce9d3397484c7ac883f8864c96db37432a38bc6c3b9",
     "tests/test_board_status.py": "c0b44f16dfb33ad9f9dd9108bff39810324a4a946dff9d9c2617c882a039d4fd",
@@ -58,7 +58,7 @@
     "tests/test_version_numbers.py": "20ac3f6cbf854e96a96ad689733e69a87e8c569e76d8529e48fa9fcd0e29a2eb",
     "tests/test_views.py": "9b917e019bb1a66ed18781f99cbe790378da8d9faccc3cf67f3c74fd561c3e8e",
     "tests/test_watch.py": "bd66b0017b84182e70da7a44696111003c8ec9c602f45518192bd3e37d4056ee",
-    "tests/test_workflow.py": "4d4c2091bdfb96c2cf1049bdff2728fc3e6d7c7b6d16d774dea744e2dfff7ca8"
+    "tests/test_workflow.py": "dffbe117d2968e7fbf416e328336459ccded586ab65d2279f134198487688948"
   },
-  "standard": "V0.10.0"
+  "standard": "V0.10.1"
 }

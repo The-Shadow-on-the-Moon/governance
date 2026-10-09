@@ -6,8 +6,9 @@ name: Versioning
 # Three times a day (08:17, 16:17 and 20:17 UTC: 4am, noon and 4pm ET in summer time, an hour earlier in winter) and on request with mode "scheduled":
 #   the preflight, the Implemented tickets, the Version# sweep, the date sweep, the Watch flags and the refresh of the Fix field. The scheduled run never commits to a branch.
 # The main job and the scheduled job share one concurrency group, so a merge and a scheduled run never overlap (the second waits).
-# On an issue event (edited, closed, reopened, assigned, labeled) of an issue the team wrote, and on a comment by the team or the tick of a box in the
-#   automation's own comment: the same as mode "conditions" below, for the whole board, so a closed issue or a tick shows at once.
+# On an issue event (edited, closed, reopened, assigned, labeled) or a comment on an issue (created, edited, which includes the tick of a box in the
+#   automation's own comment), caused by someone with write access: the same as mode "conditions" below, for the whole board, so a closed issue or a tick
+#   shows at once. The job "team" decides who may start it (see there).
 # On request with mode "conditions": the preflight, the attaching of the Implemented tickets (so that a ticket waiting for its Version is not shown as broken) and the refresh of the Fix field (what each ticket breaks, see conditions.py), a dry run unless told otherwise.
 # On request with mode "finalize": the preflight and the finalize step, as a dry run unless told otherwise (safe to repeat).
 # On request with mode "release", "hotfix" or "retire": the preflight and that step, as a dry run unless told otherwise.
@@ -79,6 +80,41 @@ permissions:
   pull-requests: write
 
 jobs:
+  team:
+    # Decides whether an issue event or a comment may start the refresh. The repository is public and the job "conditions" holds secrets, so a stranger's
+    # comment must never reach it. This job has no secret of its own (only the workflow token, to ask the API) and no concurrency group, so a stranger's run
+    # ends here and cannot take the place of a real one. The person is asked about by permission, not by the association in the event, because the
+    # association is computed without a viewer and shows a private member of the organization as an outsider. Event data reaches the script only
+    # through environment variables, never written into the command.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions')
+      || github.event_name == 'issues'
+      || (github.event_name == 'issue_comment' && !github.event.issue.pull_request)
+    runs-on: ubuntu-latest
+    outputs:
+      allowed: ${{ steps.who.outputs.allowed }}
+    steps:
+      - name: Does the person who caused this have write access?
+        id: who
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          SENDER: ${{ github.event.sender.login }}
+          ASSOCIATION: ${{ github.event.issue.author_association }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "event: $EVENT, sender: $SENDER, association in the payload: ${ASSOCIATION:-none}"
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "allowed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          permission=$(gh api "repos/$REPOSITORY/collaborators/$SENDER/permission" --jq .permission 2>/dev/null || echo none)
+          echo "permission of $SENDER: $permission"
+          case "$permission" in
+            admin|write) echo "allowed=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "allowed=false" >> "$GITHUB_OUTPUT"; echo "not started: $SENDER has no write access" ;;
+          esac
+
   advisory:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -317,24 +353,14 @@ jobs:
           fi
 
   conditions:
-    # On request, or on an event of an issue the team wrote or of a comment by the team. The repository is public and its secrets are
-    # available to this job, so a stranger's comment must never start it. The bot's own comments (those with the checkboxes) are
-    # written by github-actions[bot], which GitHub does not call a collaborator, and only someone with write access can edit another
-    # user's comment, so an edit of a bot comment is the team ticking a box. No event text reaches a shell command.
-    if: >-
-      (github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions')
-      || (github.event_name == 'issues'
-      && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
-      || (github.event_name == 'issue_comment' && !github.event.issue.pull_request
-      && (contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
-      || (github.event.action == 'edited' && github.event.comment.user.type == 'Bot')))
+    # On request, or when the job "team" found that the person who caused an issue event or a comment has write access.
+    needs: team
+    if: ${{ always() && needs.team.outputs.allowed == 'true' }}
     runs-on: ubuntu-latest
     concurrency:
       group: versioning-board
       cancel-in-progress: false
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
       DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout
@@ -343,9 +369,15 @@ jobs:
           fetch-depth: 0
 
       - name: Preflight
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: python3 .github/scripts/preflight.py
 
       - name: Attach Implemented tickets to their versions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           if [ "$DRY_RUN" = "true" ]; then
             python3 .github/scripts/implemented.py --dry-run
@@ -354,6 +386,9 @@ jobs:
           fi
 
       - name: Refresh the conditions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           if [ "$DRY_RUN" = "true" ]; then
             python3 .github/scripts/conditions.py --dry-run
@@ -363,6 +398,9 @@ jobs:
 
       - name: End red if a board write failed, otherwise stamp the board
         if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         run: |
           if [ "$DRY_RUN" = "true" ]; then
             python3 .github/scripts/board_status.py --job-status "${{ job.status }}" --dry-run
