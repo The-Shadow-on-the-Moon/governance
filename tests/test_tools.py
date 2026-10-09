@@ -160,11 +160,13 @@ class GuideValueTests(unittest.TestCase):
         for phrase in ("a week at *Review*", "about a month", "six months", "two weeks"):
             self.assertIn(phrase, housekeeping, phrase)
 
-    def test_a_broken_rule_is_shown_without_a_wait(self):
+    def test_a_broken_rule_is_shown_without_a_wait_and_commented_after_one(self):
         text = self.guide("03-project-structure.md")
         self.assertIn("needs no wait", text)
-        for phrase in ("five minutes", "two hours"):
-            self.assertNotIn(phrase, text, phrase)
+        self.assertNotIn("five minutes", text)
+        self.assertIn("stays broken for two hours", text)
+        conditions = self.automation("conditions")
+        self.assertEqual(conditions.FIX_COMMENT_AFTER.total_seconds(), 2 * 3600)
 
     def test_the_fields_reference_does_not_repeat_the_attention_rules(self):
         reference = self.guide("appendix-c-ticket-fields-reference.md")

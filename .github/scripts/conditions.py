@@ -21,14 +21,19 @@ Run by hand: `python .github/scripts/conditions.py [--dry-run]`.
 import os
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Callable
 
+import condition_comments as cc
+import failures
 import finalize
 import preflight
+import versions
 from github_api import Client, GitHubError
 
 DECIDE, FOLLOW_UP, FIX = "decide", "follow-up", "fix"
 FIX_FIELD = "Fix"
+FIX_COMMENT_AFTER = timedelta(hours=2)  # a broken rule is put in a comment only when the ticket has not changed for this long
 
 OPEN = ("ToDo", "OnDeck", "InProgress", "Review", "Suspended")
 CLOSED = ("Completed", "Abandoned")
@@ -109,15 +114,15 @@ _FIXES = "nobody: it goes when the fields agree again"
 CONDITIONS = (
     # decide
     Condition("stale", "Stale", DECIDE, "No activity for too long: a week at Review, a month at OnDeck or InProgress, six months at Suspended.",
-              "watch.py", "a person decides (Fine or Acknowledged)", level="Watch"),
+              "watch.py", "a person ticks a box (Fine or Handled elsewhere)", level="Watch"),
     Condition("waited-too-long", "Waited too long", DECIDE, "A ticket has waited for input for two weeks.",
-              "watch.py", "a person decides (Fine or Acknowledged)", level="Watch"),
+              "watch.py", "a person ticks a box (Fine or Handled elsewhere)", level="Watch"),
     Condition("new-work-on-finished-ticket", "New work on a finished ticket", DECIDE,
               "A push brought work to a Completed, Abandoned, Review or Suspended ticket whose earlier work was already pushed or delivered.",
-              "push_step.py", "a person decides (Fine or Acknowledged)", level="Caution"),
+              "push_step.py", "a person ticks a box (Fine or Handled elsewhere)", level="Caution"),
     Condition("passed-version", "Aimed at a passed version", DECIDE,
               "An Implemented ticket is aimed at a version that was passed, so it can never be attached.",
-              "implemented.py", "a person decides (Fine or Acknowledged)", level="Caution"),
+              "implemented.py", "a person ticks a box (Fine or Handled elsewhere)", level="Caution"),
     Condition("open-alert", "Open Alert", DECIDE, "A bypass, a merge without changelog entries, an unreadable changelog or stale planned versions.",
               "bypass.py", "a person, through InProgress, Review and Completed"),
     # follow-up
@@ -152,6 +157,7 @@ CONDITIONS = (
 
 BY_ID = {c.id: c for c in CONDITIONS}
 FIX_RULES = tuple(c for c in CONDITIONS if c.nature == FIX)
+DECIDE_LEVELS = {c.id: c.level for c in CONDITIONS if c.nature == DECIDE and c.level}
 
 
 def broken_rules(ticket):
@@ -175,7 +181,7 @@ def fix_value(broken):
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
          "pageInfo{hasNextPage endCursor} nodes{id updatedAt "
-         "content{... on Issue{number state updatedAt issueType{name} comments(last:30){nodes{body}}}} "
+         "content{... on Issue{number state updatedAt issueType{name}}} "
          "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "resolution:fieldValueByName(name:\"Resolution\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "waiting:fieldValueByName(name:\"Waiting\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
@@ -204,7 +210,6 @@ def board_tickets(project_client, board):
             found.append({"item": node["id"], "number": content["number"], "item_updated": node["updatedAt"],
                           "issue_updated": content["updatedAt"], "state": content["state"],
                           "type": (content.get("issueType") or {}).get("name"),
-                          "comments": (content.get("comments") or {}).get("nodes") or [],
                           "status": name("status"), "delivery": name("delivery"), "resolution": name("resolution"), "waiting": name("waiting"),
                           "origin": name("origin"), "attention": name("attention"),
                           "ref": (node.get("ref") or {}).get("text") or "",
@@ -218,29 +223,78 @@ def board_tickets(project_client, board):
 
 # --- the refresh --------------------------------------------------------------------------------------------
 
-def refresh(run, project_client, board):
-    """Write the Fix field of every ticket whose set of broken rules changed. Returns the numbers changed.
+def sync_comments(run, repo_client, ticket, broken, now):
+    """Keep the ticket's condition comments in step with the board.
 
-    There is no wait: the field is live, so a ticket in the middle of an edit shows and then clears at the
-    next refresh. The waits of the old Caution flags apply only to a comment, never to the field.
+    The comments are read fresh just before anything is edited, and an edit changes only the automation's own
+    lines, so a box ticked a moment ago is never lost.
+    - a decide comment whose boxes are ticked moves Attention (cc.attention_after); damaged boxes are put back;
+    - a fix rule still broken after FIX_COMMENT_AFTER gets a comment, and one that is no longer broken has its
+      comment edited to say it was fixed.
+    Returns the Attention value to set, or None."""
+    number = ticket["number"]
+    comments = repo_client.list_comments(number)
+    ours = [(c, cc.condition_of(c.get("body"))) for c in comments]
+    ours = [(c, i) for c, i in ours if i and c.get("user", {}).get("type") == "Bot"]
+    decide = []
+    for comment, condition_id in ours:
+        if condition_id not in DECIDE_LEVELS or cc.is_fixed(comment["body"]):
+            continue
+        current = cc.state(comment["body"])
+        if current == "damaged":
+            run.do(f"#{number}: put back the boxes of the {condition_id} comment", repo_client.edit_comment, comment["id"], cc.restore(comment["body"]))
+        decide.append((condition_id, current))
+    quiet = now - datetime.fromisoformat(ticket["item_updated"].replace("Z", "+00:00"))
+    for rule in FIX_RULES:
+        open_comments = [c for c, i in ours if i == rule.id and cc.is_fix_comment(c["body"]) and not cc.is_fixed(c["body"])]
+        if rule.id in broken:
+            if not open_comments and quiet >= FIX_COMMENT_AFTER:
+                run.do(f"#{number}: comment on the broken rule {rule.id}", repo_client.comment, number, cc.fix_comment(rule.id, broken[rule.id]))
+        else:
+            for comment in open_comments:
+                run.do(f"#{number}: mark the {rule.id} comment fixed", repo_client.edit_comment, comment["id"],
+                       cc.mark_fixed(comment["body"], now.strftime("%Y-%m-%d")))
+    return cc.attention_after(decide, ticket["attention"], DECIDE_LEVELS)
+
+
+def needs_comments(ticket, broken):
+    """Whether the ticket's comments must be read: it has a flag the boxes can clear, or a rule broken now or before."""
+    return bool(broken) or bool(ticket["fix"]) or ticket["attention"] in ("Watch", "Caution")
+
+
+def refresh(run, project_client, board, repo_client=None, now=None):
+    """Write the Fix field of every ticket whose set of broken rules changed, and keep the comments in step.
+    Returns the numbers changed.
+
+    There is no wait for the field: it is live, so a ticket in the middle of an edit shows and then clears at the
+    next refresh. A comment about a broken rule does wait (FIX_COMMENT_AFTER). Without `repo_client` no comment is
+    read or written.
     """
     field = board.fields.get(FIX_FIELD)
     if field is None:
         run.log.append(f"the board has no {FIX_FIELD} field, so nothing is written (create it with fields.py --apply)")
         return []
+    now = now or versions.utc_now()
+    attention = board.fields.get("Attention")
     changed = []
     for ticket in board_tickets(project_client, board):
-        wanted = fix_value(broken_rules(ticket))
-        if wanted == ticket["fix"]:
-            continue
+        broken = broken_rules(ticket)
+        wanted = fix_value(broken)
         number = ticket["number"]
-        if wanted:
-            run.do(f"#{number}: set {FIX_FIELD} to {wanted}", project_client.set_project_field,
-                   board.id, ticket["item"], field["id"], {"text": wanted})
-        else:
-            run.do(f"#{number}: clear {FIX_FIELD} (was {ticket['fix']})", project_client.clear_project_field,
-                   board.id, ticket["item"], field["id"])
-        changed.append(number)
+        if wanted != ticket["fix"]:
+            if wanted:
+                run.do(f"#{number}: set {FIX_FIELD} to {wanted}", project_client.set_project_field,
+                       board.id, ticket["item"], field["id"], {"text": wanted})
+            else:
+                run.do(f"#{number}: clear {FIX_FIELD} (was {ticket['fix']})", project_client.clear_project_field,
+                       board.id, ticket["item"], field["id"])
+            changed.append(number)
+        if repo_client is None or not needs_comments(ticket, broken):
+            continue
+        new_attention = sync_comments(run, repo_client, ticket, broken, now)
+        if new_attention and attention and new_attention in attention["options"]:
+            run.do(f"#{number}: set Attention to {new_attention} (from the boxes in its comments)", project_client.set_project_field,
+                   board.id, ticket["item"], attention["id"], {"singleSelectOptionId": attention["options"][new_attention]})
     return changed
 
 
@@ -260,9 +314,10 @@ def main(argv=None):
         return 0
     run = finalize.Runner("--dry-run" in args)
     try:
-        refresh(run, project_client, report.board)
+        refresh(run, project_client, report.board, repo_client)
     except GitHubError as error:
         run.log.append(f"the refresh of the conditions stopped: {error}")
+        failures.record(f"the refresh of the conditions stopped: {error}")
     for line in run.log or ["no ticket's Fix field needs a change"]:
         print(("would: " if run.dry_run else "did: ") + line)
     return 0

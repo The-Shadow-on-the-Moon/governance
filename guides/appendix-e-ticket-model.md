@@ -90,8 +90,9 @@ Side paths:
 ### Attention
 
 Attention is a separate, parallel track on a work ticket. It starts blank. The automation raises *Watch* or
-*Caution* with a comment saying why; a person looks and sets *Fine* (nothing wrong, or put right) or
-*Acknowledged* (something has to be done, and it is handled elsewhere). Setting it changes nothing else.
+*Caution* with a comment saying why, with two boxes; a person looks and ticks *Fine* (nothing wrong, or put
+right) or *Handled elsewhere* (something has to be done, and it is handled elsewhere), and the automation
+sets *Fine* or *Acknowledged* when every comment is ticked. Setting it changes nothing else.
 What raises each level is in *Project structure*, section 4.3.
 
 ## 4. How the fields hold together

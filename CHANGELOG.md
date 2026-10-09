@@ -1,6 +1,24 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261009043032 (branch project-views)
+#### #120 — Refresh the conditions on the events that change them
+- .github/workflows/versioning.yml: the workflow also starts on `issues` (edited, closed, reopened, assigned, labeled) and `issue_comment` (created, edited); the job of mode `conditions` runs for them only when the issue was written by the team (OWNER, MEMBER, COLLABORATOR), or the comment was by the team, or it is an edit of a comment written by a bot (the tick of a box), never for a pull request, and no job other than `conditions` starts on them. A test checks the guard, that no `run:` step uses event text, and that no script writes a comment or an issue with the personal token (an event it started would start the workflow again).
+- .github/scripts/conditions.py: the board query no longer reads comments.
+- tests/test_workflow.py: the tests of the triggers and the guard. guides/03-project-structure.md section 2.3, guides/07-issues-and-the-board-in-practice.md section 2.5 and doc/wiki/Automation.md: the events that refresh the Fix field and why a stranger's comment starts nothing.
+#### #121 — Give each Decide condition its own checkbox comment
+- .github/scripts/condition_comments.py (new): builds the comment of a condition (the hidden marker `<!-- condition:<id> -->` after the existing first-line marker, and the two boxes *Fine* and *Handled elsewhere*), reads a tick back, restores edited box lines, edits a fix comment to "✅ fixed on <date>", and chooses Attention from the ticked boxes (all ticked: Fine, or Acknowledged if any is *Handled elsewhere*; some open: the highest open level; a value set by hand and AtRisk are never changed; it never raises a flag).
+- .github/scripts/conditions.py: the refresh reads the comments of a ticket that has an open flag or a broken rule now or before (fresh, just before it edits, and only comments written by a bot count), sets Attention from the boxes, puts back damaged boxes, posts one comment for a rule broken for two hours without the ticket changing, and marks the comment fixed when the rule stops being broken; the cleared-by wording of the four Decide conditions follows.
+- .github/scripts/watch.py, push_step.py and implemented.py: the four Decide comments (stale, waited too long, new work on a finished ticket, a passed version) carry the condition marker and the boxes, and ask for a tick instead of setting Attention.
+- tests/test_condition_comments.py (new), tests/test_watch.py, test_implemented.py, test_push_step.py and test_tools.py: the text, the ticks, the Attention rule, the race (the comments are read fresh), a person's fake comment, damaged boxes, the dry run, the fix comment and its wait.
+- guides/03-project-structure.md section 4.3, guides/07-issues-and-the-board-in-practice.md sections 2.4 and 2.5 and the checklist, guides/appendix-b, appendix-c and appendix-e, doc/wiki/Automation.md ("The checkbox comments"): how to close a flag by ticking a box.
+#### #122 — Show when the board was last checked and fail loudly when it was not written
+- .github/scripts/failures.py (new) and board_status.py (new): every sweep that carries on after a failed board write records it in a file of the runner; the last step of each board job prints each as an error and ends the job red, or, when nothing failed and the job succeeded, writes "Board checked <UTC time>" to the project's description (never in a dry run).
+- .github/scripts/github_api.py: `set_project_description`, `list_comments` and `edit_comment`. .github/scripts/conditions.py, dates.py, implemented.py, version_numbers.py, watch.py and finalize.py: they record their board failures. .github/workflows/versioning.yml: the last step of the `main`, `scheduled` and `conditions` jobs.
+- tests/test_board_status.py (new) and tests/test_workflow.py: the trace, the red ending, the stamp, and the last step of each job.
+- guides/07-issues-and-the-board-in-practice.md section 2.1 (look at the stamp first), guides/10-new-project-bootstrap.md section 4.1 and doc/wiki/Automation.md ("Failures and the stamp").
+- .github/automation-manifest.json regenerated (59 files, standard V0.10.0); guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
+
 ### Build 20261009035718 (branch project-views)
 #### #119 — Replace the Health view with the Decide, Follow up and Fix views
 - .github/views.json: Health is replaced by **Decide** (`attention:Watch,Caution,AtRisk OR (type:Alert AND is:open)`), **Follow up** (`has:waiting OR status:Review`) and **Fix** (`has:fix`), after Board and before Versions: seven views. The longest filter is 90 characters (Health's was 494 of the 512 GitHub allows). Not yet applied to the board.

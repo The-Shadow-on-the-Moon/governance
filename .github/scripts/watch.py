@@ -17,9 +17,11 @@ import re
 import sys
 from datetime import datetime, timedelta, timezone
 
+import condition_comments
 import finalize
 import preflight
 import versions
+import failures
 from github_api import Client, GitHubError
 
 THRESHOLDS = {"Review": timedelta(days=7), "OnDeck": timedelta(days=30), "InProgress": timedelta(days=30),
@@ -94,10 +96,11 @@ def already_raised(ticket):
 
 
 def comment_text(ticket, why, now):
-    return (f"{FLAG_MARKER}watch situation={situation(ticket)} -->\n"
+    text = (f"{FLAG_MARKER}watch situation={situation(ticket)} -->\n"
             f"Attention: Watch. This ticket has had {why} (last activity {last_activity(ticket):%Y-%m-%d %H:%M} UTC). "
             "Update it, complete it if the work is done and verified, suspend or abandon it, or ask again if it is waiting; "
-            "then set Attention to Fine or Acknowledged and say what you decided.")
+            "then tick a box below.")
+    return condition_comments.decorate(text, "waited-too-long" if ticket["waiting"] == "Needs input" and why.startswith("waiting") else "stale")
 
 
 def sweep(run, repo_client, project_client, board, now):
@@ -137,6 +140,7 @@ def main(argv=None):
         sweep(run, repo_client, project_client, report.board, versions.utc_now())
     except GitHubError as error:
         run.log.append(f"Watch sweep stopped: {error}")
+        failures.record(f"Watch sweep stopped: {error}")
     for line in run.log or ["no stale tickets to flag"]:
         print(("would: " if run.dry_run else "did: ") + line)
     return 0

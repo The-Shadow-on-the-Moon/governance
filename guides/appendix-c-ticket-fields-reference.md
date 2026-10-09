@@ -117,8 +117,8 @@ Version and Alert tickets have no Attention.
 | Value | Colour | Meaning | Set by |
 |---|---|---|---|
 | *(blank)* | none | Nothing has affected it. | n/a |
-| **Fine** | green | Looked at: nothing is wrong, or it was put right. | a person |
-| **Acknowledged** | purple | Looked at: something has to be done, and it is handled elsewhere (another ticket, or this ticket moved back to *ToDo*, *OnDeck*, *InProgress* or *Suspended*). The comment says where. | a person |
+| **Fine** | green | Looked at: nothing is wrong, or it was put right. | a person, or the automation from the box ticked in its comment |
+| **Acknowledged** | purple | Looked at: something has to be done, and it is handled elsewhere (another ticket, or this ticket moved back to *ToDo*, *OnDeck*, *InProgress* or *Suspended*). A reply says where. | a person, or the automation from the box ticked in its comment |
 | **Watch** | yellow | An open flag, the lowest level. | the automation |
 | **Caution** | orange | An open flag, the middle level. | the automation |
 | **AtRisk** | red | An open flag, the highest level. Reserved: no rule uses it yet. | the automation |

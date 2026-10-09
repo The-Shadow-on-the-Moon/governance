@@ -148,6 +148,12 @@ request. Each run sweeps the board and does the following, and the other guides 
 - **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
   *Implemented* tickets), so a version that has just been finalized does not wait for the next run, and the
   two never run at the same time: the second waits for the first.
+- **Rule:** the Fix field is also refreshed, for the whole board, when the team closes, reopens, edits,
+  assigns or labels an issue it wrote, comments on an issue, or ticks a box in a comment the automation
+  wrote, so that a ticket just corrected stops showing without waiting for the timer. Nothing else starts
+  it: a comment or an issue from anyone outside the team starts nothing, and no text of an event ever
+  reaches a command. A change to a board field alone starts no workflow (GitHub has no such trigger), so it
+  shows at the next of these runs.
 
 **Why.** Facts that no event announces are still facts the board depends on. A timer finds them without
 asking a person to remember, and without a person's edit having to trigger anything.
@@ -339,7 +345,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | one; text | a person |
 | **Progress** | Where is the work? | one | a person; the automation only advances *ToDo* and *OnDeck* to *InProgress* |
 | **Waiting** | Is it waiting for someone's input? | one | a person |
-| **Attention** | Has the ticket's state been looked at, and is it sound? | one | the automation raises *Watch*, *Caution* and *AtRisk*; a person sets *Fine* or *Acknowledged* |
+| **Attention** | Has the ticket's state been looked at, and is it sound? | one | the automation raises *Watch*, *Caution* and *AtRisk*; a person ticks *Fine* or *Handled elsewhere* in its comment, which sets *Fine* or *Acknowledged* |
 | **Resolution** | How did it end? | one | a person |
 | **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker, *Implemented*, and *Dropped* on a planned Version ticket, which a person sets) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
@@ -421,10 +427,11 @@ state and lose where the ticket was.
   automation. A level records how serious something looks, not what it is: the comment the automation
   adds says why, so new causes can be added without new values. *AtRisk* is reserved, and no rule uses
   it yet.
-- **Rule:** *Fine* and *Acknowledged* close a flag, and are set by a person after looking. *Fine* means
-  nothing is wrong, or it has been put right. *Acknowledged* means something has to be done and it is
-  handled elsewhere: in another ticket, or on this one, moved back to *ToDo*, *OnDeck*, *InProgress* or
-  *Suspended*. A comment says what was decided and, for *Acknowledged*, where it is handled.
+- **Rule:** *Fine* and *Acknowledged* close a flag, and are decided by a person after looking, by ticking
+  one of the two boxes in the automation's comment (or by setting the value by hand). *Fine* means
+  nothing is wrong, or it has been put right. *Acknowledged* (the box *Handled elsewhere*) means something
+  has to be done and it is handled elsewhere: in another ticket, or on this one, moved back to *ToDo*,
+  *OnDeck*, *InProgress* or *Suspended*. A reply says where it is handled.
 - **Rule:** these are the causes the automation uses today, with the level each starts at:
   - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
     whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
@@ -441,11 +448,15 @@ state and lose where the ticket was.
 - **Rule:** a rule of section 4.4 that is broken is not an Attention flag: it is listed in the ticket's Fix
   field (below), which clears by itself when the fields agree again, so there is nothing for a person to
   decide or close.
-- **Rule:** the automation sets an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or
-  that has a lower open flag, and a higher level replaces a lower one. It never sets *Fine* or
-  *Acknowledged*, and never lowers a level. A person may set any value by hand.
+- **Rule:** the automation raises an open flag only on a ticket that is blank, *Fine* or *Acknowledged*, or
+  that has a lower open flag, and a higher level replaces a lower one. It sets *Fine* or *Acknowledged*
+  only from the boxes: when every comment of the ticket is ticked it sets *Fine*, or *Acknowledged* if any
+  ticked box was *Handled elsewhere*; while some stay open it shows the highest level among them. It never
+  changes a value a person set by hand, and never touches *AtRisk*.
 - **Rule:** each time it raises a flag, the automation adds one comment saying why and, for new work,
-  which build.
+  which build, with a hidden marker `<!-- condition:<id> -->` (the id is in the table of guide 07, section
+  2.5) and the two boxes. Each open condition has its own comment, so that several can be cleared one by one.
+  If the lines of the boxes are edited away, the automation puts them back unticked and says so.
 - **Rule:** a flag is raised when a situation begins, and not again while the same situation goes on,
   however long that is. Time alone never raises it a second time. After a person closed a flag, it is
   raised again only if the situation reappears: new work arrives (a later build), or the ticket changes
@@ -519,10 +530,13 @@ ticket planned for a later version that ships earlier fixes itself.
   spaces, and is empty when none is broken. Only the automation writes it. A refresh recomputes the set
   from the ticket's other fields, so it needs no wait: a ticket in the middle of an edit shows and then
   clears at the next refresh.
+- **Rule:** a rule that stays broken for two hours without the ticket changing also gets one comment, without
+  boxes, so that the person is notified; when the rule stops being broken the comment is edited to say
+  "✅ fixed on" and the date. A rule that breaks again gets a new comment.
 - **Rule:** nobody sets or clears Fix, and it has no *Fine* or *Acknowledged*: a person fixes the cause, and
   the id goes. The rules and their ids are the list in `conditions.py`; a new rule is a new entry there.
-- **Rule:** the refresh runs after a merge to `main`, on every scheduled run and on request (section 2.3).
-  A change to a board field alone starts no workflow, so it shows at the next of those.
+- **Rule:** the refresh runs after a merge to `main`, on every scheduled run, on request and on the events
+  of section 2.3. A change to a board field alone starts no workflow, so it shows at the next of those.
 
 *Why.* An inconsistency is not a judgment: it is true or false from the other fields. Showing it as a stored
 set that is recomputed means two broken rules both have to be fixed before the ticket drops out, with no flag

@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.join(ROOT, ".github", "scripts"))
 
 import finalize  # noqa: E402
 import preflight  # noqa: E402
+import condition_comments  # noqa: E402
 import watch  # noqa: E402
 
 NOW = datetime(2026, 10, 20, 12, 0, 0, tzinfo=timezone.utc)
@@ -143,7 +144,9 @@ class FlagRulesTests(unittest.TestCase):
         _, repo, _, _ = sweep([ticket(1, "Review", 10, build="20261001000000", comments=[comment(10)])])
         text = repo.comments[0][1]
         self.assertTrue(text.startswith("<!-- attention:watch situation=Review/20261001000000 -->\n"))
-        self.assertIn("then set Attention to Fine or Acknowledged", text)
+        self.assertIn("then tick a box below", text)
+        self.assertIn("<!-- condition:stale -->", text)
+        self.assertEqual(condition_comments.state(text), "open")
         self.assertTrue(watch.SITUATION.search(text))
 
     def test_one_comment_per_flagged_ticket(self):

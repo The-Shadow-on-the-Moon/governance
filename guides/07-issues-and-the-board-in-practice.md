@@ -59,6 +59,10 @@ somebody else did.
 
 ### 2.1 What to look at, in order
 
+0. **The stamp.** The project's description says "Board checked" and a UTC time. The automation writes it
+   whenever a run finishes without a failed board write. If the time is old, the automation has stopped
+   (a token that expired, a schedule that was switched off, a failing run): look at the Actions tab before
+   trusting an empty view.
 1. **Alerts.** Open tickets of Type *Alert*. Each is *Critical* and is waiting for a person.
 2. **Attention.** Tickets with an open flag: *AtRisk*, then *Caution*, then *Watch* (section 2.4).
 3. **Waiting.** Tickets marked *Needs input*. Has the answer arrived? If so, clear it. If a ticket has waited
@@ -135,22 +139,30 @@ The steps:
      abandon it.
    - *A long wait:* ask again, or decide without the answer, and clear Waiting.
 3. **Act,** and comment on what you decided.
-4. **Close the flag.** Set *Fine* if nothing is wrong or you put it right. Set *Acknowledged* if
-   something still has to be done and it is handled elsewhere, and say where in the comment: another
-   ticket, or this ticket moved back to *ToDo*, *OnDeck*, *InProgress* or *Suspended*.
+4. **Close the flag.** Tick a box in the automation's comment. Tick *Fine* if nothing is wrong or you put it
+   right. Tick *Handled elsewhere* if something still has to be done and it is handled elsewhere, and say
+   where in a reply: another ticket, or this ticket moved back to *ToDo*, *OnDeck*, *InProgress* or *Suspended*.
+   The automation then sets Attention for you (*Fine*, or *Acknowledged* if any box you ticked was
+   *Handled elsewhere*). You can still set Attention by hand.
 
 - **Rule:** whoever holds the ticket decides and closes the flag. For an unassigned ticket, someone
   holding the project owner role does.
-- **Rule:** closing a flag comes with a comment, and an *Acknowledged* comment names where the work is
+- **Rule:** each open condition on a ticket has its own comment and its own two boxes, and the ticket drops
+  out of the Decide view only when every one is ticked: two open conditions need two ticks. While one stays
+  open, Attention shows the highest level among the open ones.
+- **Rule:** closing a flag comes with a reply when it is *Handled elsewhere*, which names where the work is
   handled.
+- **Recommendation:** do not edit the lines of the boxes or the hidden marker above them. If they are
+  changed, the automation puts them back unticked and adds a note.
 - **Recommendation:** close the flag only after deciding. A flag closed without acting is not raised again
   for the same situation, so nothing will remind you.
 - **Recommendation:** take the higher levels first, because *Caution* and *AtRisk* mean the board and
   the facts disagree.
 
 **Why.** The automation cannot know what a person meant, so it points and a person decides. Setting
-*Fine* or *Acknowledged* is the decision being recorded, and the comment says which and why, so the next
-person does not have to ask.
+*Fine* or *Handled elsewhere* is the decision being recorded, and the reply says why, so the next
+person does not have to ask. A tick is an event the automation reacts to, so the flag clears within a
+minute or so instead of waiting for the next scheduled run.
 
 ### 2.5 The conditions the board shows
 
@@ -160,10 +172,10 @@ there.
 
 | Id | Name | View | Cleared by |
 |---|---|---|---|
-| `stale` | Stale | Decide | a person decides (Fine or Acknowledged) |
-| `waited-too-long` | Waited too long | Decide | a person decides (Fine or Acknowledged) |
-| `new-work-on-finished-ticket` | New work on a finished ticket | Decide | a person decides (Fine or Acknowledged) |
-| `passed-version` | Aimed at a passed version | Decide | a person decides (Fine or Acknowledged) |
+| `stale` | Stale | Decide | a person ticks a box (Fine or Handled elsewhere) |
+| `waited-too-long` | Waited too long | Decide | a person ticks a box (Fine or Handled elsewhere) |
+| `new-work-on-finished-ticket` | New work on a finished ticket | Decide | a person ticks a box (Fine or Handled elsewhere) |
+| `passed-version` | Aimed at a passed version | Decide | a person ticks a box (Fine or Handled elsewhere) |
 | `open-alert` | Open Alert | Decide | a person, through InProgress, Review and Completed |
 | `waiting` | Waiting | Follow up | a person, when it is answered; always at Completed or Abandoned |
 | `review` | Review | Follow up | a person: Completed with Done, or back to InProgress |
@@ -184,10 +196,11 @@ there.
   true or false from the ticket's other fields, so the refresh lists the broken ones in the ticket's Fix
   field and removes each when it stops being true. Nobody closes it: correct the field. A ticket with two
   broken rules keeps both ids until both are put right.
-- The refresh runs after a merge to `main`, on every scheduled run and on request, and an *Implemented*
-  ticket waiting for its Version is attached just before it, so it is not shown as broken. A change to a
-  board field alone starts no run: if Fix still shows a ticket you have just corrected, it goes at the next
-  refresh, or ask for one (the workflow mode `conditions`).
+- The refresh runs after a merge to `main`, on every scheduled run, on request, and when the team closes,
+  reopens, edits, assigns or labels an issue it wrote, comments, or ticks a box in the automation's comment.
+  An *Implemented* ticket waiting for its Version is attached just before it, so it is not shown as broken.
+  A change to a board field alone starts no run: if Fix still shows a ticket you have just corrected, it
+  goes when you close the issue, or at the next refresh, or ask for one (the workflow mode `conditions`).
 
 
 ---
@@ -461,7 +474,7 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] I looked at *Decide* first (Alerts, then Attention flags), then *Follow up* (Waiting and Review) and *Fix*,
       and then InProgress, OnDeck and ToDo.
-- [ ] Each open Attention flag on my tickets was decided and closed with *Fine* or *Acknowledged* and a
+- [ ] Each open Attention flag on my tickets was decided and closed (a box ticked, with a reply when it is *Handled elsewhere*) and a
       comment, and not just dismissed.
 - [ ] I cleared Waiting where the answer arrived.
 

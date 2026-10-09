@@ -151,6 +151,25 @@ class Client:
             variables["o"] = [{"name": option, "color": color, "description": ""} for option, color in options]
         return self.graphql(query, variables)["createProjectV2Field"]["projectV2Field"]
 
+    def set_project_description(self, project_id, text):
+        """Set the project's short description (the board's "last checked" stamp lives there)."""
+        query = ("mutation($p:ID!,$d:String!){updateProjectV2(input:{projectId:$p,shortDescription:$d})"
+                 "{projectV2{id shortDescription}}}")
+        return self.graphql(query, {"p": project_id, "d": text})["updateProjectV2"]["projectV2"]
+
+    def list_comments(self, number):
+        """The comments of an issue, oldest first, as GitHub returns them (id, body, user, created_at)."""
+        found, page = [], 1
+        while True:
+            chunk = self.request("GET", self.repo_path(f"/issues/{number}/comments?per_page=100&page={page}"))
+            found += chunk
+            if len(chunk) < 100:
+                return found
+            page += 1
+
+    def edit_comment(self, comment_id, body):
+        return self.request("PATCH", self.repo_path(f"/issues/comments/{comment_id}"), {"body": body})
+
     # Project (board) views
     def project_views(self, project_id):
         """The board's views as GraphQL returns them: id, number, name, layout, filter, grouping, sorting, visible fields."""

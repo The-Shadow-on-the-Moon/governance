@@ -45,6 +45,8 @@ PATTERNS = [
     "tests/test_retire.py",
     "tests/test_views.py",
     "tests/test_conditions.py",
+    "tests/test_board_status.py",
+    "tests/test_condition_comments.py",
     "tests/test_fields.py",
     "tests/test_reenable_schedule.py",
     "tests/test_manifest.py",

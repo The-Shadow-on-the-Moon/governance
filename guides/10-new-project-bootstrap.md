@@ -189,8 +189,10 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 The automation writes to the board: it sets Delivery, Version, Build, the dates and the Attention flags,
 advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to an organization's board,
 so the project keeps its own token, stored as a secret. The same token lets the preflight store the board's
-number in a repository variable. Without it the automation still versions, and only the board steps are
-skipped, with a clear message.
+number in a repository variable. Without it the automation still versions, and the board steps are
+skipped, with a clear message; the run then ends red once its other steps are done, so that GitHub sends
+its failure notice, because a green run with a stale board looks like a healthy one. A run that did write to
+the board ends by writing "Board checked" and the UTC time to the project's description.
 
 ### 4.2 The steps
 

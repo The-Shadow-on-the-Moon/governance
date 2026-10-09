@@ -39,6 +39,84 @@ class WorkflowTests(unittest.TestCase):
         for trigger in ("pull_request:", "push:", "workflow_dispatch:", "- '**'"):
             self.assertIn(trigger, text)
 
+    def test_it_also_starts_on_issue_events_and_comments(self):
+        text = workflow()
+        self.assertRegex(text, r"(?m)^  issues:\n    types: \[edited, closed, reopened, assigned, labeled\]\n")
+        self.assertRegex(text, r"(?m)^  issue_comment:\n    types: \[created, edited\]\n")
+
+    def conditions_guard(self):
+        text = workflow()
+        job = text[text.index("\n  conditions:\n"):text.index("\n  release:\n")]
+        lines = job.split("\n")
+        start = next(i for i, line in enumerate(lines) if line.startswith("    if: >-"))
+        block = []
+        for line in lines[start + 1:]:
+            if not line.startswith("      "):
+                break
+            block.append(line)
+        return job, " ".join(line.strip() for line in block), block
+
+    def test_only_the_team_can_start_the_refresh_by_an_event(self):
+        job, expression, block = self.conditions_guard()
+        self.assertEqual({len(line) - len(line.lstrip()) for line in block}, {6})  # one indent, so the block folds into one line
+        self.assertEqual(expression.count("("), expression.count(")"))
+        self.assertEqual(expression.count("'") % 2, 0)
+        # an issue the team wrote, or a comment by the team
+        self.assertIn("github.event_name == 'issues'", expression)
+        self.assertIn("github.event.issue.author_association", expression)
+        self.assertIn("github.event.comment.author_association", expression)
+        self.assertEqual(expression.count('fromJSON(\'["OWNER","MEMBER","COLLABORATOR"]\')'), 2)
+        for stranger in ("NONE", "CONTRIBUTOR", "FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER", "MANNEQUIN"):
+            self.assertNotIn(stranger, expression.replace("github-actions", ""))
+        # the tick of a box: an edit of a comment the bot wrote (only someone with write access can edit another's comment)
+        self.assertIn("github.event.action == 'edited' && github.event.comment.user.type == 'Bot'", expression)
+        # not the comments of pull requests, and still the request by hand
+        self.assertIn("!github.event.issue.pull_request", expression)
+        self.assertIn("github.event_name == 'workflow_dispatch' && inputs.mode == 'conditions'", expression)
+
+    def test_no_other_job_starts_on_an_issue_event(self):
+        text = workflow()
+        for job in ("advisory", "branch", "main", "scheduled", "release", "hotfix", "retire"):
+            body = text[text.index(f"\n  {job}:\n"):]
+            condition = body[:body.index("\n    runs-on:")]
+            self.assertNotIn("'issues'", condition, job)
+            self.assertNotIn("'issue_comment'", condition, job)
+
+    def test_no_event_text_reaches_a_shell_command(self):
+        lines = workflow().split("\n")
+        for number, line in enumerate(lines):
+            if re.match(r"\s+run:", line):
+                indent = len(line) - len(line.lstrip())
+                body = [line]
+                for later in lines[number + 1:]:
+                    if later.strip() and len(later) - len(later.lstrip()) <= indent:
+                        break
+                    body.append(later)
+                for text in body:
+                    self.assertNotIn("github.event.", text, f"line {number + 1}")
+                    self.assertNotIn("github.head_ref", text, f"line {number + 1}")
+
+    def test_no_script_writes_a_comment_or_an_issue_with_the_personal_token(self):
+        # an event started by the personal token would start the workflow again: a loop. The workflow token starts none.
+        scripts = os.path.join(ROOT, ".github", "scripts")
+        pattern = re.compile(r"project_client\.(comment|close_issue|create_issue|add_sub_issue|edit_comment)\b"
+                             r"|project_client\.request\(\s*[\"'](POST|PATCH|PUT|DELETE)[\"'][^)]*(issues|comments)")
+        for name in sorted(os.listdir(scripts)):
+            if name.endswith(".py"):
+                with open(os.path.join(scripts, name), encoding="utf-8") as handle:
+                    self.assertIsNone(pattern.search(handle.read()), name)
+
+    def test_every_job_that_writes_to_the_board_ends_with_the_status_step(self):
+        text = workflow()
+        for job, nxt in (("main", "scheduled"), ("scheduled", "conditions"), ("conditions", "release")):
+            body = text[text.index(f"\n  {job}:\n"):text.index(f"\n  {nxt}:\n")]
+            self.assertIn("board_status.py", body, job)
+            self.assertGreater(body.index("board_status.py"), body.index("conditions.py"), job)
+            step = body[body.index("End red if a board write failed"):]
+            self.assertIn("if: always()", step.split("run:")[0], job)
+            self.assertIn('--job-status "${{ job.status }}"', step, job)
+            self.assertEqual(step.count("- name:"), 0, f"{job}: it is the last step")
+
     def test_declares_its_own_permissions(self):
         text = workflow()
         self.assertRegex(text, r"(?m)^permissions:\n  contents: write\n  issues: write\n  pull-requests: write\n")

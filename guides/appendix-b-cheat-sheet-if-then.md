@@ -41,7 +41,7 @@ branching and merging.
 | work is set aside to resume later | Suspend the ticket, with a comment, and the branch too. | Issues and the board in practice, section 4.1 |
 | work is being dropped | Abandon it with a Resolution and a comment, and the branch too. | Issues and the board in practice, section 4.2 |
 | an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5 |
-| the automation flagged my ticket (*Watch*, *Caution* or *AtRisk*) | Read its comment, decide, act, and set *Fine*, or *Acknowledged* if it is handled elsewhere. | Issues and the board in practice, section 2.4 |
+| the automation flagged my ticket (*Watch*, *Caution* or *AtRisk*) | Read its comment, decide, act, and tick *Fine*, or *Handled elsewhere* if it is handled elsewhere. | Issues and the board in practice, section 2.4 |
 | an Alert was raised in error | Abandon it with Resolution *Invalid* and a comment, and raise a Bug against the automation. | Issues and the board in practice, section 5 |
 | a planned version will not happen | Mark it *Dropped*, close it, and comment what replaced it. | Issues and the board in practice, section 6 |
 
