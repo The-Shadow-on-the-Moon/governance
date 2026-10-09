@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.10.1 — 2026-10-09 08:52 UTC
 ### Build 20261009084750 (branch fix-conditions-team-check)
 #### #132 — The conditions job is skipped for the team's own issue events
 - .github/workflows/versioning.yml: a new job `team` (no secret but the workflow token, no concurrency group) starts for an issue event, for a comment on an issue that is not a pull request, and for a start on request with mode `conditions`; it asks the API whether the person who caused the event has write access, prints the association the payload carried, and outputs `allowed`. The job `conditions` needs it and runs only when `allowed` is true; the old condition on the event's `author_association` (which hid the organization's private members, so every run was skipped) is gone, and the two tokens are on the steps that use them instead of on the job.
