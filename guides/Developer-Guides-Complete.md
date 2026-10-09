@@ -103,7 +103,10 @@ roles (see *Project structure*, section 10.6).
 - The project is hosted on GitHub, in an organization, with issues, a project board and workflows.
 - Compiling and testing are done by the developer, locally. There is no continuous integration.
 - The local hooks and the workflow come with the standard, and the hooks need their runtime (Python 3).
-- The tool-neutral text applies on any platform. The "In GitHub" blocks name the GitHub specifics.
+- The tool-neutral text applies on any platform. The "In GitHub" blocks name the GitHub specifics. Two
+  places name GitHub outside the blocks, because they are about GitHub itself: the fixed file names of
+  the project structure (such as `.github/`), and the whole bootstrap guide, which sets up a GitHub
+  repository (the glossary has a section of GitHub names, marked as such in its title).
 
 ---
 
@@ -996,6 +999,8 @@ a breach:
 
 - Rebasing instead of merging (section 4.3).
 - Recompiling and retesting after a sync (section 4.5).
+- Hiding a bypass, for example by rewriting history on a branch (section 6.5). On `main` the branch
+  protection forbids rewriting history.
 
 Skipped local checks are only partly detectable. If a commit made on a developer's machine changed the
 changelog but still has its build placeholder when it is pushed, the local checks were skipped, and the
@@ -1010,7 +1015,7 @@ Naming them tells the developer where the safeguard is their own care.
 - **Recommendation:** a bypass is legitimate when there is a reason. Do it deliberately, say why in the
   commit or ticket, and expect the Alert. Treat the Alert as the other half of the decision, not as a
   penalty.
-- **Recommendation:** never hide a bypass, for example by editing history. The record is what makes it
+- **Rule:** never hide a bypass, for example by editing history. The record is what makes it
   recoverable.
 
 > **In GitHub.** The warnings are the advisory check on the pull request and the local git hooks, which
@@ -4369,8 +4374,9 @@ rules about versions and branches are in the guide on branching and merging.
 - **Recommendation**: good practice with reasons, but the person decides.
 - **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
   and say why when you do not.
-- **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
-  tool-neutral.
+- **In GitHub**: how the step looks with GitHub and plain git. Unlike the other guides, this one is about
+  setting up a GitHub repository, so its text names GitHub features (workflows, the project token, issue
+  types) outside the blocks as well.
 
 **Roles, and responsible, not necessarily manual.** Developer, project owner and administrator are roles.
 One person may hold several, and in a small team they often do. Where this guide names a role, it means

@@ -1,6 +1,13 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261009003524 (branch project-views)
+#### #116 — Fix gaps and conflicts found by the repeated sweeps of the guides
+- guides/02-branching-and-merging-strategy.md (section 6.5): "never hide a bypass" is a Rule, not a Recommendation. Guide 06 and Appendix A treated it as one, and a pointer added to guide 06 section 6.3 during #113 had made that Rule point at a Recommendation.
+- guides/README.md ("What the standard assumes"): the guides said everything outside the "In GitHub" blocks is tool-neutral; two places name GitHub outside the blocks because they are about GitHub itself, the fixed file names of the project structure and the bootstrap guide, and the sentence now says so.
+- guides/02-branching-and-merging-strategy.md (section 6.4): hiding a bypass is listed among the rules that rest on discipline, now that section 6.5 makes it a Rule (on `main` the branch protection forbids rewriting history).
+- guides/10-new-project-bootstrap.md (preamble): the guide says of itself that it names GitHub features outside the "In GitHub" blocks, which its old preamble denied; guides/README.md names the glossary section of GitHub names beside the other two places.
+- guides/Developer-Guides-Complete.md rebuilt; `xref_check` reports 0 problems.
 ### Build 20261008235402 (branch project-views)
 #### #116 — Fix gaps and conflicts found by the repeated sweeps of the guides
 - guides/01-concepts-and-vocabulary.md (glossary): four terms used throughout and not defined are added: build block, kebab-case, trial and regression checks.

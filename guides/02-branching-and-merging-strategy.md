@@ -491,6 +491,8 @@ a breach:
 
 - Rebasing instead of merging (section 4.3).
 - Recompiling and retesting after a sync (section 4.5).
+- Hiding a bypass, for example by rewriting history on a branch (section 6.5). On `main` the branch
+  protection forbids rewriting history.
 
 Skipped local checks are only partly detectable. If a commit made on a developer's machine changed the
 changelog but still has its build placeholder when it is pushed, the local checks were skipped, and the
@@ -505,7 +507,7 @@ Naming them tells the developer where the safeguard is their own care.
 - **Recommendation:** a bypass is legitimate when there is a reason. Do it deliberately, say why in the
   commit or ticket, and expect the Alert. Treat the Alert as the other half of the decision, not as a
   penalty.
-- **Recommendation:** never hide a bypass, for example by editing history. The record is what makes it
+- **Rule:** never hide a bypass, for example by editing history. The record is what makes it
   recoverable.
 
 > **In GitHub.** The warnings are the advisory check on the pull request and the local git hooks, which

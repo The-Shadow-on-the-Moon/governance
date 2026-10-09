@@ -12,8 +12,9 @@ rules about versions and branches are in the guide on branching and merging.
 - **Recommendation**: good practice with reasons, but the person decides.
 - **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
   and say why when you do not.
-- **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
-  tool-neutral.
+- **In GitHub**: how the step looks with GitHub and plain git. Unlike the other guides, this one is about
+  setting up a GitHub repository, so its text names GitHub features (workflows, the project token, issue
+  types) outside the blocks as well.
 
 **Roles, and responsible, not necessarily manual.** Developer, project owner and administrator are roles.
 One person may hold several, and in a small team they often do. Where this guide names a role, it means
