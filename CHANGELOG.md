@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.12.0 — 2026-10-11 20:29 UTC
 ### Build 20261011202606 (branch audit-tools)
 #### #148 — Audit tool: files and local git checks
 - tools/audit_common.py: the check model every audit script uses (an id, the guide section, rule or recommendation, a result of pass, fail or not-checkable, a message and a fix hint), the report with its counts, and the text format.
