@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.11.1 — 2026-10-11 18:28 UTC
 ### Build 20261011182523 (branch columns-colors-and-sort)
 #### #144 — Set the manifest standard to the version that carries it
 - .github/automation-manifest.json: the standard is V0.11.1, the version this branch becomes (a mod: its only ticket is a Task), where it said V0.10.1 although the automation files listed had changed in V0.11.0; the hashes are unchanged.
