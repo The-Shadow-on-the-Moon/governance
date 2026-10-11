@@ -137,7 +137,7 @@ class FinishTests(HotfixRepo):
         self.assertEqual(remote_head, head)
         self.assertEqual(repo.created_tags, [("released/V1.25.0-HF1", head)])
         title, body, kind = repo.issues[0]
-        self.assertEqual((title, kind), ("Version 1.25.0-HF1", "Version"))
+        self.assertEqual((title, kind), ("Version 001.025.000-HF1", "Version"))
         self.assertIn(f"from the hotfix branch {BRANCH}", body)
         self.assertIn("hotfix of V1.25.0", body)
         self.assertEqual(repo.subs, [(90, 301), (90, 302)])
@@ -149,8 +149,8 @@ class FinishTests(HotfixRepo):
         _, _, project = self.finish()
         sets = {(item, field): value for item, field, value in project.sets}
         self.assertEqual(sets[("I301", "F-Delivery")], {"singleSelectOptionId": "Delivery-Released"})
-        self.assertEqual(sets[("I301", "F-Version")], {"text": "V1.25.0-HF1"})
-        self.assertEqual(sets[("I301", "F-Version#")], {"number": float(V("V1.25.0-HF1").number())})
+        self.assertEqual(sets[("I301", "F-Version")], {"text": "V001.025.000-HF1"})
+        self.assertNotIn(("I301", "F-Version#"), sets)
         self.assertEqual(sets[("I301", "F-Build")], {"text": "20261007100000"})
         self.assertNotIn("Delivery-Merged", [v.get("singleSelectOptionId") for v in sets.values()])
         self.assertEqual(sets[("I90", "F-Delivery")], {"singleSelectOptionId": "Delivery-Released"})  # the Version ticket

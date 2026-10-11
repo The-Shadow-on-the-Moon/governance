@@ -4,7 +4,7 @@ For each ticket in the changelog entries that the push added, it sets Delivery t
 the ticket's latest build, moves a ticket still at ToDo or OnDeck to InProgress, and raises Caution in
 Attention, with one comment naming the build, when the ticket is Completed, Abandoned, Review or
 Suspended and its earlier work was already pushed or delivered (new work has arrived on a finished
-ticket). Earlier work is recognised by a Build recorded on the board that is older than the build being
+ticket). Earlier work is recognized by a Build recorded on the board that is older than the build being
 pushed, or by Delivery Implemented (which has no Build). A ticket whose Delivery was merely set by hand has
 no such Build, so its push counts as a first push and never raises it. It never moves a ticket out of those
 states.

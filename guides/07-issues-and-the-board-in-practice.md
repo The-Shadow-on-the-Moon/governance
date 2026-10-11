@@ -93,7 +93,7 @@ The board has seven saved views, in this order:
   verification.
 - **Fix:** tickets whose fields contradict each other. The refresh lists the broken rules in each ticket's
   Fix field and this view shows every ticket that has any (section 2.5).
-- **Versions:** the work tickets grouped by their Version ticket (the group reads "Version 0.7.0"), with Delivery,
+- **Versions:** the work tickets grouped by their Version ticket (the group reads "Version 000.007.000"), with Delivery,
   Build and Resolution, to see what each version holds and whether it shipped. Tickets only aimed at a version,
   which have no Version ticket yet, are in a group of their own, ordered by version.
 
@@ -328,7 +328,7 @@ An Alert is *Critical* and starts at *ToDo*. Every move is manual: *InProgress* 
 *Review* when they believe it is handled, *Completed* with Resolution *Done* when a human has verified it.
 Shipping a version never moves it. The person who takes it sets its Size and Risk when triaging.
 
-*Done* means that something was done beyond analysing the Alert, for example documenting the change. An
+*Done* means that something was done beyond analyzing the Alert, for example documenting the change. An
 Alert that analysis shows to be wrong is *Invalid*.
 
 ### 5.4 Rules
@@ -372,13 +372,13 @@ coming back.
 - **Aim tickets with their Version field and nothing else.** The automation creates the Version ticket
   itself when the version is finalized, so the Version tickets exist in the order the versions shipped.
   Aimed tickets show on the *Board* view (a row for each Version), in the *Backlog*, and in the *Versions*
-  view's group of tickets with no Version ticket yet, ordered by Version#.
+  view's group of tickets with no Version ticket yet, ordered by version.
 - **Creating a Version ticket ahead of time is allowed but not recommended.** It would be titled exactly
-  `Version 2.5.0`, with Type *Version*, Delivery blank and the issue open, as a place to record what you
-  plan. But the *Versions* view orders its groups by the order the Version tickets were created in: a ticket
-  made early for a later version (say `Version 2.0.0` while the project is at 1.30.0) would sort ahead of a
-  version that ships first (1.31.0, created by the automation when it ships). A planned number is also a guess
-  (the bump is decided at merge), so a planned ticket tends to go stale.
+  `Version 002.005.000` (the automation also finds `Version 2.5.0` and renames it when the version ships),
+  with Type *Version*, Delivery blank and the issue open, as a place to record what you plan. The *Versions*
+  view orders its groups by the text of the titles, which is the order of the versions, so a ticket made early
+  does not jump the queue. A planned number is a guess (the bump is decided at merge), so a planned ticket
+  tends to go stale.
 - Before the version is finalized a planned ticket is only a plan. Tickets are not attached to it as
   sub-issues ahead of time; the target Version field on each ticket says which version it is aimed at, and
   the automation attaches the tickets when it finalizes the version.

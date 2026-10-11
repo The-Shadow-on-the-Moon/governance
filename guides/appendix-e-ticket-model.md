@@ -25,7 +25,7 @@ code has shipped).
 | **Resolution** | How did it end? | board field | a person |
 | **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Fix** | Which of the rules that span fields do its fields break? | board field | the automation |
-| **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Version#, Start date, End date | a person, except Build, Version#, the real Version and the dates |
+| **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, Version#, the real Version and the dates |
 
 Two principles decide who sets a field. **Judgment belongs to people, facts belong to the automation**:
 whether the work is done, verified or urgent is a person's call, while where the code is, which build it is
@@ -120,8 +120,8 @@ The stages, the rules and the causes of each are in *Project structure*, section
 - **Version numbers.** The Type of each ticket in a version decides the bump, and a marker can override it
   (the rules are in *Branching and merging strategy*, section 3.3).
 - **Delivery, Version, Build and dates** are written by the automation from pushes, merges, releases and a
-  sweep that runs after each finalize and on every scheduled run. The scheduled run also sets Version# on any ticket that has a
-  Version, so a ticket only aimed at a version sorts with the others.
+  sweep that runs after each finalize and on every scheduled run. The scheduled run also puts Version in the board form on any ticket that
+  has one, so a ticket only aimed at a version sorts with the others.
 - **Attention** is raised from the same sweep and from pushes.
 - **Nothing in Area, Risk, Priority or Size** drives any rule.
 

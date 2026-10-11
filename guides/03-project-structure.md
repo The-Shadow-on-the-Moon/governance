@@ -93,7 +93,7 @@ branch they came through.
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
 | **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
-| **Licence files** (root) | The project's licence, when it has one. |
+| **License files** (root) | The project's license, when it has one. |
 
 ### 2.2 Rules
 
@@ -139,7 +139,7 @@ request. Each run sweeps the board and does the following, and the other guides 
 
 - sets the Start and End dates of tickets that have started or ended;
 - raises *Watch* on tickets that have gone quiet or have waited too long (section 4.3);
-- sets Version# on every ticket that has a Version, including one that is only aimed at a version;
+- puts the Version of every ticket that has one in the board form, including one that is only aimed at a version;
 - attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2);
 - refreshes the Fix field of every ticket (section 4.3), always after the attaching, so that an *Implemented*
   ticket that is waiting for its Version is not shown as broken.
@@ -213,7 +213,7 @@ back to why the change was made.
   what happened, and the version or build it was found on. **The more detail the better**: a ticket that
   can be understood without asking anyone saves more time than it costs to write. The solution and the
   discussion that leads to it belong in the comments. A suggested implementation may go in the
-  description, but only when it is clearly labelled as a proposal.
+  description, but only when it is clearly labeled as a proposal.
 - **Comments:** keep the record in comments, not in side channels.
   - When setting *Waiting*, say what is needed and from whom.
   - When abandoning a ticket, say why and link the related ticket.
@@ -263,7 +263,7 @@ More examples, covering every Type, are in appendix D (*Ticket examples*).
 > has had three requests this quarter for a way to take the data out directly, and two customers use the
 > pasted tables in monthly reviews.
 >
-> **Who is affected.** Anyone who reads reports and needs to analyse or share them: mostly finance users,
+> **Who is affected.** Anyone who reads reports and needs to analyze or share them: mostly finance users,
 > typically once a month, with reports of up to a few thousand rows.
 >
 > **What is wanted.** An *Export* button on the reports page that downloads the report currently shown
@@ -276,7 +276,7 @@ More examples, covering every Type, are in appendix D (*Ticket examples*).
 >
 > **Done when.** The CSV opens correctly in two common spreadsheet programs with accented characters
 > intact, matches what the page shows for at least three different reports, and the user guide describes
-> the export. Behaviour with an empty report is defined and tested (header row only).
+> the export. Behavior with an empty report is defined and tested (header row only).
 >
 > **Notes.** The layout was agreed in #210. Reports above 50,000 rows are not expected; if one is found
 > in practice, raise a separate ticket.
@@ -351,7 +351,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Resolution** | How did it end? | one | a person |
 | **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker, *Implemented*, and *Dropped* on a planned Version ticket, which a person sets) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
-| **Version**, **Build**, **Version#** | Which version and build? | text, text, number | a person may aim it; the automation sets the real values |
+| **Version**, **Build** | Which version and build? | text, text | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
 | **Fix** | Which of the rules that span fields do its fields break? | text (rule ids) | the automation |
 
@@ -437,7 +437,7 @@ state and lose where the ticket was.
 - **Rule:** these are the causes the automation uses today, with the level each starts at:
   - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
     whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
-    *Released* or *Dropped*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
+    *Released* or *Dropped*). Earlier work is recognized by the ticket's recorded Build: a Build older than the
     one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
     Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
     never raises it: a ticket moved to *Review* before its first push has no earlier work. A *Caution* is also
@@ -516,8 +516,11 @@ nothing in the repository shows that a secret was stored or a setting changed.
 - **Rule:** Version is a single field for the version a ticket is aimed at and, once it ships, the
   version it really shipped in: a person may set it ahead of time, and the automation overwrites it with
   the real version. Build holds the ticket's latest build (the most recent build stamp among the build blocks that
-  mention it), and Version# is derived from Version only to sort versions. The automation sets it, not only
-  when a version ships but on every scheduled run for any ticket that has a Version, so a ticket that is only aimed at a
+  mention it). On the board a version is written with three digits for each of V, s and m (`V000.010.001`, and
+  `V001.025.000-HF1` for a hotfix), so that the text sorts in version order in a plain table, in a group and in
+  the hierarchy; a Version ticket's title uses the same form (`Version 000.010.001`). The changelog, tags and branch
+  names keep the short form. A person may type either form; the automation writes the board form when it
+  finalizes and on every scheduled run, for any ticket that has a Version, so a ticket that is only aimed at a
   version sorts among the others.
 - **Rule:** Start date and End date are the dates the automation noticed the ticket start and end. A
   person may correct one by hand. The automation clears the End date when it sees the ticket open again.
@@ -643,14 +646,14 @@ instead of a note someone has to remember.
 
 The automation generates these texts. The names, numbers and dates are invented for illustration.
 
-#### Version ticket: "Version 2.4.1"
+#### Version ticket: "Version 002.004.001"
 
 | Field | Value |
 |---|---|
-| **Title** | Version 2.4.1 |
+| **Title** | Version 002.004.001 |
 | **Type** | Version |
 | **Delivery** | Merged |
-| **Version** | V2.4.1 |
+| **Version** | V002.004.001 |
 | **Build** | 20261005143045 |
 | **Sub-issues** | #201, #204, #205 |
 | **Progress, Priority, Size, Risk, Area** | none |
@@ -677,7 +680,7 @@ When a release is cut on this version, the automation sets Delivery to *Released
 | **Progress** | ToDo |
 | **Size, Risk** | blank until triaged |
 | **Assignee** | Sam (the person who pushed) |
-| **Version** | V2.4.1 |
+| **Version** | V002.004.001 |
 
 > Detected on the push of 2026-10-05 16:40 UTC to `main` (commit `abc1234`): this merge's result is not
 > identical to its branch's final state. The branch was not synced first, or a conflict was resolved
@@ -699,8 +702,8 @@ When a release is cut on this version, the automation sets Delivery to *Released
 | **Size, Risk** | blank until triaged |
 | **Assignee** | none until someone takes it |
 
-> Version 2.4.1 was finalized. These planned Version tickets have a lower number and cannot happen under
-> it: #130 Version 2.4.0.
+> Version 002.004.001 was finalized. These planned Version tickets have a lower number and cannot happen under
+> it: #130 Version 002.004.000.
 >
 > **To do.** For each one, set Delivery to *Dropped* and close it with a comment saying what replaced it,
 > or correct the number if it was a mistake.
@@ -946,7 +949,7 @@ Documentation lives in three places, and each answers a different question.
 |---|---|---|
 | **Readme** (root) | What the project is, its requirements, and how to build and use it. The entry point: kept short, and linking to the wiki for detail. | Yes |
 | **Wiki** (`doc/wiki/`) | Current-state reference pages: how the project works now. One topic per page, with a `Home` page as the index. | Yes, whenever what a page describes changes |
-| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyses and investigations, measurements. | No: dated, and not rewritten afterwards |
+| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyzes and investigations, measurements. | No: dated, and not rewritten afterwards |
 
 ### 9.2 Rules
 
@@ -1018,7 +1021,7 @@ it is a judgment (is the work done, is it verified, how urgent is it), a person 
 | *Completed* and *Done* | sets, after verifying | sets, after verifying | | |
 | *Abandoned*, *Suspended* and the abandon reasons | proposes | decides | | |
 | Version (the target) | | sets | | overwrites it with the real version |
-| Delivery (except *Committed*, *Implemented* and *Dropped* on a planned Version ticket), Build, Version#, Start and End dates | | | | sets |
+| Delivery (except *Committed*, *Implemented* and *Dropped* on a planned Version ticket), Build, Start and End dates | | | | sets |
 | Delivery *Implemented*, with its Version | sets | may change | | attaches the ticket to its Version ticket |
 
 *Completed* and *Done* may be set by the developer or the project owner, whoever verified the result. The

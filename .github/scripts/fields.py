@@ -2,7 +2,7 @@
 
 The fields and their values are `preflight.REQUIRED_FIELDS`, which is also what the preflight checks and what a
 test compares with the guide's table. Run on a board, this script creates every field that is missing, with its
-values (single-select options get the guide's colours, gray otherwise). It never changes a field that exists:
+values (single-select options get the colors and descriptions of Appendix C, gray and none otherwise). It never changes a field that exists:
 a field of the wrong type, or lacking values, is listed so that an administrator corrects it by hand, and the
 built-in Status field, which every board has, is only ever reported.
 
@@ -45,7 +45,7 @@ def create(run, project_client, board, missing):
     """Create each missing field. Returns the names created (or that would be, in a dry run)."""
     created = []
     for name, kind, values in missing:
-        options = [(value, preflight.OPTION_COLORS.get(value, "GRAY")) for value in values]
+        options = [(value, preflight.OPTION_COLORS.get(value, "GRAY"), preflight.OPTION_DESCRIPTIONS.get(value, "")) for value in values]
         shown = f"{name} ({kind}" + (f": {', '.join(values)}" if values else "") + ")"
         run.do(f"create the field {shown}", project_client.create_field, board.id, name, kind, options)
         created.append(name)

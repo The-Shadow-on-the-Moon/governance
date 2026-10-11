@@ -36,6 +36,10 @@ Four words that are easy to confuse. Each answers a different question.
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
   Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
   exception and has no `V` (`Version 2.4.1`).
+- **Rule:** on the board, the Version field and the title of a Version ticket write the version with three
+  digits for each of V, s and m (`V002.004.001`, `Version 002.004.001`; a hotfix `V002.004.001-HF1`), because the
+  board sorts and groups by text and `V2.10.0` would come before `V2.4.0`. The changelog, the tags and the
+  branch names keep the short form (`V2.4.1`).
 - A *release* is a version that has been declared one, and the tag marks it; a version that was not declared a
   release is simply a version. A stamp embedded at compile time is a *compile stamp*.
 
@@ -141,7 +145,7 @@ design of a ticket as a whole. Nothing here is new: it collects what the other g
 | **Resolution** | How a ticket ended: *Done*, or a reason for abandoning it. | fields reference |
 | **Delivery** | Where the ticket's delivered work is: *Committed*, *Pushed*, *Merged*, *Implemented*, *Released* or *Dropped*. | fields reference |
 | **Priority, Size, Risk** | How urgent, how big in effort, and how likely to go wrong. | fields reference |
-| **Version, Build, Version#** | The version and build a ticket belongs to, and a number used only to sort versions. | fields reference |
+| **Version, Build** | The version and build a ticket belongs to. On the board a version is written with three digits for each of V, s and m (`V000.010.001`), so that it sorts as text; everywhere else it keeps the short form (`V0.10.1`). | fields reference |
 | **Start date, End date** | The dates the automation noticed the work start and end. | fields reference |
 | **Version ticket** | A bookkeeping record for one version, created by the automation and closed at finalize. | project structure, section 5 |
 | **Alert** | A ticket the automation raises when a person must review something, such as a bypass. | project structure, section 5 |
@@ -196,7 +200,7 @@ Nothing here is new: it collects what the other guides define.
 | **Durable authorization** | An approval for a kind of action that is recorded in the shared instructions file, so the assistant need not ask each time. | working with an assistant, section 3 |
 | **Local automation** | The git hooks and scripts that run on a developer's machine. | project structure, section 10 |
 | **Remote automation** | The workflow that runs on the hosting service. | project structure, section 10 |
-| **Scheduled run** | The workflow's runs on a timer (three a day) and on request. It sweeps the board for what no event announces: dates, stale and waiting tickets, broken field rules, Version# and *Implemented* tickets. A small workflow switches the schedule back on if GitHub turns it off for inactivity. | project structure, section 2.3 |
+| **Scheduled run** | The workflow's runs on a timer (three a day) and on request. It sweeps the board for what no event announces: dates, stale and waiting tickets, broken field rules, the form of Version and *Implemented* tickets. A small workflow switches the schedule back on if GitHub turns it off for inactivity. | project structure, section 2.3 |
 | **Hook** | A small script git runs at a set moment, such as before a commit. The hooks stamp the build, draft the message and warn. | working and committing, section 5 |
 | **Workflow** | The hosting service's automation. It finalizes versions, tags, updates the board and raises Alerts. | new-project bootstrap, section 2 |
 | **Finalize** | The automation's step at merge: it renames the open version to the real one, updates the tickets and creates the Version ticket. | syncing and merging, section 5 |

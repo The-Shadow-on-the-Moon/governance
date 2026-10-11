@@ -66,7 +66,7 @@ the work exists, and the entry says *what changed in the files*.
   or to make a critical correction (section 2.5).
 - **Recommendation:** write the entry as you make each change, not at commit time.
 - **Recommendation:** list code, tests and documentation as separate bullets.
-- **Recommendation:** include the previous behaviour when it helps a reader.
+- **Recommendation:** include the previous behavior when it helps a reader.
 
 **Why.** The changelog is the record someone reads when a problem appears. A specific entry lets them find
 the change and see its effect without reading the diff. Leaving earlier entries untouched keeps it a
@@ -146,7 +146,7 @@ The comment on #204:
 **Why.** A silent edit would make the record untrustworthy, because a reader could not tell what had been
 changed or why. Putting the correction in a ticket, in the current version and in a comment on the
 original ticket means it can be found from all three directions, and the note in the old entry tells
-anyone who reads only that entry that it was corrected. A correction of the code's behaviour is a Bug, not
+anyone who reads only that entry that it was corrected. A correction of the code's behavior is a Bug, not
 a changelog correction.
 
 
@@ -172,7 +172,7 @@ condition is given.
 
 | What you changed | Update |
 |---|---|
-| **Product** (code, design files, product settings) | ☐ Changelog bullet for each file<br>☐ Tests (new or changed logic)<br>☐ Build locally<br>☐ Ticket<br>☐ Wiki page *(if behaviour it describes changed)*<br>☐ Readme *(if setup, build or use changed)*<br>☐ Code comment *(if what it describes changed)*<br>☐ User docs *(if users can see the change)*<br>☐ Dated record in `doc/` *(if it rests on a decision or investigation worth keeping)*<br>☐ Known-limitation ticket *(if one is created or removed)*<br>☐ Wiki known-issues page *(if the limitation is critical or very important)* |
+| **Product** (code, design files, product settings) | ☐ Changelog bullet for each file<br>☐ Tests (new or changed logic)<br>☐ Build locally<br>☐ Ticket<br>☐ Wiki page *(if behavior it describes changed)*<br>☐ Readme *(if setup, build or use changed)*<br>☐ Code comment *(if what it describes changed)*<br>☐ User docs *(if users can see the change)*<br>☐ Dated record in `doc/` *(if it rests on a decision or investigation worth keeping)*<br>☐ Known-limitation ticket *(if one is created or removed)*<br>☐ Wiki known-issues page *(if the limitation is critical or very important)* |
 | **Tests** | ☐ Changelog bullet<br>☐ Build and run<br>☐ Ticket<br>☐ Test procedure document *(if what it describes changed)* |
 | **Documentation** (readme, wiki, records, comments) | ☐ Changelog bullet<br>☐ Ticket<br>☐ Wiki `Home` and links *(if a page is added, renamed or removed)*<br>☐ Date in the file name *(if it is a record)* |
 | **Build, tooling, config files** | ☐ Changelog bullet<br>☐ Build locally<br>☐ Ticket<br>☐ Tests *(if scripts have logic)*<br>☐ Readme *(if setup or build changed)*<br>☐ Readme and wiki variable list *(if people must apply new settings)* |
@@ -184,7 +184,7 @@ ticket is the source of truth and holds every detail. "Ticket" means keeping the
 wrong (see the section on keeping the ticket current). Documentation that you update is itself a change
 to a file, so it gets its own bullet in the changelog entry.
 
-**Why.** The list is organised by what you changed, not by what to update, because you know what you
+**Why.** The list is organized by what you changed, not by what to update, because you know what you
 changed and do not yet know what else it affects. One row per change means you never have to combine
 rows, and a short checklist is one that gets used.
 

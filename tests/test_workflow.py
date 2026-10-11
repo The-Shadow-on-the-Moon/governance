@@ -162,8 +162,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertLess(main.index("preflight.py"), main.index("bypass.py"))
         self.assertLess(main.index("bypass.py"), main.index("finalize.py"))
         self.assertLess(main.index("finalize.py"), main.index("bypass.py stale"))
-        self.assertLess(main.index("bypass.py stale"), main.index("version_numbers.py"))
-        self.assertLess(main.index("version_numbers.py"), main.index("dates.py"))
+        self.assertLess(main.index("bypass.py stale"), main.index("version_format.py"))
+        self.assertLess(main.index("version_format.py"), main.index("dates.py"))
         self.assertLess(main.index("dates.py"), main.index("watch.py"))
         self.assertLess(main.index("watch.py"), main.index("conditions.py"))
         self.assertNotIn("field_rules.py", main)
@@ -218,7 +218,7 @@ class WorkflowTests(unittest.TestCase):
     def test_the_scheduled_job_runs_the_checks_in_order_and_never_commits(self):
         text = workflow()
         scheduled = text[text.index("  scheduled:"):text.index("  conditions:")]
-        order = ["preflight.py", "implemented.py", "version_numbers.py", "dates.py", "watch.py", "conditions.py"]
+        order = ["preflight.py", "implemented.py", "version_format.py", "dates.py", "watch.py", "conditions.py"]
         positions = [scheduled.index(name) for name in order]
         self.assertEqual(positions, sorted(positions))
         for forbidden in ("git push", "git commit", "finalize.py", "bypass.py"):

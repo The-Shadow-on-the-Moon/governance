@@ -60,9 +60,9 @@ tracked in a ticket. The schedule runs from `main`.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what has changed.
 
-## Licence
+## License
 
-Two licences, by the kind of file. The guides and other documentation are under
+Two licenses, by the kind of file. The guides and other documentation are under
 [CC BY 4.0](LICENSE-CC-BY-4.0.txt). The code (`tools/`, `tests/`, and the workflows, scripts and hooks) is under
-the [MIT licence](LICENSE-MIT.txt). [`LICENSE`](LICENSE) lists which paths fall under which.
+the [MIT license](LICENSE-MIT.txt). [`LICENSE`](LICENSE) lists which paths fall under which.
 Copyright (c) 2026 The Shadow on the Moon, Inc.

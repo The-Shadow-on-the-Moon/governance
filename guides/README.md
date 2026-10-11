@@ -41,6 +41,7 @@ situations on a page each.
 | **C Ticket fields reference** | Every ticket field with its values, meanings and who sets them. |
 | **D Ticket examples** | Example tickets for each Type, as full forms. |
 | **E Ticket model** | The design of a ticket as a whole: the questions it answers, why each has its own field, and its life from creation to release. |
+| **F Board views, columns and sorting** | What each saved view of the board shows: its columns, sort order and grouping. |
 
 ## Where to start
 

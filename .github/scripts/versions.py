@@ -1,4 +1,4 @@
-"""Version rules: the version format, the bump, Version#, and UTC timestamps.
+"""Version rules: the version format, the bump, the board form that sorts as text, and UTC timestamps.
 
 See the guide on branching and merging (section 3) and appendix C.
 """
@@ -38,8 +38,18 @@ class Version:
         text = f"V{self.major}.{self.sub}.{self.mod}"
         return text + (f"-HF{self.hotfix}" if self.hotfix else "")
 
+    def board(self):
+        """The form of the board's Version field: three digits for each of V, s and m, so that text order is version order
+        (`V000.010.001`, and `V001.025.000-HF1` for the first hotfix: a hotfix number is one digit)."""
+        text = f"V{self.major:03d}.{self.sub:03d}.{self.mod:03d}"
+        return text + (f"-HF{self.hotfix}" if self.hotfix else "")
+
+    def title(self):
+        """The title of the version's Version ticket, which sorts as text in the same way."""
+        return "Version " + self.board()[1:]
+
     def number(self):
-        """The number used only to sort versions (Version#)."""
+        """A number that orders versions, for comparing two of them in code."""
         return self.major * 10_000_000 + self.sub * 10_000 + self.mod * 10 + self.hotfix
 
 

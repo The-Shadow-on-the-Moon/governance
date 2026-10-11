@@ -1,7 +1,7 @@
 """The finalize step: after a merge to main, number the version and record it.
 
 It decides the bump, renames the open WIP-Version heading in a commit of its own, sets the
-Delivery, Version, Build and Version# of each ticket on the board, and creates (or reuses) the
+Delivery, Version, Build of each ticket on the board, and creates (or reuses) the
 Version ticket with the tickets as sub-issues, then closes it.
 
 Safe to run again: it skips what is already done. A board problem does not stop the version
@@ -28,8 +28,7 @@ ITEM_QUERY = ("query($o:String!,$n:String!,$num:Int!){repository(owner:$o,name:$
               "delivery:fieldValueByName(name:\"Delivery\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
               "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}} "
               "build:fieldValueByName(name:\"Build\"){... on ProjectV2ItemFieldTextValue{text}} "
-              "attention:fieldValueByName(name:\"Attention\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
-              "number:fieldValueByName(name:\"Version#\"){... on ProjectV2ItemFieldNumberValue{number}}"
+              "attention:fieldValueByName(name:\"Attention\"){... on ProjectV2ItemFieldSingleSelectValue{name}}"
               "}}}}}")
 
 
@@ -108,32 +107,26 @@ def update_ticket(run, project_client, board, number, version, build, delivery="
         wanted.append(("Status", "InProgress", {"singleSelectOptionId": fields["Status"]["options"]["InProgress"]}))
     if _value(item, "delivery", "name") != delivery:
         wanted.append(("Delivery", delivery, {"singleSelectOptionId": fields["Delivery"]["options"][delivery]}))
-    if _value(item, "version", "text") != str(version):
-        wanted.append(("Version", str(version), {"text": str(version)}))
+    if _value(item, "version", "text") != version.board():
+        wanted.append(("Version", version.board(), {"text": version.board()}))
     if build and _value(item, "build", "text") != build:
         wanted.append(("Build", build, {"text": build}))
-    if _value(item, "number", "number") != float(version.number()):
-        wanted.append(("Version#", str(version.number()), {"number": float(version.number())}))
     for name, shown, value in wanted:
         run.do(f"#{number}: set {name} to {shown}", project_client.set_project_field, board.id, item["id"], fields[name]["id"], value)
 
 
-def find_version_ticket(repo_client, title):
-    """The Version ticket with exactly this title, or None."""
-    return implemented.version_ticket(repo_client, Version.parse("V" + title.split(" ", 1)[1]))
-
-
 def record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, tickets, delivery="Merged",
                           source=None):
-    title = f"Version {str(version)[1:]}"
+    title = version.title()
     body = version_description(version, when, bump, pull_request, last_build, tickets, source)
-    existing = find_version_ticket(repo_client, title)
+    existing = implemented.version_ticket(repo_client, version)
     if existing and existing["state"] == "closed":
         run.do(f"{title}: already recorded as #{existing['number']}")
         return existing["number"]
     if existing:
         number = existing["number"]
-        run.do(f"{title}: reuse the planned ticket #{number}", repo_client.request, "PATCH", repo_client.repo_path(f"/issues/{number}"), {"body": body})
+        run.do(f"{title}: reuse the planned ticket #{number}", repo_client.request, "PATCH", repo_client.repo_path(f"/issues/{number}"),
+               {"title": title, "body": body})
         node_id = existing["node_id"]
     else:
         created = run.do(f"{title}: create the Version ticket", repo_client.create_issue, title, body, "Version")
@@ -144,9 +137,8 @@ def record_version_ticket(run, repo_client, project_client, board, version, when
         try:
             item_id = run.do(f"{title}: add to the board", project_client.add_to_project, board.id, node_id)
             for name, text, value in (("Delivery", delivery, {"singleSelectOptionId": board.fields["Delivery"]["options"][delivery]}),
-                                      ("Version", str(version), {"text": str(version)}),
-                                      ("Build", last_build, {"text": last_build}),
-                                      ("Version#", str(version.number()), {"number": float(version.number())})):
+                                      ("Version", version.board(), {"text": version.board()}),
+                                      ("Build", last_build, {"text": last_build})):
                 if text:
                     run.do(f"{title}: set {name} to {text}", project_client.set_project_field, board.id, item_id, board.fields[name]["id"], value)
         except GitHubError as error:

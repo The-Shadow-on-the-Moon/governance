@@ -47,6 +47,18 @@ class VersionTests(unittest.TestCase):
         with self.assertRaises(versions.VersionError):
             Version.parse("2.4.1")
 
+    def test_the_board_form_pads_v_s_and_m_and_sorts_as_text(self):
+        self.assertEqual(Version.parse("V0.10.1").board(), "V000.010.001")
+        self.assertEqual(Version.parse("V1.25.0-HF1").board(), "V001.025.000-HF1")
+        self.assertEqual(Version.parse("V1.25.0-HF1").title(), "Version 001.025.000-HF1")
+        self.assertEqual(Version.parse("V000.010.001").board(), "V000.010.001")  # the board form parses back
+        self.assertEqual(Version.parse("V000.010.001"), Version(0, 10, 1))
+        shuffled = ["V0.10.0", "V0.2.0", "V0.1.0", "V1.0.0", "V0.9.0", "V0.10.0-HF1", "V0.10.1", "V0.99.9", "V0.100.0"]
+        by_text = sorted(shuffled, key=lambda text: Version.parse(text).board())
+        self.assertEqual(by_text, sorted(shuffled, key=lambda text: Version.parse(text).number()))
+        self.assertEqual(by_text[:3], ["V0.1.0", "V0.2.0", "V0.9.0"])
+        self.assertEqual(by_text.index("V0.10.0-HF1"), by_text.index("V0.10.0") + 1)
+
     def test_number(self):
         self.assertEqual(Version.parse("V0.1.0").number(), 10000)
         self.assertEqual(Version.parse("V0.2.0").number(), 20000)

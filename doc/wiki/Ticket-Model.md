@@ -1,6 +1,6 @@
 # Ticket model
 
-How a ticket is built: the questions it answers, the field that answers each, and how a ticket moves from creation to release. The full text, with the reasons behind each choice, is [Appendix E: Ticket model](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-e-ticket-model.md). The values of every field are in [Appendix C: ticket fields](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-c-ticket-fields-reference.md).
+How a ticket is built: the questions it answers, the field that answers each, and how a ticket moves from creation to release. The full text, with the reasons behind each choice, is [Appendix E: Ticket model](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-e-ticket-model.md). The values of every field are in [Appendix C: ticket fields](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-c-ticket-fields-reference.md), with the standard color of each value and of each Area label: a recommendation, which a project may change for its own board.
 
 ## The fields
 
@@ -17,7 +17,7 @@ Each field answers one question, and the fields are kept separate on purpose.
 | **Resolution** | How did it end? | a person |
 | **Delivery** | Where is the delivered work? | the automation (a person sets *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | a person |
-| **Version**, **Build**, **Version#** | Which version and build? | a person may aim it, the automation sets the real values |
+| **Version**, **Build** | Which version and build? | a person may aim it, the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | the automation |
 | **Fix** | Which of the rules that span fields do its fields break? | the automation |
 

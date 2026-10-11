@@ -272,7 +272,7 @@ class PreflightTests(unittest.TestCase):
         self.assertIn("administrators too", text)
         self.assertEqual(len(report.warnings), 3)
 
-    def test_an_unrecognised_protection_answer_is_skipped_and_no_token_asks_nothing(self):
+    def test_an_unrecognized_protection_answer_is_skipped_and_no_token_asks_nothing(self):
         report = preflight.run(FakeRepoClient(dict(GOOD_SETTINGS)), quiet_project(protection={"something": "else"}))
         self.assertEqual(report.warnings, [])
         project = quiet_project(token="")
