@@ -1,5 +1,23 @@
 # Changelog
 
+## WIP-Version
+### Build 20261011164019 (branch columns-colors-and-sort)
+#### #135 — Adopt standard colors for fields in views
+- guides/appendix-c-ticket-fields-reference.md: a Color column (the eight GitHub board colors) on the tables of Type, Origin, Progress, Waiting, Attention, Resolution, Delivery, Priority, Size and Risk, a Hex column on the Area and `dummy` labels, and a paragraph that says the colors and descriptions are a recommendation a project may change for its own board.
+- .github/scripts/preflight.py: `OPTION_COLORS` now holds the color of every board option and the new `OPTION_DESCRIPTIONS` its description (they were the five Attention colors only).
+- .github/scripts/fields.py and .github/scripts/github_api.py: a field is created with each option's color and description (gray and none for an option the tables do not list); `create_field` takes options as `(name, color, description)`.
+- guides/10-new-project-bootstrap.md: the Attention colors leave the board table (Appendix C holds them all); section 5.2 recommends the label and issue type colors. doc/wiki/Ticket-Model.md says the colors are in Appendix C. guides/Developer-Guides-Complete.md rebuilt.
+- tests/test_tools.py and tests/test_fields.py: a test that the colors and descriptions of the preflight are those of Appendix C (and that the 15 labels have a hex color); the field tests follow the new option shape. .github/automation-manifest.json regenerated.
+- Applied to this repository: the options of Status, Origin, Waiting, Attention, Resolution, Delivery, Priority and Size on the Governance board now carry the standard colors and descriptions (option ids unchanged, so no ticket's value changed), and the 15 labels their hex colors. The issue types already had the standard colors.
+
+#### #141 — Adjust wording to American spelling
+- guides/ (02, 03, 05, 07, 09, appendix C and D), doc/wiki/ (Automation, Home), doc/Evaluation/, README.md, LICENSE and AGENTS.md: licence, behaviour, recognised, labelled, summarise, organised, analyse, trialling and cancelled are now license, behavior, recognized, labeled, summarize, organized, analyze, trialing and canceled. File names (`LICENSE`, `LICENSE-MIT.txt`) are unchanged, and the entries of earlier versions in this changelog keep the spelling they were written in. guides/Developer-Guides-Complete.md rebuilt.
+- .github/scripts/push_step.py, tests/test_condition_comments.py, tests/test_fields.py, tests/test_preflight.py and tests/test_views.py: the same words in a comment, a test name and a test value. .github/automation-manifest.json regenerated.
+
+#### #140 — Columns shown in table views
+- guides/appendix-f-board-views-layout.md: added. Step 1 of the ticket: the columns, sort order and grouping (swimlanes) of every saved view as the board reports them on 2026-10-11, and where the board and `.github/views.json` differ (Type is requested everywhere and reported nowhere; the board lists columns in field order). It is to be replaced by the chosen layout in steps 2 and 3.
+- tools/combine.py, guides/README.md and doc/wiki/Home.md list the new appendix; guides/Developer-Guides-Complete.md rebuilt.
+
 ## V0.10.1 — 2026-10-09 08:52 UTC
 ### Build 20261009084750 (branch fix-conditions-team-check)
 #### #132 — The conditions job is skipped for the team's own issue events

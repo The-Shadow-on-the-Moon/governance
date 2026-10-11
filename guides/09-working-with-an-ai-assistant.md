@@ -264,7 +264,7 @@ shared file and the guides win.
 # Preferences (personal)
 
 Communication
-- <how short or detailed the replies should be; whether to summarise at the end>
+- <how short or detailed the replies should be; whether to summarize at the end>
 
 Autonomy
 - <what to do without asking; what to always ask about first>

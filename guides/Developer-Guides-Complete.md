@@ -43,6 +43,7 @@ situations on a page each.
 | **C Ticket fields reference** | Every ticket field with its values, meanings and who sets them. |
 | **D Ticket examples** | Example tickets for each Type, as full forms. |
 | **E Ticket model** | The design of a ticket as a whole: the questions it answers, why each has its own field, and its life from creation to release. |
+| **F Board views, columns and sorting** | What each saved view of the board shows: its columns, sort order and grouping. |
 
 ## Where to start
 
@@ -208,6 +209,11 @@ roles (see *Project structure*, section 10.6).
   - [5. Special tickets](#5-special-tickets-1)
   - [6. How the model drives the automation](#6-how-the-model-drives-the-automation)
   - [7. Where each part is defined](#7-where-each-part-is-defined)
+- [Appendix F: Board views, columns and sorting](#appendix-f-board-views-columns-and-sorting)
+  - [1. Table views](#1-table-views)
+  - [2. Board views](#2-board-views)
+  - [3. Where the board and the file differ](#3-where-the-board-and-the-file-differ)
+  - [4. Notes](#4-notes)
 
 ---
 
@@ -848,7 +854,7 @@ afterwards.
   on and put the details in a comment on that ticket (a `REF` if there is none). A significant one may
   deserve a ticket of its own.
 
-**Why.** A resolution is a decision about which of two behaviours survives, and it is easy to get
+**Why.** A resolution is a decision about which of two behaviors survives, and it is easy to get
 wrong. Making it on the branch, as its own commit, means it is visible, testable and reversible.
 Documenting it matters for the same reason as the build stamps: when a problem appears later, the
 conflict resolution is one of the first places to look, and it should not have to be reconstructed
@@ -1143,7 +1149,7 @@ branch they came through.
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
 | **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
-| **Licence files** (root) | The project's licence, when it has one. |
+| **License files** (root) | The project's license, when it has one. |
 
 #### 2.2 Rules
 
@@ -1263,7 +1269,7 @@ back to why the change was made.
   what happened, and the version or build it was found on. **The more detail the better**: a ticket that
   can be understood without asking anyone saves more time than it costs to write. The solution and the
   discussion that leads to it belong in the comments. A suggested implementation may go in the
-  description, but only when it is clearly labelled as a proposal.
+  description, but only when it is clearly labeled as a proposal.
 - **Comments:** keep the record in comments, not in side channels.
   - When setting *Waiting*, say what is needed and from whom.
   - When abandoning a ticket, say why and link the related ticket.
@@ -1313,7 +1319,7 @@ More examples, covering every Type, are in appendix D (*Ticket examples*).
 > has had three requests this quarter for a way to take the data out directly, and two customers use the
 > pasted tables in monthly reviews.
 >
-> **Who is affected.** Anyone who reads reports and needs to analyse or share them: mostly finance users,
+> **Who is affected.** Anyone who reads reports and needs to analyze or share them: mostly finance users,
 > typically once a month, with reports of up to a few thousand rows.
 >
 > **What is wanted.** An *Export* button on the reports page that downloads the report currently shown
@@ -1326,7 +1332,7 @@ More examples, covering every Type, are in appendix D (*Ticket examples*).
 >
 > **Done when.** The CSV opens correctly in two common spreadsheet programs with accented characters
 > intact, matches what the page shows for at least three different reports, and the user guide describes
-> the export. Behaviour with an empty report is defined and tested (header row only).
+> the export. Behavior with an empty report is defined and tested (header row only).
 >
 > **Notes.** The layout was agreed in #210. Reports above 50,000 rows are not expected; if one is found
 > in practice, raise a separate ticket.
@@ -1487,7 +1493,7 @@ state and lose where the ticket was.
 - **Rule:** these are the causes the automation uses today, with the level each starts at:
   - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
     whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
-    *Released* or *Dropped*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
+    *Released* or *Dropped*). Earlier work is recognized by the ticket's recorded Build: a Build older than the
     one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
     Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
     never raises it: a ticket moved to *Review* before its first push has no earlier work. A *Caution* is also
@@ -1996,7 +2002,7 @@ Documentation lives in three places, and each answers a different question.
 |---|---|---|
 | **Readme** (root) | What the project is, its requirements, and how to build and use it. The entry point: kept short, and linking to the wiki for detail. | Yes |
 | **Wiki** (`doc/wiki/`) | Current-state reference pages: how the project works now. One topic per page, with a `Home` page as the index. | Yes, whenever what a page describes changes |
-| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyses and investigations, measurements. | No: dated, and not rewritten afterwards |
+| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyzes and investigations, measurements. | No: dated, and not rewritten afterwards |
 
 #### 9.2 Rules
 
@@ -2514,7 +2520,7 @@ the work exists, and the entry says *what changed in the files*.
   or to make a critical correction (section 2.5).
 - **Recommendation:** write the entry as you make each change, not at commit time.
 - **Recommendation:** list code, tests and documentation as separate bullets.
-- **Recommendation:** include the previous behaviour when it helps a reader.
+- **Recommendation:** include the previous behavior when it helps a reader.
 
 **Why.** The changelog is the record someone reads when a problem appears. A specific entry lets them find
 the change and see its effect without reading the diff. Leaving earlier entries untouched keeps it a
@@ -2594,7 +2600,7 @@ The comment on #204:
 **Why.** A silent edit would make the record untrustworthy, because a reader could not tell what had been
 changed or why. Putting the correction in a ticket, in the current version and in a comment on the
 original ticket means it can be found from all three directions, and the note in the old entry tells
-anyone who reads only that entry that it was corrected. A correction of the code's behaviour is a Bug, not
+anyone who reads only that entry that it was corrected. A correction of the code's behavior is a Bug, not
 a changelog correction.
 
 
@@ -2620,7 +2626,7 @@ condition is given.
 
 | What you changed | Update |
 |---|---|
-| **Product** (code, design files, product settings) | ☐ Changelog bullet for each file<br>☐ Tests (new or changed logic)<br>☐ Build locally<br>☐ Ticket<br>☐ Wiki page *(if behaviour it describes changed)*<br>☐ Readme *(if setup, build or use changed)*<br>☐ Code comment *(if what it describes changed)*<br>☐ User docs *(if users can see the change)*<br>☐ Dated record in `doc/` *(if it rests on a decision or investigation worth keeping)*<br>☐ Known-limitation ticket *(if one is created or removed)*<br>☐ Wiki known-issues page *(if the limitation is critical or very important)* |
+| **Product** (code, design files, product settings) | ☐ Changelog bullet for each file<br>☐ Tests (new or changed logic)<br>☐ Build locally<br>☐ Ticket<br>☐ Wiki page *(if behavior it describes changed)*<br>☐ Readme *(if setup, build or use changed)*<br>☐ Code comment *(if what it describes changed)*<br>☐ User docs *(if users can see the change)*<br>☐ Dated record in `doc/` *(if it rests on a decision or investigation worth keeping)*<br>☐ Known-limitation ticket *(if one is created or removed)*<br>☐ Wiki known-issues page *(if the limitation is critical or very important)* |
 | **Tests** | ☐ Changelog bullet<br>☐ Build and run<br>☐ Ticket<br>☐ Test procedure document *(if what it describes changed)* |
 | **Documentation** (readme, wiki, records, comments) | ☐ Changelog bullet<br>☐ Ticket<br>☐ Wiki `Home` and links *(if a page is added, renamed or removed)*<br>☐ Date in the file name *(if it is a record)* |
 | **Build, tooling, config files** | ☐ Changelog bullet<br>☐ Build locally<br>☐ Ticket<br>☐ Tests *(if scripts have logic)*<br>☐ Readme *(if setup or build changed)*<br>☐ Readme and wiki variable list *(if people must apply new settings)* |
@@ -2632,7 +2638,7 @@ ticket is the source of truth and holds every detail. "Ticket" means keeping the
 wrong (see the section on keeping the ticket current). Documentation that you update is itself a change
 to a file, so it gets its own bullet in the changelog entry.
 
-**Why.** The list is organised by what you changed, not by what to update, because you know what you
+**Why.** The list is organized by what you changed, not by what to update, because you know what you
 changed and do not yet know what else it affects. One row per change means you never have to combine
 rows, and a short checklist is one that gets used.
 
@@ -3727,7 +3733,7 @@ An Alert is *Critical* and starts at *ToDo*. Every move is manual: *InProgress* 
 *Review* when they believe it is handled, *Completed* with Resolution *Done* when a human has verified it.
 Shipping a version never moves it. The person who takes it sets its Size and Risk when triaging.
 
-*Done* means that something was done beyond analysing the Alert, for example documenting the change. An
+*Done* means that something was done beyond analyzing the Alert, for example documenting the change. An
 Alert that analysis shows to be wrong is *Invalid*.
 
 #### 5.4 Rules
@@ -4409,7 +4415,7 @@ shared file and the guides win.
 # Preferences (personal)
 
 Communication
-- <how short or detailed the replies should be; whether to summarise at the end>
+- <how short or detailed the replies should be; whether to summarize at the end>
 
 Autonomy
 - <what to do without asking; what to always ask about first>
@@ -4724,6 +4730,8 @@ They are set up once, by the administrator, for the organization.
   automation (see the *Ticket fields reference*). There are no other labels.
 - **Rule:** each label carries its meaning from the *Ticket fields reference* as its description, so the
   meaning shows wherever the label is used.
+- **Recommendation:** each label takes the hex color that the *Ticket fields reference* gives it, and each
+  issue type the color that table gives it, so that a ticket reads the same in every project.
 - **Rule:** the labels a new repository starts with that are not on this list (for example `bug`,
   `enhancement`, `duplicate`, `invalid`, `question`, `wontfix`, `good first issue`, `help wanted` and
   `accessibility`; the set changes over time) are deleted. `documentation` stays, because it is on the list.
@@ -4757,7 +4765,7 @@ fields reference*.
 | Origin | single select | Backfilled, Backdated |
 | REF | text | |
 | Waiting | single select | Needs input |
-| Attention | single select | Fine (green), Acknowledged (purple), Watch (yellow), Caution (orange), AtRisk (red) |
+| Attention | single select | Fine, Acknowledged, Watch, Caution, AtRisk |
 | Resolution | single select | Done, Duplicate, Invalid, WontFix, Superseded, Obsolete |
 | Delivery | single select | Committed, Pushed, Merged, Implemented, Released, Dropped |
 | Priority | single select | Critical, Urgent, High, Normal, Low, Wishlist |
@@ -4771,7 +4779,7 @@ fields reference*.
 
 Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
 script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
-(the colours of the table, gray otherwise), as a dry run until it is given `--apply`, with the project token.
+(the colors and descriptions of the *Ticket fields reference*, gray and none otherwise), as a dry run until it is given `--apply`, with the project token.
 It never changes a field that exists: one of the wrong type, or lacking a value, is listed for the
 administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
 the automation is switched on, because the preflight requires every field in the table.
@@ -5089,22 +5097,30 @@ together over a ticket's life is in *Appendix E: Ticket model*.
 **Where each field lives (GitHub).** Type is the native issue type, Area is a set of labels, and every
 other field is a board field.
 
+**Colors.** The Color column of each table is the standard's color for that option, so that a ticket reads
+the same on every board. A board option takes one of the eight colors GitHub offers (GRAY, BLUE, GREEN,
+YELLOW, ORANGE, RED, PINK, PURPLE); an Area label takes the hex color in its Hex column. The Meaning column
+is the description to give the option or label. The colors are a recommendation, not a rule: a new project
+starts with them (the board script creates the fields with them), a project becoming compliant adopts
+them, and a project may change any of them for its own board without breaking the standard. The preflight
+does not check colors.
+
 ---
 
 ### Type
 
 One value per ticket. Says what sort of ticket it is and why the change is made.
 
-| Value | Meaning | Version bump |
-|---|---|---|
-| **Feature** | New capability that did not exist before. | sub |
-| **Enhancement** | An improvement to something that already works: better performance, smarter behavior, easier use. | sub |
-| **Change** | A change to existing behavior that is neither an improvement nor a fix: a new default, a different threshold, an adjustment someone asked for. | mod |
-| **Bug** | Something that behaves differently from what was intended, and the fix for it. | mod |
-| **Refactor** | Internal restructuring with no change in what the product does. | mod |
-| **Task** | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
-| **Version** | Bookkeeping ticket for one version. It does no work and never counts toward a bump. | none |
-| **Alert** | An automatic check that needs a person to review something, such as a detected bypass or a stale planned version. It never counts toward a bump. | none |
+| Value | Color | Meaning | Version bump |
+|---|---|---|---|
+| **Feature** | PURPLE | New capability that did not exist before. | sub |
+| **Enhancement** | GREEN | An improvement to something that already works: better performance, smarter behavior, easier use. | sub |
+| **Change** | BLUE | A change to existing behavior that is neither an improvement nor a fix: a new default, a different threshold, an adjustment someone asked for. | mod |
+| **Bug** | PINK | Something that behaves differently from what was intended, and the fix for it. | mod |
+| **Refactor** | ORANGE | Internal restructuring with no change in what the product does. | mod |
+| **Task** | YELLOW | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
+| **Version** | GRAY | Bookkeeping ticket for one version. It does no work and never counts toward a bump. | none |
+| **Alert** | RED | An automatic check that needs a person to review something, such as a detected bypass or a stale planned version. It never counts toward a bump. | none |
 
 Set by a person when the ticket is created; the automation sets it on Version and Alert tickets.
 
@@ -5113,22 +5129,22 @@ Set by a person when the ticket is created; the automation sets it on Version an
 Several values per ticket. Says what kind of work the ticket involves. Descriptive only: it never affects
 version numbers or any automation. At least one is suggested on a work ticket; none is allowed.
 
-| Value | Meaning |
-|---|---|
-| `requirements` | Working out what is needed, with the people who need it. |
-| `research` | Investigating options or unknowns: technologies, parts, approaches. |
-| `design` | Deciding how it will be built, before building it (software, hardware, mechanical). |
-| `implementation` | Producing the thing itself: code, circuit, enclosure, configuration of the product. |
-| `assembly` | Putting physical parts together: electronics, mechanical parts, enclosures. |
-| `testing` | Unit, functional and acceptance or QA testing. |
-| `analysis` | Examining existing behaviour or data to understand it, without necessarily fixing it. |
-| `debugging` | Finding and fixing the cause of a fault. |
-| `documentation` | Wiki, readme, guides, comments and other written documentation. |
-| `tool` | Developer tooling and scripts that support the work. |
-| `process` | How the team works: git, changelog, versioning, hooks, the board, repository settings. |
-| `config` | Settings that tune how the product behaves: feature flags, pin assignments, intervals. |
-| `content` | Data the product or its tests use: test fixtures, sample data, lookup tables, a database seed. |
-| `build` | Build system, toolchain, compiling and releasing. |
+| Value | Hex | Meaning |
+|---|---|---|
+| `requirements` | 2196F3 | Working out what is needed, with the people who need it. |
+| `research` | 8E24AA | Investigating options or unknowns: technologies, parts, approaches. |
+| `design` | 00ACC1 | Deciding how it will be built, before building it (software, hardware, mechanical). |
+| `implementation` | 1565C0 | Producing the thing itself: code, circuit, enclosure, configuration of the product. |
+| `assembly` | 8D6E63 | Putting physical parts together: electronics, mechanical parts, enclosures. |
+| `testing` | 43A047 | Unit, functional and acceptance or QA testing. |
+| `analysis` | 5E35B1 | Examining existing behavior or data to understand it, without necessarily fixing it. |
+| `debugging` | E53935 | Finding and fixing the cause of a fault. |
+| `documentation` | C0A000 | Wiki, readme, guides, comments and other written documentation. |
+| `tool` | 546E7A | Developer tooling and scripts that support the work. |
+| `process` | 424242 | How the team works: git, changelog, versioning, hooks, the board, repository settings. |
+| `config` | FB8C00 | Settings that tune how the product behaves: feature flags, pin assignments, intervals. |
+| `content` | D81B60 | Data the product or its tests use: test fixtures, sample data, lookup tables, a database seed. |
+| `build` | EF6C00 | Build system, toolchain, compiling and releasing. |
 
 The list is the same for every project. Adding a value is a change to the standard, not something a
 project does on its own. Set by a person.
@@ -5138,9 +5154,9 @@ project does on its own. Set by a person.
 Not an Area. A marker for a throwaway ticket or Version ticket made to test the automation (a trial of a
 new step, a test of a rule). It is the only label besides the 14 Area labels.
 
-| Label | Meaning |
-|---|---|
-| `dummy` | A throwaway ticket or version made to test the automation; left out of the board's working views. |
+| Label | Hex | Meaning |
+|---|---|---|
+| `dummy` | BDBDBD | A throwaway ticket or version made to test the automation; left out of the board's working views. |
 
 Set by a person when the test ticket is created. A test ticket is titled `DUMMY ...` and is closed as
 *Abandoned*, with Resolution *Invalid*, when the test is over. Every saved view of the board except All excludes the
@@ -5152,11 +5168,11 @@ any automation, and it is not part of Area. The tags a trial makes are kept apar
 
 **Origin** is blank for a ticket created in the normal flow.
 
-| Value | Meaning | Example |
-|---|---|---|
-| *(blank)* | Created before or while the work was done. | Most tickets. |
-| **Backfilled** | Created after the work was done, to replace a ticket-less placeholder in the changelog. | A quick fix logged as a placeholder and ticketed afterwards. |
-| **Backdated** | Created to document history from before the process existed. | Tickets written when a project adopted the ticket system, covering earlier development. |
+| Value | Color | Meaning | Example |
+|---|---|---|---|
+| *(blank)* | none | Created before or while the work was done. | Most tickets. |
+| **Backfilled** | YELLOW | Created after the work was done, to replace a ticket-less placeholder in the changelog. | A quick fix logged as a placeholder and ticketed afterwards. |
+| **Backdated** | ORANGE | Created to document history from before the process existed. | Tickets written when a project adopted the ticket system, covering earlier development. |
 
 **REF** is a text field. For a Backfilled ticket it holds the placeholder token or tokens (separated by
 commas, if one ticket replaces several entries) from the changelog. Blank otherwise. Both are set by a
@@ -5166,15 +5182,15 @@ person.
 
 Where the work is.
 
-| Value | Meaning | Who sets it |
-|---|---|---|
-| **ToDo** | Accepted, not scheduled. | the person creating the ticket |
-| **OnDeck** | Chosen to be worked on next. | a person |
-| **InProgress** | Work has started. | a person; the automation also moves a ticket here when code for it is pushed (or merged) and it was still *ToDo* or *OnDeck* |
-| **Review** | The developer (or an assistant) believes the work is done and wants it checked. May be a real review or a formality. | a person, never the automation |
-| **Completed** | A human has verified the result. | a human only |
-| **Suspended** | Set aside, expected to resume. | a person |
-| **Abandoned** | Dropped, not expected to return. | a person |
+| Value | Color | Meaning | Who sets it |
+|---|---|---|---|
+| **ToDo** | GREEN | Accepted, not scheduled. | the person creating the ticket |
+| **OnDeck** | BLUE | Chosen to be worked on next. | a person |
+| **InProgress** | YELLOW | Work has started. | a person; the automation also moves a ticket here when code for it is pushed (or merged) and it was still *ToDo* or *OnDeck* |
+| **Review** | ORANGE | The developer (or an assistant) believes the work is done and wants it checked. May be a real review or a formality. | a person, never the automation |
+| **Completed** | PURPLE | A human has verified the result. | a human only |
+| **Suspended** | PINK | Set aside, expected to resume. | a person |
+| **Abandoned** | RED | Dropped, not expected to return. | a person |
 
 The path is *ToDo, OnDeck, InProgress, Review, Completed*. *Suspended* and *Abandoned* are exits from any
 open state. What the automation may and may not do to Progress, and when the issue is closed, is set out in
@@ -5185,9 +5201,9 @@ section 4.1.
 
 Blank by default.
 
-| Value | Meaning |
-|---|---|
-| **Needs input** | The ticket is waiting for someone's feedback, an answer to a question, or a verification. |
+| Value | Color | Meaning |
+|---|---|---|
+| **Needs input** | ORANGE | The ticket is waiting for someone's feedback, an answer to a question, or a verification. |
 
 Set by a person together with a comment that says what is needed and from whom. When it is cleared is in
 *Project structure*, section 4.3.
@@ -5197,14 +5213,14 @@ Set by a person together with a comment that says what is needed and from whom. 
 Whether a work ticket's state has been looked at and is sound. Blank by default: nothing has affected it.
 Version and Alert tickets have no Attention.
 
-| Value | Colour | Meaning | Set by |
+| Value | Color | Meaning | Set by |
 |---|---|---|---|
 | *(blank)* | none | Nothing has affected it. | n/a |
-| **Fine** | green | Looked at: nothing is wrong, or it was put right. | a person, or the automation from the box ticked in its comment |
-| **Acknowledged** | purple | Looked at: something has to be done, and it is handled elsewhere (another ticket, or this ticket moved back to *ToDo*, *OnDeck*, *InProgress* or *Suspended*). A reply says where. | a person, or the automation from the box ticked in its comment |
-| **Watch** | yellow | An open flag, the lowest level. | the automation |
-| **Caution** | orange | An open flag, the middle level. | the automation |
-| **AtRisk** | red | An open flag, the highest level. Reserved: no rule uses it yet. | the automation |
+| **Fine** | GREEN | Looked at: nothing is wrong, or it was put right. | a person, or the automation from the box ticked in its comment |
+| **Acknowledged** | PURPLE | Looked at: something has to be done, and it is handled elsewhere (another ticket, or this ticket moved back to *ToDo*, *OnDeck*, *InProgress* or *Suspended*). A reply says where. | a person, or the automation from the box ticked in its comment |
+| **Watch** | YELLOW | An open flag, the lowest level. | the automation |
+| **Caution** | ORANGE | An open flag, the middle level. | the automation |
+| **AtRisk** | RED | An open flag, the highest level. Reserved: no rule uses it yet. | the automation |
 
 A level says how serious something looks, not what it is. The comment the automation adds says why.
 Setting the field changes nothing else on the ticket. The causes the automation uses, the idle times and
@@ -5214,14 +5230,14 @@ waits, and when a flag is raised again are set out once, in *Project structure*,
 
 How a ticket ended. Blank while the ticket is open.
 
-| Value | Meaning | Used with |
-|---|---|---|
-| **Done** | The work was done and verified. | *Completed* |
-| **Duplicate** | The same as another ticket, which the comment links. | *Abandoned* |
-| **Invalid** | Not a real problem, or based on a misunderstanding; includes a fault that cannot be reproduced. | *Abandoned* |
-| **WontFix** | A valid request or fault that was decided not to act on. | *Abandoned* |
-| **Superseded** | Replaced by a different approach or ticket: the work was real, but something else took its place. | *Abandoned* |
-| **Obsolete** | No longer relevant because the thing it was about changed or was removed. | *Abandoned* |
+| Value | Color | Meaning | Used with |
+|---|---|---|---|
+| **Done** | GREEN | The work was done and verified. | *Completed* |
+| **Duplicate** | GRAY | The same as another ticket, which the comment links. | *Abandoned* |
+| **Invalid** | PINK | Not a real problem, or based on a misunderstanding; includes a fault that cannot be reproduced. | *Abandoned* |
+| **WontFix** | ORANGE | A valid request or fault that was decided not to act on. | *Abandoned* |
+| **Superseded** | BLUE | Replaced by a different approach or ticket: the work was real, but something else took its place. | *Abandoned* |
+| **Obsolete** | PURPLE | No longer relevant because the thing it was about changed or was removed. | *Abandoned* |
 
 Set by the person making the move to *Completed* or *Abandoned*. When it is set and cleared is in *Project
 structure*, section 4.3.
@@ -5230,15 +5246,15 @@ structure*, section 4.3.
 
 Where the ticket's delivered work is: a fact about the work, independent of Progress and Resolution.
 
-| Value | Meaning | Set by |
-|---|---|---|
-| *(blank)* | No code for this ticket exists on the hosting service, and its work is not yet in effect. | n/a |
-| **Committed** | Optional personal marker: the work is committed locally and not yet pushed. | the developer, by hand only |
-| **Pushed** | Code for the ticket is on a branch on the hosting service, not yet merged. | the automation, when a push contains a changelog entry for the ticket |
-| **Merged** | The work is on `main`, in a finalized version. | the automation, at finalize |
-| **Implemented** | The work is in effect and involved no file change (a setting, a secret, a check that was run). | a person, with the Version it belongs to; the automation then attaches the ticket to that version's ticket |
-| **Released** | The version containing it has been declared a release. | the automation, when a release is cut |
-| **Dropped** | The code or version was planned or pushed but will never be delivered. | the automation when a branch is abandoned; a person for a planned version |
+| Value | Color | Meaning | Set by |
+|---|---|---|---|
+| *(blank)* | none | No code for this ticket exists on the hosting service, and its work is not yet in effect. | n/a |
+| **Committed** | BLUE | Optional personal marker: the work is committed locally and not yet pushed. | the developer, by hand only |
+| **Pushed** | GREEN | Code for the ticket is on a branch on the hosting service, not yet merged. | the automation, when a push contains a changelog entry for the ticket |
+| **Merged** | PURPLE | The work is on `main`, in a finalized version. | the automation, at finalize |
+| **Implemented** | GREEN | The work is in effect and involved no file change (a setting, a secret, a check that was run). | a person, with the Version it belongs to; the automation then attaches the ticket to that version's ticket |
+| **Released** | RED | The version containing it has been declared a release. | the automation, when a release is cut |
+| **Dropped** | GRAY | The code or version was planned or pushed but will never be delivered. | the automation when a branch is abandoned; a person for a planned version |
 
 The rules for Delivery (when it moves back, what *Committed* and *Implemented* are for, and the two
 Delivery and Version rules a *Completed* ticket must meet) are in *Project structure*, sections 4.3 and 4.4.
@@ -5251,14 +5267,14 @@ How urgent, by consequence rather than by deadline. A ticket with no priority is
 creator proposes it and the owner can change it at any time; *Critical* needs a comment saying why (the
 Alerts the automation creates are *Critical* without one).
 
-| Value | Meaning |
-|---|---|
-| **Critical** | Act now: a fault in released software, or an unverified bypass. Every Alert ticket is Critical. |
-| **Urgent** | Must be in the current or next version; it blocks other work or a release. |
-| **High** | Important; planned for the next few versions. |
-| **Normal** | The default for ordinary work. |
-| **Low** | Nice to have; do it when convenient. |
-| **Wishlist** | An idea or backlog item with no commitment to do it. |
+| Value | Color | Meaning |
+|---|---|---|
+| **Critical** | RED | Act now: a fault in released software, or an unverified bypass. Every Alert ticket is Critical. |
+| **Urgent** | ORANGE | Must be in the current or next version; it blocks other work or a release. |
+| **High** | YELLOW | Important; planned for the next few versions. |
+| **Normal** | BLUE | The default for ordinary work. |
+| **Low** | GREEN | Nice to have; do it when convenient. |
+| **Wishlist** | GRAY | An idea or backlog item with no commitment to do it. |
 
 ### Size
 
@@ -5266,13 +5282,13 @@ Estimated developer effort, from starting the work to moving it to *Review*, inc
 documentation. It is effort, not calendar time, and it is not risk. A day means eight hours of effort.
 Every work ticket gets a Size when it is created, and a Size can be corrected as understanding improves.
 
-| Value | Estimated effort |
-|---|---|
-| **XS** | up to 1 hour |
-| **S** | up to 4 hours |
-| **M** | up to 2 days |
-| **L** | up to 2 weeks |
-| **XL** | more than 2 weeks |
+| Value | Color | Estimated effort |
+|---|---|---|
+| **XS** | GREEN | up to 1 hour |
+| **S** | BLUE | up to 4 hours |
+| **M** | YELLOW | up to 2 days |
+| **L** | ORANGE | up to 2 weeks |
+| **XL** | RED | more than 2 weeks |
 
 ### Risk
 
@@ -5280,13 +5296,13 @@ How likely the work is to go wrong. Size assumes the work succeeds; Risk says ho
 be badly wrong. Proposed by the creator and revised by the developer before the ticket moves to *Review*.
 Informational only: it drives no rule or automation.
 
-| Value | Meaning |
-|---|---|
-| **1 Very low** | Nothing depends on it. |
-| **2 Low** | Isolated and easy to undo. |
-| **3 Medium** | Some uncertainty. |
-| **4 High** | Likely to go wrong: critical failure or major delay. |
-| **5 Very high** | May not be feasible. |
+| Value | Color | Meaning |
+|---|---|---|
+| **1 Very low** | GREEN | Nothing depends on it. |
+| **2 Low** | BLUE | Isolated and easy to undo. |
+| **3 Medium** | YELLOW | Some uncertainty. |
+| **4 High** | ORANGE | Likely to go wrong: critical failure or major delay. |
+| **5 Very high** | RED | May not be feasible. |
 
 ### Version, Build and Version#
 
@@ -5559,7 +5575,7 @@ All names, numbers, versions and builds are invented for illustration.
 > (storage, validation, defaults, migration of old settings, and the screens that edit them). Changes to
 > one concern keep breaking another, and new people cannot tell where to add things.
 >
-> **What must not change.** Behaviour. Every setting must be stored, validated, defaulted and migrated
+> **What must not change.** Behavior. Every setting must be stored, validated, defaulted and migrated
 > exactly as before, and the public interface other modules use must stay the same, so nothing outside
 > the module has to change.
 >
@@ -5592,7 +5608,7 @@ All names, numbers, versions and builds are invented for illustration.
 > are accepted today (the union of the four), with the same results for every input that works now.
 >
 > **What must not change.** Which inputs are accepted or rejected, and the dates they produce. Where the
-> four places disagree today, list the differences in a comment first and decide which behaviour wins
+> four places disagree today, list the differences in a comment first and decide which behavior wins
 > before changing anything.
 >
 > **Done when.** The four places call the one function, a test table of accepted and rejected inputs
@@ -5644,7 +5660,7 @@ All names, numbers, versions and builds are invented for illustration.
 > empty report. Two screenshots.
 >
 > **Dependencies.** The export feature must be merged first, so the screenshots and wording match the
-> real behaviour.
+> real behavior.
 >
 > **Done when.** The section is added to the guide, a colleague who has not seen the feature follows it
 > successfully, and the guide's contents list is updated.
@@ -5815,3 +5831,58 @@ The stages, the rules and the causes of each are in *Project structure*, section
 | Creating a ticket and keeping it current | *Starting work* and *Working and committing* |
 | Review, verification and the daily board | *Issues and the board in practice* |
 | Example tickets | *Appendix D: Ticket examples* |
+
+---
+
+## Appendix F: Board views, columns and sorting
+
+What each saved view of the board shows, column by column: the fields displayed, the sort order and the
+grouping (the swimlanes of a board view, the row groups of a table). It records the views as they are, so a
+change to them can be judged against it. Which tickets each view lists, and why, is in *Issues and the board
+in practice*, section 2.2; the filters are in `.github/views.json` and in the wiki page Board views.
+
+**Read as of 2026-10-11,** from the Governance board (project 7) through the API, and compared with
+`.github/views.json`. Every view also shows the ticket **Title**, which is not repeated in the lists below.
+
+---
+
+### 1. Table views
+
+| View | Columns, in the order the board reports them | Sort | Groups |
+|---|---|---|---|
+| **All** | Assignees, Status, Labels, Origin, Waiting, Attention, Resolution, Delivery, Priority, Size, Risk, REF, Version, Build, Version#, Start date, End date | Created, ascending (ticket-number order) | none |
+| **Decide** | Assignees, Status, Attention, Priority | Priority, ascending | none |
+| **Follow up** | Assignees, Status, Waiting, Priority | Priority, ascending | none |
+| **Fix** | Assignees, Status, Resolution, Delivery, Priority, REF, Version, End date, Fix | Priority, ascending | none |
+| **Versions** | Status, Resolution, Delivery, Priority, Version, Build | Version#, ascending, then Priority, ascending | Parent issue (the Version ticket) |
+
+### 2. Board views
+
+A board view has columns (one per value of a field) and, optionally, rows (swimlanes, one per value of a
+second field). The fields below are the ones drawn on each card.
+
+| View | Layout | Columns | Rows | Fields on the card | Sort within a cell |
+|---|---|---|---|---|---|
+| **Backlog** | board | Status | none | Assignees, Priority, Size, Risk, Version | Priority, ascending |
+| **Board** | board | Status | Version | Assignees, Waiting, Attention, Priority, Size | Priority, ascending |
+
+### 3. Where the board and the file differ
+
+`.github/views.json` asks for more columns than the board reports for each view:
+
+- **Type** is requested by All, Backlog, Board, Decide, Follow up, Fix and Versions, and the board reports it
+  for none. Type is the issue type, not a board field, and the API may leave it out of this list although
+  the column is shown. Check it on the screen.
+- **Order.** The board reports the columns in the order of its fields (REF comes after Risk), while the file
+  lists them in the order they are meant to appear (REF after Origin). Which order the screen shows is
+  checked by looking at it, not by this table.
+
+### 4. Notes
+
+- All is the view the owner finds right for working through many tickets: every field is shown, and the
+  order is the ticket number. The other table views show little, which is enough for one or two tickets
+  (open the ticket for the rest) and not enough when many are listed.
+- The sort and grouping of a view can only be set when it is created (see *Issues and the board in
+  practice*, section 2.3), so changing them recreates the view.
+- This appendix is documentation of the present state. Choosing the columns each view should show is
+  decided separately, and the result replaces sections 1 and 2.

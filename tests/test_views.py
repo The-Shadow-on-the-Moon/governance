@@ -181,8 +181,8 @@ class BodyTests(unittest.TestCase):
 
     def test_an_unknown_field_is_named_and_the_known_ones_listed(self):
         with self.assertRaises(views.ViewsError) as caught:
-            views.request_body({"name": "X", "layout": "table", "group_by": "Colour"}, IDS)
-        self.assertIn("unknown field(s) Colour", str(caught.exception))
+            views.request_body({"name": "X", "layout": "table", "group_by": "Color"}, IDS)
+        self.assertIn("unknown field(s) Color", str(caught.exception))
         self.assertIn("Priority", str(caught.exception))
 
 
@@ -345,7 +345,7 @@ class SyncTests(unittest.TestCase):
 
     def test_nothing_is_changed_when_a_field_name_is_unknown(self):
         project = FakeProject()
-        bad = {"name": "Bad", "layout": "table", "group_by": "Colour"}
+        bad = {"name": "Bad", "layout": "table", "group_by": "Color"}
         with self.assertRaises(views.ViewsError):
             self.sync(project, [ALL, bad])
         self.assertEqual(project.calls, [])  # All was not created either: every field name is checked first

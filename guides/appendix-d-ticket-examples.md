@@ -216,7 +216,7 @@ All names, numbers, versions and builds are invented for illustration.
 > (storage, validation, defaults, migration of old settings, and the screens that edit them). Changes to
 > one concern keep breaking another, and new people cannot tell where to add things.
 >
-> **What must not change.** Behaviour. Every setting must be stored, validated, defaulted and migrated
+> **What must not change.** Behavior. Every setting must be stored, validated, defaulted and migrated
 > exactly as before, and the public interface other modules use must stay the same, so nothing outside
 > the module has to change.
 >
@@ -249,7 +249,7 @@ All names, numbers, versions and builds are invented for illustration.
 > are accepted today (the union of the four), with the same results for every input that works now.
 >
 > **What must not change.** Which inputs are accepted or rejected, and the dates they produce. Where the
-> four places disagree today, list the differences in a comment first and decide which behaviour wins
+> four places disagree today, list the differences in a comment first and decide which behavior wins
 > before changing anything.
 >
 > **Done when.** The four places call the one function, a test table of accepted and rejected inputs
@@ -301,7 +301,7 @@ All names, numbers, versions and builds are invented for illustration.
 > empty report. Two screenshots.
 >
 > **Dependencies.** The export feature must be merged first, so the screenshots and wording match the
-> real behaviour.
+> real behavior.
 >
 > **Done when.** The section is added to the guide, a colleague who has not seen the feature follows it
 > successfully, and the guide's contents list is updated.

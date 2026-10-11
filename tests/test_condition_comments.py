@@ -86,7 +86,7 @@ class TextTests(unittest.TestCase):
         self.assertEqual(restored.count(cc.RESTORED), 1)
         self.assertEqual(cc.restore(restored).count(cc.RESTORED), 1)
 
-    def test_a_fix_comment_has_no_boxes_and_is_recognised(self):
+    def test_a_fix_comment_has_no_boxes_and_is_recognized(self):
         text = cc.fix_comment("issue-open", "it is Completed but its issue is still open")
         self.assertTrue(cc.is_fix_comment(text))
         self.assertEqual(cc.condition_of(text), "issue-open")

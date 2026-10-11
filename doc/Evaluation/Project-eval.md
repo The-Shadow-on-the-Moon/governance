@@ -24,7 +24,7 @@ Date: 2026-10-08. Analysis only: nothing in the repository was changed. `combine
 6. **Critical priority.** Appendix C says Critical "needs a comment saying why". Every automation-created Alert is Critical, and the automation writes no such comment. Hotfix tickets are Critical too.
 7. **Assistant and merging.** 09 §3.1 requires approval for any "merge". Syncing `main` into a branch is a merge, yet guides 04 and 06 present it as routine. 09 §3.2 treats "syncing branches" as something a durable authorization can cover, which implies it is gated.
 8. **Skipped-hooks pointer.** Appendix B points to "Working and committing §5" for the skipped-hooks fallback. That text is in guide 04 §5.1, with a mention in 03 §7.2.
-9. **Root contents.** 03 §2.2 says the root holds "only what the table lists". The table omits `LICENSE*` and `.gitattributes`, which this repo has. The table needs a "licence" row and an "other root config" row.
+9. **Root contents.** 03 §2.2 says the root holds "only what the table lists". The table omits `LICENSE*` and `.gitattributes`, which this repo has. The table needs a "license" row and an "other root config" row.
 10. **Smaller points.** Guide 01 §5's heading, "Branches and tags' words", is ungrammatical. The wiki Home lists Appendices A, B, C and E but not D, and links no individual guides.
 
 ### Gaps (incomplete)
@@ -35,7 +35,7 @@ Date: 2026-10-08. Analysis only: nothing in the repository was changed. `combine
   - The glossary (guide 01) has no entry for "scheduled run" or "sweep".
 - **Line endings.** Bootstrap omits `.gitattributes`. Windows line endings broke the hooks and parser once (ticket #14, commits `f252bb7` and `d74d99d`, which rewrote the whole changelog).
 - **Build order.** Nothing says builds inside a version are newest first. Only "newest version first" is stated.
-- **Trialling automation.** The DUMMY-ticket convention (title `DUMMY`, label, close as Invalid, tag branches before deleting) lives only in Appendix C and `AGENTS.md`. Nothing in 05 §3.2's "Hooks, automation, process rules" row or the bootstrap trial (10 §8) says to use it.
+- **Trialing automation.** The DUMMY-ticket convention (title `DUMMY`, label, close as Invalid, tag branches before deleting) lives only in Appendix C and `AGENTS.md`. Nothing in 05 §3.2's "Hooks, automation, process rules" row or the bootstrap trial (10 §8) says to use it.
 - **Tool attribution.** 09 §4.2 forbids naming the tool in commit messages. Assistant tooling often appends a co-author trailer. `AGENTS.md` could say explicitly that the trailer is suppressed.
 
 ### Structural risk
@@ -85,7 +85,7 @@ Each Attention, Delivery and Version rule is restated in 4–6 places: 03 §4.3 
 
 ### Not verified
 
-The live saved views against `views.json`, the token's expiry date, and the `advisory` check's behaviour on a fresh pull request.
+The live saved views against `views.json`, the token's expiry date, and the `advisory` check's behavior on a fresh pull request.
 
 ## Notes outside the review
 

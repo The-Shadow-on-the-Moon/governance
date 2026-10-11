@@ -19,9 +19,9 @@ This project
   first and say what it would do. When the run is a test of the automation, tick its input `trial`, so the
   tag goes under `test/`; nothing else tells the run, and it does not refuse a trial that forgot the box.
 - Flag comments (they start with `<!-- attention:`) and commits whose message starts with `Finalize `,
-  `Flag bypass` or `Fill in a build heading` are written by the automation, which recognises them: do not edit
+  `Flag bypass` or `Fill in a build heading` are written by the automation, which recognizes them: do not edit
   or reuse them.
-- Tests of the automation use throwaway tickets and branches, titled DUMMY and labelled `dummy`, closed as
+- Tests of the automation use throwaway tickets and branches, titled DUMMY and labeled `dummy`, closed as
   Invalid (Abandoned), with their branches tagged (under `test/`, with the input `trial` ticked) before they are deleted.
 - Commit messages and pull request descriptions carry no assistant attribution (no co-author trailer and no
   "generated with" line): authorship belongs to the person (guide 09, section 4.2), even if the assistant's

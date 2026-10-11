@@ -18,6 +18,7 @@ The guides are kept in the repository, and this page only points to them.
 | [Appendix E: ticket model](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-e-ticket-model.md) | The design of a ticket as a whole, and its life from creation to release. |
 | [Appendix C: ticket fields](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-c-ticket-fields-reference.md) | Every ticket field with its values and who sets them. |
 | [Appendix D: ticket examples](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-d-ticket-examples.md) | Example tickets for each Type, as full forms. |
+| [Appendix F: board views](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-f-board-views-layout.md) | The columns, sort order and grouping of each saved view. |
 
 The ten guides:
 [01 Concepts and vocabulary](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/01-concepts-and-vocabulary.md),
@@ -36,9 +37,9 @@ The ten guides:
 The separate files in `guides/` are the source of truth, and the combined file is rebuilt from them with
 `python tools/combine.py`. See the repository's readme.
 
-## Licence
+## License
 
-The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tests/`, and the workflows, scripts and hooks) is under the MIT licence. See the [licence file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/LICENSE) for which paths fall under which. Copyright (c) 2026 The Shadow on the Moon, Inc.
+The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tests/`, and the workflows, scripts and hooks) is under the MIT license. See the [license file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/LICENSE) for which paths fall under which. Copyright (c) 2026 The Shadow on the Moon, Inc.
 
 ## Roles and board
 

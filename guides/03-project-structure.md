@@ -93,7 +93,7 @@ branch they came through.
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
 | **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
-| **Licence files** (root) | The project's licence, when it has one. |
+| **License files** (root) | The project's license, when it has one. |
 
 ### 2.2 Rules
 
@@ -213,7 +213,7 @@ back to why the change was made.
   what happened, and the version or build it was found on. **The more detail the better**: a ticket that
   can be understood without asking anyone saves more time than it costs to write. The solution and the
   discussion that leads to it belong in the comments. A suggested implementation may go in the
-  description, but only when it is clearly labelled as a proposal.
+  description, but only when it is clearly labeled as a proposal.
 - **Comments:** keep the record in comments, not in side channels.
   - When setting *Waiting*, say what is needed and from whom.
   - When abandoning a ticket, say why and link the related ticket.
@@ -263,7 +263,7 @@ More examples, covering every Type, are in appendix D (*Ticket examples*).
 > has had three requests this quarter for a way to take the data out directly, and two customers use the
 > pasted tables in monthly reviews.
 >
-> **Who is affected.** Anyone who reads reports and needs to analyse or share them: mostly finance users,
+> **Who is affected.** Anyone who reads reports and needs to analyze or share them: mostly finance users,
 > typically once a month, with reports of up to a few thousand rows.
 >
 > **What is wanted.** An *Export* button on the reports page that downloads the report currently shown
@@ -276,7 +276,7 @@ More examples, covering every Type, are in appendix D (*Ticket examples*).
 >
 > **Done when.** The CSV opens correctly in two common spreadsheet programs with accented characters
 > intact, matches what the page shows for at least three different reports, and the user guide describes
-> the export. Behaviour with an empty report is defined and tested (header row only).
+> the export. Behavior with an empty report is defined and tested (header row only).
 >
 > **Notes.** The layout was agreed in #210. Reports above 50,000 rows are not expected; if one is found
 > in practice, raise a separate ticket.
@@ -437,7 +437,7 @@ state and lose where the ticket was.
 - **Rule:** these are the causes the automation uses today, with the level each starts at:
   - *Caution:* new work arrives on a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and
     whose earlier work was already pushed or delivered (Delivery is *Pushed*, *Merged*, *Implemented*,
-    *Released* or *Dropped*). Earlier work is recognised by the ticket's recorded Build: a Build older than the
+    *Released* or *Dropped*). Earlier work is recognized by the ticket's recorded Build: a Build older than the
     one being pushed (or, for *Implemented*, which has no file change and no Build, the Delivery itself). A
     Delivery with no such Build, for example one set by hand, does not count. The first push of a ticket
     never raises it: a ticket moved to *Review* before its first push has no earlier work. A *Caution* is also
@@ -946,7 +946,7 @@ Documentation lives in three places, and each answers a different question.
 |---|---|---|
 | **Readme** (root) | What the project is, its requirements, and how to build and use it. The entry point: kept short, and linking to the wiki for detail. | Yes |
 | **Wiki** (`doc/wiki/`) | Current-state reference pages: how the project works now. One topic per page, with a `Home` page as the index. | Yes, whenever what a page describes changes |
-| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyses and investigations, measurements. | No: dated, and not rewritten afterwards |
+| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyzes and investigations, measurements. | No: dated, and not rewritten afterwards |
 
 ### 9.2 Rules
 

@@ -1,6 +1,6 @@
 # Ticket model
 
-How a ticket is built: the questions it answers, the field that answers each, and how a ticket moves from creation to release. The full text, with the reasons behind each choice, is [Appendix E: Ticket model](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-e-ticket-model.md). The values of every field are in [Appendix C: ticket fields](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-c-ticket-fields-reference.md).
+How a ticket is built: the questions it answers, the field that answers each, and how a ticket moves from creation to release. The full text, with the reasons behind each choice, is [Appendix E: Ticket model](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-e-ticket-model.md). The values of every field are in [Appendix C: ticket fields](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-c-ticket-fields-reference.md), with the standard color of each value and of each Area label: a recommendation, which a project may change for its own board.
 
 ## The fields
 

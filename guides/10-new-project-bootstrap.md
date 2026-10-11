@@ -243,6 +243,8 @@ They are set up once, by the administrator, for the organization.
   automation (see the *Ticket fields reference*). There are no other labels.
 - **Rule:** each label carries its meaning from the *Ticket fields reference* as its description, so the
   meaning shows wherever the label is used.
+- **Recommendation:** each label takes the hex color that the *Ticket fields reference* gives it, and each
+  issue type the color that table gives it, so that a ticket reads the same in every project.
 - **Rule:** the labels a new repository starts with that are not on this list (for example `bug`,
   `enhancement`, `duplicate`, `invalid`, `question`, `wontfix`, `good first issue`, `help wanted` and
   `accessibility`; the set changes over time) are deleted. `documentation` stays, because it is on the list.
@@ -276,7 +278,7 @@ fields reference*.
 | Origin | single select | Backfilled, Backdated |
 | REF | text | |
 | Waiting | single select | Needs input |
-| Attention | single select | Fine (green), Acknowledged (purple), Watch (yellow), Caution (orange), AtRisk (red) |
+| Attention | single select | Fine, Acknowledged, Watch, Caution, AtRisk |
 | Resolution | single select | Done, Duplicate, Invalid, WontFix, Superseded, Obsolete |
 | Delivery | single select | Committed, Pushed, Merged, Implemented, Released, Dropped |
 | Priority | single select | Critical, Urgent, High, Normal, Low, Wishlist |
@@ -290,7 +292,7 @@ fields reference*.
 
 Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
 script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
-(the colours of the table, gray otherwise), as a dry run until it is given `--apply`, with the project token.
+(the colors and descriptions of the *Ticket fields reference*, gray and none otherwise), as a dry run until it is given `--apply`, with the project token.
 It never changes a field that exists: one of the wrong type, or lacking a value, is listed for the
 administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
 the automation is switched on, because the preflight requires every field in the table.

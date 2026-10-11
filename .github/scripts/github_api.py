@@ -141,14 +141,14 @@ class Client:
         return self.graphql(query, {"p": project_id, "i": item_id, "f": field_id})
 
     def create_field(self, project_id, name, data_type, options=()):
-        """Create a board field of `data_type` (TEXT, NUMBER, DATE or SINGLE_SELECT); `options` is [(name, color)]
-        for a single-select field. Returns the new field's id and name."""
+        """Create a board field of `data_type` (TEXT, NUMBER, DATE or SINGLE_SELECT); `options` is [(name, color, description)]
+        for a single-select field (a two-item tuple has no description). Returns the new field's id and name."""
         query = ("mutation($p:ID!,$n:String!,$t:ProjectV2CustomFieldType!,$o:[ProjectV2SingleSelectFieldOptionInput!]){"
                  "createProjectV2Field(input:{projectId:$p,name:$n,dataType:$t,singleSelectOptions:$o})"
                  "{projectV2Field{... on ProjectV2Field{id name} ... on ProjectV2SingleSelectField{id name}}}}")
         variables = {"p": project_id, "n": name, "t": data_type}
         if data_type == "SINGLE_SELECT":
-            variables["o"] = [{"name": option, "color": color, "description": ""} for option, color in options]
+            variables["o"] = [{"name": name, "color": color, "description": (rest or [""])[0]} for name, color, *rest in options]
         return self.graphql(query, variables)["createProjectV2Field"]["projectV2Field"]
 
     def set_project_description(self, project_id, text):

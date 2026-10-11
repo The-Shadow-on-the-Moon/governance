@@ -328,7 +328,7 @@ An Alert is *Critical* and starts at *ToDo*. Every move is manual: *InProgress* 
 *Review* when they believe it is handled, *Completed* with Resolution *Done* when a human has verified it.
 Shipping a version never moves it. The person who takes it sets its Size and Risk when triaging.
 
-*Done* means that something was done beyond analysing the Alert, for example documenting the change. An
+*Done* means that something was done beyond analyzing the Alert, for example documenting the change. An
 Alert that analysis shows to be wrong is *Invalid*.
 
 ### 5.4 Rules

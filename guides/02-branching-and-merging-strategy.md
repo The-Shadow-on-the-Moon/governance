@@ -338,7 +338,7 @@ afterwards.
   on and put the details in a comment on that ticket (a `REF` if there is none). A significant one may
   deserve a ticket of its own.
 
-**Why.** A resolution is a decision about which of two behaviours survives, and it is easy to get
+**Why.** A resolution is a decision about which of two behaviors survives, and it is easy to get
 wrong. Making it on the branch, as its own commit, means it is visible, testable and reversible.
 Documenting it matters for the same reason as the build stamps: when a problem appears later, the
 conflict resolution is one of the first places to look, and it should not have to be reconstructed

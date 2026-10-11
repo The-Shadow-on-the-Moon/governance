@@ -69,15 +69,15 @@ class CreateTests(unittest.TestCase):
         self.assertEqual((names, project.created), (["Fix"], []))
         self.assertEqual(run.log, ["create the field Fix (TEXT)"])
 
-    def test_a_real_run_creates_each_field_with_the_guides_colours(self):
+    def test_a_real_run_creates_each_field_with_the_standard_colors_and_descriptions(self):
         project, run = FakeProject(), finalize.Runner(False)
         missing = [("Fix", "TEXT", []), ("Attention", "SINGLE_SELECT", ["Fine", "Acknowledged", "Watch", "Caution", "AtRisk"]),
                    ("Size", "SINGLE_SELECT", ["XS", "S"])]
         fields.create(run, project, full_board(), missing)
         self.assertEqual(project.created[0], ("P7", "Fix", "TEXT", []))
-        colours = dict(project.created[1][3])
-        self.assertEqual(colours, {"Fine": "GREEN", "Acknowledged": "PURPLE", "Watch": "YELLOW", "Caution": "ORANGE", "AtRisk": "RED"})
-        self.assertEqual(project.created[2][3], [("XS", "GRAY"), ("S", "GRAY")])
+        colors = {name: color for name, color, description in project.created[1][3]}
+        self.assertEqual(colors, {"Fine": "GREEN", "Acknowledged": "PURPLE", "Watch": "YELLOW", "Caution": "ORANGE", "AtRisk": "RED"})
+        self.assertEqual(project.created[2][3], [("XS", "GREEN", "Estimated effort: up to 1 hour."), ("S", "BLUE", "Estimated effort: up to 4 hours.")])
         self.assertIn("create the field Size (SINGLE_SELECT: XS, S)", run.log)
 
 
@@ -98,10 +98,11 @@ class ClientTests(unittest.TestCase):
         self.assertIn("createProjectV2Field", sent["query"])
         self.assertEqual(sent["variables"], {"p": "P7", "n": "Fix", "t": "TEXT"})
 
-    def test_a_single_select_field_is_created_with_a_name_a_colour_and_a_description_per_option(self):
+    def test_a_single_select_field_is_created_with_a_name_a_color_and_a_description_per_option(self):
         client = self.client()
-        client.create_field("P7", "Waiting", "SINGLE_SELECT", [("Needs input", "GRAY")])
-        self.assertEqual(self.sent[0]["variables"]["o"], [{"name": "Needs input", "color": "GRAY", "description": ""}])
+        client.create_field("P7", "Waiting", "SINGLE_SELECT", [("Needs input", "ORANGE", "Waiting."), ("Other", "GRAY")])
+        self.assertEqual(self.sent[0]["variables"]["o"], [{"name": "Needs input", "color": "ORANGE", "description": "Waiting."},
+                                                           {"name": "Other", "color": "GRAY", "description": ""}])
 
 
 class MainTests(unittest.TestCase):

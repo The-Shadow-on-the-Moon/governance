@@ -337,19 +337,34 @@ class GuideValueTests(unittest.TestCase):
         bootstrap = self.guide("10-new-project-bootstrap.md")
         table = bootstrap.split("| Field | Kind | Values |", 1)[1].split("Type is the issue type", 1)[0]
         kinds = {"single select": "SINGLE_SELECT", "text": "TEXT", "number": "NUMBER", "date": "DATE"}
-        from_guide, colours = {}, {}
+        from_guide = {}
         for names, kind, values in re.findall(r"^\| (.*?) \| (single select|text|number|date) \|(.*?)\|$", table, re.M):
-            listed = []
-            for value in [v.strip() for v in values.strip().split(", ") if v.strip()]:
-                match = re.match(r"(.*?) \((\w+)\)$", value)
-                if match:
-                    value, colours[match.group(1)] = match.group(1), match.group(2).upper()
-                listed.append(value)
+            listed = [v.strip() for v in values.strip().split(", ") if v.strip()]
             for name in [n.strip() for n in names.split(",")]:
                 from_guide[name] = (kinds[kind], listed or None)
         self.assertEqual(from_guide, dict(preflight.REQUIRED_FIELDS))
-        self.assertEqual(colours, preflight.OPTION_COLORS)
         self.assertEqual(list(from_guide), list(preflight.REQUIRED_FIELDS))
+
+    def test_the_colors_and_descriptions_of_the_preflight_are_those_of_appendix_c(self):
+        import re
+
+        preflight = self.automation("preflight")
+        text = self.guide("appendix-c-ticket-fields-reference.md")
+        sections = ("Progress (Status)", "Origin and REF", "Waiting", "Attention", "Resolution", "Delivery", "Priority", "Size", "Risk")
+        colors, descriptions = {}, {}
+        for section in re.split(r"^## ", text, flags=re.M)[1:]:
+            title, _, body = section.partition(chr(10))
+            if title not in sections:
+                continue
+            for row in re.findall(r"^\| \*\*(.*?)\*\* \| (.*?) \| (.*?) \|", body, re.M):
+                name, color, meaning = row
+                colors[name] = color
+                descriptions[name] = re.sub(r"[*`]", "", meaning) if title != "Size" else f"Estimated effort: {meaning}."
+        self.assertEqual(colors, dict(preflight.OPTION_COLORS))
+        self.assertEqual(descriptions, dict(preflight.OPTION_DESCRIPTIONS))
+        self.assertLessEqual(set(colors.values()), {"GRAY", "BLUE", "GREEN", "YELLOW", "ORANGE", "RED", "PINK", "PURPLE"})
+        areas = re.findall(r"^\| `(\w+)` \| ([0-9A-F]{6}) \|", text, re.M)
+        self.assertEqual(len(areas), 15)  # the 14 Area labels and dummy
 
     def test_the_registry_and_the_automation_agree_on_the_ten_rules_of_the_guide(self):
         import re

@@ -28,9 +28,9 @@ Ordered by importance. "Fix" says what to change; each fix is a small documentat
 | G8 | **Appendix C: "Critical needs a comment"**, but automation-created Alerts and hotfix tickets are Critical. | Project evaluation | Add "except Alerts, which the automation creates as Critical". |
 | G9 | **Hotfix version assignment.** Guide 01 §1 says a version is assigned "when a branch merges into main"; a hotfix version is assigned at finish. | Project evaluation | Add "or, for a hotfix, when it is finished". |
 | G10 | **Wrong cross-reference in Appendix B** for the skipped-hooks fallback ("Working and committing §5"). It's in guide 04 §5.1. | Project evaluation | Change the "See" column. `xref_check` can't catch this because the section exists. |
-| G11 | **Root contents table is incomplete.** 03 §2.2 says the root holds only what the table lists; `LICENSE*` and `.gitattributes` aren't in it. | Project evaluation | Add rows for licence files and for `.gitattributes`. |
+| G11 | **Root contents table is incomplete.** 03 §2.2 says the root holds only what the table lists; `LICENSE*` and `.gitattributes` aren't in it. | Project evaluation | Add rows for license files and for `.gitattributes`. |
 | G12 | **Bootstrap omits `.gitattributes`.** Windows line endings broke the hooks and parser once (ticket #14). | Project evaluation | Add `.gitattributes` with `* text=auto eol=lf` to guide 10 §1 and the checklist. |
-| G13 | **Trialling automation changes isn't a procedure.** The DUMMY-ticket convention is only in Appendix C and `AGENTS.md`. | Project evaluation | Add a short subsection to guide 05 §3.2 (or 10 §8) covering the title, label, closing as Invalid, and tagging branches before deleting. |
+| G13 | **Trialing automation changes isn't a procedure.** The DUMMY-ticket convention is only in Appendix C and `AGENTS.md`. | Project evaluation | Add a short subsection to guide 05 §3.2 (or 10 §8) covering the title, label, closing as Invalid, and tagging branches before deleting. |
 | G14 | **Build blocks within a version: order is not stated.** | Project evaluation | Add "newest build first" to 03 §7.3. |
 | G15 | **Push rejected on a shared branch.** Guide 06 doesn't say to merge `origin/<branch>` and never rebase. | Gemini | Add a note to 06 §1: fetch, merge the remote branch, rebuild, push. |
 | G16 | **`AUTO-REF` after a new-block triage.** Only implied that it stays. | Gemini (partly covered) | One sentence in 03 §7.4: the generated entry stays as the record, same as `REF`. |
@@ -110,7 +110,7 @@ Decisions taken on 2026-10-08, and the tickets created from them. All five are a
 | P1 no stored test results | Closed by the G1 decision: recording is a recommendation, so the project is compliant. |
 | P2 board actions described in the changelog | Earlier entries are not edited. Keep such statements in ticket comments from now on. |
 | Section 3, irrelevant or incorrect findings | Not defects, so nothing to fix. |
-| Scaling to large organisations, wider secrets guidance, beginner setup help (Copilot) | Out of scope for a small-team standard. |
+| Scaling to large organizations, wider secrets guidance, beginner setup help (Copilot) | Out of scope for a small-team standard. |
 
 ### Order
 
