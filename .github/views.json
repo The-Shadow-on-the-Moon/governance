@@ -52,7 +52,7 @@
       "layout": "table",
       "filter": "has:version AND -type:Version",
       "group_by": "Parent issue",
-      "sort_by": [["Version#", "asc"], ["Priority", "asc"]],
+      "sort_by": [["Version", "asc"], ["Priority", "asc"]],
       "visible_fields": ["Title", "Status", "Type", "Labels", "Assignees", "Priority", "Size", "Delivery", "Resolution", "Version", "Build"]
     }
   ]

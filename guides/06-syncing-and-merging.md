@@ -272,7 +272,7 @@ After a merge to `main`, the automation:
   `WIP-Version` heading to the real version (with its UTC date and time) in a commit of its own on top of
   the merge;
 - for each ticket in the version: advances it to *InProgress* if it was somehow still *ToDo* or *OnDeck* (the
-  push normally did that already), sets Delivery to *Merged*, and sets Version, Build and Version#. It never moves a ticket out of *Completed*:
+  push normally did that already), sets Delivery to *Merged*, and sets Version (in the board form) and Build. It never moves a ticket out of *Completed*:
   a ticket verified before the merge stays *Completed*;
 - creates the Version ticket, or reuses a planned one, with a generated description, the last build and
   the tickets as sub-issues, and closes it;

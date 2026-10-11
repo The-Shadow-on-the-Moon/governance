@@ -12,7 +12,7 @@ import dates  # noqa: E402
 import conditions  # noqa: E402
 import implemented  # noqa: E402
 import preflight  # noqa: E402
-import version_numbers  # noqa: E402
+import version_format  # noqa: E402
 import watch  # noqa: E402
 
 FIELDS = {"status": {"name": "InProgress"}, "delivery": {"name": "Implemented"}, "version": {"text": "V1.0.0"},
@@ -49,7 +49,7 @@ class SweepsSkipItemsThatAreNotIssues(unittest.TestCase):
         self.assertEqual(implemented.unattached(FakeProject(), board()), [])
 
     def test_the_version_number_sweep(self):
-        self.assertEqual(version_numbers.board_items(FakeProject(), board()), [])
+        self.assertEqual(version_format.board_items(FakeProject(), board()), [])
 
 
 if __name__ == "__main__":

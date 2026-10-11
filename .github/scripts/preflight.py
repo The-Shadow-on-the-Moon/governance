@@ -47,7 +47,6 @@ REQUIRED_FIELDS = {
     "Risk": (SELECT, ["1 Very low", "2 Low", "3 Medium", "4 High", "5 Very high"]),
     "Version": (TEXT, None),
     "Build": (TEXT, None),
-    "Version#": (NUMBER, None),
     "Start date": (DATE, None),
     "End date": (DATE, None),
     "Fix": (TEXT, None),

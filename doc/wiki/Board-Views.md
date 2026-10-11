@@ -14,7 +14,7 @@ Every view except All also ends with `AND is:issue AND -label:dummy`, which the 
 | Decide | table | `attention:Watch,Caution,AtRisk OR (type:Alert AND is:open)` | sorted by Priority | What the automation noticed and a person must judge: an open Attention flag, an open Alert. Start a work session here. |
 | Follow up | table | `has:waiting OR status:Review` | sorted by Priority | The ordinary queues: a ticket marked *Needs input*, and a ticket at *Review* awaiting verification. |
 | Fix | table | `has:fix` | sorted by Priority | Tickets whose fields contradict each other; the Fix column names the broken rules. |
-| Versions | table | `has:version AND -type:Version` | grouped by Parent issue (the Version ticket, so a group reads "Version 0.7.0"); sorted by Version#, then Priority | What each version holds, with Delivery, Build and Resolution. Tickets only aimed at a version (no Version ticket yet) are in the "No parent issue" group, ordered by their Version#. |
+| Versions | table | `has:version AND -type:Version` | grouped by Parent issue (the Version ticket, so a group reads "Version 000.007.000"); sorted by Version, then Priority | What each version holds, with Delivery, Build and Resolution. Tickets only aimed at a version (no Version ticket yet) are in the "No parent issue" group, ordered by their Version. |
 
 The columns of each view, in order, and their sorting and grouping are in [Appendix F: board views](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-f-board-views-layout.md).
 

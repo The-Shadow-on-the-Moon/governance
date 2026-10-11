@@ -54,7 +54,7 @@ def bypass_alert(findings, missing, version, push_sha, when):
 def stale_alert(version, planned):
     """(title, body) of the Alert for planned Version tickets that can no longer happen."""
     listing = ", ".join(f"#{number} {title}" for number, title in planned)
-    body = (f"Version {str(version)[1:]} was finalized. These planned Version tickets have a lower number and cannot "
+    body = (f"{version.title()} was finalized. These planned Version tickets have a lower number and cannot "
             f"happen under it: {listing}.\n\n**To do.** For each one, set Delivery to *Dropped* and close it with a "
             "comment saying what replaced it, or correct the number if it was a mistake.\n")
     return f"Stale planned Version tickets after {version}", body

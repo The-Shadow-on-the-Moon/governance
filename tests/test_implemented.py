@@ -16,14 +16,13 @@ NOW = datetime(2026, 10, 6, 10, 0, 0, tzinfo=timezone.utc)
 V = Version.parse
 
 
-def node(number, delivery="Implemented", version="", parent=None, version_number=None, title=None, status=None, attention=None, comments=()):
+def node(number, delivery="Implemented", version="", parent=None, title=None, status=None, attention=None, comments=()):
     return {"id": f"I{number}", "content": {"number": number, "title": title or f"Ticket {number}", "parent": {"number": parent} if parent else None,
                                             "comments": {"nodes": [{"body": body} for body in comments]}},
             "attention": {"name": attention} if attention else None,
             "delivery": {"name": delivery} if delivery else None,
             "status": {"name": status} if status else None,
-            "version": {"text": version} if version else None,
-            "number": {"number": version_number} if version_number is not None else None}
+            "version": {"text": version} if version else None}
 
 
 class FakeProject:
@@ -80,23 +79,37 @@ def sweep(nodes, tickets=OLD_TICKETS, finalized=FINALIZED, dry_run=False):
     return run, repo, project, added
 
 
+class VersionTicketTests(unittest.TestCase):
+    def test_a_version_ticket_is_found_by_the_version_in_either_form(self):
+        for title in ("Version 000.003.001", "Version 0.3.1"):
+            self.assertEqual(implemented.version_ticket(FakeRepo([{"title": title, "number": 9}]), V("V0.3.1"))["number"], 9)
+
+    def test_another_version_or_other_text_is_not_found(self):
+        tickets = [{"title": "Version 000.003.000", "number": 1}, {"title": "Version 3.1", "number": 2}, {"title": "Something", "number": 3}]
+        self.assertIsNone(implemented.version_ticket(FakeRepo(tickets), V("V0.3.1")))
+
+
 class SweepTests(unittest.TestCase):
     def test_a_blank_version_gets_the_version_being_finalized(self):
         run, repo, project, _ = sweep([node(50)])
         self.assertEqual(repo.subs, [(30, 50)])
         sets = {(field): value for _, field, value in project.sets}
-        self.assertEqual(sets["F-Version"], {"text": "V0.4.0"})
-        self.assertEqual(sets["F-Version#"], {"number": 40000.0})
+        self.assertEqual(sets["F-Version"], {"text": "V000.004.000"})
+        self.assertNotIn("F-Version#", sets)
 
-    def test_the_version_being_finalized_is_attached_and_kept(self):
+    def test_the_version_being_finalized_is_attached_and_put_in_the_board_form(self):
         _, repo, project, _ = sweep([node(50, version="V0.4.0")])
         self.assertEqual(repo.subs, [(30, 50)])
-        self.assertNotIn("F-Version", [field for _, field, _ in project.sets])
+        self.assertEqual([(field, value) for _, field, value in project.sets], [("F-Version", {"text": "V000.004.000"})])
+
+    def test_a_version_already_in_the_board_form_is_not_set_again(self):
+        _, repo, project, _ = sweep([node(50, version="V000.004.000")])
+        self.assertEqual((repo.subs, project.sets), ([(30, 50)], []))
 
     def test_an_earlier_finalized_version_is_attached_to_its_own_ticket(self):
         run, repo, project, _ = sweep([node(50, version="V0.3.1")])
         self.assertEqual(repo.subs, [(27, 50)])
-        self.assertEqual({field: value for _, field, value in project.sets}["F-Version#"], {"number": 30010.0})
+        self.assertEqual({field: value for _, field, value in project.sets}["F-Version"], {"text": "V000.003.001"})
         self.assertEqual(repo.comments[0][0], 27)
 
     def test_a_later_version_waits(self):
@@ -151,10 +164,6 @@ class SweepTests(unittest.TestCase):
     def test_already_attached_and_other_deliveries_are_left_alone(self):
         _, repo, project, _ = sweep([node(50, parent=27), node(51, delivery="Merged"), node(52, delivery=None)])
         self.assertEqual((repo.subs, project.sets, repo.comments), ([], [], []))
-
-    def test_version_number_already_right_is_not_set_again(self):
-        _, _, project, _ = sweep([node(50, version="V0.4.0", version_number=40000.0)])
-        self.assertEqual(project.sets, [])
 
     def test_one_comment_per_version_ticket_lists_the_tickets(self):
         _, repo, _, _ = sweep([node(50, version="V0.3.1", title="A"), node(51, version="V0.3.1", title="B"), node(52, title="C")])

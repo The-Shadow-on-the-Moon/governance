@@ -139,7 +139,7 @@ request. Each run sweeps the board and does the following, and the other guides 
 
 - sets the Start and End dates of tickets that have started or ended;
 - raises *Watch* on tickets that have gone quiet or have waited too long (section 4.3);
-- sets Version# on every ticket that has a Version, including one that is only aimed at a version;
+- puts the Version of every ticket that has one in the board form, including one that is only aimed at a version;
 - attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2);
 - refreshes the Fix field of every ticket (section 4.3), always after the attaching, so that an *Implemented*
   ticket that is waiting for its Version is not shown as broken.
@@ -351,7 +351,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Resolution** | How did it end? | one | a person |
 | **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker, *Implemented*, and *Dropped* on a planned Version ticket, which a person sets) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
-| **Version**, **Build**, **Version#** | Which version and build? | text, text, number | a person may aim it; the automation sets the real values |
+| **Version**, **Build** | Which version and build? | text, text | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
 | **Fix** | Which of the rules that span fields do its fields break? | text (rule ids) | the automation |
 
@@ -516,8 +516,11 @@ nothing in the repository shows that a secret was stored or a setting changed.
 - **Rule:** Version is a single field for the version a ticket is aimed at and, once it ships, the
   version it really shipped in: a person may set it ahead of time, and the automation overwrites it with
   the real version. Build holds the ticket's latest build (the most recent build stamp among the build blocks that
-  mention it), and Version# is derived from Version only to sort versions. The automation sets it, not only
-  when a version ships but on every scheduled run for any ticket that has a Version, so a ticket that is only aimed at a
+  mention it). On the board a version is written with three digits for each of V, s and m (`V000.010.001`, and
+  `V001.025.000-HF1` for a hotfix), so that the text sorts in version order in a plain table, in a group and in
+  the hierarchy; a Version ticket's title uses the same form (`Version 000.010.001`). The changelog, tags and branch
+  names keep the short form. A person may type either form; the automation writes the board form when it
+  finalizes and on every scheduled run, for any ticket that has a Version, so a ticket that is only aimed at a
   version sorts among the others.
 - **Rule:** Start date and End date are the dates the automation noticed the ticket start and end. A
   person may correct one by hand. The automation clears the End date when it sees the ticket open again.
@@ -643,14 +646,14 @@ instead of a note someone has to remember.
 
 The automation generates these texts. The names, numbers and dates are invented for illustration.
 
-#### Version ticket: "Version 2.4.1"
+#### Version ticket: "Version 002.004.001"
 
 | Field | Value |
 |---|---|
-| **Title** | Version 2.4.1 |
+| **Title** | Version 002.004.001 |
 | **Type** | Version |
 | **Delivery** | Merged |
-| **Version** | V2.4.1 |
+| **Version** | V002.004.001 |
 | **Build** | 20261005143045 |
 | **Sub-issues** | #201, #204, #205 |
 | **Progress, Priority, Size, Risk, Area** | none |
@@ -677,7 +680,7 @@ When a release is cut on this version, the automation sets Delivery to *Released
 | **Progress** | ToDo |
 | **Size, Risk** | blank until triaged |
 | **Assignee** | Sam (the person who pushed) |
-| **Version** | V2.4.1 |
+| **Version** | V002.004.001 |
 
 > Detected on the push of 2026-10-05 16:40 UTC to `main` (commit `abc1234`): this merge's result is not
 > identical to its branch's final state. The branch was not synced first, or a conflict was resolved
@@ -699,8 +702,8 @@ When a release is cut on this version, the automation sets Delivery to *Released
 | **Size, Risk** | blank until triaged |
 | **Assignee** | none until someone takes it |
 
-> Version 2.4.1 was finalized. These planned Version tickets have a lower number and cannot happen under
-> it: #130 Version 2.4.0.
+> Version 002.004.001 was finalized. These planned Version tickets have a lower number and cannot happen under
+> it: #130 Version 002.004.000.
 >
 > **To do.** For each one, set Delivery to *Dropped* and close it with a comment saying what replaced it,
 > or correct the number if it was a mistake.
@@ -1018,7 +1021,7 @@ it is a judgment (is the work done, is it verified, how urgent is it), a person 
 | *Completed* and *Done* | sets, after verifying | sets, after verifying | | |
 | *Abandoned*, *Suspended* and the abandon reasons | proposes | decides | | |
 | Version (the target) | | sets | | overwrites it with the real version |
-| Delivery (except *Committed*, *Implemented* and *Dropped* on a planned Version ticket), Build, Version#, Start and End dates | | | | sets |
+| Delivery (except *Committed*, *Implemented* and *Dropped* on a planned Version ticket), Build, Start and End dates | | | | sets |
 | Delivery *Implemented*, with its Version | sets | may change | | attaches the ticket to its Version ticket |
 
 *Completed* and *Done* may be set by the developer or the project owner, whoever verified the result. The

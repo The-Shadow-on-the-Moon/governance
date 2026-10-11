@@ -286,7 +286,6 @@ fields reference*.
 | Risk | single select | 1 Very low, 2 Low, 3 Medium, 4 High, 5 Very high |
 | Version | text | |
 | Build | text | |
-| Version# | number | |
 | Start date, End date | date | |
 | Fix | text | |
 

@@ -2,9 +2,9 @@ name: Versioning
 
 # On a pull request: the pull request is put on the board (a failure there never fails the run), then the advisory check.
 # On a push to another branch: the preflight, the fallback for skipped hooks, then the push step (Delivery, Progress, Build, Attention).
-# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the Version# sweep, the date sweep, the Watch flags and the refresh of the Fix field.
+# On a push to main: the preflight, then bypass detection, the finalize step, the stale-version check, the Version-form sweep, the date sweep, the Watch flags and the refresh of the Fix field.
 # Three times a day (08:17, 16:17 and 20:17 UTC: 4am, noon and 4pm ET in summer time, an hour earlier in winter) and on request with mode "scheduled":
-#   the preflight, the Implemented tickets, the Version# sweep, the date sweep, the Watch flags and the refresh of the Fix field. The scheduled run never commits to a branch.
+#   the preflight, the Implemented tickets, the Version-form sweep, the date sweep, the Watch flags and the refresh of the Fix field. The scheduled run never commits to a branch.
 # The main job and the scheduled job share one concurrency group, so a merge and a scheduled run never overlap (the second waits).
 # On an issue event (edited, closed, reopened, assigned, labeled) or a comment on an issue (created, edited, which includes the tick of a box in the
 #   automation's own comment), caused by someone with write access: the same as mode "conditions" below, for the whole board, so a closed issue or a tick
@@ -233,14 +233,14 @@ jobs:
         if: github.event_name == 'push' || inputs.dry_run == false
         run: python3 .github/scripts/bypass.py stale
 
-      - name: Set Version# from Version
+      - name: Put Version in the board form
         env:
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
         run: |
           if [ "$DRY_RUN" = "true" ]; then
-            python3 .github/scripts/version_numbers.py --dry-run
+            python3 .github/scripts/version_format.py --dry-run
           else
-            python3 .github/scripts/version_numbers.py
+            python3 .github/scripts/version_format.py
           fi
 
       - name: Sweep the dates
@@ -311,12 +311,12 @@ jobs:
             python3 .github/scripts/implemented.py
           fi
 
-      - name: Set Version# from Version
+      - name: Put Version in the board form
         run: |
           if [ "$DRY_RUN" = "true" ]; then
-            python3 .github/scripts/version_numbers.py --dry-run
+            python3 .github/scripts/version_format.py --dry-run
           else
-            python3 .github/scripts/version_numbers.py
+            python3 .github/scripts/version_format.py
           fi
 
       - name: Sweep the dates

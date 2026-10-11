@@ -1,6 +1,14 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261011175747 (branch columns-colors-and-sort)
+#### #139 — Sorting by version does not work well
+- The board sorts and groups by the text of a field, and the text of `V0.10.0` comes before `V0.2.0`, so the Versions view, the Parent issue groups and the hierarchy listed V0.10.0 after V0.1.0. The board now writes a version with three digits for each of V, s and m (`V000.010.001`; a hotfix `V001.025.000-HF1`, one digit) in the Version field and in the title of a Version ticket (`Version 000.010.001`), so that text order is version order. The changelog, the tags, the branch names and the manifest keep the short form.
+- .github/scripts/versions.py: `Version.board()` and `Version.title()` give the two forms; the board form parses back, and a test checks that sorting the board forms as text equals sorting the versions.
+- .github/scripts/finalize.py and .github/scripts/implemented.py: the Version field and the Version ticket title are written in the board form; a planned Version ticket typed by hand as `Version 0.10.1` is found and its title is rewritten when the version ships; Version# is no longer written. .github/scripts/alerts.py names the version by its title.
+- Version# is removed (the board can now sort by Version itself, and the code compared versions with a value computed in Python, never with the field): .github/scripts/version_numbers.py and tests/test_version_numbers.py are replaced by .github/scripts/version_format.py and tests/test_version_format.py, which put the Version of every ticket (Version tickets included, Alerts left alone) in the board form on each scheduled run; the field leaves the required fields of .github/scripts/preflight.py and the bootstrap table; the Versions view sorts by Version, then Priority (.github/views.json). The workflow step is renamed. .github/automation-manifest.json regenerated.
+- guides/01, 03, 06, 07, 09, 10, appendix C, E and F, doc/wiki/ (Automation, Board-Views, Ticket-Model) and HANDOFF-governance.md: the board form of Version, the new sweep, and no Version#. guides/Developer-Guides-Complete.md rebuilt.
+- tests/: finalize, hotfix, implemented, workflow, board status and automation library follow the new form; new tests for the two forms, for finding a hand-typed Version ticket, and for the sweep.
 ### Build 20261011170418 (branch columns-colors-and-sort)
 #### #140 — Columns shown in table views
 - .github/views.json: the columns of All, Decide, Follow up, Fix and Versions, chosen with the owner. All five start with Title, Assignees, Status, Type and Labels; All shows every field but the helper Version# (and gains Fix); Decide and Follow up gain Type, Labels, Delivery and Version; Follow up also gains Size, Risk and Resolution; Fix and Versions gain Type, Labels and, for Versions, Size. .github/automation-manifest.json regenerated.

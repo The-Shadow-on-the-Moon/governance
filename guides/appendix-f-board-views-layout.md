@@ -33,10 +33,10 @@ The number is the position of the column in the view; "·" means the view does n
 | Build | 17 | · | · | 11 | 11 |
 | Start date | 18 | · | · | · | · |
 | End date | 19 | · | · | 12 | · |
-| **Sort** | Created, ascending | Priority, ascending | Priority, ascending | Priority, ascending | Version#, ascending, then Priority, ascending |
+| **Sort** | Created, ascending | Priority, ascending | Priority, ascending | Priority, ascending | Version, ascending, then Priority, ascending |
 | **Group** | none | none | none | none | Parent issue (the Version ticket) |
 
-Version# is never shown: it is a helper number used only to sort versions.
+Version is written in the board form (`V000.010.001`), which sorts as text in version order, so the Versions view sorts by it and its groups (the Version tickets, titled `Version 000.010.001`) come out in version order.
 
 ## 2. Board views
 
@@ -51,7 +51,7 @@ second field). The fields below are the ones drawn on each card.
 ## 3. Why these columns
 
 - Every table view starts with the same five columns (Title, Assignees, Status, Type, Labels), so a ticket
-  reads the same wherever it is listed. All is the complete list: every field except the helper Version#.
+  reads the same wherever it is listed. All is the complete list: every field.
 - The short views add what their job needs: Attention and Waiting to decide, Waiting, Size, Risk and
   Resolution to follow up, Fix and the rule columns to fix, Delivery, Resolution and Build to see what a
   version holds. Delivery and Version are on all of them, to tell at a glance whether the work is merged or

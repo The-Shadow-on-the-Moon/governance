@@ -6,7 +6,7 @@ run and on a manual run, this sweep looks at the Implemented tickets that are no
 Version ticket:
 
 - a blank Version gets the version being finalized (at a scheduled run, the latest finalized version);
-- a Version that is already finalized is kept, and the ticket is attached to that version's ticket;
+- a Version that is already finalized is kept (put in the board form), and the ticket is attached to that version's ticket;
 - a Version that is not finalized yet makes the ticket wait, quietly while a higher version is not finalized
   either; but when a higher version is already finalized, the aimed number was passed and can no longer
   happen, so the ticket would wait for ever: it gets Attention Caution and one comment, and a person decides
@@ -16,6 +16,8 @@ The ticket keeps Delivery Implemented and gets no Build. A comment on each Versi
 tickets were added, because its description is written once. See the guide on project structure
 (section 5.2) and appendix C.
 """
+import re
+
 import condition_comments
 import failures
 from versions import Version
@@ -25,8 +27,7 @@ ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first
          "attention:fieldValueByName(name:\"Attention\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "delivery:fieldValueByName(name:\"Delivery\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
-         "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}} "
-         "number:fieldValueByName(name:\"Version#\"){... on ProjectV2ItemFieldNumberValue{number}}}}}}}")
+         "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}}}}}}}")
 
 
 def unattached(project_client, board):
@@ -42,20 +43,28 @@ def unattached(project_client, board):
                 found.append({"item": node["id"], "number": content["number"], "title": content["title"],
                               "attention": (node.get("attention") or {}).get("name"),
                               "comments": [c.get("body") or "" for c in (content.get("comments") or {}).get("nodes") or []],
-                              "version": (node.get("version") or {}).get("text") or "",
-                              "version_number": (node.get("number") or {}).get("number")})
+                              "version": (node.get("version") or {}).get("text") or ""})
         if not page["pageInfo"]["hasNextPage"]:
             return found
         after = page["pageInfo"]["endCursor"]
 
 
+def _title_version(title):
+    """The version a Version ticket's title names, in either form, or None."""
+    match = re.match(r"^Version (\d+\.\d+\.\d+(?:-HF\d+)?)$", title)
+    try:
+        return Version.parse("V" + match.group(1)) if match else None
+    except ValueError:
+        return None
+
+
 def version_ticket(repo_client, version):
-    """The Version ticket titled exactly `Version X.Y.Z`, closed (finalized) or not, or None."""
-    title = f"Version {str(version)[1:]}"
+    """The Version ticket for `version`, closed (finalized) or not, or None. Its title is the version in the board form
+    (`Version 000.010.001`); a planned ticket typed by hand as `Version 0.10.1` is found too."""
     for page in range(1, 11):
         issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=all&type=Version&per_page=100&page={page}"))
         for issue in issues:
-            if issue["title"] == title:
+            if _title_version(issue["title"]) == version:
                 return issue
         if len(issues) < 100:
             return None
@@ -110,12 +119,9 @@ def sweep(run, repo_client, project_client, board, finalized, current, now):
             parent = found["number"]
         run.do(f"#{ticket['number']}: attach to the Version ticket #{parent} ({aimed})", repo_client.add_sub_issue, parent, ticket["number"])
         fields = board.fields
-        if not ticket["version"]:
-            run.do(f"#{ticket['number']}: set Version to {aimed}", project_client.set_project_field, board.id, ticket["item"],
-                   fields["Version"]["id"], {"text": str(aimed)})
-        if ticket["version_number"] != float(aimed.number()):
-            run.do(f"#{ticket['number']}: set Version# to {aimed.number()}", project_client.set_project_field, board.id,
-                   ticket["item"], fields["Version#"]["id"], {"number": float(aimed.number())})
+        if ticket["version"] != aimed.board():
+            run.do(f"#{ticket['number']}: set Version to {aimed.board()}", project_client.set_project_field, board.id, ticket["item"],
+                   fields["Version"]["id"], {"text": aimed.board()})
         added.setdefault(aimed, (parent, []))[1].append((ticket["number"], ticket["title"]))
     when = now.strftime("%Y-%m-%d %H:%M")
     for aimed, (parent, tickets) in added.items():

@@ -214,13 +214,12 @@ Informational only: it drives no rule or automation.
 | **4 High** | ORANGE | Likely to go wrong: critical failure or major delay. |
 | **5 Very high** | RED | May not be feasible. |
 
-## Version, Build and Version#
+## Version and Build
 
 | Field | Holds | Set by |
 |---|---|---|
-| **Version** (text) | The version a ticket is aimed at and, once it ships, the version it really shipped in (`V2.1.0`, or `V2.1.0-HF1` for a hotfix). | a person may set it ahead of time; the automation overwrites it with the real version (for a backfilled ticket, the version where its placeholder appears). On an *Implemented* ticket the person's value stays |
+| **Version** (text) | The version a ticket is aimed at and, once it ships, the version it really shipped in (`V002.001.000`, or `V002.001.000-HF1` for a hotfix: three digits for each of V, s and m, so that the text sorts in version order; a hotfix number is one digit). | a person may set it ahead of time, in this form or as `V2.1.0`; the automation writes the board form on every scheduled run and overwrites it with the real version (for a backfilled ticket, the version where its placeholder appears). On an *Implemented* ticket the person's value stays |
 | **Build** (text) | The latest build of the ticket: the most recent build stamp among the build blocks that mention it. | the automation |
-| **Version#** (number) | A number derived from Version, used only to sort versions. It keeps a digit for the hotfix number. | the automation: at finalize, and on every scheduled run for any ticket that has a Version (also one that is only aimed at a version) and a blank or different Version# |
 
 ## Start date and End date
 
@@ -260,7 +259,7 @@ ticket has none.
 | Priority | Normal by default | none | Critical, always |
 | Size | required at creation | none | set by the person who takes it |
 | Risk | proposed by the creator | none | set by the person who takes it |
-| Version, Build, Version# | yes | its own version; its last build | the version in which it was raised |
+| Version, Build | yes | its own version; its last build | the version in which it was raised |
 | Start date, End date | yes | none | none |
 | Fix | yes | none | yes (the Delivery rules do not apply) |
 | Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog; none for stale planned versions |

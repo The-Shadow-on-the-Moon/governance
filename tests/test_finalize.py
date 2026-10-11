@@ -151,14 +151,14 @@ class FinalizeTests(Repo):
         self.assertEqual(self.git("rev-parse", "HEAD"), subprocess.run(
             ["git", "rev-parse", "main"], cwd=self.remote, capture_output=True, text=True).stdout)
         sets = {(item, field): value for item, field, value in project.sets}
-        self.assertEqual(sets[("I201", "F-Version")], {"text": "V0.3.0"})
+        self.assertEqual(sets[("I201", "F-Version")], {"text": "V000.003.000"})
         self.assertEqual(sets[("I201", "F-Build")], {"text": "20261006090000"})
-        self.assertEqual(sets[("I201", "F-Version#")], {"number": 30000.0})
+        self.assertNotIn(("I201", "F-Version#"), sets)
         self.assertEqual(sets[("I201", "F-Delivery")], {"singleSelectOptionId": "Delivery-Merged"})
         self.assertNotIn(("I201", "F-Status"), sets)  # already InProgress
         self.assertNotIn(("I205", "F-Status"), sets)  # a Completed ticket stays Completed
         title, body = repo.of("create")[0][1:3]
-        self.assertEqual(title, "Version 0.3.0")
+        self.assertEqual(title, "Version 000.003.000")
         self.assertIn("Finalized 2026-10-06 10:00 UTC from pull request #10. Bump: sub, from the Type of #201 (Feature).", body)
         self.assertIn("Last build: 20261006090000.", body)
         self.assertIn("- #205 Fix the totals (Bug)", body)
@@ -207,9 +207,9 @@ class FinalizeTests(Repo):
     def test_running_again_skips_what_is_done(self):
         self.write(CHANGELOG.format(marker=""))
         finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
-        done = {201: {"status": "InProgress", "delivery": "Merged", "version": "V0.3.0", "build": "20261006090000", "number": 30000},
-                205: {"status": "Completed", "delivery": "Merged", "version": "V0.3.0", "build": "20261006090000", "number": 30000}}
-        existing = [{"title": "Version 0.3.0", "state": "closed", "number": 50, "node_id": "N50"}]
+        done = {201: {"status": "InProgress", "delivery": "Merged", "version": "V000.003.000", "build": "20261006090000"},
+                205: {"status": "Completed", "delivery": "Merged", "version": "V000.003.000", "build": "20261006090000"}}
+        existing = [{"title": "Version 000.003.000", "state": "closed", "number": 50, "node_id": "N50"}]
         repo, project = FakeRepo(self.TYPES, existing), FakeProject(done)
         head = self.git("rev-parse", "HEAD")
         run = finalize.finalize(self.dir, repo, project, board(), NOW)
@@ -226,6 +226,14 @@ class FinalizeTests(Repo):
         self.assertEqual(repo.of("create"), [])
         self.assertEqual(repo.of("close"), [("close", 33)])
         self.assertEqual([c[1] for c in repo.of("sub")], [33, 33])
+
+    def test_a_planned_ticket_typed_by_hand_is_found_and_given_the_board_form_title(self):
+        self.write(CHANGELOG.format(marker=""))
+        existing = [{"title": "Version 0.3.0", "state": "open", "number": 33, "node_id": "N33"}]
+        repo = FakeRepo(self.TYPES, existing)
+        finalize.finalize(self.dir, repo, FakeProject(), board(), NOW)
+        patched = [c for c in repo.of("request") if c[1] == "PATCH"]
+        self.assertEqual(patched[0][3]["title"], "Version 000.003.000")
 
     def test_a_board_error_does_not_stop_the_version(self):
         self.write(CHANGELOG.format(marker=""))

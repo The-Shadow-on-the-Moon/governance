@@ -113,7 +113,7 @@ class BoardStatusTests(unittest.TestCase):
 class EverySweepRecordsItsFailureTests(unittest.TestCase):
     def test_each_place_that_carries_on_after_a_board_error_also_records_it(self):
         scripts = os.path.join(ROOT, ".github", "scripts")
-        for name in ("conditions", "dates", "implemented", "version_numbers", "watch", "finalize"):
+        for name in ("conditions", "dates", "implemented", "version_format", "watch", "finalize"):
             with open(os.path.join(scripts, name + ".py"), encoding="utf-8") as handle:
                 text = handle.read()
             self.assertIn("import failures", text, name)
