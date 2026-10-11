@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.11.0 — 2026-10-11 18:05 UTC
 ### Build 20261011175747 (branch columns-colors-and-sort)
 #### #139 — Sorting by version does not work well
 - The board sorts and groups by the text of a field, and the text of `V0.10.0` comes before `V0.2.0`, so the Versions view, the Parent issue groups and the hierarchy listed V0.10.0 after V0.1.0. The board now writes a version with three digits for each of V, s and m (`V000.010.001`; a hotfix `V001.025.000-HF1`, one digit) in the Version field and in the title of a Version ticket (`Version 000.010.001`), so that text order is version order. The changelog, the tags, the branch names and the manifest keep the short form.
