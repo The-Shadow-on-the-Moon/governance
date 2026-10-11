@@ -1,5 +1,31 @@
 # Changelog
 
+## WIP-Version
+### Build 20261011202606 (branch audit-tools)
+#### #148 — Audit tool: files and local git checks
+- tools/audit_common.py: the check model every audit script uses (an id, the guide section, rule or recommendation, a result of pass, fail or not-checkable, a message and a fix hint), the report with its counts, and the text format.
+- tools/audit_files.py: audits the working tree of a project against the guides: the places every project has (readme, changelog, doc/wiki, hooks, .github, AGENTS.md, ignore and line-endings files, license), the `* text=auto eol=lf` line, the changelog (Unix line endings, no Known bugs or Planned sections, WIP-Version headings and markers, version headings and their order, build and ticket headings), the hooks and whether they are active in the clone, the wiki (Home page, page names), the automation files (workflow, pull request template, manifest, tests) and that AGENTS.md points to the guides. `--json <file>` writes the result; the exit code is 1 when a rule fails.
+- tools/audit_git.py: audits branches, tags and commits of a clone: `main` exists and is the only integration line, branch names are kebab-case without `/` (or the hotfix form), tag names follow the namespaces, release tags are on `main` and name a changelog version, work reaches `main` through merge commits, and no commit subject has a `fix:` or `feat:` prefix or an assistant co-author or "generated with" line. Same `--json` option and exit code.
+- tests/test_audit_files.py and tests/test_audit_git.py: a complete project and a fixture repository that pass, and one case per failing check.
+
+#### #149 — Audit tool: GitHub repository settings checks
+- tools/audit_github.py: audits the repository through `gh api` (read-only): merge methods, automatic branch deletion, default branch, issues, projects and wiki, that the owner is an organization, protection of `main` (or an active ruleset; the up-to-date requirement; the administrator bypass left open), Actions enabled, the secret PROJECT_TOKEN and the variable BOARD_NUMBER, the labels (exactly the 14 Area labels and `dummy`, each with a description and its standard color) and the eight issue types (present, described, standard colors). What cannot be read (no `gh`, not signed in, no access) is reported as not-checkable. The repository is the origin remote, or `--repo owner/name`; same `--json` option and exit code.
+- tools/audit_common.py: `gh_api` (status and data from `gh api`, pages merged), `remote_repo` and `appendix_c`, which reads the label and issue type tables from guides/appendix-c-ticket-fields-reference.md so that the audit and the guide cannot differ.
+- tests/test_audit_github.py: a conforming repository and one case per failing or unreadable check, with a fake `gh`.
+
+#### #150 — Audit tool: board and ticket checks
+- tools/audit_board.py: audits the board linked to the repository through `gh api graphql` (read-only): that a board is linked; every field of the bootstrap table with its kind, exact values and standard colors (read from `.github/scripts/preflight.py`, so the audit and the preflight cannot differ); the saved views against `.github/views.json` (present, none extra, same layout, filter, grouping, sorting and columns); and the tickets: an issue type on each, a Size on each work ticket, a closed work ticket Completed or Abandoned and an open one not, Resolution set exactly when a ticket is finished, a Backfilled ticket with its REF, Version in the board form, Version tickets titled in the board form, Alerts Critical, and an Area label on each work ticket. Throwaway tickets (`dummy`) and pull requests are skipped; what cannot be read (no `gh`, no `project` scope) is not-checkable. `--repo`, `--board` and `--json` options; same exit code.
+- tests/test_audit_board.py: a conforming board and one case per failing check, with a fake GraphQL, including paging and unreadable data.
+
+#### #151 — Audit tool: combined runner, report and JSON output
+- tools/audit.py: runs the files, git, GitHub and board audits on a project and prints one report with the total of rules and of recommendations apart (passed, failed, not checkable); `--offline` runs only the files and git audits, `--repo` and `--board` choose the repository and board, `--json <file>` writes the whole result (the summary and every check). The exit code is 1 when a rule fails and never for a recommendation or a check that could not be made; 2 for bad arguments. A project without a GitHub remote gets one not-checkable check for the GitHub and board part.
+- tests/test_audit.py: the order of the audits, `--offline`, no remote, the separate totals, the JSON file, the exit codes and bad arguments, with fake GitHub and board readers.
+
+#### #152 — Audit tool: documentation
+- doc/wiki/Audit-Tools.md: added. How to run the audits and their options, what each one checks and needs, how to read the report and the JSON file, and the limits. doc/wiki/Home.md links to it.
+- README.md: the `tools/` row names the audit tools.
+- guides/10-new-project-bootstrap.md: a recommendation (section 8.3) to audit an existing project with the audit tools before applying the standard to it. guides/Developer-Guides-Complete.md rebuilt.
+
 ## V0.11.1 — 2026-10-11 18:28 UTC
 ### Build 20261011182523 (branch columns-colors-and-sort)
 #### #144 — Set the manifest standard to the version that carries it

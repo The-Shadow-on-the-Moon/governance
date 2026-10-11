@@ -1,0 +1,199 @@
+import copy
+import os
+import sys
+import unittest
+
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+
+import audit_board  # noqa: E402
+import audit_common  # noqa: E402
+import preflight  # noqa: E402
+import views  # noqa: E402
+
+
+def board_fields():
+    nodes = []
+
+    for name, (kind, values) in preflight.REQUIRED_FIELDS.items():
+        node = {"name": name, "dataType": kind}
+
+        if values is not None:
+            node["options"] = [{"name": v, "color": preflight.OPTION_COLORS.get(v, "GRAY"), "description": ""}
+                               for v in values]
+
+        nodes.append(node)
+
+    return nodes
+
+
+def view_nodes():
+    nodes = []
+
+    for entry in views.load_definition():
+        state = views.desired_state(entry)
+        nodes.append({"id": "V_" + entry["name"], "number": 1, "name": entry["name"],
+                      "layout": views.LAYOUTS[entry["layout"]], "filter": state["filter"],
+                      "groupByFields": {"nodes": [{"name": state["group_by"]}] if state["group_by"] else []},
+                      "verticalGroupByFields": {"nodes": [{"name": state["vertical_group_by"]}]
+                                                if state["vertical_group_by"] else []},
+                      "sortByFields": {"nodes": [{"field": {"name": f}, "direction": d.upper()}
+                                                 for f, d in state["sort_by"]]},
+                      "visibleFields": {"nodes": [{"name": f} for f in state.get("visible_fields", [])]}})
+
+    return nodes
+
+
+def item(number, title="A ticket", state="OPEN", issue_type="Feature", labels=("tool",), **fields):
+    node = {"content": {"__typename": "Issue", "number": number, "title": title, "state": state,
+                        "issueType": {"name": issue_type} if issue_type else None,
+                        "labels": {"nodes": [{"name": l} for l in labels]}}}
+
+    for key, value in fields.items():
+        node[key] = {"text": value} if key in audit_board.TEXTS else {"name": value}
+
+    return node
+
+
+GOOD_ITEMS = [
+    item(1, Status="InProgress", Size="M"),
+    item(2, state="CLOSED", Status="Completed", Resolution="Done", Size="S", Version="V000.001.000"),
+    item(3, title="Version 000.001.000", issue_type="Version", labels=(), Status="Completed", Resolution="Done"),
+    item(4, issue_type="Alert", labels=(), Priority="Critical", Status="ToDo"),
+]
+
+
+class Fake:
+    def __init__(self):
+        self.boards = [{"id": "B1", "number": 7, "title": "Governance"}]
+        self.fields = board_fields()
+        self.views = view_nodes()
+        self.items = copy.deepcopy(GOOD_ITEMS)
+        self.down = set()
+
+    def __call__(self, query, variables):
+        for key, name in ((audit_board.LINKED, "linked"), (audit_board.FIELDS, "fields"),
+                          (audit_board.VIEWS, "views"), (audit_board.ITEMS, "items")):
+            if query == key:
+                break
+        else:
+            raise AssertionError("unexpected query")
+
+        if name in self.down:
+            return None
+
+        if name == "linked":
+            return {"repository": {"projectsV2": {"nodes": self.boards}}}
+
+        if name == "fields":
+            return {"node": {"fields": {"nodes": self.fields}}}
+
+        if name == "views":
+            return {"node": {"views": {"nodes": self.views}}}
+
+        return {"node": {"items": {"pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": self.items}}}
+
+
+def failed(report):
+    return {c.id for c in report.checks if c.result == audit_common.FAIL}
+
+
+def unknown(report):
+    return {c.id for c in report.checks if c.result == audit_common.NOT_CHECKABLE}
+
+
+class AuditBoardTests(unittest.TestCase):
+    def setUp(self):
+        self.fake = Fake()
+
+    def audit(self, number=None):
+        return audit_board.audit("org/proj", number, self.fake)
+
+    def test_a_conforming_board_passes(self):
+        report = self.audit()
+        self.assertEqual(failed(report), set())
+        self.assertEqual(unknown(report), set())
+
+    def test_board_cannot_be_read(self):
+        self.fake.down.add("linked")
+        self.assertEqual(unknown(self.audit()), {"board.linked"})
+
+    def test_no_linked_board_or_wrong_number(self):
+        self.fake.boards = []
+        self.assertEqual(failed(self.audit()), {"board.linked"})
+        self.fake.boards = [{"id": "B1", "number": 7, "title": "x"}]
+        self.assertEqual(failed(self.audit(number=9)), {"board.linked"})
+
+    def test_missing_field_wrong_kind_and_values(self):
+        fields = {f["name"]: f for f in self.fake.fields}
+        self.fake.fields = [f for f in self.fake.fields if f["name"] != "Fix"]
+        fields["Build"]["dataType"] = "NUMBER"
+        fields["Size"]["options"] = fields["Size"]["options"][:-1] + [{"name": "XXL", "color": "RED"}]
+        fields["Risk"]["options"][0]["color"] = "PINK"
+        bad = failed(self.audit())
+        self.assertTrue({"board.field.fix", "board.field.build.type", "board.field.size.values",
+                         "board.field.risk.colors"} <= bad)
+
+    def test_views_missing_extra_and_different(self):
+        removed = self.fake.views.pop(0)["name"]
+        self.fake.views.append(dict(self.fake.views[0], name="Mine"))
+        self.fake.views[1]["layout"] = "TABLE_LAYOUT" if self.fake.views[1]["layout"] != "TABLE_LAYOUT" else "BOARD_LAYOUT"
+        bad = failed(self.audit())
+        self.assertIn(removed, [e["name"] for e in views.load_definition()])
+        self.assertTrue({"board.views.present", "board.views.no-extra", "board.views.match"} <= bad)
+
+    def test_tickets_that_break_rules(self):
+        self.fake.items += [
+            item(10, issue_type=None, Size="S", Status="ToDo"),
+            item(11, Status="ToDo"),
+            item(12, state="CLOSED", Size="S", Status="Review"),
+            item(13, Size="S", Status="Completed", Resolution="Done"),
+            item(14, Size="S", Status="InProgress", Resolution="Done"),
+            item(15, Size="S", Status="InProgress", Origin="Backfilled"),
+            item(16, Size="S", Status="InProgress", Version="V0.1.0"),
+            item(17, title="Version 0.1.0", issue_type="Version", labels=()),
+            item(18, issue_type="Alert", labels=(), Priority="High"),
+            item(19, labels=(), Size="S", Status="ToDo"),
+        ]
+        bad = failed(self.audit())
+        self.assertEqual({i[len("board.ticket."):] for i in bad},
+                         {"type", "size", "closed-status", "open-status", "resolution", "backfilled-ref",
+                          "version-form", "version-title", "alert-priority", "area"})
+
+    def test_the_message_lists_the_tickets(self):
+        self.fake.items.append(item(11, Status="ToDo"))
+        check = next(c for c in self.audit().checks if c.id == "board.ticket.size")
+        self.assertIn("#11", check.message)
+
+    def test_throwaway_tickets_and_pull_requests_are_skipped(self):
+        self.fake.items.append(item(20, labels=("dummy",), Status="ToDo"))
+        self.fake.items.append({"content": {"__typename": "PullRequest"}})
+        self.fake.items.append({"content": None})
+        self.assertEqual(failed(self.audit()), set())
+
+    def test_items_that_cannot_be_read(self):
+        self.fake.down.add("items")
+        self.assertIn("board.tickets", unknown(self.audit()))
+
+    def test_pagination(self):
+        pages = [{"pageInfo": {"hasNextPage": True, "endCursor": "c1"}, "nodes": [item(1, Size="S", Status="ToDo")]},
+                 {"pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": [item(2, Status="ToDo")]}]
+        seen = []
+
+        def graphql(query, variables):
+            seen.append(variables.get("after"))
+            return {"node": {"items": pages[len(seen) - 1]}}
+
+        items = audit_board.read_items(graphql, "B1")
+        self.assertEqual([i["content"]["number"] for i in items], [1, 2])
+        self.assertEqual(seen, [None, "c1"])
+
+    def test_main(self):
+        self.assertEqual(audit_board.main(["audit_board.py"]), 2)
+        self.assertEqual(audit_board.main(["audit_board.py", ROOT, "--repo", "org/proj", "--board", "7"], self.fake), 0)
+        self.fake.items.append(item(11, Status="ToDo"))
+        self.assertEqual(audit_board.main(["audit_board.py", ROOT, "--repo", "org/proj"], self.fake), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
