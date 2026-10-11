@@ -16,6 +16,8 @@ Every view except All also ends with `AND is:issue AND -label:dummy`, which the 
 | Fix | table | `has:fix` | sorted by Priority | Tickets whose fields contradict each other; the Fix column names the broken rules. |
 | Versions | table | `has:version AND -type:Version` | grouped by Parent issue (the Version ticket, so a group reads "Version 0.7.0"); sorted by Version#, then Priority | What each version holds, with Delivery, Build and Resolution. Tickets only aimed at a version (no Version ticket yet) are in the "No parent issue" group, ordered by their Version#. |
 
+The columns of each view, in order, and their sorting and grouping are in [Appendix F: board views](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-f-board-views-layout.md).
+
 ## What the condition views show
 
 Everything the board draws attention to is a *condition*, and each of the three natures has its own view: **Decide** (a person must judge it), **Follow up** (a queue) and **Fix** (the fields contradict each other). The conditions are listed once, in the registry `.github/scripts/conditions.py`, and the table of the guide on the board (section 2.5) is checked against it by a test.

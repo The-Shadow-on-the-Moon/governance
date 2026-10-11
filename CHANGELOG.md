@@ -1,6 +1,11 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261011170418 (branch columns-colors-and-sort)
+#### #140 — Columns shown in table views
+- .github/views.json: the columns of All, Decide, Follow up, Fix and Versions, chosen with the owner. All five start with Title, Assignees, Status, Type and Labels; All shows every field but the helper Version# (and gains Fix); Decide and Follow up gain Type, Labels, Delivery and Version; Follow up also gains Size, Risk and Resolution; Fix and Versions gain Type, Labels and, for Versions, Size. .github/automation-manifest.json regenerated.
+- guides/appendix-f-board-views-layout.md: rewritten as the chosen layout, field by view, replacing the snapshot of step 1. doc/wiki/Board-Views.md points to it. guides/Developer-Guides-Complete.md rebuilt.
+
 ### Build 20261011164019 (branch columns-colors-and-sort)
 #### #135 — Adopt standard colors for fields in views
 - guides/appendix-c-ticket-fields-reference.md: a Color column (the eight GitHub board colors) on the tables of Type, Origin, Progress, Waiting, Attention, Resolution, Delivery, Priority, Size and Risk, a Hex column on the Area and `dummy` labels, and a paragraph that says the colors and descriptions are a recommendation a project may change for its own board.
