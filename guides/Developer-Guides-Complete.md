@@ -4888,6 +4888,9 @@ exists and lists the tickets, and the tickets show Delivery *Merged*.
 - **Rule:** check the result of the first merge, as in the guide on syncing and merging (section 5.2).
 - **Recommendation:** if something fails on the first real merge, correct the board by hand and fix the
   cause. The version number stays as it is.
+- **Recommendation:** when the standard is applied to a project that already exists, first audit it with the
+  audit tools (`tools/audit.py` in the standard's repository, pointed at the project), to see which rules it already
+  follows and what differs. The audits only read.
 
 **Why.** Level 1 finds nearly every setup mistake with nothing to clean up, and the first merge shows what
 only a live run can: whether the automation really writes to the board. Keeping the trial out of the real
