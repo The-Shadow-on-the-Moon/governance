@@ -2,7 +2,8 @@
 
 This guide is the checklist for applying the standard to a new repository: the files and folders, the
 automation, the repository and board settings, the issue types and labels, the first version, and a trial
-run that proves the setup works. Most of it is work for the administrator role. The pieces it refers to
+run that proves the setup works. A project that already exists, with a history, follows the guide on adopting
+the standard in an existing project, which uses this one for the settings. Most of it is work for the administrator role. The pieces it refers to
 (the structure, tickets, fields, the changelog) are defined in the guide on project structure, and the
 rules about versions and branches are in the guide on branching and merging.
 
@@ -394,9 +395,9 @@ exists and lists the tickets, and the tickets show Delivery *Merged*.
 - **Rule:** check the result of the first merge, as in the guide on syncing and merging (section 5.2).
 - **Recommendation:** if something fails on the first real merge, correct the board by hand and fix the
   cause. The version number stays as it is.
-- **Recommendation:** when the standard is applied to a project that already exists, first audit it with the
-  audit tools (`tools/audit.py` in the standard's repository, pointed at the project), to see which rules it already
-  follows and what differs. The audits only read.
+- **Recommendation:** when the standard is applied to a project that already exists, follow the guide on adopting
+  the standard in an existing project (section 2 there starts with an audit of the project with the audit tools,
+  `tools/audit.py` in the standard's repository). The audits only read.
 
 **Why.** Level 1 finds nearly every setup mistake with nothing to clean up, and the first merge shows what
 only a live run can: whether the automation really writes to the board. Keeping the trial out of the real

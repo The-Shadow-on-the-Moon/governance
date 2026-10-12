@@ -213,6 +213,11 @@ Nothing here is new: it collects what the other guides define.
 | **Regression checks** | The checks that show a version still does what the one before it did. They are run to verify a version before it is declared a release. | releases and hotfixes, section 1.1 |
 | **Project token** | The credential, stored as a secret, that lets the automation write to the board. | new-project bootstrap, section 4 |
 | **Manifest** | The file that lists the version of the standard a project follows and a hash of each automation file. | new-project bootstrap, section 2.4 |
+| **Audit** | A read-only check of an existing project against the guides, by the audit tools. It reports each rule and recommendation as passed, failed or not checkable. | adopting the standard, section 2 |
+| **Adoption** | Bringing a project that already exists into line with the standard, in stages, through the normal flow. | adopting the standard, section 1 |
+| **Cut-over** | The merge that lands the adoption on `main`. The rules apply from it; what came before is history. | adopting the standard, section 1 |
+| **Baseline heading** | The one finalized version heading written by hand when a project adopts the standard: the version it continues from. | adopting the standard, section 4.2 |
+| **Accepted deviation** | Something that differs from the standard and is recorded with a reason, a date and who agreed, instead of being fixed (the past, or a rule that does not apply). The audit shows it as accepted. | adopting the standard, section 3 |
 
 
 

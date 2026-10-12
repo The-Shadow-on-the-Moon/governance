@@ -99,6 +99,9 @@ says it did.
 - **Anything outward-facing:** sending content to an external service publishes it, and it may be cached
   or indexed even if it is deleted later.
 - **A major version bump:** adding a `+V` marker.
+- **Settings and shared git state during an adoption:** changes to repository, organization or board settings,
+  to labels and issue types, and to tags, and renaming, retiring or deleting branches. Running the audit tools
+  is routine, because they only read.
 - **Real decisions:** when there are several valid approaches, an ambiguous requirement or trade-offs, the
   assistant presents the options with a recommendation and asks which. It does not silently pick one, and
   it does not ask a plain yes or no in place of the choice.
@@ -116,6 +119,10 @@ says it did.
   never covers anything on `main`, tags, releases, hotfix finalize,
   deleting or retiring branches, force pushes or skipping hooks: those are decided each time.
 - **Rule:** for a real decision, the assistant presents the options, recommends one, and asks.
+- **Rule:** when a project adopts the standard (guide on adopting the standard in an existing project), the
+  assistant changes repository, organization and board settings, tags and branches only when the administrator
+  tells it to, and it never rewrites history (no rebase, squash, filter or force-push) to make a check
+  pass: the past is recorded as accepted instead.
 - **Rule:** the assistant never bypasses a rule on its own initiative: no skipping hooks, no force push,
   no direct push to `main`. A bypass is a deliberate decision of the person (see the guide on branching
   and merging, section 6).
@@ -307,6 +314,8 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] Risky, out-of-scope and outward-facing actions were asked about. An approval covered only what was
       asked, and any durable authorization is written in `AGENTS.md`.
 - [ ] A real decision was put as options with a recommendation, and asked.
+- [ ] In an adoption, only the audit was run on its own; settings, tags and branches were changed on the
+      administrator's word, and history was not rewritten.
 - [ ] No rule was bypassed on the assistant's own initiative (no skipped hooks, no force push, no direct
       push to `main`), and a major bump was asked about.
 

@@ -26,6 +26,7 @@ GUIDES = [
     ("08", "08-releases-hotfixes-and-retiring-branches.md"),
     ("09", "09-working-with-an-ai-assistant.md"),
     ("10", "10-new-project-bootstrap.md"),
+    ("11", "11-adopting-the-standard-in-an-existing-project.md"),
 ]
 APPENDICES = [
     "appendix-a-cheat-sheet-daily-flow.md",
@@ -34,6 +35,7 @@ APPENDICES = [
     "appendix-d-ticket-examples.md",
     "appendix-e-ticket-model.md",
     "appendix-f-board-views-layout.md",
+    "appendix-g-audit-findings-and-fixes.md",
 ]
 
 

@@ -1,5 +1,62 @@
 # Changelog
 
+## WIP-Version
+### Build 20261012024016 (branch audit-tools)
+#### #155 — Audit tools: usage instructions and full list of checks
+- doc/wiki/Audit-Tools.md: added where the report goes, step-by-step instructions, and a table with one row for every check of the four audit scripts.
+
+#### #156 — Audit tool: write the report to a Markdown file
+- tools/audit.py: besides the screen, the report is written as Markdown with every check, passes included: the project, the date, the totals of rules and recommendations, then one table per audit (result, id, strength, guide section, check, detail and fix). It goes to `audit-report.md` in the current directory, or to the file given with the new option `--md <file>`, and an existing file is overwritten.
+- tests/test_audit.py: the report lists every check and the totals, escapes pipes and line breaks, is dated, and defaults to `audit-report.md` in the current directory; the other tests write to a temporary file.
+- doc/wiki/Audit-Tools.md: where the report goes and the `--md` option.
+
+#### #157 — Audit tools: list every offender, and an option to detail passed checks
+- tools/audit_common.py: a check keeps `details`, one line per item it looked at; the text report prints them under the check, and `Report.as_dict(verbose)` leaves out the details of a passed check unless `verbose`.
+- tools/audit_files.py, tools/audit_git.py, tools/audit_github.py and tools/audit_board.py: every check lists all its offenders instead of a sample (each commit with its full hash and subject, each branch, tag, label, issue type, changelog line, ticket with what is wrong, and for a board view each differing setting with the board's value and the one in views.json, and the columns that are missing or extra). The messages now count the offenders. A passed check records what it examined.
+- tools/audit.py and the four scripts: new option `--verbose` (default off) that also prints the passed checks with their details, on the screen, in the Markdown report and in the JSON file. The Markdown report lists the details as bullets under each table.
+- tests: every offender is listed (more than five), the details of passed checks appear only with `--verbose`, the Markdown bullets and the JSON `details`.
+- doc/wiki/Audit-Tools.md: the bullets, the `--verbose` option and the `details` field.
+
+#### #158 — Guide 11: adopting the standard in an existing project
+- guides/11-adopting-the-standard-in-an-existing-project.md: new procedural guide. The principles (history is never rewritten, the rules apply from a cut-over, the adoption goes through the normal flow, the audit is the measure), what to decide before starting (first audit kept, cut-over, continuing version, backup, open work, roles), the triage of an audit report into fix now, convert, accept as history and not applicable (with a record of the accepted ones), the seven stages (GitHub settings; the adoption branch with line endings, structure, automation and a baseline changelog heading; token, board and preflight; branches and tags; tickets; landing and proving; keeping it), the special cases (a line other than `main`, existing versions and releases, the team's clones, a plan that lacks a feature) and a checklist.
+- tools/combine.py and tools/xref_check.py: the new guide is built into the combined copy and its cross-references are checked. guides/Developer-Guides-Complete.md rebuilt.
+
+#### #159 — Appendix G: audit findings and how to fix them
+- guides/appendix-g-audit-findings-and-fixes.md: added. One row for every check the four audits can report, in four tables (files, git, GitHub, board): the usual triage class, the adoption stage, the role, whether it can be undone, what the finding means and what to do.
+- tools/combine.py: the appendix is built into the combined copy. guides/Developer-Guides-Complete.md rebuilt.
+- tests/test_tools.py: a test fails when an audit check has no row in the appendix, or a row names a check no audit reports; the combined-copy test also expects appendix G; the guide count includes guide 11.
+
+#### #160 — Adoption: cross-links, vocabulary and assistant rules
+- guides/README.md: guide 11 and appendix G in the tables, and a line in Where to start. guides/10-new-project-bootstrap.md: the intro and the recommendation of section 8.3 point to guide 11.
+- guides/09-working-with-an-ai-assistant.md: during an adoption the assistant runs the audit on its own, changes settings, tags and branches only when the administrator tells it to, and never rewrites history to make a check pass (section 3 and the checklist).
+- guides/01-concepts-and-vocabulary.md: audit, adoption, cut-over, baseline heading and accepted deviation. guides/appendix-b-cheat-sheet-if-then.md: two situations for an existing project.
+- guides/11-adopting-the-standard-in-an-existing-project.md: the baseline file, `--since` and the adoption plan are named where the guide spoke of them in general.
+- tools/audit.py: the report points to appendix G for what to do about each finding. guides/Developer-Guides-Complete.md rebuilt.
+
+#### #161 — Adoption: wiki page
+- doc/wiki/Adopting-the-Standard.md: added. The ideas, the route from the first audit to the re-audit (decide, triage, the seven stages with who does them, the baseline and `--since`), useful commands and where to read more. doc/wiki/Home.md links to it and lists guide 11 and appendix G; doc/wiki/Audit-Tools.md points to it.
+
+#### #162 — Audit tools: --since option to audit history from a cut-over
+- tools/audit_git.py: `audit(root, since)` and the option `--since <date or commit>` judge the history only from a cut-over: the merge commits on `main`, the commit messages and the tags that point at commits made after a UTC date or after a commit. Branch names stay the present state. The history checks say which cut-over they judged from. A value that is neither a date nor a commit is a bad argument (exit code 2).
+- tools/audit.py: the same option; the Markdown report names the cut-over (`History judged from`) and the JSON file has a `since` key.
+- tests/test_audit_git.py and tests/test_audit.py: the whole history without the option, a cut-over by commit and by date, what comes after it still judged, a bad value, and the reports.
+- doc/wiki/Audit-Tools.md: the option and which checks it applies to.
+
+#### #163 — Audit tools: baseline of accepted deviations
+- tools/audit_baseline.py: new. Reads `.github/audit-baseline.json` of the audited project (or the file of `--baseline`): entries with a check id, a reason, a date, who agreed and optional items. A failed check that an entry accepts becomes *accepted* (new result, counted apart, never a failure); items accept only the detail lines they start. The check `baseline.stale` (a recommendation) lists entries that accept nothing now. An invalid file, or a `--baseline` file that does not exist, is a bad argument (exit code 2).
+- tools/audit_common.py and tools/audit.py: the *accepted* result and its counts on the screen, in the Markdown report (an Accepted column) and in the JSON file.
+- tests/test_audit_baseline.py and tests/test_audit.py: loading and refusing files, whole-check and item entries, partial coverage, stale entries, the option, and the exit codes.
+- guides/appendix-g-audit-findings-and-fixes.md: a row for `baseline.stale`. doc/wiki/Audit-Tools.md: the baseline.
+
+#### #164 — Audit tools: adoption plan in the report
+- tools/audit_plan.py: new. Groups the failed checks by the adoption stage of guide 11, with the class, the role and whether the change can be undone, read from the tables of appendix G; checks that could not be made are listed apart as to confirm, and findings that appendix G does not list under no stage.
+- tools/audit.py: the plan is printed after the checks, written as an Adoption plan section (a table per stage) in the Markdown report, and added to the JSON file as `plan`.
+- tests/test_audit_plan.py and tests/test_audit.py: the stages equal the headings of guide 11, grouping and order, placeholders, passes, accepted and unknown ids, the checks to confirm, and the three outputs.
+- doc/wiki/Audit-Tools.md: the plan.
+
+#### #165 — New combined evaluation of the guides
+- doc/Evaluation/Combined-eval.md: rewritten as a new, independent evaluation of the guides: a verdict on coherence, consistency and completeness with 13 findings and suggested fixes, a check of every finding in the Copilot and Gemini evaluations, a comparison of the three, an order of work and the decisions needed.
+
 ## V0.12.0 — 2026-10-11 20:29 UTC
 ### Build 20261011202606 (branch audit-tools)
 #### #148 — Audit tool: files and local git checks

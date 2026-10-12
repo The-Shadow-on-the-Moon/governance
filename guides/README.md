@@ -33,6 +33,7 @@ situations on a page each.
 | **08 Releases, hotfixes and retiring branches** | Declaring a release, fixing a released version, and retiring a branch. | you release, hotfix or retire |
 | **09 Working with an AI assistant** | What an assistant may do alone, what it must ask, how it handles tickets, the changelog and commits, and how a project instructs it. | an assistant works on the project |
 | **10 New-project bootstrap** | Applying the standard to a new repository: structure, automation, settings, token, labels, board, first version, and a trial. | you start a project |
+| **11 Adopting the standard in an existing project** | What is different when the project is not empty: the audit as the measure, the cut-over, triaging the findings, the seven stages, and recording what cannot change. | a project already exists |
 
 | Appendix | What it holds |
 |---|---|
@@ -42,6 +43,7 @@ situations on a page each.
 | **D Ticket examples** | Example tickets for each Type, as full forms. |
 | **E Ticket model** | The design of a ticket as a whole: the questions it answers, why each has its own field, and its life from creation to release. |
 | **F Board views, columns and sorting** | What each saved view of the board shows: its columns, sort order and grouping. |
+| **G Audit findings and how to fix them** | Every finding the audit tools can report, with its class, stage, role, whether it can be undone, and the fix. |
 
 ## Where to start
 
@@ -53,6 +55,7 @@ situations on a page each.
 - **Releasing or fixing a release:** 08.
 - **Working with an assistant, or instructing one:** 09.
 - **Starting a project:** 10.
+- **Bringing an existing project into line:** run the audit tools, then 11 with appendix G.
 
 ## Ideas that run through the guides
 

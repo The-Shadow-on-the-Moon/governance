@@ -31,7 +31,7 @@ class CombineTests(unittest.TestCase):
         for num, _ in combine.GUIDES:
             self.assertIn("## Guide {}:".format(num), document)
 
-        for letter in "ABCDE":
+        for letter in "ABCDEFG":
             self.assertIn("## Appendix {}:".format(letter), document)
 
     def test_combined_file_is_up_to_date(self):
@@ -251,11 +251,36 @@ class GuideValueTests(unittest.TestCase):
         for name in ("03-project-structure.md", "10-new-project-bootstrap.md"):
             self.assertIn(f"`{line}`", self.guide(name), name)
 
+    def test_appendix_g_has_a_row_for_every_check_the_audits_can_report(self):
+        import re
+
+        import audit_files
+        import audit_github
+
+        emitted = set()
+
+        for name in ("audit.py", "audit_baseline.py", "audit_files.py", "audit_git.py", "audit_github.py",
+                     "audit_board.py"):
+            source = self.read("tools", name)
+            emitted |= {i for i in re.findall(r'"((?:files|git|github|board|baseline)\.[A-Za-z0-9_.\-]+)"', source)
+                        if not i.endswith(".")}
+
+        source = self.read("tools", "audit_board.py")
+        emitted |= {"board.ticket." + i for i in re.findall(r'^    add\("([a-z-]+)"', source, re.M)}
+        emitted |= {"github.setting." + key for key, *_ in audit_github.SETTINGS}
+        emitted |= {"files.location." + n.strip(".").replace("/", ".") for n, *_ in audit_files.LOCATIONS}
+        emitted |= {"board.field.<field>" + suffix for suffix in ("", ".type", ".values", ".colors")}
+        # the ids built from a name in the source are listed through the three families above
+        emitted -= {"board.field", "board.field.name"}
+        documented = set(re.findall(r"^\| `([^`]+)` \|", self.guide("appendix-g-audit-findings-and-fixes.md"), re.M))
+        self.assertEqual(sorted(emitted - documented), [], "audit checks with no row in appendix G")
+        self.assertEqual(sorted(documented - emitted), [], "rows of appendix G that no audit reports")
+
     def test_every_guide_defines_the_markers_it_uses(self):
         import glob
 
         names = sorted(glob.glob(os.path.join(ROOT, "guides", "[0-1][0-9]-*.md"))) + [os.path.join(ROOT, "guides", "README.md")]
-        self.assertEqual(len(names), 11)
+        self.assertEqual(len(names), 12)
         for name in names:
             with open(name, encoding="utf-8") as handle:
                 text = handle.read()

@@ -5,10 +5,11 @@ Actions, secret and variable names, labels and the organization's issue types. R
 enough access (administration to read protection and secrets); what it cannot read is reported as not-checkable.
 
 Usage:
-    python tools/audit_github.py <project-path> [--repo owner/name] [--json <file>]
+    python tools/audit_github.py <project-path> [--verbose] [--repo owner/name] [--json <file>]
 
 The repository is the origin remote of the project unless --repo says otherwise.
-Prints the checks that are not a pass and exits 1 when a rule fails.
+Prints the checks that are not a pass (every check with --verbose), each with all its detail lines, and exits 1 when
+a rule fails.
 """
 import json
 import os
@@ -38,7 +39,7 @@ def audit(repo, gh=gh_api):
     if status != 200 or not isinstance(info, dict):
         report.add("github.repository", GUIDE, RULE, "the repository can be read with `gh`", None,
                    "cannot read {} (status {}): `gh` is missing, not signed in, or has no access".format(repo, status),
-                   "run `gh auth login` and use an account with access")
+                   "run `gh auth login` and use an account with access", ["gh api repos/{} returned status {}".format(repo, status)])
         return report
 
     check_settings(report, info)
@@ -54,16 +55,20 @@ def check_settings(report, info):
     for key, wanted, title, strength in SETTINGS:
         value = info.get(key)
         report.add("github.setting." + key, GUIDE, strength, title, None if value is None else value == wanted,
-                   "{} is {}".format(key, value), "change it in the repository's settings")
+                   "{} is {}".format(key, value), "change it in the repository's settings",
+                   ["{} = {} (wanted {})".format(key, value, wanted)])
 
     branch = info.get("default_branch")
     report.add("github.setting.default_branch", GUIDE, RULE, "the default branch is `main`", branch == "main",
-               "the default branch is {!r}".format(branch), "rename it to `main` and make it the default")
+               "the default branch is {!r}".format(branch), "rename it to `main` and make it the default",
+               ["default_branch = {}".format(branch)])
     report.add("github.setting.owner-type", "10 section 5.1", RULE,
                "the repository belongs to an organization (issue types need one)",
                (info.get("owner") or {}).get("type") == "Organization",
                "the owner is {!r}".format((info.get("owner") or {}).get("type")),
-               "move the repository to an organization")
+               "move the repository to an organization",
+               ["owner {} is of type {}".format((info.get("owner") or {}).get("login"),
+                                                (info.get("owner") or {}).get("type"))])
 
 
 def check_protection(report, repo, gh):
@@ -76,32 +81,45 @@ def check_protection(report, repo, gh):
                                          for r in rulesets or [])
         report.add("github.protection.pull-request", GUIDE, RECOMMENDATION, title, covered if status2 == 200 else None,
                    "no branch protection and no active ruleset on `main`",
-                   "protect `main` where the plan offers it (leave the administrator bypass open)")
+                   "protect `main` where the plan offers it (leave the administrator bypass open)",
+                   ["branch protection of main: none (status 404)",
+                    "active branch rulesets: {}".format(
+                        ", ".join(r.get("name", "?") for r in rulesets or []
+                                  if r.get("target") == "branch" and r.get("enforcement") == "active") or "none")])
         return
 
     if status != 200 or not isinstance(protection, dict):
         report.add("github.protection.pull-request", GUIDE, RECOMMENDATION, title, None,
-                   "branch protection could not be read (status {})".format(status), "")
+                   "branch protection could not be read (status {})".format(status), "",
+                   ["gh api branches/main/protection returned status {}".format(status)])
         return
 
     report.add("github.protection.pull-request", GUIDE, RECOMMENDATION, title,
                bool(protection.get("required_pull_request_reviews") is not None
                     or protection.get("required_status_checks") is not None),
-               "no pull request requirement on `main`", "require a pull request before merging")
+               "no pull request requirement on `main`", "require a pull request before merging",
+               ["required_pull_request_reviews: {}".format(
+                   "set" if protection.get("required_pull_request_reviews") is not None else "not set"),
+                "required_status_checks: {}".format(
+                    "set" if protection.get("required_status_checks") is not None else "not set")])
     strict = (protection.get("required_status_checks") or {}).get("strict")
     report.add("github.protection.up-to-date", GUIDE, RECOMMENDATION, "`main` requires the branch to be up to date",
-               bool(strict), "the up-to-date requirement is off", "require branches to be up to date before merging")
+               bool(strict), "the up-to-date requirement is off", "require branches to be up to date before merging",
+               ["required_status_checks.strict = {}".format(strict)])
     enforce = (protection.get("enforce_admins") or {}).get("enabled")
     report.add("github.protection.admin-bypass", GUIDE, RECOMMENDATION, "the administrator bypass is left open",
                enforce is False, "the protection also applies to administrators",
-               "untick \"do not allow bypassing the above settings\"")
+               "untick \"do not allow bypassing the above settings\"",
+               ["enforce_admins.enabled = {}".format(enforce)])
 
 
 def check_actions(report, repo, gh):
     status, actions = gh("repos/{}/actions/permissions".format(repo))
     report.add("github.actions.enabled", GUIDE, RULE, "Actions is enabled",
                None if status != 200 or not isinstance(actions, dict) else bool(actions.get("enabled")),
-               "Actions is disabled or could not be read", "enable Actions for the repository")
+               "Actions is disabled or could not be read", "enable Actions for the repository",
+               ["gh api actions/permissions returned status {}".format(status)] +
+               (["enabled = {}".format(actions.get("enabled"))] if status == 200 and isinstance(actions, dict) else []))
 
 
 def check_token_and_board(report, repo, gh):
@@ -109,13 +127,17 @@ def check_token_and_board(report, repo, gh):
     names = [s.get("name") for s in (secrets or {}).get("secrets", [])] if status == 200 else None
     report.add("github.token.secret", "10 section 4", RULE, "the secret PROJECT_TOKEN exists",
                None if names is None else "PROJECT_TOKEN" in names, "no secret PROJECT_TOKEN",
-               "store the project token as the Actions secret PROJECT_TOKEN")
+               "store the project token as the Actions secret PROJECT_TOKEN",
+               ["secrets found: {}".format(", ".join(names) or "none")] if names is not None
+               else ["secrets could not be read (status {})".format(status)])
 
     status, variables = gh("repos/{}/actions/variables".format(repo))
     names = [v.get("name") for v in (variables or {}).get("variables", [])] if status == 200 else None
     report.add("github.board.variable", "10 section 2.3", RECOMMENDATION, "the variable BOARD_NUMBER is set",
                None if names is None else "BOARD_NUMBER" in names, "no variable BOARD_NUMBER",
-               "run the preflight, which stores the board number")
+               "run the preflight, which stores the board number",
+               ["variables found: {}".format(", ".join(names) or "none")] if names is not None
+               else ["variables could not be read (status {})".format(status)])
 
 
 def check_labels(report, repo, gh):
@@ -124,7 +146,8 @@ def check_labels(report, repo, gh):
 
     if status != 200 or not isinstance(labels, list):
         report.add("github.labels.exact", "10 section 5.2", RULE, "the labels are the 14 Area labels and `dummy`", None,
-                   "labels could not be read (status {})".format(status), "")
+                   "labels could not be read (status {})".format(status), "",
+                   ["gh api labels returned status {}".format(status)])
         return
 
     found = {l["name"]: l for l in labels}
@@ -133,13 +156,19 @@ def check_labels(report, repo, gh):
     report.add("github.labels.exact", "10 section 5.2", RULE, "the labels are the 14 Area labels and `dummy`, no others",
                not extra and not missing,
                "extra: {}; missing: {}".format(", ".join(extra) or "none", ", ".join(missing) or "none"),
-               "delete the extra labels and create the missing ones")
+               "delete the extra labels and create the missing ones",
+               ["extra: " + n for n in extra] + ["missing: " + n for n in missing]
+               or ["{} labels, all expected: {}".format(len(found), ", ".join(sorted(found)))])
     nodesc = sorted(n for n in wanted if n in found and not (found[n].get("description") or "").strip())
     report.add("github.labels.descriptions", "10 section 5.2", RULE, "each label carries a description", not nodesc,
-               "without a description: {}".format(", ".join(nodesc)), "give each label its meaning from Appendix C")
+               "{} label(s) without a description".format(len(nodesc)), "give each label its meaning from Appendix C",
+               ["no description: " + n for n in nodesc]
+               or ["{}: {}".format(n, found[n].get("description")) for n in sorted(wanted) if n in found])
     wrong = sorted(n for n in wanted if n in found and (found[n].get("color") or "").upper() != wanted[n][0])
     report.add("github.labels.colors", "10 section 5.2", RECOMMENDATION, "each label has its standard color", not wrong,
-               "other color: {}".format(", ".join(wrong)), "use the hex colors of Appendix C")
+               "{} label(s) with another color".format(len(wrong)), "use the hex colors of Appendix C",
+               ["{}: color {}, expected {}".format(n, (found[n].get("color") or "").upper(), wanted[n][0])
+                for n in wrong] or ["{}: {}".format(n, wanted[n][0]) for n in sorted(wanted) if n in found])
 
 
 def check_issue_types(report, repo, gh):
@@ -149,25 +178,35 @@ def check_issue_types(report, repo, gh):
 
     if status != 200 or not isinstance(types, list):
         report.add("github.issue-types.exact", "10 section 5.1", RULE, "the eight issue types exist", None,
-                   "issue types could not be read (status {})".format(status), "")
+                   "issue types could not be read (status {})".format(status), "",
+                   ["gh api orgs/{}/issue-types returned status {}".format(owner, status)])
         return
 
     found = {t["name"]: t for t in types if t.get("is_enabled", True)}
     missing = sorted(set(wanted) - set(found))
     report.add("github.issue-types.exact", "10 section 5.1", RULE, "the eight issue types exist", not missing,
-               "missing: {}".format(", ".join(missing)), "create them in the organization's settings")
+               "{} issue type(s) missing".format(len(missing)), "create them in the organization's settings",
+               ["missing: " + n for n in missing] or ["found: " + n for n in sorted(wanted)])
     nodesc = sorted(n for n in wanted if n in found and not (found[n].get("description") or "").strip())
     report.add("github.issue-types.descriptions", "10 section 5.1", RULE, "each issue type carries a description",
-               not nodesc, "without a description: {}".format(", ".join(nodesc)),
-               "give each type its definition from Appendix C")
+               not nodesc, "{} issue type(s) without a description".format(len(nodesc)),
+               "give each type its definition from Appendix C",
+               ["no description: " + n for n in nodesc]
+               or ["{}: {}".format(n, found[n].get("description")) for n in sorted(wanted) if n in found])
     wrong = sorted(n for n in wanted if n in found and (found[n].get("color") or "").upper() != wanted[n][0])
     report.add("github.issue-types.colors", "10 section 5.2", RECOMMENDATION, "each issue type has its standard color",
-               not wrong, "other color: {}".format(", ".join(wrong)), "use the colors of Appendix C")
+               not wrong, "{} issue type(s) with another color".format(len(wrong)), "use the colors of Appendix C",
+               ["{}: color {}, expected {}".format(n, (found[n].get("color") or "").upper(), wanted[n][0])
+                for n in wrong] or ["{}: {}".format(n, wanted[n][0]) for n in sorted(wanted) if n in found])
 
 
 def main(argv, gh=gh_api):
     args = argv[1:]
     options = {}
+    verbose = "--verbose" in args
+
+    if verbose:
+        args.remove("--verbose")
 
     for flag in ("--repo", "--json"):
         if flag in args:
@@ -188,11 +227,11 @@ def main(argv, gh=gh_api):
     else:
         report = audit(repo, gh)
 
-    print(format_report(report))
+    print(format_report(report, verbose))
 
     if options.get("--json"):
         with open(options["--json"], "w", encoding="utf-8") as f:
-            json.dump(report.as_dict(), f, indent=2)
+            json.dump(report.as_dict(verbose), f, indent=2)
 
     return 1 if report.failures(RULE) else 0
 

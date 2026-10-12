@@ -4,21 +4,25 @@ An audit script looks at an existing project and reports, for each rule or recom
 the project follows it. Nothing here changes the project that is audited.
 
 A check has an id, the guide section it comes from, its strength (rule or recommendation), a result and, when the
-result is not a pass, a message and a hint on how to fix it.
+result is not a pass, a message and a hint on how to fix it. It also keeps `details`: one line per item the check
+looked at. On a fail or a not-checkable result they are the offenders, all of them; on a pass they are what was
+examined and found right (shown only when the report is made verbose).
 
 Results:
     pass          the project follows it
     fail          the project does not
+    accepted      it fails, and the project recorded the deviation in its baseline (set by audit.py, never by a check)
     not-checkable the audit could not tell (the data was not reachable, or it needs a person's judgment)
 """
 import json
 import os
 import re
 import subprocess
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field, asdict
 
 PASS = "pass"
 FAIL = "fail"
+ACCEPTED = "accepted"
 NOT_CHECKABLE = "not-checkable"
 
 RULE = "rule"
@@ -34,6 +38,7 @@ class Check:
     result: str = PASS
     message: str = ""
     hint: str = ""
+    details: list = field(default_factory=list)
 
     def as_dict(self):
         return asdict(self)
@@ -46,24 +51,33 @@ class Report:
         self.area = area
         self.checks = []
 
-    def add(self, check_id, guide, strength, title, ok, message="", hint=""):
-        """Record a pass (ok True), a fail (ok False) or a check that could not be made (ok None)."""
+    def add(self, check_id, guide, strength, title, ok, message="", hint="", details=None):
+        """Record a pass (ok True), a fail (ok False) or a check that could not be made (ok None). `details` are the
+        items the check looked at, as text lines: the offenders when it did not pass, what was examined when it did."""
         result = NOT_CHECKABLE if ok is None else PASS if ok else FAIL
-        self.checks.append(Check(check_id, guide, strength, title, result, "" if ok else message, "" if ok else hint))
+        self.checks.append(Check(check_id, guide, strength, title, result, "" if ok else message, "" if ok else hint,
+                                 [str(d) for d in details or []]))
 
     def failures(self, strength=None):
         return [c for c in self.checks if c.result == FAIL and (strength is None or c.strength == strength)]
 
     def counts(self):
-        counts = {PASS: 0, FAIL: 0, NOT_CHECKABLE: 0}
+        counts = {PASS: 0, FAIL: 0, ACCEPTED: 0, NOT_CHECKABLE: 0}
 
         for check in self.checks:
             counts[check.result] += 1
 
         return counts
 
-    def as_dict(self):
-        return {"area": self.area, "counts": self.counts(), "checks": [c.as_dict() for c in self.checks]}
+    def as_dict(self, verbose=False):
+        """The report as plain data. The details of a passed check are left out unless `verbose`."""
+        checks = [c.as_dict() for c in self.checks]
+
+        for check in checks:
+            if check["result"] == PASS and not verbose:
+                check["details"] = []
+
+        return {"area": self.area, "counts": self.counts(), "checks": checks}
 
 
 def git(root, *args):
@@ -133,12 +147,13 @@ def read(path):
         return None
 
 
-def format_report(report):
-    """The report as text: one line per check that is not a pass, then the counts."""
+def format_report(report, verbose=False):
+    """The report as text: one line per check that is not a pass (every pass too when `verbose`), each followed by its
+    message, its detail lines and its fix hint, then the counts."""
     lines = ["== {} ==".format(report.area)]
 
     for check in report.checks:
-        if check.result == PASS:
+        if check.result == PASS and not verbose:
             continue
 
         lines.append("[{}] {} ({}, guide {}): {}".format(check.result.upper(), check.id, check.strength, check.guide,
@@ -147,9 +162,12 @@ def format_report(report):
         if check.message:
             lines.append("    {}".format(check.message))
 
+        lines.extend("      - {}".format(d) for d in check.details)
+
         if check.hint:
             lines.append("    fix: {}".format(check.hint))
 
     counts = report.counts()
-    lines.append("{} passed, {} failed, {} not checkable".format(counts[PASS], counts[FAIL], counts[NOT_CHECKABLE]))
+    lines.append("{} passed, {} failed, {} accepted, {} not checkable".format(
+        counts[PASS], counts[FAIL], counts[ACCEPTED], counts[NOT_CHECKABLE]))
     return "\n".join(lines)

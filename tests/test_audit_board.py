@@ -160,10 +160,25 @@ class AuditBoardTests(unittest.TestCase):
                          {"type", "size", "closed-status", "open-status", "resolution", "backfilled-ref",
                           "version-form", "version-title", "alert-priority", "area"})
 
-    def test_the_message_lists_the_tickets(self):
-        self.fake.items.append(item(11, Status="ToDo"))
+    def test_the_details_list_every_ticket(self):
+        self.fake.items += [item(n, "Ticket %d" % n, Status="ToDo") for n in range(11, 19)]
         check = next(c for c in self.audit().checks if c.id == "board.ticket.size")
-        self.assertIn("#11", check.message)
+        self.assertEqual(check.message, "8 ticket(s)")
+        self.assertEqual(check.details, ["#%d Ticket %d - no Size" % (n, n) for n in range(11, 19)])
+
+    def test_a_passed_ticket_check_says_how_many_were_examined(self):
+        check = next(c for c in self.audit().checks if c.id == "board.ticket.size")
+        self.assertEqual(check.result, audit_common.PASS)
+        self.assertRegex(check.details[0], r"^\d+ ticket\(s\) on the board checked$")
+
+    def test_a_different_view_says_what_differs(self):
+        view = next(v for v in self.fake.views if v["visibleFields"]["nodes"])
+        removed = view["visibleFields"]["nodes"].pop()["name"]
+        view["filter"] = "is:open"
+        check = next(c for c in self.audit().checks if c.id == "board.views.match")
+        mine = [d for d in check.details if d.startswith("view %s:" % view["name"])]
+        self.assertIn("view %s: column %s is missing" % (view["name"], removed), mine)
+        self.assertTrue(any("filter is 'is:open', views.json wants" in d for d in mine))
 
     def test_throwaway_tickets_and_pull_requests_are_skipped(self):
         self.fake.items.append(item(20, labels=("dummy",), Status="ToDo"))

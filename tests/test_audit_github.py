@@ -120,6 +120,13 @@ class AuditGithubTests(unittest.TestCase):
         bad = failed(self.audit())
         self.assertTrue({"github.labels.exact", "github.labels.descriptions", "github.labels.colors"} <= bad)
 
+    def test_the_label_details_name_every_extra_and_missing_label(self):
+        labels = self.data["repos/org/proj/labels?per_page=100"]
+        labels += [{"name": "bug", "description": "", "color": "ff0000"}, {"name": "idea", "description": "", "color": "0"}]
+        labels[:] = [l for l in labels if l["name"] != "tool"]
+        check = next(c for c in self.audit().checks if c.id == "github.labels.exact")
+        self.assertEqual(check.details, ["extra: bug", "extra: idea", "missing: tool"])
+
     def test_issue_types(self):
         types = self.data["orgs/org/issue-types"]
         types[:] = [t for t in types if t["name"] != "Alert"]

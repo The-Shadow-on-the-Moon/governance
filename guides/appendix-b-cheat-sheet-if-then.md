@@ -64,3 +64,5 @@ branching and merging.
 | I am an assistant and the action is risky, outward-facing, or a commit, push or merge into `main` or a shared branch | Ask first, and propose the commit message. Syncing `main` into the person's own branch is routine. | Working with an assistant, section 3 |
 | I am an assistant and there is a real choice to make | Present the options with a recommendation and ask. | Working with an assistant, section 3 |
 | I am starting a new project | Follow the bootstrap checklist. | New-project bootstrap, section 9 |
+| the project already exists and I want it to follow the standard | Audit it, triage the findings, then do the stages in order. | Adopting the standard, sections 2 to 4; appendix G |
+| the audit reports a failure in the past (commits, tags) | Do not rewrite history. Record it as accepted with a reason, and judge from the cut-over. | Adopting the standard, section 3 |
