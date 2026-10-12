@@ -33,7 +33,7 @@ situations on a page each.
 | **08 Releases, hotfixes and retiring branches** | Declaring a release, fixing a released version, and retiring a branch. | you release, hotfix or retire |
 | **09 Working with an AI assistant** | What an assistant may do alone, what it must ask, how it handles tickets, the changelog and commits, and how a project instructs it. | an assistant works on the project |
 | **10 New-project bootstrap** | Applying the standard to a new repository: structure, automation, settings, token, labels, board, first version, and a trial. | you start a project |
-| **11 Adopting the standard in an existing project** | What is different when the project is not empty: the audit as the measure, the cut-over, triaging the findings, the seven stages, and recording what cannot change. | a project already exists |
+| **11 Adopting the standard in an existing project** | What is different when the project is not empty: the audit as the measure, the cut-over, triaging the findings, stage 0 and the seven stages, and recording what cannot change. | a project already exists |
 
 | Appendix | What it holds |
 |---|---|
@@ -82,6 +82,7 @@ in one place. Checklists and cheat sheets add no rules.
 | Syncing, landing, bypass and enforcement | *Branching and merging*, sections 4 to 6 |
 | Ticket fields: the rules, Attention causes, idle times and waits | *Project structure*, section 4 |
 | Version and Alert tickets | *Project structure*, section 5 |
+| Triaging an Alert | *Issues and the board in practice*, section 5.2 |
 | The scheduled run | *Project structure*, section 2.3 |
 | The changelog's structure | *Project structure*, section 7 |
 | The value of every field and who sets it | *Appendix C* |

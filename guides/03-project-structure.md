@@ -89,10 +89,11 @@ branch they came through.
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
 | **`.githooks/`** | The local git hooks. |
-| **`.github/`** | Server-side workflows and their scripts, and the pull request template. |
+| **`.github/`** | Server-side workflows and their scripts, the pull request template, the manifest of the automation files, the saved board views and, in an adopted project, the audit baseline. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
 | **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
+| **`.git-blame-ignore-revs`** (root) | The commits that only changed line endings, so that blame skips them. Present only after a line-endings commit in an adopted project. |
 | **License files** (root) | The project's license, when it has one. |
 
 ### 2.2 Rules
@@ -539,13 +540,15 @@ ticket planned for a later version that ships earlier fixes itself.
   boxes, so that the person is notified; when the rule stops being broken the comment is edited to say
   "✅ fixed on" and the date. A rule that breaks again gets a new comment.
 - **Rule:** nobody sets or clears Fix, and it has no *Fine* or *Acknowledged*: a person fixes the cause, and
-  the id goes. The rules and their ids are the list in `conditions.py`; a new rule is a new entry there.
+  the id goes. The rules and their ids are one list kept with the automation; a new rule is a new entry there.
 - **Rule:** the refresh runs after a merge to `main`, on every scheduled run, on request and on the events
   of section 2.3. A change to a board field alone starts no workflow, so it shows at the next of those.
 
 *Why.* An inconsistency is not a judgment: it is true or false from the other fields. Showing it as a stored
 set that is recomputed means two broken rules both have to be fixed before the ticket drops out, with no flag
 to forget to close.
+
+> **In GitHub.** The list of rules is the registry in `.github/scripts/conditions.py`.
 
 ### 4.4 Rules that span fields
 
@@ -949,7 +952,7 @@ Documentation lives in three places, and each answers a different question.
 |---|---|---|
 | **Readme** (root) | What the project is, its requirements, and how to build and use it. The entry point: kept short, and linking to the wiki for detail. | Yes |
 | **Wiki** (`doc/wiki/`) | Current-state reference pages: how the project works now. One topic per page, with a `Home` page as the index. | Yes, whenever what a page describes changes |
-| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyzes and investigations, measurements. | No: dated, and not rewritten afterwards |
+| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyses and investigations, measurements. | No: dated, and not rewritten afterwards |
 
 ### 9.2 Rules
 

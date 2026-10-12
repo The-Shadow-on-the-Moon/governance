@@ -43,7 +43,7 @@ explains it. It adds no new rules.
 
 13. **Pull `main` and check:** the heading is renamed to the expected version, the Version ticket lists your
     tickets, and they show Delivery *Merged* (*Syncing and merging*, section 5).
-14. **Triage any Alert** assigned to you (*Issues and the board in practice*, section 5), and decide any
+14. **Triage any Alert** assigned to you (*Issues and the board in practice*, section 5.2), and decide any
     Attention flag on your tickets (*Issues and the board in practice*, section 2.4).
 15. **Verify** (a person), before or after the merge: set Resolution *Done* and Progress *Completed*
     together, and close the issue

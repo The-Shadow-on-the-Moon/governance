@@ -123,6 +123,77 @@ class BoardViewsPageTests(unittest.TestCase):
             self.assertNotIn("creates them in the web interface", self.read(*parts), parts)
 
 
+class AppendixFTests(unittest.TestCase):
+    """Appendix F (board views, columns and sorting) must say what .github/views.json says."""
+
+    @classmethod
+    def setUpClass(cls):
+        import json
+
+        with open(os.path.join(ROOT, "guides", "appendix-f-board-views-layout.md"), encoding="utf-8") as handle:
+            cls.text = handle.read()
+        with open(os.path.join(ROOT, ".github", "views.json"), encoding="utf-8") as handle:
+            cls.views = {view["name"]: view for view in json.load(handle)["views"]}
+
+    def table(self, heading):
+        """The rows of the first table after a heading, as lists of cells with the bold marks removed."""
+        section = self.text.split(heading, 1)[1]
+        rows = []
+        for line in section.splitlines():
+            if line.startswith("|"):
+                rows.append([cell.strip().replace("**", "") for cell in line.strip().strip("|").split("|")])
+            elif rows:
+                break
+        return rows[2:]  # leave out the header and the separator
+
+    def sort_text(self, view):
+        parts = ["{}, {}ending".format(field, direction) for field, direction in view["sort_by"]]
+        return ", then ".join(parts)
+
+    def test_the_table_views_have_the_columns_in_the_order_of_the_file(self):
+        rows = self.table("## 1. Table views")
+        names = [cell for cell in self.text.split("## 1. Table views", 1)[1].splitlines()
+                 if cell.startswith("| Field")][0].strip("|").split("|")
+        names = [name.strip() for name in names][1:]
+        self.assertEqual(set(names), {n for n, v in self.views.items() if v["layout"] == "table"})
+        for column, name in enumerate(names, start=1):
+            positions = {}
+            for row in rows:
+                if row[column].isdigit():
+                    positions[int(row[column])] = row[0]
+            shown = [positions[n] for n in sorted(positions)]
+            self.assertEqual(shown, self.views[name]["visible_fields"], name)
+
+    def test_the_table_views_have_the_sort_and_grouping_of_the_file(self):
+        rows = {row[0]: row for row in self.table("## 1. Table views") if not row[1].isdigit() and row[1] != "·"}
+        names = [n.strip() for n in [c for c in self.text.splitlines() if c.startswith("| Field")][0].strip("|").split("|")][1:]
+        for column, name in enumerate(names, start=1):
+            view = self.views[name]
+            self.assertEqual(rows["Sort"][column], self.sort_text(view), name)
+            group = view.get("group_by")
+            if group:
+                self.assertTrue(rows["Group"][column].startswith(group), name)
+            else:
+                self.assertEqual(rows["Group"][column], "none", name)
+
+    def test_the_board_views_have_the_columns_rows_card_fields_and_sort_of_the_file(self):
+        rows = self.table("## 2. Board views")
+        self.assertEqual({row[0] for row in rows}, {n for n, v in self.views.items() if v["layout"] == "board"})
+        for name, layout, columns, swimlanes, card, sort in rows:
+            view = self.views[name]
+            self.assertEqual(layout, "board", name)
+            self.assertEqual(columns, view["vertical_group_by"], name)
+            self.assertEqual(swimlanes, view.get("group_by") or "none", name)
+            # Title is always drawn and Type is not reported by the API, so neither is listed.
+            shown = {field for field in view["visible_fields"] if field not in ("Title", "Type")}
+            self.assertEqual(set(card.split(", ")), shown, name)
+            self.assertEqual(sort, self.sort_text(view), name)
+
+    def test_every_view_of_the_file_is_in_the_appendix(self):
+        for name in self.views:
+            self.assertIn(name, self.text)
+
+
 if __name__ == "__main__":
     unittest.main()
 

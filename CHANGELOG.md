@@ -1,6 +1,26 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261012225317 (branch audit-tools)
+#### #166 — Guides: file tables and README claims agree with the repo
+- guides/03-project-structure.md: the `.github/` row of section 2.1 now names the manifest of the automation files, the saved board views and the audit baseline, and a root row for `.git-blame-ignore-revs` is added. The names `conditions.py` (section 4.3) now sit in an In GitHub block.
+- guides/07-issues-and-the-board-in-practice.md: the file `views.json`, the script `views.py`, the registry `conditions.py` and the workflow mode `conditions` moved out of the main text of sections 2.2 and 2.5 into In GitHub blocks, so the README's statement about where GitHub is named holds.
+
+#### #167 — Guides: stale term, typo and "seven stages" wording
+- guides/appendix-e-ticket-model.md: removed the Version# field, which no longer exists, from the Planning row.
+- guides/03-project-structure.md: "analyzes" corrected to "analyses" (section 9.1).
+- guides/README.md: guide 11 is described as "stage 0 and the seven stages", as the guide numbers them 0 to 7.
+
+#### #168 — Guides: one home for Alert triage
+- guides/07-issues-and-the-board-in-practice.md: section 5.2 now holds the whole triage of a bypass or a merge without entries (confirm, document in place or in a new block, comment, Review).
+- guides/05-working-and-committing.md: section 6.2 is reduced to documenting an `AUTO-REF` and points to guide 07, section 5.2.
+- guides/02-branching-and-merging-strategy.md, guides/06-syncing-and-merging.md, guides/appendix-a-cheat-sheet-daily-flow.md and guides/appendix-b-cheat-sheet-if-then.md: point to guide 07, section 5.2 instead of repeating or sending the reader through guide 05.
+- guides/README.md: a "Triaging an Alert" row in "Where a rule lives".
+
+#### #169 — Test: Appendix F against views.json
+- guides/Developer-Guides-Complete.md: rebuilt after the edits of #166 to #168.
+- tests/test_tools.py: `AppendixFTests` read the tables of Appendix F and compare them with `.github/views.json`: the column order of every table view, its sort and grouping, and the columns, rows, card fields and sort of every board view.
+
 ### Build 20261012024016 (branch audit-tools)
 #### #155 — Audit tools: usage instructions and full list of checks
 - doc/wiki/Audit-Tools.md: added where the report goes, step-by-step instructions, and a table with one row for every check of the four audit scripts.

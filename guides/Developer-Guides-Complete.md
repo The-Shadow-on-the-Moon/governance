@@ -35,7 +35,7 @@ situations on a page each.
 | **08 Releases, hotfixes and retiring branches** | Declaring a release, fixing a released version, and retiring a branch. | you release, hotfix or retire |
 | **09 Working with an AI assistant** | What an assistant may do alone, what it must ask, how it handles tickets, the changelog and commits, and how a project instructs it. | an assistant works on the project |
 | **10 New-project bootstrap** | Applying the standard to a new repository: structure, automation, settings, token, labels, board, first version, and a trial. | you start a project |
-| **11 Adopting the standard in an existing project** | What is different when the project is not empty: the audit as the measure, the cut-over, triaging the findings, the seven stages, and recording what cannot change. | a project already exists |
+| **11 Adopting the standard in an existing project** | What is different when the project is not empty: the audit as the measure, the cut-over, triaging the findings, stage 0 and the seven stages, and recording what cannot change. | a project already exists |
 
 | Appendix | What it holds |
 |---|---|
@@ -84,6 +84,7 @@ in one place. Checklists and cheat sheets add no rules.
 | Syncing, landing, bypass and enforcement | *Branching and merging*, sections 4 to 6 |
 | Ticket fields: the rules, Attention causes, idle times and waits | *Project structure*, section 4 |
 | Version and Alert tickets | *Project structure*, section 5 |
+| Triaging an Alert | *Issues and the board in practice*, section 5.2 |
 | The scheduled run | *Project structure*, section 2.3 |
 | The changelog's structure | *Project structure*, section 7 |
 | The value of every field and who sets it | *Appendix C* |
@@ -1026,11 +1027,9 @@ The response is the same for all of them, and it never blocks the person who nee
 
 What the developer does afterwards:
 
-- **Recommendation:** triage the Alert promptly. Confirm that the result was built and tested, document
-  what changed, either by replacing the generated note in the changelog or, preferably, by describing
-  it in a new block in the current version.
-- Every move of the Alert after creation is manual: a person starts it (`InProgress`), says they believe
-  it is handled (`Review`), and a human verifies it (`Completed`). Shipping a version never moves it.
+- **Recommendation:** triage the Alert promptly. What to do, and how the Alert moves afterwards (every
+  move is manual, and shipping a version never moves it), is in the guide on issues and the board,
+  section 5.
 
 **Why.** A bypass is not a failure to be hidden; it is a decision that needs follow-up. Creating the
 ticket at the moment of the event means the follow-up exists even if the person who bypassed is too busy
@@ -1170,10 +1169,11 @@ branch they came through.
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
 | **`.githooks/`** | The local git hooks. |
-| **`.github/`** | Server-side workflows and their scripts, and the pull request template. |
+| **`.github/`** | Server-side workflows and their scripts, the pull request template, the manifest of the automation files, the saved board views and, in an adopted project, the audit baseline. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
 | **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
+| **`.git-blame-ignore-revs`** (root) | The commits that only changed line endings, so that blame skips them. Present only after a line-endings commit in an adopted project. |
 | **License files** (root) | The project's license, when it has one. |
 
 #### 2.2 Rules
@@ -1620,13 +1620,15 @@ ticket planned for a later version that ships earlier fixes itself.
   boxes, so that the person is notified; when the rule stops being broken the comment is edited to say
   "✅ fixed on" and the date. A rule that breaks again gets a new comment.
 - **Rule:** nobody sets or clears Fix, and it has no *Fine* or *Acknowledged*: a person fixes the cause, and
-  the id goes. The rules and their ids are the list in `conditions.py`; a new rule is a new entry there.
+  the id goes. The rules and their ids are one list kept with the automation; a new rule is a new entry there.
 - **Rule:** the refresh runs after a merge to `main`, on every scheduled run, on request and on the events
   of section 2.3. A change to a board field alone starts no workflow, so it shows at the next of those.
 
 *Why.* An inconsistency is not a judgment: it is true or false from the other fields. Showing it as a stored
 set that is recomputed means two broken rules both have to be fixed before the ticket drops out, with no flag
 to forget to close.
+
+> **In GitHub.** The list of rules is the registry in `.github/scripts/conditions.py`.
 
 #### 4.4 Rules that span fields
 
@@ -2030,7 +2032,7 @@ Documentation lives in three places, and each answers a different question.
 |---|---|---|
 | **Readme** (root) | What the project is, its requirements, and how to build and use it. The entry point: kept short, and linking to the wiki for detail. | Yes |
 | **Wiki** (`doc/wiki/`) | Current-state reference pages: how the project works now. One topic per page, with a `Home` page as the index. | Yes, whenever what a page describes changes |
-| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyzes and investigations, measurements. | No: dated, and not rewritten afterwards |
+| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyses and investigations, measurements. | No: dated, and not rewritten afterwards |
 
 #### 9.2 Rules
 
@@ -2900,12 +2902,12 @@ Or documented in a new block in the current version, leaving the placeholder as 
 - Documents REF 20261006091500 (V2.4.1): fixed the spelling of "authentication" in the settings help text.
 ```
 
-#### 6.2 Triaging an Alert and its AUTO-REF
+#### 6.2 Documenting an AUTO-REF
 
-1. Confirm that the merged result was built and tested.
-2. Document what changed, in place or in a new block under the Alert's ticket, as above.
-3. Comment on the Alert with what you found.
-4. Move it to *Review*; a human completes it.
+The person who triages an Alert documents the change its `AUTO-REF` stands for, in the same two ways as a
+`REF` above: replace the generated note in place under the Alert's ticket, or, preferably, describe the
+change in a new block in the current version and leave the `AUTO-REF` as it was. The rest of the triage (what
+to confirm, the comment, the move to *Review*) is in the guide on issues and the board, section 5.2.
 
 #### 6.3 Rules
 
@@ -3294,8 +3296,8 @@ After a merge to `main`, the automation:
 1. **Pull `main`** and see that the heading was renamed to the version you expected.
 2. **See that the Version ticket exists** and lists your tickets.
 3. **See that your tickets show Delivery *Merged*** and the right Version.
-4. **If an Alert was raised for your merge,** triage it. It is assigned to you (see the guide on working
-   and committing, section 6).
+4. **If an Alert was raised for your merge,** triage it. It is assigned to you (see the guide on issues
+   and the board, section 5.2).
 5. **If the board was not updated,** the version is still finalized. The board step is skipped when the
    project token is missing or the hosting service reports an error. Re-run the finalize step, which is safe to
    repeat and skips what is already done, or correct the fields by hand.
@@ -3347,7 +3349,7 @@ both are detected afterwards (see the guide on branching and merging, section 6.
 
 1. **Do it deliberately,** and say why in the pull request, the commit message or a comment on the ticket.
 2. **Expect the Alert.** It is assigned to you, and the automation also writes a placeholder entry in the
-   changelog. Triage it promptly (see the guide on working and committing, section 6).
+   changelog. Triage it promptly (see the guide on issues and the board, section 5.2).
 3. **Pull `main` right afterwards, then build and test it.** You skipped the sync that would have caught a
    mismatch, so this is the check you owe.
 4. **Never hide it,** for example by editing history. The record is what makes the bypass recoverable.
@@ -3532,11 +3534,13 @@ The board has seven saved views, in this order:
 
 Every view except All leaves out pull requests and test tickets by ending its filter with `is:issue AND -label:dummy`
 (see *Ticket fields reference*; the automation puts each pull request on the board so that All has no gaps).
-The views are defined in a file, `.github/views.json`, and created by a script, `views.py`, so every project
+The views are defined in a file kept in the repository and created by a script, so every project
 has the same ones. To change a view, change the file and run the script. Two settings of *All* are made by
 hand when it is created, because the API cannot reach them: the sort *Created, ascending* and *Show hierarchy* off
 (guide on the new-project bootstrap, section 6). Setting them up is part of
 configuring the board, which is the administrator's job.
+
+> **In GitHub.** The file is `.github/views.json` and the script is `.github/scripts/views.py`.
 
 #### 2.3 Rules
 
@@ -3600,8 +3604,10 @@ minute or so instead of waiting for the next scheduled run.
 #### 2.5 The conditions the board shows
 
 Everything the board draws attention to is a *condition*, and each has one of three natures, which is also
-the view it shows in. The list below is the registry in `conditions.py`; a new condition is one new entry
+the view it shows in. The list below is the registry of the automation; a new condition is one new entry
 there.
+
+> **In GitHub.** The registry is `.github/scripts/conditions.py`, and a refresh on request is the workflow mode `conditions`.
 
 | Id | Name | View | Cleared by |
 |---|---|---|---|
@@ -3634,7 +3640,7 @@ there.
   you have write access).
   An *Implemented* ticket waiting for its Version is attached just before it, so it is not shown as broken.
   A change to a board field alone starts no run: if Fix still shows a ticket you have just corrected, it
-  goes when you close the issue, or at the next refresh, or ask for one (the workflow mode `conditions`).
+  goes when you close the issue, or at the next refresh, or ask for one.
 
 
 ---
@@ -3743,9 +3749,11 @@ covers who takes it and what to do with it.
 
 #### 5.2 Triage
 
-- **A bypass or a merge without entries:** the steps are in the guide on working and committing,
-  section 6.2. Confirm that the result was built and tested, document what changed, comment, and move the
-  Alert to *Review* for a human to complete.
+- **A bypass or a merge without entries:** confirm that the merged result was built and tested. Document
+  what changed, either by replacing the generated `AUTO-REF` note in place or, preferably, by describing
+  it in a new block in the current version (the placeholder then stays where it is, as the record of how
+  the change first appeared; the guide on working and committing, section 6.2, shows both). Comment on
+  the Alert with what you found, and move it to *Review* for a human to complete.
 - **A changelog that could not be read:** no version was finalized. Correct `CHANGELOG.md` by hand (one
   open `WIP-Version` heading, with at most one marker and no other text), run the finalize step again,
   comment on the Alert with what was wrong, and move it to *Review*.
@@ -5401,7 +5409,7 @@ explains it. It adds no new rules.
 
 13. **Pull `main` and check:** the heading is renamed to the expected version, the Version ticket lists your
     tickets, and they show Delivery *Merged* (*Syncing and merging*, section 5).
-14. **Triage any Alert** assigned to you (*Issues and the board in practice*, section 5), and decide any
+14. **Triage any Alert** assigned to you (*Issues and the board in practice*, section 5.2), and decide any
     Attention flag on your tickets (*Issues and the board in practice*, section 2.4).
 15. **Verify** (a person), before or after the merge: set Resolution *Done* and Progress *Completed*
     together, and close the issue
@@ -5463,7 +5471,7 @@ branching and merging.
 | a ticket needs more work after it is *Completed* | Reopen it only if its own scope is unmet. Otherwise create a new ticket and link the two. | Issues and the board in practice, section 4.3 |
 | work is set aside to resume later | Suspend the ticket, with a comment, and the branch too. | Issues and the board in practice, section 4.1 |
 | work is being dropped | Abandon it with a Resolution and a comment, and the branch too. | Issues and the board in practice, section 4.2 |
-| an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5 |
+| an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5.2 |
 | the automation flagged my ticket (*Watch*, *Caution* or *AtRisk*) | Read its comment, decide, act, and tick *Fine*, or *Handled elsewhere* if it is handled elsewhere. | Issues and the board in practice, section 2.4 |
 | an Alert was raised in error | Abandon it with Resolution *Invalid* and a comment, and raise a Bug against the automation. | Issues and the board in practice, section 5 |
 | a planned version will not happen | Mark it *Dropped*, close it, and comment what replaced it. | Issues and the board in practice, section 6 |
@@ -6123,7 +6131,7 @@ code has shipped).
 | **Resolution** | How did it end? | board field | a person |
 | **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Fix** | Which of the rules that span fields do its fields break? | board field | the automation |
-| **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, Version#, the real Version and the dates |
+| **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, the real Version and the dates |
 
 Two principles decide who sets a field. **Judgment belongs to people, facts belong to the automation**:
 whether the work is done, verified or urgent is a person's call, while where the code is, which build it is

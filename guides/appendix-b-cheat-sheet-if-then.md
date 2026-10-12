@@ -40,7 +40,7 @@ branching and merging.
 | a ticket needs more work after it is *Completed* | Reopen it only if its own scope is unmet. Otherwise create a new ticket and link the two. | Issues and the board in practice, section 4.3 |
 | work is set aside to resume later | Suspend the ticket, with a comment, and the branch too. | Issues and the board in practice, section 4.1 |
 | work is being dropped | Abandon it with a Resolution and a comment, and the branch too. | Issues and the board in practice, section 4.2 |
-| an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5 |
+| an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5.2 |
 | the automation flagged my ticket (*Watch*, *Caution* or *AtRisk*) | Read its comment, decide, act, and tick *Fine*, or *Handled elsewhere* if it is handled elsewhere. | Issues and the board in practice, section 2.4 |
 | an Alert was raised in error | Abandon it with Resolution *Invalid* and a comment, and raise a Bug against the automation. | Issues and the board in practice, section 5 |
 | a planned version will not happen | Mark it *Dropped*, close it, and comment what replaced it. | Issues and the board in practice, section 6 |

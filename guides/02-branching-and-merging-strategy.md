@@ -485,11 +485,9 @@ The response is the same for all of them, and it never blocks the person who nee
 
 What the developer does afterwards:
 
-- **Recommendation:** triage the Alert promptly. Confirm that the result was built and tested, document
-  what changed, either by replacing the generated note in the changelog or, preferably, by describing
-  it in a new block in the current version.
-- Every move of the Alert after creation is manual: a person starts it (`InProgress`), says they believe
-  it is handled (`Review`), and a human verifies it (`Completed`). Shipping a version never moves it.
+- **Recommendation:** triage the Alert promptly. What to do, and how the Alert moves afterwards (every
+  move is manual, and shipping a version never moves it), is in the guide on issues and the board,
+  section 5.
 
 **Why.** A bypass is not a failure to be hidden; it is a decision that needs follow-up. Creating the
 ticket at the moment of the event means the follow-up exists even if the person who bypassed is too busy
