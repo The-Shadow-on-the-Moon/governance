@@ -99,7 +99,8 @@ secrets need administration access. A refused read is *not-checkable*, not a fai
 | `github.setting.has_projects` | Fix | 1 | Admin | Yes | Projects are off. Turn them on: the board is a project. |
 | `github.setting.has_wiki` | Fix / N/A | 1 | Admin | Yes | The wiki is off. Turn it on and create a first page, or record that the plan does not offer it for the repository. |
 | `github.setting.default_branch` | Convert | 1 | Admin | With care | The default branch is not `main`. Create or rename `main` and make it the default (guide 11, section 5.1). |
-| `github.setting.owner-type` | Convert | 1 | Admin | With care | The repository belongs to a person. Transfer it to an organization: issue types exist only there. Clones must update their remote. |
+| `github.setting.owner-type` | Convert | 1 | Admin | With care | The repository belongs to a person and the Type is not kept in the field Kind. Either transfer it to an organization (issue types exist only there; clones must update their remote), or keep it and set the variable `TYPE_SOURCE` to `field`, so that the Type lives in the board field Kind. |
+| `github.type-source` | Fix | 1 | Admin | Yes | The repository variable `TYPE_SOURCE` is neither `issue-type` nor `field`. Set it to one of them, or delete it: the source is then `issue-type` for an organization and `field` for a person. Not-checkable when the variable cannot be read. |
 | `github.protection.pull-request` | Fix / N/A | 6 | Admin | Yes | `main` does not require a pull request. Turn on protection (or a ruleset) after the first compliant merge, where the plan offers it. Not-checkable when protection cannot be read. |
 | `github.protection.up-to-date` | Fix / N/A | 6 | Admin | Yes | `main` does not require branches to be up to date. Turn it on with the protection. |
 | `github.protection.admin-bypass` | Fix | 6 | Admin | Yes | The protection also applies to administrators. Leave the administrator bypass open: a bypass is allowed, with an Alert as its record. |
@@ -109,7 +110,7 @@ secrets need administration access. A refused read is *not-checkable*, not a fai
 | `github.labels.exact` | Convert | 1 | Admin | With care | The repository's labels are not exactly the 14 Area labels and `dummy`. Move the issues from each extra label to the Area label that replaces it, then delete it, because deleting a label removes it from its issues. Create the missing ones. |
 | `github.labels.descriptions` | Fix | 1 | Admin | Yes | A label has no description. Give each its meaning from Appendix C. |
 | `github.labels.colors` | Fix | 1 | Admin | Yes | A label has another color than the standard. Use the colors of Appendix C. |
-| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the eight types (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert). Not-checkable when the types cannot be read. |
+| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the eight types (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert). Not needed, and passed, when the Type is kept in the field Kind. Not-checkable when the types cannot be read. |
 | `github.issue-types.descriptions` | Fix | 1 | Admin | Yes | A type has no description. Give it the definition of Appendix C. |
 | `github.issue-types.colors` | Fix | 1 | Admin | Yes | A type has another color than the standard. Use the colors of Appendix C. |
 
@@ -134,7 +135,7 @@ project`). Tickets labeled `dummy` and pull requests are skipped.
 | `board.views.no-extra` | Fix / N/A | 3 | Owner | Yes | The board has a view that `views.json` does not list. Delete it (`views.py --delete-unlisted`), or add it to the file. |
 | `board.views.match` | Fix | 3 | Admin | Yes | A view differs from its definition: the report names the view and the setting. Run `views.py --apply` (it creates the view again) or correct `views.json`. |
 | `board.tickets` | Fix | 5 | Admin | Yes | The board's tickets could not be read. Check the `project` scope. |
-| `board.ticket.type` | Fix | 5 | Owner | Yes | A ticket has no issue type. Set its Type. For many old issues, set the type through the API in one pass. |
+| `board.ticket.type` | Fix | 5 | Owner | Yes | A ticket has no Type (no issue type, or no value in the field Kind). Set it. For many old issues, set the type through the API in one pass. |
 | `board.ticket.size` | Fix | 5 | Owner | Yes | A work ticket has no Size. Estimate it and set the Size. |
 | `board.ticket.closed-status` | Convert | 5 | Owner | Yes | A closed work ticket is not *Completed* or *Abandoned*. Set the Status to match (or reopen the ticket if it is not done). |
 | `board.ticket.open-status` | Convert | 5 | Owner | Yes | An open work ticket is *Completed* or *Abandoned*. Close the issue or move the Status back. |

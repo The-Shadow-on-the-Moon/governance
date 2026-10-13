@@ -521,9 +521,10 @@ other guides define.
 
 | Term | What it means | See |
 |---|---|---|
-| **Organization** | The account that owns the repository and the board. The standard needs one, because issue types are an organization feature. | new-project bootstrap, section 5 |
+| **Organization** | The account that owns the repository and the board. Issue types are an organization feature, so a project owned by an organization keeps the Type in the issue type, and one owned by a personal account keeps it in the board field Kind. | new-project bootstrap, section 5 |
 | **Issue** | A ticket. | project structure, section 3 |
 | **Issue type** | The native single value on an issue that says what sort of ticket it is. It carries the Type. | fields reference |
+| **Kind** | The board field that carries the Type in a project owned by a personal account, where there are no issue types. It has the same eight values. | new-project bootstrap, section 5 |
 | **Label** | A tag on an issue. The only labels are the 14 Area labels and the marker label `dummy`. | fields reference |
 | **Sub-issue** | An issue attached to another, which has one parent. | project structure, section 5 |
 | **Closing keyword** | A word such as *Closes*, *Fixes* or *Resolves* followed by a ticket number, which closes the ticket automatically when the pull request merges. The process never uses one. | syncing and merging, section 3 |
@@ -826,7 +827,7 @@ is defined in *Concepts*.)
 A version is not a release. Every merge creates a version; declaring one of them a release is a
 separate, deliberate step (section 2.2).
 
-> **In GitHub.** The Type is the issue's native Issue Type. A `## WIP-Version` heading with a marker
+> **In GitHub.** The Type is the issue's native Issue Type (or its board field Kind, in a project owned by a personal account). A `## WIP-Version` heading with a marker
 > sits at the top of `CHANGELOG.md`. The finalizing job reads the ticket numbers listed in that
 > section, looks up each issue's Type, applies any marker, and renames the heading to the resulting
 > version on merge.
@@ -1652,7 +1653,7 @@ to forget to close.
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
 | A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
-> **In GitHub.** Type is the native issue type. Area is a set of labels. The other fields are board
+> **In GitHub.** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values). Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start
 > date and End date are date fields. The automation reads Type from the issue and writes the other fields
 > to the board.
@@ -2132,7 +2133,7 @@ developer may also set the optional *Committed* marker in Delivery.
 | Item | Who does it |
 |---|---|
 | Repository settings, branch protection and its bypass | the administrator |
-| Issue types, labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
+| Issue types (or the Kind field), labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
 | The project token and other secrets | the administrator holds and renews them |
 | Installing and updating the automation | the administrator |
 
@@ -4310,7 +4311,7 @@ says it did.
   or indexed even if it is deleted later.
 - **A major version bump:** adding a `+V` marker.
 - **Settings and shared git state during an adoption:** changes to repository, organization or board settings,
-  to labels and issue types, and to tags, and renaming, retiring or deleting branches. Running the audit tools
+  to labels, issue types and the Kind field, and to tags, and renaming, retiring or deleting branches. Running the audit tools
   is routine, because they only read.
 - **Real decisions:** when there are several valid approaches, an ambiguous requirement or trade-offs, the
   assistant presents the options with a recommendation and asks which. It does not silently pick one, and
@@ -4786,10 +4787,18 @@ the preflight's warning means the board does not stop updating without notice.
 - **Rule:** the eight issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
   *Refactor*, *Task*, *Version* and *Alert*. Each carries its short definition from the *Ticket fields
   reference* as its description.
-- **Prerequisite:** the repository belongs to an organization, because issue types are an organization
-  feature.
+- **Rule:** the Type has one source, chosen by who owns the repository. A project owned by an organization
+  keeps it in the eight issue types, which need an organization. A project owned by a personal account has
+  no issue types and keeps it in the board field *Kind* (section 6.1), with the same eight values and the
+  same definitions. Everything else in the standard is the same in both.
+- **Rule:** the repository variable `TYPE_SOURCE` names the source, `issue-type` or `field`. When it is not
+  set, the source is `issue-type` for an organization and `field` for a personal account.
+- **Recommendation:** use an organization when the project has a team. The issue type is part of an issue,
+  so it shows in every list and search and cannot be missing from a board item; the field exists only on
+  the board.
 
-They are set up once, by the administrator, for the organization.
+The issue types are set up once, by the administrator, for the organization. The field is created with the
+other board fields (section 6.1).
 
 #### 5.2 Labels
 
@@ -4844,13 +4853,14 @@ fields reference*.
 | Build | text | |
 | Start date, End date | date | |
 | Fix | text | |
+| Kind | single select | Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert (only when the Type source is the field) |
 
-Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
+Area is labels, and Type is the issue type, so neither is a board field; when the Type source is the field, Type is the board field *Kind*. Every field above is a kind that a
 script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
 (the colors and descriptions of the *Ticket fields reference*, gray and none otherwise), as a dry run until it is given `--apply`, with the project token.
 It never changes a field that exists: one of the wrong type, or lacking a value, is listed for the
 administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
-the automation is switched on, because the preflight requires every field in the table.
+the automation is switched on, because the preflight requires every field in the table (Kind only when the Type source is the field).
 
 **Saved views:** All, Backlog, Board, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
@@ -4876,7 +4886,7 @@ every run, and a view that is created again loses them, so make them again.
 **Why.** The automation reads and writes these fields by name, so a board that differs breaks it, and a
 build stamp stored in a number field is rejected by the hosting service.
 
-> **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
+> **In GitHub.** The board is a GitHub Project owned by the organization (or the personal account) and linked to the repository. The
 > fields are added in the project's settings, and the saved views are views of the project. A new board has
 > one default view, and GitHub never deletes a board's last view, so the script creates the new views first and
 > then deletes the default one (`--delete-unlisted`).
@@ -4996,7 +5006,7 @@ A one-page summary of the guide. It adds no new rules.
 
 **Issue types and labels** (section 5)
 
-- [ ] The eight issue types exist with their descriptions.
+- [ ] The eight issue types exist with their descriptions (or, for a personal account, the board field Kind has the eight values and `TYPE_SOURCE` is `field`).
 - [ ] The 14 Area labels and `dummy` exist with their descriptions, and the default labels not on the list
       are deleted.
 
@@ -5163,10 +5173,13 @@ project still works (the build, the tests, a push).
 
 Administrator. These settings do not change the code, and most can be undone, so they come first.
 
-1. **Ownership.** The repository belongs to an organization, because issue types exist only there. If it does
-   not, transfer it (the administrator decides who owns it; links to the old address are redirected by the
-   host, but clones should update their remote).
-2. **Issue types and labels.** Create the eight issue types and the 14 Area labels and `dummy`
+1. **Ownership.** Issue types exist only in an organization. If the repository belongs to a person, either
+   transfer it to an organization (the administrator decides who owns it; links to the old address are
+   redirected by the host, but clones should update their remote), or keep it and let the Type live in the
+   board field Kind (guide on new-project bootstrap, section 5.1); the audit then judges the field and not the
+   issue types.
+2. **Issue types and labels.** Create the eight issue types (not for a project that keeps the Type in the
+   field Kind) and the 14 Area labels and `dummy`
    (guide on new-project bootstrap, section 5). Before deleting a label that is not on the list, move its
    issues to the Area label that replaces it, because deleting a label removes it from every issue that has
    it.
@@ -5267,14 +5280,14 @@ and closed state of the issues.
 
 1. **Bring the issues onto the board.** Add every open issue, and the closed issues the team still needs (for
    example those the old changelog cites). Older closed issues may stay off the board.
-2. **Give each one its fields.** The issue type, the Area label, the Size and, for a closed issue, the Status
+2. **Give each one its fields.** The Type (the issue type, or the field Kind), the Area label, the Size and, for a closed issue, the Status
    *Completed* or *Abandoned* and a Resolution. An open issue is not *Completed* or *Abandoned*.
 3. **Mark late tickets.** A ticket written now to document work that happened before the process is given the
    Origin *Backdated*; one written after the work to replace a `REF` is *Backfilled* and keeps the `REF` token
    (guide on project structure, section 4.3).
 4. **Open work.** Open issues continue as they were, on the board, from their Status.
 
-- **Rule:** every ticket on the board has an issue type, and every work ticket has a Size (guide on project
+- **Rule:** every ticket on the board has a Type (an issue type, or Kind), and every work ticket has a Size (guide on project
   structure, section 3).
 - **Rule:** a closed work ticket is *Completed* or *Abandoned*, and Resolution is set exactly when it is.
 - **Rule:** a ticket written after the work is not given dates or builds it never had.
@@ -5357,8 +5370,9 @@ next push.
 
 #### 5.4 When the plan lacks a feature
 
-If the hosting plan does not offer branch protection, a wiki for a private repository, or issue types, the
-matching findings are *not applicable* and are recorded as such. The finding stays in the report as a reminder
+If the hosting plan does not offer branch protection or a wiki for a private repository, the matching
+findings are *not applicable* and are recorded as such. A plan without issue types (a personal account) keeps
+the Type in the field Kind instead (stage 1), and its findings are judged for the field. The finding stays in the report as a reminder
 and is revisited when the plan changes.
 
 ---
@@ -5538,7 +5552,7 @@ Every ticket field with its values, what they mean, who sets them and when. The 
 and the rules that tie the fields together, are in section 4 of *Project structure*. How the fields work
 together over a ticket's life is in *Appendix E: Ticket model*.
 
-**Where each field lives (GitHub).** Type is the native issue type, Area is a set of labels, and every
+**Where each field lives (GitHub).** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values), Area is a set of labels, and every
 other field is a board field.
 
 **Colors.** The Color column of each table is the standard's color for that option, so that a ticket reads
@@ -5553,7 +5567,8 @@ does not check colors.
 
 ### Type
 
-One value per ticket. Says what sort of ticket it is and why the change is made.
+One value per ticket. Says what sort of ticket it is and why the change is made. In a project owned by a
+personal account the values are the options of the board field Kind.
 
 | Value | Color | Meaning | Version bump |
 |---|---|---|---|
@@ -6154,7 +6169,7 @@ code has shipped).
 
 | Space | Question | Where it lives (GitHub) | Set by |
 |---|---|---|---|
-| **Type** | What sort of ticket is this, and why is the change being made? | the issue type | a person (the automation for Version and Alert tickets) |
+| **Type** | What sort of ticket is this, and why is the change being made? | the issue type (or the board field Kind) | a person (the automation for Version and Alert tickets) |
 | **Area** | What kind of work does it involve? | labels, several per ticket | a person |
 | **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | board fields | a person |
 | **Progress** | Where is the work? | the board's Status field | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
@@ -6358,8 +6373,9 @@ second field). The fields below are the ones drawn on each card.
 ### 4. Notes
 
 - **Type** is the issue type, not a board field. The API does not report it among a view's visible fields,
-  so `views.py` does not compare it, and the order of the columns is not compared either (only which fields
-  are shown).
+  so `views.py` does not compare it. When the Type source is the field Kind, the column is *Kind*, a board
+  field like the others, and the filters use `kind:` where the views use `type:`. The order of the columns is
+  not compared either (only which fields are shown).
 - The sort and grouping of a view can only be set when it is created (see *Issues and the board in
   practice*, section 2.3), so changing them recreates the view. Recreating All also loses its two hand-made
   settings (sort by Created, ascending, and *Show hierarchy* off).
@@ -6467,7 +6483,8 @@ secrets need administration access. A refused read is *not-checkable*, not a fai
 | `github.setting.has_projects` | Fix | 1 | Admin | Yes | Projects are off. Turn them on: the board is a project. |
 | `github.setting.has_wiki` | Fix / N/A | 1 | Admin | Yes | The wiki is off. Turn it on and create a first page, or record that the plan does not offer it for the repository. |
 | `github.setting.default_branch` | Convert | 1 | Admin | With care | The default branch is not `main`. Create or rename `main` and make it the default (guide 11, section 5.1). |
-| `github.setting.owner-type` | Convert | 1 | Admin | With care | The repository belongs to a person. Transfer it to an organization: issue types exist only there. Clones must update their remote. |
+| `github.setting.owner-type` | Convert | 1 | Admin | With care | The repository belongs to a person and the Type is not kept in the field Kind. Either transfer it to an organization (issue types exist only there; clones must update their remote), or keep it and set the variable `TYPE_SOURCE` to `field`, so that the Type lives in the board field Kind. |
+| `github.type-source` | Fix | 1 | Admin | Yes | The repository variable `TYPE_SOURCE` is neither `issue-type` nor `field`. Set it to one of them, or delete it: the source is then `issue-type` for an organization and `field` for a person. Not-checkable when the variable cannot be read. |
 | `github.protection.pull-request` | Fix / N/A | 6 | Admin | Yes | `main` does not require a pull request. Turn on protection (or a ruleset) after the first compliant merge, where the plan offers it. Not-checkable when protection cannot be read. |
 | `github.protection.up-to-date` | Fix / N/A | 6 | Admin | Yes | `main` does not require branches to be up to date. Turn it on with the protection. |
 | `github.protection.admin-bypass` | Fix | 6 | Admin | Yes | The protection also applies to administrators. Leave the administrator bypass open: a bypass is allowed, with an Alert as its record. |
@@ -6477,7 +6494,7 @@ secrets need administration access. A refused read is *not-checkable*, not a fai
 | `github.labels.exact` | Convert | 1 | Admin | With care | The repository's labels are not exactly the 14 Area labels and `dummy`. Move the issues from each extra label to the Area label that replaces it, then delete it, because deleting a label removes it from its issues. Create the missing ones. |
 | `github.labels.descriptions` | Fix | 1 | Admin | Yes | A label has no description. Give each its meaning from Appendix C. |
 | `github.labels.colors` | Fix | 1 | Admin | Yes | A label has another color than the standard. Use the colors of Appendix C. |
-| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the eight types (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert). Not-checkable when the types cannot be read. |
+| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the eight types (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert). Not needed, and passed, when the Type is kept in the field Kind. Not-checkable when the types cannot be read. |
 | `github.issue-types.descriptions` | Fix | 1 | Admin | Yes | A type has no description. Give it the definition of Appendix C. |
 | `github.issue-types.colors` | Fix | 1 | Admin | Yes | A type has another color than the standard. Use the colors of Appendix C. |
 
@@ -6502,7 +6519,7 @@ project`). Tickets labeled `dummy` and pull requests are skipped.
 | `board.views.no-extra` | Fix / N/A | 3 | Owner | Yes | The board has a view that `views.json` does not list. Delete it (`views.py --delete-unlisted`), or add it to the file. |
 | `board.views.match` | Fix | 3 | Admin | Yes | A view differs from its definition: the report names the view and the setting. Run `views.py --apply` (it creates the view again) or correct `views.json`. |
 | `board.tickets` | Fix | 5 | Admin | Yes | The board's tickets could not be read. Check the `project` scope. |
-| `board.ticket.type` | Fix | 5 | Owner | Yes | A ticket has no issue type. Set its Type. For many old issues, set the type through the API in one pass. |
+| `board.ticket.type` | Fix | 5 | Owner | Yes | A ticket has no Type (no issue type, or no value in the field Kind). Set it. For many old issues, set the type through the API in one pass. |
 | `board.ticket.size` | Fix | 5 | Owner | Yes | A work ticket has no Size. Estimate it and set the Size. |
 | `board.ticket.closed-status` | Convert | 5 | Owner | Yes | A closed work ticket is not *Completed* or *Abandoned*. Set the Status to match (or reopen the ticket if it is not done). |
 | `board.ticket.open-status` | Convert | 5 | Owner | Yes | An open work ticket is *Completed* or *Abandoned*. Close the issue or move the Status back. |

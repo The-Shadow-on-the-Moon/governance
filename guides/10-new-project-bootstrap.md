@@ -231,10 +231,18 @@ the preflight's warning means the board does not stop updating without notice.
 - **Rule:** the eight issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
   *Refactor*, *Task*, *Version* and *Alert*. Each carries its short definition from the *Ticket fields
   reference* as its description.
-- **Prerequisite:** the repository belongs to an organization, because issue types are an organization
-  feature.
+- **Rule:** the Type has one source, chosen by who owns the repository. A project owned by an organization
+  keeps it in the eight issue types, which need an organization. A project owned by a personal account has
+  no issue types and keeps it in the board field *Kind* (section 6.1), with the same eight values and the
+  same definitions. Everything else in the standard is the same in both.
+- **Rule:** the repository variable `TYPE_SOURCE` names the source, `issue-type` or `field`. When it is not
+  set, the source is `issue-type` for an organization and `field` for a personal account.
+- **Recommendation:** use an organization when the project has a team. The issue type is part of an issue,
+  so it shows in every list and search and cannot be missing from a board item; the field exists only on
+  the board.
 
-They are set up once, by the administrator, for the organization.
+The issue types are set up once, by the administrator, for the organization. The field is created with the
+other board fields (section 6.1).
 
 ### 5.2 Labels
 
@@ -289,13 +297,14 @@ fields reference*.
 | Build | text | |
 | Start date, End date | date | |
 | Fix | text | |
+| Kind | single select | Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert (only when the Type source is the field) |
 
-Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
+Area is labels, and Type is the issue type, so neither is a board field; when the Type source is the field, Type is the board field *Kind*. Every field above is a kind that a
 script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
 (the colors and descriptions of the *Ticket fields reference*, gray and none otherwise), as a dry run until it is given `--apply`, with the project token.
 It never changes a field that exists: one of the wrong type, or lacking a value, is listed for the
 administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
-the automation is switched on, because the preflight requires every field in the table.
+the automation is switched on, because the preflight requires every field in the table (Kind only when the Type source is the field).
 
 **Saved views:** All, Backlog, Board, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
@@ -321,7 +330,7 @@ every run, and a view that is created again loses them, so make them again.
 **Why.** The automation reads and writes these fields by name, so a board that differs breaks it, and a
 build stamp stored in a number field is rejected by the hosting service.
 
-> **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
+> **In GitHub.** The board is a GitHub Project owned by the organization (or the personal account) and linked to the repository. The
 > fields are added in the project's settings, and the saved views are views of the project. A new board has
 > one default view, and GitHub never deletes a board's last view, so the script creates the new views first and
 > then deletes the default one (`--delete-unlisted`).
@@ -441,7 +450,7 @@ A one-page summary of the guide. It adds no new rules.
 
 **Issue types and labels** (section 5)
 
-- [ ] The eight issue types exist with their descriptions.
+- [ ] The eight issue types exist with their descriptions (or, for a personal account, the board field Kind has the eight values and `TYPE_SOURCE` is `field`).
 - [ ] The 14 Area labels and `dummy` exist with their descriptions, and the default labels not on the list
       are deleted.
 

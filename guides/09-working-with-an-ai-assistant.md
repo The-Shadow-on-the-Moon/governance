@@ -100,7 +100,7 @@ says it did.
   or indexed even if it is deleted later.
 - **A major version bump:** adding a `+V` marker.
 - **Settings and shared git state during an adoption:** changes to repository, organization or board settings,
-  to labels and issue types, and to tags, and renaming, retiring or deleting branches. Running the audit tools
+  to labels, issue types and the Kind field, and to tags, and renaming, retiring or deleting branches. Running the audit tools
   is routine, because they only read.
 - **Real decisions:** when there are several valid approaches, an ambiguous requirement or trade-offs, the
   assistant presents the options with a recommendation and asks which. It does not silently pick one, and

@@ -18,6 +18,10 @@ Every view except All also ends with `AND is:issue AND -label:dummy`, which the 
 
 The columns of each view, in order, and their sorting and grouping are in [Appendix F: board views](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-f-board-views-layout.md).
 
+## When the Type is the field Kind
+
+A project owned by a personal account has no issue types; its Type is the board field **Kind** (see the standard's bootstrap guide, section 5.1). `views.py` then writes `kind:` where `views.json` has the issue type's `type:` in a filter, and shows the column Kind where the file lists Type, so the same file serves both. Nothing else changes.
+
 ## What the condition views show
 
 Everything the board draws attention to is a *condition*, and each of the three natures has its own view: **Decide** (a person must judge it), **Follow up** (a queue) and **Fix** (the fields contradict each other). The conditions are listed once, in the registry `.github/scripts/conditions.py`, and the table of the guide on the board (section 2.5) is checked against it by a test.

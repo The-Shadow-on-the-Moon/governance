@@ -568,7 +568,7 @@ to forget to close.
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
 | A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
-> **In GitHub.** Type is the native issue type. Area is a set of labels. The other fields are board
+> **In GitHub.** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values). Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start
 > date and End date are date fields. The automation reads Type from the issue and writes the other fields
 > to the board.
@@ -1048,7 +1048,7 @@ developer may also set the optional *Committed* marker in Delivery.
 | Item | Who does it |
 |---|---|
 | Repository settings, branch protection and its bypass | the administrator |
-| Issue types, labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
+| Issue types (or the Kind field), labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
 | The project token and other secrets | the administrator holds and renews them |
 | Installing and updating the automation | the administrator |
 

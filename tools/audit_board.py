@@ -22,8 +22,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", ".github", "scripts"))
 
+import audit_common  # noqa: E402
 from audit_common import Report, RULE, RECOMMENDATION, remote_repo, format_report  # noqa: E402
 import preflight  # noqa: E402
+import ticket_type  # noqa: E402
 import views  # noqa: E402
 
 WORK_EXEMPT = ("Version", "Alert")
@@ -43,7 +45,7 @@ VIEWS = ("query($id:ID!){node(id:$id){... on ProjectV2{views(first:50){nodes{id 
          "sortByFields(first:5){nodes{field{... on ProjectV2FieldCommon{name}} direction}} "
          "visibleFields(first:50){nodes{... on ProjectV2FieldCommon{name}}}}}}}}")
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
-         "pageInfo{hasNextPage endCursor} nodes{content{__typename ... on Issue{number title state "
+         "pageInfo{hasNextPage endCursor} nodes{" + ticket_type.SELECTION + "content{__typename ... on Issue{number title state "
          "issueType{name} labels(first:20){nodes{name}}}} "
          + " ".join("{0}:fieldValueByName(name:\"{0}\"){{... on ProjectV2ItemFieldSingleSelectValue{{name}}}}".format(n)
                     for n in SELECTS) + " "
@@ -67,7 +69,7 @@ def run_graphql(query, variables):
     return payload.get("data") if isinstance(payload, dict) and not payload.get("errors") else None
 
 
-def audit(repo, board_number=None, graphql=run_graphql, definition=None):
+def audit(repo, board_number=None, graphql=run_graphql, definition=None, type_source=ticket_type.ISSUE_TYPE):
     report = Report("board")
     owner, name = repo.split("/", 1)
     data = graphql(LINKED, {"o": owner, "n": name})
@@ -90,8 +92,9 @@ def audit(repo, board_number=None, graphql=run_graphql, definition=None):
 
     fields = graphql(FIELDS, {"id": board["id"]})
     fields = {f["name"]: f for f in fields["node"]["fields"]["nodes"] if f and f.get("name")} if fields else None
-    check_fields(report, fields)
-    check_views(report, graphql(VIEWS, {"id": board["id"]}), definition)
+    check_fields(report, fields, type_source)
+    check_views(report, graphql(VIEWS, {"id": board["id"]}),
+                views.for_source(definition if definition is not None else views.load_definition(), type_source))
     items = read_items(graphql, board["id"])
 
     if items is None:
@@ -103,7 +106,7 @@ def audit(repo, board_number=None, graphql=run_graphql, definition=None):
     return report
 
 
-def check_fields(report, fields):
+def check_fields(report, fields, type_source=ticket_type.ISSUE_TYPE):
     guide = "10 section 6.2"
 
     if fields is None:
@@ -111,8 +114,9 @@ def check_fields(report, fields):
                    ["the GraphQL query for the board's fields returned no data"])
         return
 
-    for field_name, (kind, values) in preflight.REQUIRED_FIELDS.items():
+    for field_name, (kind, values) in preflight.required_fields(type_source).items():
         found = fields.get(field_name)
+        colors = ticket_type.COLORS if field_name == ticket_type.FIELD else preflight.OPTION_COLORS
         ident = "board.field." + field_name.lower().replace(" ", "-")
 
         if found is None:
@@ -139,13 +143,13 @@ def check_fields(report, fields):
                    ["missing value: " + v for v in missing] + ["extra value: " + v for v in extra]
                    or ["{}: {}".format(field_name, ", ".join(have))])
         wrong = [o["name"] for o in found.get("options") or []
-                 if o["name"] in preflight.OPTION_COLORS and o.get("color") != preflight.OPTION_COLORS[o["name"]]]
+                 if o["name"] in colors and o.get("color") != colors[o["name"]]]
         report.add(ident + ".colors", "Appendix C", RECOMMENDATION, "{} values have the standard colors".format(field_name),
                    not wrong, "{} value(s) with another color".format(len(wrong)), "use the colors of Appendix C",
-                   ["{}: color {}, expected {}".format(o["name"], o.get("color"), preflight.OPTION_COLORS[o["name"]])
+                   ["{}: color {}, expected {}".format(o["name"], o.get("color"), colors[o["name"]])
                     for o in found.get("options") or [] if o["name"] in wrong]
                    or ["{}: {}".format(o["name"], o.get("color")) for o in found.get("options") or []
-                       if o["name"] in preflight.OPTION_COLORS])
+                       if o["name"] in colors])
 
 
 def check_views(report, data, definition=None):
@@ -243,7 +247,7 @@ def ticket(node):
 
     value = lambda key: ((node.get(key) or {}).get("name") or (node.get(key) or {}).get("text") or "").strip()
     result = {"number": content["number"], "title": content["title"], "open": content["state"] == "OPEN",
-              "type": (content.get("issueType") or {}).get("name", ""), "labels": labels}
+              "type": ticket_type.of_node(node, content) or "", "labels": labels}
 
     for key in SELECTS + TEXTS:
         result[key.lower()] = value(key)
@@ -261,8 +265,8 @@ def check_tickets(report, items):
         report.add("board.ticket." + ident, guide, strength, title, not bad, "{} ticket(s)".format(len(bad)), hint,
                    lines or ["{} ticket(s) on the board checked".format(len(tickets))])
 
-    add("type", "03 section 4.3", RULE, "every ticket has an issue type", [t for t in tickets if not t["type"]],
-        "set its Type", lambda t: "no issue type")
+    add("type", "03 section 4.3", RULE, "every ticket has a Type (an issue type, or the field Kind)",
+        [t for t in tickets if not t["type"]], "set its Type", lambda t: "no Type")
     add("size", "03 section 3", RULE, "every work ticket has a Size", [t for t in work if not t["size"]],
         "estimate it and set the Size", lambda t: "no Size")
     add("closed-status", "03 section 4.3", RULE, "a closed work ticket is Completed or Abandoned",
@@ -292,7 +296,7 @@ def check_tickets(report, items):
         [t for t in work if not t["labels"]], "add an Area label", lambda t: "no label")
 
 
-def main(argv, graphql=run_graphql):
+def main(argv, graphql=run_graphql, type_source=None):
     args = argv[1:]
     options = {}
     verbose = "--verbose" in args
@@ -318,7 +322,7 @@ def main(argv, graphql=run_graphql):
                    "no github.com origin remote; pass --repo owner/name", "")
     else:
         number = int(options["--board"]) if options.get("--board") else None
-        report = audit(repo, number, graphql)
+        report = audit(repo, number, graphql, None, type_source if type_source is not None else audit_common.type_source(repo))
 
     print(format_report(report, verbose))
 

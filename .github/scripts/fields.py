@@ -17,15 +17,16 @@ import sys
 
 import finalize
 import preflight
+import ticket_type
 from github_api import Client, GitHubError
 
 BUILT_IN = ("Status",)
 
 
-def plan(board):
+def plan(board, required=None):
     """(missing, differing): what to create as (name, kind, values), and the differences nobody here can change."""
     missing, differing = [], []
-    for name, (kind, values) in preflight.REQUIRED_FIELDS.items():
+    for name, (kind, values) in (preflight.REQUIRED_FIELDS if required is None else required).items():
         found = board.fields.get(name)
         if found is None:
             if name in BUILT_IN:
@@ -45,7 +46,9 @@ def create(run, project_client, board, missing):
     """Create each missing field. Returns the names created (or that would be, in a dry run)."""
     created = []
     for name, kind, values in missing:
-        options = [(value, preflight.OPTION_COLORS.get(value, "GRAY"), preflight.OPTION_DESCRIPTIONS.get(value, "")) for value in values]
+        colors, descriptions = ((ticket_type.COLORS, ticket_type.DESCRIPTIONS) if name == ticket_type.FIELD
+                                else (preflight.OPTION_COLORS, preflight.OPTION_DESCRIPTIONS))
+        options = [(value, colors.get(value, "GRAY"), descriptions.get(value, "")) for value in values]
         shown = f"{name} ({kind}" + (f": {', '.join(values)}" if values else "") + ")"
         run.do(f"create the field {shown}", project_client.create_field, board.id, name, kind, options)
         created.append(name)
@@ -67,7 +70,7 @@ def main(argv=None):
     if board is None:
         print("fields skipped: no board was identified (link one to the repository first)")
         return 1
-    missing, differing = plan(board)
+    missing, differing = plan(board, preflight.required_fields(report.type_source))
     run = finalize.Runner("--apply" not in args)
     try:
         create(run, project_client, board, missing)

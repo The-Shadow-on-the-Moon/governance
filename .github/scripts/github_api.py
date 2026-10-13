@@ -36,6 +36,8 @@ class Client:
     def __init__(self, token, repo, transport=None, api=API):
         self.token, self.repo, self.api = token, repo, api
         self.transport = transport or _urllib_transport
+        self.owner_kind = "orgs"  # the REST path of the owner of the board: "orgs", or "users" for a personal account
+        self.kind_reader = None  # number -> Kind of the board item, set when the Type lives in the field Kind
         self.last_headers = {}
 
     def request(self, method, path, body=None):
@@ -71,6 +73,9 @@ class Client:
             raise GitHubError(200, "; ".join(error["message"] for error in payload["errors"]))
         return payload["data"]
 
+    def owner_path(self):
+        return f"/{self.owner_kind}/{self.repo.split('/')[0]}"
+
     def repo_path(self, path):
         return f"/repos/{self.repo}{path}"
 
@@ -80,11 +85,13 @@ class Client:
 
     def issue_type(self, number):
         issue_type = self.issue(number).get("type")
-        return issue_type["name"] if issue_type else None
+        if issue_type:
+            return issue_type["name"]
+        return self.kind_reader(number) if self.kind_reader else None
 
     def create_issue(self, title, body, issue_type=None, labels=(), assignees=()):
         data = {"title": title, "body": body, "labels": list(labels), "assignees": list(assignees)}
-        if issue_type:
+        if issue_type and self.kind_reader is None:  # with the field Kind there are no issue types: the caller sets Kind
             data["type"] = issue_type
         return self.request("POST", self.repo_path("/issues"), data)
 
@@ -185,15 +192,13 @@ class Client:
         query = "query($id:ID!){node(id:$id){... on ProjectV2{fields(first:50){nodes{... on ProjectV2FieldCommon{databaseId name}}}}}}"
         ids = {f["name"]: f["databaseId"] for f in self.graphql(query, {"id": project_id})["node"]["fields"]["nodes"]
                if f and f.get("name") and f.get("databaseId")}
-        owner = self.repo.split("/")[0]
-        for f in self.request("GET", f"/orgs/{owner}/projectsV2/{number}/fields?per_page=100") or []:
+        for f in self.request("GET", f"{self.owner_path()}/projectsV2/{number}/fields?per_page=100") or []:
             ids.setdefault(f["name"], f["id"])
         return ids
 
     def create_view(self, number, body):
         """Create a view (REST). `body`: name, layout, filter and, as numeric field ids, visible_fields, sort_by, group_by, vertical_group_by."""
-        owner = self.repo.split("/")[0]
-        return self.request("POST", f"/orgs/{owner}/projectsV2/{number}/views", body)
+        return self.request("POST", f"{self.owner_path()}/projectsV2/{number}/views", body)
 
     def delete_view(self, view_id):
         return self.graphql("mutation($v:ID!){deleteProjectV2View(input:{viewId:$v}){clientMutationId}}", {"v": view_id})

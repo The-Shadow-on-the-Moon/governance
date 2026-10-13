@@ -22,6 +22,7 @@ import finalize
 import preflight
 import versions
 import failures
+import ticket_type
 from github_api import Client, GitHubError
 
 THRESHOLDS = {"Review": timedelta(days=7), "OnDeck": timedelta(days=30), "InProgress": timedelta(days=30),
@@ -33,7 +34,7 @@ FLAG_MARKER = "<!-- attention:"  # every flag comment the automation writes star
 SITUATION = re.compile(r"<!-- attention:watch situation=(\S+) -->")
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
-         "pageInfo{hasNextPage endCursor} nodes{id updatedAt "
+         "pageInfo{hasNextPage endCursor} nodes{id updatedAt " + ticket_type.SELECTION +
          "content{... on Issue{number issueType{name} comments(last:30){nodes{createdAt body}}}} "
          "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "waiting:fieldValueByName(name:\"Waiting\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
@@ -54,7 +55,7 @@ def board_tickets(project_client, board):
             if not content.get("number"):
                 continue
             found.append({"item": node["id"], "number": content["number"], "updated": node["updatedAt"],
-                          "type": (content.get("issueType") or {}).get("name"),
+                          "type": ticket_type.of_node(node, content),
                           "comments": (content.get("comments") or {}).get("nodes") or [],
                           "status": (node.get("status") or {}).get("name"),
                           "waiting": (node.get("waiting") or {}).get("name"),

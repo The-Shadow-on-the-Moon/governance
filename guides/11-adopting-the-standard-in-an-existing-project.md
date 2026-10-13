@@ -136,10 +136,13 @@ project still works (the build, the tests, a push).
 
 Administrator. These settings do not change the code, and most can be undone, so they come first.
 
-1. **Ownership.** The repository belongs to an organization, because issue types exist only there. If it does
-   not, transfer it (the administrator decides who owns it; links to the old address are redirected by the
-   host, but clones should update their remote).
-2. **Issue types and labels.** Create the eight issue types and the 14 Area labels and `dummy`
+1. **Ownership.** Issue types exist only in an organization. If the repository belongs to a person, either
+   transfer it to an organization (the administrator decides who owns it; links to the old address are
+   redirected by the host, but clones should update their remote), or keep it and let the Type live in the
+   board field Kind (guide on new-project bootstrap, section 5.1); the audit then judges the field and not the
+   issue types.
+2. **Issue types and labels.** Create the eight issue types (not for a project that keeps the Type in the
+   field Kind) and the 14 Area labels and `dummy`
    (guide on new-project bootstrap, section 5). Before deleting a label that is not on the list, move its
    issues to the Area label that replaces it, because deleting a label removes it from every issue that has
    it.
@@ -240,14 +243,14 @@ and closed state of the issues.
 
 1. **Bring the issues onto the board.** Add every open issue, and the closed issues the team still needs (for
    example those the old changelog cites). Older closed issues may stay off the board.
-2. **Give each one its fields.** The issue type, the Area label, the Size and, for a closed issue, the Status
+2. **Give each one its fields.** The Type (the issue type, or the field Kind), the Area label, the Size and, for a closed issue, the Status
    *Completed* or *Abandoned* and a Resolution. An open issue is not *Completed* or *Abandoned*.
 3. **Mark late tickets.** A ticket written now to document work that happened before the process is given the
    Origin *Backdated*; one written after the work to replace a `REF` is *Backfilled* and keeps the `REF` token
    (guide on project structure, section 4.3).
 4. **Open work.** Open issues continue as they were, on the board, from their Status.
 
-- **Rule:** every ticket on the board has an issue type, and every work ticket has a Size (guide on project
+- **Rule:** every ticket on the board has a Type (an issue type, or Kind), and every work ticket has a Size (guide on project
   structure, section 3).
 - **Rule:** a closed work ticket is *Completed* or *Abandoned*, and Resolution is set exactly when it is.
 - **Rule:** a ticket written after the work is not given dates or builds it never had.
@@ -330,8 +333,9 @@ next push.
 
 ### 5.4 When the plan lacks a feature
 
-If the hosting plan does not offer branch protection, a wiki for a private repository, or issue types, the
-matching findings are *not applicable* and are recorded as such. The finding stays in the report as a reminder
+If the hosting plan does not offer branch protection or a wiki for a private repository, the matching
+findings are *not applicable* and are recorded as such. A plan without issue types (a personal account) keeps
+the Type in the field Kind instead (stage 1), and its findings are judged for the field. The finding stays in the report as a reminder
 and is revisited when the plan changes.
 
 ---

@@ -18,7 +18,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from audit_common import (Report, RULE, RECOMMENDATION, gh_api, remote_repo, appendix_c, format_report)  # noqa: E402
+from audit_common import (Report, RULE, RECOMMENDATION, Variables, gh_api, remote_repo, appendix_c, format_report)  # noqa: E402
+import ticket_type  # noqa: E402
 
 GUIDE = "10 section 3"
 SETTINGS = (
@@ -42,16 +43,39 @@ def audit(repo, gh=gh_api):
                    "run `gh auth login` and use an account with access", ["gh api repos/{} returned status {}".format(repo, status)])
         return report
 
-    check_settings(report, info)
+    source = check_type_source(report, repo, gh, info)
+    check_settings(report, info, source)
     check_protection(report, repo, gh)
     check_actions(report, repo, gh)
     check_token_and_board(report, repo, gh)
     check_labels(report, repo, gh)
-    check_issue_types(report, repo, gh)
+    check_issue_types(report, repo, gh, source)
     return report
 
 
-def check_settings(report, info):
+def check_type_source(report, repo, gh, info):
+    """Check the variable TYPE_SOURCE (if it is set it must name a source) and return the source that applies."""
+    status, data = gh("repos/{}/actions/variables/{}".format(repo, ticket_type.VARIABLE))
+    source = ticket_type.source(info, Variables(repo, gh))
+    value = data.get("value") if status == 200 and isinstance(data, dict) else None
+
+    if status not in (200, 404):
+        report.add("github.type-source", "10 section 5.1", RULE, "the Type source is `issue-type` or `field`", None,
+                   "the variable {} could not be read (status {})".format(ticket_type.VARIABLE, status), "",
+                   ["gh api repos/{}/actions/variables/{} returned status {}".format(repo, ticket_type.VARIABLE, status)])
+    else:
+        report.add("github.type-source", "10 section 5.1", RULE, "the Type source is `issue-type` or `field`",
+                   value is None or value.strip() in ticket_type.SOURCES,
+                   "{} is {!r}".format(ticket_type.VARIABLE, value),
+                   "set the repository variable {} to `issue-type` or `field`, or delete it".format(ticket_type.VARIABLE),
+                   ["{} = {}".format(ticket_type.VARIABLE, value) if value is not None
+                    else "{} is not set: the source is {} (the owner is {})".format(
+                        ticket_type.VARIABLE, source, (info.get("owner") or {}).get("type"))])
+
+    return source
+
+
+def check_settings(report, info, source=ticket_type.ISSUE_TYPE):
     for key, wanted, title, strength in SETTINGS:
         value = info.get(key)
         report.add("github.setting." + key, GUIDE, strength, title, None if value is None else value == wanted,
@@ -63,10 +87,10 @@ def check_settings(report, info):
                "the default branch is {!r}".format(branch), "rename it to `main` and make it the default",
                ["default_branch = {}".format(branch)])
     report.add("github.setting.owner-type", "10 section 5.1", RULE,
-               "the repository belongs to an organization (issue types need one)",
-               (info.get("owner") or {}).get("type") == "Organization",
+               "the repository belongs to an organization (issue types need one), or the Type is kept in the field Kind",
+               (info.get("owner") or {}).get("type") == "Organization" or source == ticket_type.FIELD_SOURCE,
                "the owner is {!r}".format((info.get("owner") or {}).get("type")),
-               "move the repository to an organization",
+               "move the repository to an organization, or keep the Type in the field Kind (variable TYPE_SOURCE = field)",
                ["owner {} is of type {}".format((info.get("owner") or {}).get("login"),
                                                 (info.get("owner") or {}).get("type"))])
 
@@ -171,7 +195,12 @@ def check_labels(report, repo, gh):
                 for n in wrong] or ["{}: {}".format(n, wanted[n][0]) for n in sorted(wanted) if n in found])
 
 
-def check_issue_types(report, repo, gh):
+def check_issue_types(report, repo, gh, source=ticket_type.ISSUE_TYPE):
+    if source == ticket_type.FIELD_SOURCE:
+        report.add("github.issue-types.exact", "10 section 5.1", RULE, "the eight issue types exist", True, "",
+                   "", ["not needed: the Type is kept in the board field {}".format(ticket_type.FIELD)])
+        return
+
     _, wanted = appendix_c()
     owner = repo.split("/")[0]
     status, types = gh("orgs/{}/issue-types".format(owner))

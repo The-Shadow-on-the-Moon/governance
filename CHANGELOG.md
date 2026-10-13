@@ -1,6 +1,41 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013024346 (branch audit-tools)
+#### #182 — Automation: read the Type from the issue type or the Kind field
+- .github/scripts/ticket_type.py: new. Decides where the Type of a ticket comes from (the repository variable `TYPE_SOURCE`, or the owner of the repository), reads it (the issue type of the issue, or else the Kind of its board item) and holds the colors and descriptions of the options of Kind.
+- .github/scripts/github_api.py: `Client.issue_type` falls back to the Kind of the issue's board item when there is no issue type; the client keeps its reader, and the owner's REST path for the board.
+- .github/scripts/conditions.py, dates.py, release.py, version_format.py, watch.py: the board queries also ask for Kind, and the Type of an item is its issue type or its Kind.
+- .github/scripts/preflight.py: decides the source, requires the field Kind and its eight values when the source is the field, and prints where the Type comes from. .github/scripts/fields.py creates Kind (with the colors and descriptions of the Type table of appendix C).
+- tests/test_ticket_type.py: new, with the source, the readers, the preflight, the fields and the board queries; tests/test_tools.py checks the Kind row of the bootstrap table and the colors and descriptions against the guides. .github/scripts/check_manifest.py lists the new test; the manifest is rewritten (standard V0.12.1, provisional).
+- doc/wiki/Automation.md: the new script and how the preflight decides the source.
+
+#### #183 — Automation: set the Kind of Version and Alert tickets
+- .github/scripts/github_api.py: with the field Kind, `create_issue` sends no issue type. .github/scripts/finalize.py and alerts.py set Kind to Version or Alert on the board item of the Version and Alert tickets they create.
+- tests/test_ticket_type.py: both modes, for the Version ticket, the Alert and the client.
+
+#### #184 — Board views and API paths for the Kind field and personal accounts
+- .github/scripts/views.py: with the field Kind the filters use `kind:` and the column Type is the column Kind, translated from the same views.json (`for_source`).
+- .github/scripts/github_api.py and preflight.py: the REST paths of the board's fields and views are `/users/{owner}/…` for a board owned by a personal account.
+- tests/test_views.py and tests/test_ticket_type.py: the translation, the paths.
+- doc/wiki/Board-Views.md: the Kind column and qualifier.
+
+#### #185 — Audit: checks that depend on where the Type comes from
+- tools/audit_common.py: `type_source` and `Variables` (the variable and the owner, read with `gh`). tools/audit_github.py: the new check `github.type-source`; the owner check and the issue types check follow the source. tools/audit_board.py: the fields (Kind), the views and the tickets follow the source. tools/audit.py passes the source to the board audit.
+- tests/test_audit_github.py and tests/test_audit_board.py: both sources, an invalid or unreadable variable.
+- guides/appendix-g-audit-findings-and-fixes.md and doc/wiki/Audit-Tools.md: the new check and the changed ones.
+
+#### #187 — views.py --delete ends with a NameError
+- .github/scripts/views.py: the deletion no longer ends with a NameError; tests/test_views.py: the command is run with `--delete`.
+
+#### #136 — Address implementation of issue type in personal accounts
+- The Type of a ticket has one source, chosen by the owner of the repository: the native issue type for an organization, or, for a personal account (which has no issue types), a board field **Kind** with the same eight values; the repository variable `TYPE_SOURCE` (`issue-type` or `field`) names it. Everything else is the same in both.
+- guides/10-new-project-bootstrap.md: section 5.1 states the rule and the variable and recommends an organization for a team; section 6.1 adds the field Kind to the table of board fields (only for the field source); the checklist and the note on where the board lives are adjusted.
+- guides/11-adopting-the-standard-in-an-existing-project.md: stage 1 offers, for a project owned by a person, to transfer it or to keep the Type in Kind; the tickets, the rules and section 5.4 speak of "a Type" and say a personal account keeps it in Kind.
+- guides/01-concepts-and-vocabulary.md, 02, 03, 09, appendices C, E and F and doc/wiki/Ticket-Model.md: the Type is the issue type or the field Kind; appendix F says the column and the filter qualifier for that source.
+- The automation, views and audit support for the field is in #182 to #185; appendix G and the audit wiki page follow #185.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
 ### Build 20261013021053 (branch audit-tools)
 #### #179 — Docs: README and Automation page agree with the repo
 - README.md: the guides are 01 to 11 and the appendices A to G; the `tools/` row names every audit script.

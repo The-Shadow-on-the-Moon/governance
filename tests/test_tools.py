@@ -491,6 +491,10 @@ class GuideValueTests(unittest.TestCase):
             listed = [v.strip() for v in values.strip().split(", ") if v.strip()]
             for name in [n.strip() for n in names.split(",")]:
                 from_guide[name] = (kinds[kind], listed or None)
+        ticket_type = self.automation("ticket_type")
+        kind = from_guide.pop(ticket_type.FIELD)  # only when the Type lives in the field
+        self.assertEqual(kind[0], "SINGLE_SELECT")
+        self.assertEqual([re.sub(r" \(.*\)$", "", v) for v in kind[1]], ticket_type.VALUES)
         self.assertEqual(from_guide, dict(preflight.REQUIRED_FIELDS))
         self.assertEqual(list(from_guide), list(preflight.REQUIRED_FIELDS))
 
@@ -511,6 +515,16 @@ class GuideValueTests(unittest.TestCase):
                 descriptions[name] = re.sub(r"[*`]", "", meaning) if title != "Size" else f"Estimated effort: {meaning}."
         self.assertEqual(colors, dict(preflight.OPTION_COLORS))
         self.assertEqual(descriptions, dict(preflight.OPTION_DESCRIPTIONS))
+        ticket_type = self.automation("ticket_type")
+        type_colors, type_descriptions = {}, {}
+        for section in re.split(r"^## ", text, flags=re.M)[1:]:
+            title, _, body = section.partition(chr(10))
+            if title == "Type":
+                for name, color, meaning in re.findall(r"^\| \*\*(.*?)\*\* \| (.*?) \| (.*?) \|", body, re.M):
+                    type_colors[name] = color
+                    type_descriptions[name] = re.sub(r"[*`]", "", meaning)
+        self.assertEqual(type_colors, ticket_type.COLORS)
+        self.assertEqual(type_descriptions, ticket_type.DESCRIPTIONS)
         self.assertLessEqual(set(colors.values()), {"GRAY", "BLUE", "GREEN", "YELLOW", "ORANGE", "RED", "PINK", "PURPLE"})
         areas = re.findall(r"^\| `(\w+)` \| ([0-9A-F]{6}) \|", text, re.M)
         self.assertEqual(len(areas), 15)  # the 14 Area labels and dummy

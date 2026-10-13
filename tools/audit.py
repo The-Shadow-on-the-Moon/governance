@@ -40,6 +40,7 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import audit_board  # noqa: E402
+import audit_common  # noqa: E402
 import audit_files  # noqa: E402
 import audit_git  # noqa: E402
 import audit_github  # noqa: E402
@@ -52,7 +53,7 @@ from audit_common import (ACCEPTED, FAIL, NOT_CHECKABLE, PASS, RULE, RECOMMENDAT
 APPENDIX_G = "guides/appendix-g-audit-findings-and-fixes.md"
 
 
-def audit(root, offline=False, repo=None, board=None, github=None, graphql=None, since=None):
+def audit(root, offline=False, repo=None, board=None, github=None, graphql=None, since=None, type_source=None):
     """The reports of every audit, in the order files, git, github, board. `since` is the cut-over for the history."""
     reports = [audit_files.audit(root), audit_git.audit(root, since)]
 
@@ -68,7 +69,9 @@ def audit(root, offline=False, repo=None, board=None, github=None, graphql=None,
         return reports + [missing]
 
     reports.append((github or audit_github.audit)(repo))
-    reports.append(audit_board.audit(repo, board, graphql or audit_board.run_graphql))
+    if type_source is None:  # read from the repository, unless the readers are replaced (as in the tests)
+        type_source = audit_common.type_source(repo) if github is None and graphql is None else "issue-type"
+    reports.append(audit_board.audit(repo, board, graphql or audit_board.run_graphql, None, type_source))
     return reports
 
 

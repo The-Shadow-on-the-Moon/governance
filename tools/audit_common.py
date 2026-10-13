@@ -18,7 +18,12 @@ import json
 import os
 import re
 import subprocess
+import sys
 from dataclasses import dataclass, field, asdict
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".github", "scripts"))
+
+import ticket_type  # noqa: E402
 
 PASS = "pass"
 FAIL = "fail"
@@ -111,6 +116,23 @@ def gh_api(*args):
         data = [item for page in data for item in (page if isinstance(page, list) else [page])]
 
     return 200, data
+
+
+class Variables:
+    """The repository variables, read with `gh`, in the form ticket_type.source() asks for."""
+
+    def __init__(self, repo, gh=gh_api):
+        self.repo, self.gh = repo, gh
+
+    def get_variable(self, name):
+        status, data = self.gh("repos/{}/actions/variables/{}".format(self.repo, name))
+        return data.get("value") if status == 200 and isinstance(data, dict) else None
+
+
+def type_source(repo, gh=gh_api):
+    """Where the Type of a ticket comes from for the repository: `issue-type` or `field` (guide 10, section 5.1)."""
+    status, info = gh("repos/{}".format(repo))
+    return ticket_type.source(info if status == 200 and isinstance(info, dict) else None, Variables(repo, gh))
 
 
 def remote_repo(root):

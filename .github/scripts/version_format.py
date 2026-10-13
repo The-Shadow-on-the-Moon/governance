@@ -16,13 +16,14 @@ import sys
 import finalize
 import preflight
 import failures
+import ticket_type
 from github_api import Client, GitHubError
 from versions import Version, VersionError
 
 SKIPPED_TYPES = ("Alert",)
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
-         "pageInfo{hasNextPage endCursor} nodes{id content{... on Issue{number issueType{name}}} "
+         "pageInfo{hasNextPage endCursor} nodes{id " + ticket_type.SELECTION + "content{... on Issue{number issueType{name}}} "
          "version:fieldValueByName(name:\"Version\"){... on ProjectV2ItemFieldTextValue{text}}}}}}}")
 
 
@@ -36,7 +37,7 @@ def board_items(project_client, board):
             if not content.get("number"):
                 continue
             found.append({"item": node["id"], "number": content["number"],
-                          "type": (content.get("issueType") or {}).get("name"),
+                          "type": ticket_type.of_node(node, content),
                           "version": ((node.get("version") or {}).get("text") or "").strip()})
         if not page["pageInfo"]["hasNextPage"]:
             return found

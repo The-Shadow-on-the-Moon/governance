@@ -281,7 +281,7 @@ is defined in *Concepts*.)
 A version is not a release. Every merge creates a version; declaring one of them a release is a
 separate, deliberate step (section 2.2).
 
-> **In GitHub.** The Type is the issue's native Issue Type. A `## WIP-Version` heading with a marker
+> **In GitHub.** The Type is the issue's native Issue Type (or its board field Kind, in a project owned by a personal account). A `## WIP-Version` heading with a marker
 > sits at the top of `CHANGELOG.md`. The finalizing job reads the ticket numbers listed in that
 > section, looks up each issue's Type, applies any marker, and renames the heading to the resulting
 > version on merge.

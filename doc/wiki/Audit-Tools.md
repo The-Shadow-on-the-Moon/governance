@@ -121,7 +121,7 @@ scripts (`audit_files.py` and the others) print to the screen only.
 |---|---|---|
 | **Files** (`audit_files.py`) | The places every project has (readme, `CHANGELOG.md`, `doc/wiki/`, `.githooks/`, `.github/`, `AGENTS.md`, `.gitignore`, `.gitattributes`, license); the `* text=auto eol=lf` line; the changelog (Unix line endings, no *Known bugs* or *Planned* sections, one open `WIP-Version` heading on top with a valid marker, version headings and their order, build and ticket headings); the hooks and whether they are active in the clone; the wiki (`Home.md`, page names); the workflow, pull request template, manifest and tests; that `AGENTS.md` points to the guides. | A clone. |
 | **Git** (`audit_git.py`) | `main` exists and is the only integration line; branch names are kebab-case without `/` (or the hotfix form); tag names follow the namespaces; release tags are on `main` and name a changelog version; work reaches `main` through merge commits; no `fix:` or `feat:` subject prefix; no assistant co-author or "generated with" line. | A clone. Run `git fetch` first to include the remote branches. |
-| **GitHub** (`audit_github.py`) | Merge methods, automatic branch deletion, default branch, issues, projects and wiki; that the owner is an organization; protection of `main` and the administrator bypass; Actions; the secret `PROJECT_TOKEN` and the variable `BOARD_NUMBER`; the labels (the 14 Area labels and `dummy`, described, standard colors); the eight issue types. | `gh`; administration access for protection and secrets. |
+| **GitHub** (`audit_github.py`) | Merge methods, automatic branch deletion, default branch, issues, projects and wiki; that the owner is an organization (or the Type is kept in the field Kind) and the variable `TYPE_SOURCE` is valid; protection of `main` and the administrator bypass; Actions; the secret `PROJECT_TOKEN` and the variable `BOARD_NUMBER`; the labels (the 14 Area labels and `dummy`, described, standard colors); the eight issue types. | `gh`; administration access for protection and secrets. |
 | **Board** (`audit_board.py`) | The board linked to the repository; every field with its kind, values and colors; the saved views against `.github/views.json`; the tickets (issue type, Size, Status against open or closed, Resolution, Origin and REF, the board form of Version, Version tickets, Alerts, Area labels). Throwaway (`dummy`) tickets and pull requests are skipped. | `gh` with the `project` scope (`gh auth refresh -s project`). |
 
 The tables the audits compare with are not copied: the fields, their values and colors come from
@@ -233,7 +233,8 @@ If the repository cannot be read, the only check is `github.repository` (R, 10 �
 | `github.setting.has_projects` | R | 10 §3 | Projects are enabled. |
 | `github.setting.has_wiki` | r | 10 §3 | The wiki is enabled. |
 | `github.setting.default_branch` | R | 10 §3 | The default branch is `main`. |
-| `github.setting.owner-type` | R | 10 §5.1 | The owner is an organization (issue types exist only there). |
+| `github.setting.owner-type` | R | 10 §5.1 | The owner is an organization (issue types exist only there), or the Type is kept in the board field Kind. |
+| `github.type-source` | R | 10 §5.1 | The repository variable `TYPE_SOURCE`, if it is set, is `issue-type` or `field`. When it is not set, the source is `issue-type` for an organization and `field` for a personal account. The other checks follow the source. |
 | `github.protection.pull-request` | r | 10 §3 | `main` requires a pull request or status checks, through branch protection or an active branch ruleset. Not-checkable when neither can be read. |
 | `github.protection.up-to-date` | r | 10 §3 | Branch protection requires branches to be up to date before merging. |
 | `github.protection.admin-bypass` | r | 10 §3 | The protection does not apply to administrators (the bypass is left open). |
@@ -243,7 +244,7 @@ If the repository cannot be read, the only check is `github.repository` (R, 10 �
 | `github.labels.exact` | R | 10 §5.2 | The repository's labels are exactly the 14 Area labels and `dummy` of Appendix C: none extra, none missing. |
 | `github.labels.descriptions` | R | 10 §5.2 | Each of those labels has a non-empty description. |
 | `github.labels.colors` | r | 10 §5.2 | Each of those labels has its Appendix C color. |
-| `github.issue-types.exact` | R | 10 §5.1 | The organization has all eight issue types of Appendix C (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert), enabled. |
+| `github.issue-types.exact` | R | 10 §5.1 | The organization has all eight issue types of Appendix C (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert), enabled. With the source `field` it is passed as not needed, and the next two checks are not made. |
 | `github.issue-types.descriptions` | R | 10 §5.1 | Each issue type has a non-empty description. |
 | `github.issue-types.colors` | r | 10 §5.2 | Each issue type has its Appendix C color. |
 
@@ -259,14 +260,14 @@ become hyphens).
 | Id | Strength | Guide | What is verified |
 |---|---|---|---|
 | `board.linked` | R | 10 §6.2 | A board is linked to the repository (the one given by `--board`, else the first). Nothing else runs without it. |
-| `board.field.<field>` | R | 10 §6.2 | The field exists on the board. |
+| `board.field.<field>` | R | 10 §6.2 | The field exists on the board. With the source `field`, Kind is one of the fields, with the eight values of the Type. |
 | `board.field.<field>.type` | R | 10 §6.2 | The field is of the right kind: single select, text or date (Build and Version must be text, not number). |
 | `board.field.<field>.values` | R | 10 §6.2 | A single-select field has exactly the values of the table: none missing, none extra. |
 | `board.field.<field>.colors` | r | Appendix C | Each value that has a standard color has it. |
 | `board.views.present` | R | 10 §6.2 | Every view named in `.github/views.json` exists on the board. |
 | `board.views.no-extra` | r | 10 §6.2 | The board has no view that `views.json` does not name. |
 | `board.views.match` | R | 10 §6.2 | Each view equals its definition: layout, filter, grouping, sorting and visible columns. Names the view and the differing keys. |
-| `board.ticket.type` | R | 03 §4.3 | Every ticket has an issue type. |
+| `board.ticket.type` | R | 03 §4.3 | Every ticket has a Type: an issue type, or a value in the field Kind. |
 | `board.ticket.size` | R | 03 §3 | Every work ticket (not Version or Alert) has a Size. |
 | `board.ticket.closed-status` | R | 03 §4.3 | A closed work ticket has Status *Completed* or *Abandoned*. |
 | `board.ticket.open-status` | R | 03 §4.3 | An open work ticket does not have Status *Completed* or *Abandoned*. |

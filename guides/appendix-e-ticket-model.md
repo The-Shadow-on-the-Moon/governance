@@ -16,7 +16,7 @@ code has shipped).
 
 | Space | Question | Where it lives (GitHub) | Set by |
 |---|---|---|---|
-| **Type** | What sort of ticket is this, and why is the change being made? | the issue type | a person (the automation for Version and Alert tickets) |
+| **Type** | What sort of ticket is this, and why is the change being made? | the issue type (or the board field Kind) | a person (the automation for Version and Alert tickets) |
 | **Area** | What kind of work does it involve? | labels, several per ticket | a person |
 | **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | board fields | a person |
 | **Progress** | Where is the work? | the board's Status field | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |

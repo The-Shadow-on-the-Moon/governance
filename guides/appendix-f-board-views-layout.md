@@ -60,8 +60,9 @@ second field). The fields below are the ones drawn on each card.
 ## 4. Notes
 
 - **Type** is the issue type, not a board field. The API does not report it among a view's visible fields,
-  so `views.py` does not compare it, and the order of the columns is not compared either (only which fields
-  are shown).
+  so `views.py` does not compare it. When the Type source is the field Kind, the column is *Kind*, a board
+  field like the others, and the filters use `kind:` where the views use `type:`. The order of the columns is
+  not compared either (only which fields are shown).
 - The sort and grouping of a view can only be set when it is created (see *Issues and the board in
   practice*, section 2.3), so changing them recreates the view. Recreating All also loses its two hand-made
   settings (sort by Created, ascending, and *Show hierarchy* off).

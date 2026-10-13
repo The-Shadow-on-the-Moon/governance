@@ -80,9 +80,35 @@ class AuditGithubTests(unittest.TestCase):
         self.assertTrue({"github.setting.allow_squash_merge", "github.setting.allow_rebase_merge",
                          "github.setting.delete_branch_on_merge", "github.setting.default_branch"} <= bad)
 
-    def test_personal_account_owner(self):
+    def test_personal_account_owner_with_the_issue_type_source_fails(self):
         self.data["repos/org/proj"]["owner"] = {"type": "User"}
+        self.data["repos/org/proj/actions/variables/TYPE_SOURCE"] = {"value": "issue-type"}
         self.assertIn("github.setting.owner-type", failed(self.audit()))
+
+    def test_personal_account_owner_keeps_the_type_in_the_field_by_default(self):
+        self.data["repos/org/proj"]["owner"] = {"type": "User"}
+        del self.data["orgs/org/issue-types"]
+        report = self.audit()
+        self.assertEqual(failed(report), set())
+        ids = [c.id for c in report.checks]
+        self.assertIn("github.issue-types.exact", ids)
+        self.assertNotIn("github.issue-types.descriptions", ids)
+        self.assertNotIn("github.issue-types.colors", ids)
+
+    def test_an_organization_can_choose_the_field(self):
+        self.data["repos/org/proj/actions/variables/TYPE_SOURCE"] = {"value": "field"}
+        ids = [c.id for c in self.audit().checks]
+        self.assertNotIn("github.issue-types.descriptions", ids)
+
+    def test_the_type_source_variable_must_name_a_source(self):
+        self.data["repos/org/proj/actions/variables/TYPE_SOURCE"] = {"value": "labels"}
+        self.assertIn("github.type-source", failed(self.audit()))
+        self.data["repos/org/proj/actions/variables/TYPE_SOURCE"] = {"value": "field"}
+        self.assertNotIn("github.type-source", failed(self.audit()))
+
+    def test_an_unset_type_source_passes_and_an_unreadable_one_is_not_checkable(self):
+        self.assertNotIn("github.type-source", failed(self.audit()))
+        self.assertIn("github.type-source", unknown(self.audit({"repos/org/proj/actions/variables/TYPE_SOURCE": 500})))
 
     def test_protection_details(self):
         protection = self.data["repos/org/proj/branches/main/protection"]

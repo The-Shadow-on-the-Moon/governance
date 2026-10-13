@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 import audit_board  # noqa: E402
 import audit_common  # noqa: E402
 import preflight  # noqa: E402
+import ticket_type  # noqa: E402
 import views  # noqa: E402
 
 
@@ -44,10 +45,13 @@ def view_nodes():
     return nodes
 
 
-def item(number, title="A ticket", state="OPEN", issue_type="Feature", labels=("tool",), **fields):
+def item(number, title="A ticket", state="OPEN", issue_type="Feature", labels=("tool",), kind=None, **fields):
     node = {"content": {"__typename": "Issue", "number": number, "title": title, "state": state,
                         "issueType": {"name": issue_type} if issue_type else None,
                         "labels": {"nodes": [{"name": l} for l in labels]}}}
+
+    if kind:
+        node["kind"] = {"name": kind}
 
     for key, value in fields.items():
         node[key] = {"text": value} if key in audit_board.TEXTS else {"name": value}
@@ -96,6 +100,62 @@ class Fake:
 
 def failed(report):
     return {c.id for c in report.checks if c.result == audit_common.FAIL}
+
+
+class FieldSourceTests(unittest.TestCase):
+    """A board whose Type lives in the field Kind (a personal account, which has no issue types)."""
+
+    def setUp(self):
+        self.fake = Fake()
+        kind = {"name": "Kind", "dataType": "SINGLE_SELECT",
+                "options": [{"name": v, "color": ticket_type.COLORS[v], "description": ""} for v in ticket_type.VALUES]}
+        self.fake.fields = self.fake.fields + [kind]
+        self.fake.views = []
+        for entry in views.for_source(views.load_definition(), "field"):
+            state = views.desired_state(entry)
+            self.fake.views.append({
+                "id": "V_" + entry["name"], "number": 1, "name": entry["name"], "layout": views.LAYOUTS[entry["layout"]],
+                "filter": state["filter"],
+                "groupByFields": {"nodes": [{"name": state["group_by"]}] if state["group_by"] else []},
+                "verticalGroupByFields": {"nodes": [{"name": state["vertical_group_by"]}] if state["vertical_group_by"] else []},
+                "sortByFields": {"nodes": [{"field": {"name": f}, "direction": d.upper()} for f, d in state["sort_by"]]},
+                "visibleFields": {"nodes": [{"name": f} for f in state.get("visible_fields", [])]}})
+        self.fake.items = [item(1, issue_type=None, kind="Feature", Status="InProgress", Size="M"),
+                           item(3, title="Version 000.001.000", issue_type=None, kind="Version", labels=(),
+                                Status="Completed", Resolution="Done"),
+                           item(4, issue_type=None, kind="Alert", labels=(), Priority="Critical", Status="ToDo")]
+
+    def audit(self):
+        return audit_board.audit("org/proj", None, self.fake, None, "field")
+
+    def test_a_conforming_board_passes(self):
+        report = self.audit()
+        self.assertEqual(failed(report), set())
+        self.assertEqual(unknown(report), set())
+        self.assertIn("board.field.kind.values", [c.id for c in report.checks])
+
+    def test_the_issue_type_source_does_not_look_for_kind(self):
+        ids = [c.id for c in audit_board.audit("org/proj", None, Fake()).checks]
+        self.assertNotIn("board.field.kind", ids)
+
+    def test_the_field_is_required(self):
+        self.fake.fields = [f for f in self.fake.fields if f["name"] != "Kind"]
+        self.assertIn("board.field.kind", failed(self.audit()))
+
+    def test_the_values_and_colors_of_kind_are_checked(self):
+        kind = [f for f in self.fake.fields if f["name"] == "Kind"][0]
+        kind["options"] = kind["options"][:-1]
+        self.assertIn("board.field.kind.values", failed(self.audit()))
+        kind["options"] = [{"name": v, "color": "GRAY", "description": ""} for v in ticket_type.VALUES]
+        self.assertIn("board.field.kind.colors", {c.id for c in self.audit().checks if c.result == audit_common.FAIL})
+
+    def test_a_ticket_without_a_kind_has_no_type(self):
+        self.fake.items.append(item(9, issue_type=None, Status="InProgress", Size="S"))
+        self.assertIn("board.ticket.type", failed(self.audit()))
+
+    def test_the_views_are_judged_with_kind(self):
+        self.assertNotIn("board.views.match", failed(self.audit()))
+        self.assertIn("board.views.match", failed(audit_board.audit("org/proj", None, self.fake, None, "issue-type")))
 
 
 def unknown(report):

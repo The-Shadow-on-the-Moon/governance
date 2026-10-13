@@ -21,7 +21,7 @@ Each field answers one question, and the fields are kept separate on purpose.
 | **Start date**, **End date** | When did the work actually start and end? | the automation |
 | **Fix** | Which of the rules that span fields do its fields break? | the automation |
 
-Judgment belongs to people and facts belong to the automation.
+Type lives in the native issue type, or, for a project owned by a personal account (which has no issue types), in the board field **Kind** with the same eight values. Judgment belongs to people and facts belong to the automation.
 
 ## The life of a work ticket
 

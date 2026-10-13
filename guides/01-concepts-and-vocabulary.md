@@ -282,9 +282,10 @@ other guides define.
 
 | Term | What it means | See |
 |---|---|---|
-| **Organization** | The account that owns the repository and the board. The standard needs one, because issue types are an organization feature. | new-project bootstrap, section 5 |
+| **Organization** | The account that owns the repository and the board. Issue types are an organization feature, so a project owned by an organization keeps the Type in the issue type, and one owned by a personal account keeps it in the board field Kind. | new-project bootstrap, section 5 |
 | **Issue** | A ticket. | project structure, section 3 |
 | **Issue type** | The native single value on an issue that says what sort of ticket it is. It carries the Type. | fields reference |
+| **Kind** | The board field that carries the Type in a project owned by a personal account, where there are no issue types. It has the same eight values. | new-project bootstrap, section 5 |
 | **Label** | A tag on an issue. The only labels are the 14 Area labels and the marker label `dummy`. | fields reference |
 | **Sub-issue** | An issue attached to another, which has one parent. | project structure, section 5 |
 | **Closing keyword** | A word such as *Closes*, *Fixes* or *Resolves* followed by a ticket number, which closes the ticket automatically when the pull request merges. The process never uses one. | syncing and merging, section 3 |

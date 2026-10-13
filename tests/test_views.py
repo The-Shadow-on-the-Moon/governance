@@ -413,7 +413,60 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(ids, {"Updated": 10, "Title": 11, "Type": 12})
 
 
+class SourceTests(unittest.TestCase):
+    """With the field Kind in place of the issue type, the filters and the column change; the file does not."""
+
+    DEFINITION = [{"name": "Board", "layout": "board", "filter": "is:open AND -type:Version AND -status:ToDo",
+                   "visible_fields": ["Title", "Type", "Priority"]},
+                  {"name": "Decide", "layout": "table", "filter": "attention:Watch OR (type:Alert AND is:open)"},
+                  {"name": "Fix", "layout": "table", "filter": "has:fix"}]
+
+    def test_the_issue_type_source_leaves_the_definition_alone(self):
+        self.assertEqual(views.for_source(self.DEFINITION, "issue-type"), self.DEFINITION)
+
+    def test_the_field_source_uses_kind_in_the_filters_and_the_columns(self):
+        found = views.for_source(self.DEFINITION, "field")
+        self.assertEqual(found[0]["filter"], "is:open AND -kind:Version AND -status:ToDo")
+        self.assertEqual(found[0]["visible_fields"], ["Title", "Kind", "Priority"])
+        self.assertEqual(found[1]["filter"], "attention:Watch OR (kind:Alert AND is:open)")
+        self.assertEqual(found[2], self.DEFINITION[2])
+        self.assertEqual(self.DEFINITION[0]["filter"], "is:open AND -type:Version AND -status:ToDo")  # not changed in place
+
+    def test_the_real_definition_has_no_type_left_with_the_field_source(self):
+        found = views.for_source(views.load_definition(), "field")
+        for entry in found:
+            self.assertNotIn("type:", entry.get("filter", ""), entry["name"])
+            self.assertNotIn("Type", entry.get("visible_fields", []), entry["name"])
+
+    def test_a_personal_account_uses_the_users_paths(self):
+        seen = []
+
+        def transport(method, url, headers, body):
+            seen.append(url)
+            return 200, json.dumps([] if method == "GET" and "graphql" not in url else {"data": {"node": {"fields": {"nodes": []}}}}), {}
+
+        client = Client("t", "owner/repo", transport)
+        client.owner_kind = "users"
+        client.create_view(7, {"name": "X"})
+        client.view_field_ids("P7", 7)
+        self.assertIn("https://api.github.com/users/owner/projectsV2/7/views", seen)
+        self.assertIn("https://api.github.com/users/owner/projectsV2/7/fields?per_page=100", seen)
+
+
 class MainTests(unittest.TestCase):
+    def test_a_deletion_ends_without_an_error(self):
+        from unittest import mock
+
+        class Report:
+            board = BOARD
+            type_source = "issue-type"
+
+            def render(self):
+                return "preflight: passed"
+
+        with mock.patch.dict(os.environ, {"GITHUB_REPOSITORY": "owner/repo"}),                 mock.patch.object(views.preflight, "run", return_value=Report()),                 mock.patch.object(views, "delete_named", return_value=views.finalize.Runner(True)):
+            self.assertEqual(views.main(["--delete", "Old"]), 0)
+
     def test_it_needs_a_repository(self):
         saved = os.environ.pop("GITHUB_REPOSITORY", None)
         try:
