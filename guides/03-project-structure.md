@@ -658,16 +658,14 @@ The automation generates these texts. The names, numbers and dates are invented 
 | **Delivery** | Merged |
 | **Version** | V002.004.001 |
 | **Build** | 20261005143045 |
-| **Sub-issues** | #201, #204, #205 |
+| **Sub-issues** | #204 |
 | **Progress, Priority, Size, Risk, Area** | none |
 
-> Finalized 2026-10-05 14:32 UTC from pull request #187. Bump: sub, because #201 is a Feature. Last
+> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, because #204 is a Bug. Last
 > build: 20261005143045.
 >
 > Tickets:
-> - #201 Add CSV export to the reports page (Feature)
 > - #204 Report totals ignore the last day of the month (Bug)
-> - #205 Write the user guide for the export feature (Task)
 
 When a release is cut on this version, the automation sets Delivery to *Released* and adds a comment:
 "Released 2026-10-12 09:15 UTC. Tag: `released/V2.4.1`."
@@ -790,7 +788,7 @@ and syncing, so they are worth recording whenever there is something to say.
 > #### #205 — Write the user guide for the export feature
 > - Covered by the change described under #201.
 >
-> **Tested on build** 20261004101530. `main` was merged into the branch on 2026-10-04 with no conflicts, and
+> **Tested on build** 20261006153000. `main` was merged into the branch on 2026-10-06 with no conflicts, and
 > the branch was rebuilt and retested afterwards.
 
 > **In GitHub.** The source and target branches and the commits appear automatically in the pull request.
@@ -822,7 +820,7 @@ section describes what the file contains and how it is structured.
 - what changed
 #### REF 20261005180000 — <reason>     a change with no ticket yet
 #### AUTO-REF 20261005164000 (tracked as #187)   written by the automation
-## V2.4.1 — 2026-10-05 14:32 UTC       a finalized version (UTC date and time)
+## V2.4.1 — 2026-10-05 16:41 UTC       a finalized version (UTC date and time)
 ```
 
 | Heading | Meaning |
@@ -894,7 +892,7 @@ triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the b
 #### REF 20261006091500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 
-## V2.4.1 — 2026-10-05 14:32 UTC
+## V2.4.1 — 2026-10-05 16:41 UTC
 ### Build 20261005143045 (branch report-fixes)
 #### #204 — Report totals ignore the last day of the month
 - report totals: the last day of the month is now included in the sum.

@@ -66,7 +66,7 @@ There are three formats, and the year always has four digits: a **stamp**, a **d
 | Compile stamp | `yyyymmddhhmmss` | UTC | `20261005143045` |
 | `REF` token, written by hand | `yyyymmddhhmmss` | UTC | `20261005180000` |
 | `AUTO-REF` token, written by the automation | `yyyymmddhhmmss` | UTC | `20261005164000` |
-| Finalized version heading, and the times the automation writes in tickets and comments | `yyyy-mm-dd hh:mm`, then ` UTC` | UTC | `2026-10-05 14:32 UTC` |
+| Finalized version heading, and the times the automation writes in tickets and comments | `yyyy-mm-dd hh:mm`, then ` UTC` | UTC | `2026-10-05 16:41 UTC` |
 | Tag date, and the Start and End dates | `yyyy-mm-dd` | UTC | `2026-10-05` |
 | A date or time a person writes (a record's file name, a note in a comment) | `yyyy-mm-dd` or `yyyy-mm-dd hh:mm`, and optionally a zone after a space | the writer's local time | `2026-10-05`, `2026-10-05 10:32 ET` |
 
@@ -105,7 +105,7 @@ with where it is explained. Nothing here is new: it collects what the other guid
 | **Changelog** | The file in the repository that records every change to files, grouped by version, then build, then ticket. | project structure, section 7 |
 | **Open version** | The `## WIP-Version` heading on a branch: the version being worked on. It has no number until the branch merges. | starting work, section 4 |
 | **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one version. | branching and merging, section 3.3 |
-| **Finalized version** | A `## V2.4.1 — 2026-10-05 14:32 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
+| **Finalized version** | A `## V2.4.1 — 2026-10-05 16:41 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
 | **`WIP-Build`** | The placeholder build heading for the commit being made. The local hook replaces it at commit time. | starting work, section 5 |
 | **Build heading** | `### Build 20261005143045 (branch <name>)`: one commit's worth of changes, stamped with the UTC time of the commit. If a commit was made without the hook, the automation writes a form that also carries the commit's hash. | project structure, section 7 |
 | **Build block** | A build heading with the ticket blocks under it: everything one commit added to the changelog. | working and committing, section 1 |

@@ -4,7 +4,7 @@ One invented change followed from start to finish: "Add CSV export to the report
 name, number and date is made up. The page adds no rule; each step says which guide holds it. The numbers
 below are only an example of how the pieces fit together.
 
-The project is at version V2.3.2 and has a release tag `released/V2.3.2`. Sam is the developer; the project
+The project is at version V2.4.1 and has a release tag `released/V2.4.1`. Sam is the developer; the project
 owner triages the board.
 
 ## 1. The ticket exists first
@@ -99,12 +99,12 @@ See *Syncing and merging*, sections 2 and 3.
 Sam merges with a merge commit and keeps the branch. The versioning workflow runs on `main`:
 
 - The heading is renamed. The tickets are a Feature and a Bug, and the highest Type wins, so the bump is
-  **sub**: V2.3.2 becomes V2.4.0.
-- The Version ticket "Version 002.004.000" is created, with #201 and #206 as sub-issues.
-- #201 and #206 get Delivery **Merged**, Version `V002.004.000` and their Build.
+  **sub**: V2.4.1 becomes V2.5.0.
+- The Version ticket "Version 002.005.000" is created, with #201 and #206 as sub-issues.
+- #201 and #206 get Delivery **Merged**, Version `V002.005.000` and their Build.
 
 ```
-## V2.4.0 — 2026-10-07 16:20 UTC
+## V2.5.0 — 2026-10-07 16:20 UTC
 ### Build 20261006091200 (branch csv-export)
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
@@ -112,9 +112,9 @@ Sam merges with a merge commit and keeps the branch. The versioning workflow run
 #### #206 — Fix the spelling of "authentication" in the settings help text
 - settings help text: fixed the spelling of "authentication".
 
-## V2.3.2 — 2026-10-02 11:05 UTC
-### Build 20261002101500 (branch report-fixes)
-#### #198 — Report totals ignore the last day of the month
+## V2.4.1 — 2026-10-05 16:41 UTC
+### Build 20261005143045 (branch report-fixes)
+#### #204 — Report totals ignore the last day of the month
 - report totals: the last day of the month is now included in the sum.
 ```
 
@@ -129,39 +129,39 @@ this. See *Issues and the board in practice*, section 3.
 
 ## 9. The release
 
-Every merge made a version; a release is a deliberate choice. Sam runs the regression checks on V2.4.0 and
+Every merge made a version; a release is a deliberate choice. Sam runs the regression checks on V2.5.0 and
 records the result with the build, then starts the release step of the workflow with the version. The tag
-`released/V2.4.0` goes on the commit where V2.4.0 was finalized, the Version ticket becomes **Released**
+`released/V2.5.0` goes on the commit where V2.5.0 was finalized, the Version ticket becomes **Released**
 with a comment, and so do the tickets whose Delivery was **Merged**. See *Releases, hotfixes and retiring
 branches*, section 1.
 
-## 10. A critical problem in V2.4.0: the hotfix
+## 10. A critical problem in V2.5.0: the hotfix
 
 Support reports that the export breaks accented names. It cannot wait for the next version, and `main` has
-moved on, so it is fixed in V2.4.0 itself.
+moved on, so it is fixed in V2.5.0 itself.
 
 1. Sam creates #240 (Bug, Priority Critical) and sets it InProgress.
-2. Sam creates the branch **from the release tag**, not from `main`: `hotfix-v2-4-0-export-encoding`.
+2. Sam creates the branch **from the release tag**, not from `main`: `hotfix-v2-5-0-export-encoding`.
 3. The changelog gets `## WIP-Version` with **no marker** (markers are not allowed on a hotfix), and Sam works as
    usual.
 4. Sam verifies the fix, then runs the hotfix step of the workflow **from that branch** with the explicit
-   version `V2.4.0-HF1`. It renames the heading, tags `released/V2.4.0-HF1`, creates the Version ticket and sets
+   version `V2.5.0-HF1`. It renames the heading, tags `released/V2.5.0-HF1`, creates the Version ticket and sets
    #240 straight to **Released** (a hotfix is never merged, so it skips Merged).
 
 ```
-## V2.4.0-HF1 — 2026-10-13 09:40 UTC
-### Build 20261013093100 (branch hotfix-v2-4-0-export-encoding)
+## V2.5.0-HF1 — 2026-10-13 09:40 UTC
+### Build 20261013093100 (branch hotfix-v2-5-0-export-encoding)
 #### #240 — Export breaks accented names
 - reports page: the exported file is now written in UTF-8 with a byte order mark.
 
-## V2.4.0 — 2026-10-07 16:20 UTC
+## V2.5.0 — 2026-10-07 16:20 UTC
 ### Build 20261006091200 (branch csv-export)
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
 ```
 
 5. The same fix reaches `main` separately, as an ordinary branch and pull request with its own ticket (#241, "Forward-port of
-   #240"), and gets whatever version `main` is at, say V2.4.1.
+   #240"), and gets whatever version `main` is at, say V2.5.1.
 6. The hotfix branch is deleted without a retirement tag: its release tag keeps its history.
 
 If the release being fixed was made before the project adopted the standard, the hotfix branch starts with

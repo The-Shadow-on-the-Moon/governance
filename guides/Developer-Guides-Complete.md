@@ -305,7 +305,7 @@ There are three formats, and the year always has four digits: a **stamp**, a **d
 | Compile stamp | `yyyymmddhhmmss` | UTC | `20261005143045` |
 | `REF` token, written by hand | `yyyymmddhhmmss` | UTC | `20261005180000` |
 | `AUTO-REF` token, written by the automation | `yyyymmddhhmmss` | UTC | `20261005164000` |
-| Finalized version heading, and the times the automation writes in tickets and comments | `yyyy-mm-dd hh:mm`, then ` UTC` | UTC | `2026-10-05 14:32 UTC` |
+| Finalized version heading, and the times the automation writes in tickets and comments | `yyyy-mm-dd hh:mm`, then ` UTC` | UTC | `2026-10-05 16:41 UTC` |
 | Tag date, and the Start and End dates | `yyyy-mm-dd` | UTC | `2026-10-05` |
 | A date or time a person writes (a record's file name, a note in a comment) | `yyyy-mm-dd` or `yyyy-mm-dd hh:mm`, and optionally a zone after a space | the writer's local time | `2026-10-05`, `2026-10-05 10:32 ET` |
 
@@ -344,7 +344,7 @@ with where it is explained. Nothing here is new: it collects what the other guid
 | **Changelog** | The file in the repository that records every change to files, grouped by version, then build, then ticket. | project structure, section 7 |
 | **Open version** | The `## WIP-Version` heading on a branch: the version being worked on. It has no number until the branch merges. | starting work, section 4 |
 | **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one version. | branching and merging, section 3.3 |
-| **Finalized version** | A `## V2.4.1 — 2026-10-05 14:32 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
+| **Finalized version** | A `## V2.4.1 — 2026-10-05 16:41 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
 | **`WIP-Build`** | The placeholder build heading for the commit being made. The local hook replaces it at commit time. | starting work, section 5 |
 | **Build heading** | `### Build 20261005143045 (branch <name>)`: one commit's worth of changes, stamped with the UTC time of the commit. If a commit was made without the hook, the automation writes a form that also carries the commit's hash. | project structure, section 7 |
 | **Build block** | A build heading with the ticket blocks under it: everything one commit added to the changelog. | working and committing, section 1 |
@@ -1742,16 +1742,14 @@ The automation generates these texts. The names, numbers and dates are invented 
 | **Delivery** | Merged |
 | **Version** | V002.004.001 |
 | **Build** | 20261005143045 |
-| **Sub-issues** | #201, #204, #205 |
+| **Sub-issues** | #204 |
 | **Progress, Priority, Size, Risk, Area** | none |
 
-> Finalized 2026-10-05 14:32 UTC from pull request #187. Bump: sub, because #201 is a Feature. Last
+> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, because #204 is a Bug. Last
 > build: 20261005143045.
 >
 > Tickets:
-> - #201 Add CSV export to the reports page (Feature)
 > - #204 Report totals ignore the last day of the month (Bug)
-> - #205 Write the user guide for the export feature (Task)
 
 When a release is cut on this version, the automation sets Delivery to *Released* and adds a comment:
 "Released 2026-10-12 09:15 UTC. Tag: `released/V2.4.1`."
@@ -1874,7 +1872,7 @@ and syncing, so they are worth recording whenever there is something to say.
 > #### #205 — Write the user guide for the export feature
 > - Covered by the change described under #201.
 >
-> **Tested on build** 20261004101530. `main` was merged into the branch on 2026-10-04 with no conflicts, and
+> **Tested on build** 20261006153000. `main` was merged into the branch on 2026-10-06 with no conflicts, and
 > the branch was rebuilt and retested afterwards.
 
 > **In GitHub.** The source and target branches and the commits appear automatically in the pull request.
@@ -1906,7 +1904,7 @@ section describes what the file contains and how it is structured.
 - what changed
 #### REF 20261005180000 — <reason>     a change with no ticket yet
 #### AUTO-REF 20261005164000 (tracked as #187)   written by the automation
-## V2.4.1 — 2026-10-05 14:32 UTC       a finalized version (UTC date and time)
+## V2.4.1 — 2026-10-05 16:41 UTC       a finalized version (UTC date and time)
 ```
 
 | Heading | Meaning |
@@ -1978,7 +1976,7 @@ triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the b
 #### REF 20261006091500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 
-## V2.4.1 — 2026-10-05 14:32 UTC
+## V2.4.1 — 2026-10-05 16:41 UTC
 ### Build 20261005143045 (branch report-fixes)
 #### #204 — Report totals ignore the last day of the month
 - report totals: the last day of the month is now included in the sum.
@@ -2888,7 +2886,7 @@ its ticket or description existed. It is a loan, and this section is how it is r
 The placeholder in a finalized version:
 
 ```
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261005101500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -2903,7 +2901,7 @@ Or documented in a new block in the current version, leaving the placeholder as 
 
 ```
 #### #233 — Fix the spelling of "authentication" in the settings help text
-- Documents REF 20261006091500 (V2.4.1): fixed the spelling of "authentication" in the settings help text.
+- Documents REF 20261005101500 (V2.4.1): fixed the spelling of "authentication" in the settings help text.
 ```
 
 #### 6.2 Documenting an AUTO-REF

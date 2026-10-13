@@ -1,6 +1,14 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013015511 (branch audit-tools)
+#### #178 — Guides: make the example versions and tickets agree
+- guides/03-project-structure.md: the Version ticket example of V2.4.1 lists only #204 and gives the bump as mod because #204 is a Bug (a Feature would have made a sub bump and another number); it is finalized from pull request #186 (the number #187 belongs to the Alert) at 16:41 UTC, after the push that the Alert reports (16:40 UTC); the pull request example for #201 and #205 is tested and synced on 2026-10-06, after the V2.4.1 of 2026-10-05.
+- guides/01-concepts-and-vocabulary.md: the examples of the finalized heading carry the same time.
+- guides/05-working-and-committing.md: the `REF` placeholder shown in a finalized version (V2.4.1) has a token from before that version was finalized.
+- doc/wiki/Walkthrough-CSV-Export.md: starts from V2.4.1, so the feature makes V2.5.0 and the hotfix V2.5.0-HF1, as the timeline of the guides' examples gives.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
 ### Build 20261013013217 (branch audit-tools)
 #### #173 — Wiki: end-to-end walkthrough
 - doc/wiki/Walkthrough-CSV-Export.md: added. The invented ticket #201 followed in one piece: the ticket, the start and the branch, the changelog entries and the build stamp, the first push, the sync, the backfill of a `REF`, the pull request, the merge and the version it makes, verification, the release, and a hotfix with its forward-port, with the changelog at each stage and a pointer to the guide section for each step. doc/wiki/Home.md links to it.

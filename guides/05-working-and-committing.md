@@ -400,7 +400,7 @@ its ticket or description existed. It is a loan, and this section is how it is r
 The placeholder in a finalized version:
 
 ```
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261005101500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -415,7 +415,7 @@ Or documented in a new block in the current version, leaving the placeholder as 
 
 ```
 #### #233 — Fix the spelling of "authentication" in the settings help text
-- Documents REF 20261006091500 (V2.4.1): fixed the spelling of "authentication" in the settings help text.
+- Documents REF 20261005101500 (V2.4.1): fixed the spelling of "authentication" in the settings help text.
 ```
 
 ### 6.2 Documenting an AUTO-REF
