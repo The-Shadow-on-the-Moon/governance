@@ -10,7 +10,7 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 |---|---|
 | `pre-commit` | Replaces `### WIP-Build` in the staged changelog with `### Build <UTC stamp> (branch <name>)`. Warns about a commit with no changelog entry, a merge that needs a rebuild, or a conflict resolved by hand. |
 | `prepare-commit-msg` | Drafts the commit message from the new changelog entries: the ticket title, or "Multiple tickets", or the first bullet for a `REF`, then a block per ticket. |
-| `pre-push` | Warns when the branch is behind `main`, when a pushed changelog still has its placeholder, or when the push carries a merge. |
+| `pre-push` | Warns when the branch is behind `main` (not on a `hotfix-v…` branch, which starts from a release tag and is never merged), when a pushed changelog still has its placeholder, or when the push carries a merge. |
 
 ## The versioning workflow
 
@@ -109,7 +109,7 @@ Declaring a finalized version a release is a deliberate step, started by hand (t
 
 ## The hotfix-finalize step
 
-A hotfix starts from a release tag, never from `main`, and is never merged, so its version is stated explicitly (`V1.25.0-HF1`, a single digit from 1 to 9 per release). Run on the hotfix branch (named `hotfix-v<major>-<sub>-<mod>-<description>`), `hotfix.py` renames the open `WIP-Version` heading to that version in a commit of its own on the branch, tags that commit `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets straight to *Released*. It refuses a marker on the heading, a branch that is not named for that release, an open version with no ticket entry, a branch that does not contain the release tag (or the previous hotfix's tag), a hotfix number outside 1 to 9, and a version that is already finalized or already has its tag. Afterwards the branch is deleted without a retirement tag, and the fix reaches `main` separately through an ordinary branch and pull request.
+A hotfix starts from a release tag, never from `main`, and is never merged, so its version is stated explicitly (`V1.25.0-HF1`, a single digit from 1 to 9 per release). Run on the hotfix branch (named `hotfix-v<major>-<sub>-<mod>-<description>`), `hotfix.py` renames the open `WIP-Version` heading to that version in a commit of its own on the branch, tags that commit `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets straight to *Released*. It refuses a marker on the heading, a branch that is not named for that release, an open version with no ticket entry, a branch that does not contain the release tag (or the previous hotfix's tag), a hotfix number outside 1 to 9, and a version that is already finalized or already has its tag. Afterwards the branch is deleted without a retirement tag, and the fix reaches `main` separately through an ordinary branch and pull request. For a release made before the project adopted the standard, the branch has no workflow or scripts of its own: its first commit, the overlay, brings them from `main` together with a baseline changelog (guide 08, section 2.1), and the step then runs from that branch as usual.
 
 ## The retire step
 

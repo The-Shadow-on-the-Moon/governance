@@ -138,3 +138,25 @@ Gemini's summary says there are internal contradictions and minor formatting dis
 - **E4**: how a release from before the cut-over is fixed. (a) A normal branch released as a newer version, and hotfix numbering from the first release after the cut-over (recommended: it needs no new mechanism, and old changelogs stay untouched). (b) Define a hotfix on an old tag: it needs the automation on that branch, which means editing history or copying files onto an old commit.
 - **E3**: which guide owns Alert triage. I recommend guide 07.
 - **E12**: whether to write the walkthrough, and as a wiki page (recommended) or an appendix.
+
+## 5. Status of the findings (added 2026-10-13)
+
+The sections above are the evaluation as it was made on 2026-10-11 and are not rewritten. This table records what became of each finding.
+
+| Finding | Ticket | Outcome |
+|---|---|---|
+| E1 file tables incomplete | #166 | Guide 03 section 2.1 extended (manifest, saved views, audit baseline, `.git-blame-ignore-revs`). |
+| E2 stale term Version# | #167 | Removed from appendix E. |
+| E3 Alert triage in three places | #168 | Guide 07 section 5.2 owns the triage; guides 02, 05 and 06, the appendices and the README point to it. |
+| E4 hotfix of a release from before the cut-over | #170, #174, #175 | Decision changed from option (a) to a hotfix with an overlay commit (guide 08, section 2.1); proven by a trial (#174), which also found the pre-push warning fixed in #175. |
+| E5 scope limits | #171 | Two lines in the README. |
+| E6 defective release | #171 | Guide 08 section 1.1 and a row in appendix B. |
+| E7 "seven stages" | #167 | "Stage 0 and the seven stages" in the README (the wiki and guide 11 did not use the phrase). |
+| E8 end of a converted tag | #170 | Guide 11 section 4.4. |
+| E9 tool names outside In GitHub blocks | #166 | Moved into In GitHub blocks in guides 03 and 07. |
+| E10 appendix F not guarded | #169 | `AppendixFTests` in `tests/test_tools.py`. |
+| E11 delivery transitions | #172 | "Delivery moves" table in appendix E section 3. |
+| E12 walkthrough | #173 | Wiki page Walkthrough-CSV-Export. |
+| E13 typo | #167 | Corrected in guide 03 section 9.1. |
+
+Found afterwards: the invented examples of the guides disagreed with the rules and with each other (#178), and the README and Automation page were stale (#179, guarded by the tests of #181).

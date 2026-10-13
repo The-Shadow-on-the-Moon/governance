@@ -194,6 +194,57 @@ class AppendixFTests(unittest.TestCase):
             self.assertIn(name, self.text)
 
 
+class StatementsAboutTheRepositoryTests(unittest.TestCase):
+    """The counts and descriptions of the README, the wiki Home and the guide index must match the files."""
+
+    def read(self, *parts):
+        with open(os.path.join(ROOT, *parts), encoding="utf-8") as handle:
+            return handle.read()
+
+    def guides_and_appendices(self):
+        names = os.listdir(os.path.join(ROOT, "guides"))
+        guides = sorted(n[:2] for n in names if n[:2].isdigit() and n.endswith(".md"))
+        appendices = sorted(n.split("-")[1].upper() for n in names if n.startswith("appendix-"))
+        return guides, appendices
+
+    def test_the_root_readme_names_the_guides_and_appendices_there_are(self):
+        import re
+
+        guides, appendices = self.guides_and_appendices()
+        text = self.read("README.md")
+        self.assertIn(f"The guides (01 to {guides[-1]})", text)
+        self.assertIn(f"the appendices (A to {appendices[-1]})", text)
+        self.assertEqual(guides, [f"{n:02d}" for n in range(1, len(guides) + 1)])
+        self.assertEqual(appendices, [chr(ord("A") + n) for n in range(len(appendices))])
+
+    def test_the_wiki_home_names_the_guides_and_appendices_there_are(self):
+        guides, appendices = self.guides_and_appendices()
+        text = self.read("doc", "wiki", "Home.md")
+        self.assertIn(f"guides 01 to {guides[-1]} and appendices A to {appendices[-1]}", text)
+        words = {10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen"}
+        self.assertIn(f"The {words[len(guides)]} guides:", text)
+
+    def test_the_guide_index_has_a_row_for_every_guide_and_appendix(self):
+        import re
+
+        guides, appendices = self.guides_and_appendices()
+        text = self.read("guides", "README.md")
+        self.assertEqual(re.findall(r"^\| \*\*(\d\d) ", text, re.M), guides)
+        self.assertEqual(re.findall(r"^\| \*\*([A-G]) ", text, re.M), appendices)
+
+    def test_the_root_readme_names_every_tool(self):
+        text = self.read("README.md")
+        for name in sorted(os.listdir(os.path.join(ROOT, "tools"))):
+            if name.endswith(".py"):
+                self.assertIn(f"`{name}`", text, name)
+
+    def test_the_automation_page_describes_every_hook(self):
+        text = self.read("doc", "wiki", "Automation.md")
+        for name in sorted(os.listdir(os.path.join(ROOT, ".githooks"))):
+            if name not in ("hooks.py", "__pycache__"):
+                self.assertIn(f"`{name}`", text, name)
+
+
 if __name__ == "__main__":
     unittest.main()
 

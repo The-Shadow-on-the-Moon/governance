@@ -1,6 +1,18 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013021053 (branch audit-tools)
+#### #179 — Docs: README and Automation page agree with the repo
+- README.md: the guides are 01 to 11 and the appendices A to G; the `tools/` row names every audit script.
+- doc/wiki/Automation.md: the pre-push hook does not warn about a hotfix branch being behind `main`; the hotfix-finalize step points to the overlay commit for a release made before the adoption.
+
+#### #180 — Evaluation: record which ticket closed each finding; settle #137 and #138
+- doc/Evaluation/Combined-eval.md: a status section (section 5) says which ticket handled each finding E1 to E13; the evaluation itself is unchanged. The working copy now has Unix line endings, as git stores it.
+- #137 and #138 checked against guide 11, appendix G, the audit tools and the wiki: covered; commented and moved to Review.
+
+#### #181 — Test: counts and descriptions in README, Home and the Automation page
+- tests/test_tools.py: `StatementsAboutTheRepositoryTests` compare the guides and appendices named in the root README, the wiki Home and the guide index with the files, every tool with the README, and every hook with the Automation page.
+
 ### Build 20261013015511 (branch audit-tools)
 #### #178 — Guides: make the example versions and tickets agree
 - guides/03-project-structure.md: the Version ticket example of V2.4.1 lists only #204 and gives the bump as mod because #204 is a Bug (a Feature would have made a sub bump and another number); it is finalized from pull request #186 (the number #187 belongs to the Alert) at 16:41 UTC, after the push that the Alert reports (16:40 UTC); the pull request example for #201 and #205 is tested and synced on 2026-10-06, after the V2.4.1 of 2026-10-05.
