@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.13.0 — 2026-10-13 14:11 UTC
 ### Build 20261013054128 (branch audit-tools)
 #### #190 — Consistency sweep of the guides, wiki and tools
 - doc/wiki/Board-Views.md: the Roadmap ticket is suspended, not at ToDo.
