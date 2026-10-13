@@ -20,6 +20,7 @@ import re
 
 import condition_comments
 import failures
+import ticket_type
 from versions import Version
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
@@ -62,9 +63,9 @@ def version_ticket(repo_client, version):
     """The Version ticket for `version`, closed (finalized) or not, or None. Its title is the version in the board form
     (`Version 000.010.001`); a planned ticket typed by hand as `Version 0.10.1` is found too."""
     for page in range(1, 11):
-        issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=all&type=Version&per_page=100&page={page}"))
+        issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=all{ticket_type.type_filter(repo_client, 'Version')}&per_page=100&page={page}"))
         for issue in issues:
-            if _title_version(issue["title"]) == version:
+            if "pull_request" not in issue and _title_version(issue["title"]) == version:
                 return issue
         if len(issues) < 100:
             return None

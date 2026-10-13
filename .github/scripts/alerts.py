@@ -74,9 +74,9 @@ def stale_planned(repo_client, version):
         return []
     found = []
     for page in range(1, 11):
-        issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=open&type=Version&per_page=100&page={page}"))
+        issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=open{ticket_type.type_filter(repo_client, 'Version')}&per_page=100&page={page}"))
         for issue in issues:
-            match = _PLANNED.match(issue["title"])
+            match = None if "pull_request" in issue else _PLANNED.match(issue["title"])
             if match and Version.parse("V" + match.group(1)).number() < version.number():
                 found.append((issue["number"], issue["title"]))
         if len(issues) < 100:

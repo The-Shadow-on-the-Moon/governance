@@ -1,6 +1,16 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013031037 (branch audit-tools)
+#### #188 — Automation: the Version ticket lookup fails for a personal account
+- .github/scripts/ticket_type.py: `type_filter`, the issues query for an issue type, empty when the Type lives in the field Kind. .github/scripts/implemented.py (`version_ticket`) and alerts.py (`stale_planned`) use it and find the Version ticket by its title, skipping pull requests.
+- tests/test_ticket_type.py: both lookups with and without the filter; the manifest is rewritten (standard V0.12.1, provisional).
+
+#### #186 — Test: the Kind field mode end to end
+- Trial on a throwaway private repository and a throwaway project owned by the personal account (the scripts of this repository run locally with the account's token; nothing stored as a secret): the preflight finds the board linked to the repository and the source `field`; `fields.py` created the 15 fields and Kind with its eight values and colors; the Status values were set through the API; `views.py` created the seven views through the `/users/…` paths with `kind:` filters and a second run found them all up to date; two tickets (a Feature and a Bug with their Kind) merged and `finalize.py` made V0.2.0 (a sub bump read from the Kind of the Feature), set Delivery, Version and Build, and created the Version ticket with Kind Version; `release.py` tagged and set Released, skipping the Version ticket by its Kind; `hotfix.py` made V0.2.0-HF1 from the tag; an Alert got Kind Alert; the date, Watch, conditions and Version format readers read the board; the audit judged the Kind field, the views and the ticket Types, and found the owner and the issue types not a problem.
+- One defect found (#188), fixed. Observed, not changed: the options of the built-in Status field can be set through the API (`updateProjectV2Field`), which the bootstrap guide says is done by hand.
+- Cleanup: the throwaway project deleted; the throwaway repository archived (to be deleted by its owner, the token cannot).
+
 ### Build 20261013024346 (branch audit-tools)
 #### #182 — Automation: read the Type from the issue type or the Kind field
 - .github/scripts/ticket_type.py: new. Decides where the Type of a ticket comes from (the repository variable `TYPE_SOURCE`, or the owner of the repository), reads it (the issue type of the issue, or else the Kind of its board item) and holds the colors and descriptions of the options of Kind.

@@ -63,6 +63,12 @@ def field_mode(client):
     return getattr(client, "kind_reader", None) is not None
 
 
+def type_filter(client, issue_type):
+    """The issues query for an issue type. With the field Kind there are no issue types and the filter would be refused:
+    the caller picks the issues by their title."""
+    return "" if field_mode(client) else f"&type={issue_type}"
+
+
 def set_kind(run, project_client, board, item_id, kind, label):
     """Set the field Kind of a board item (a ticket the automation created, since a personal account has no issue types)."""
     run.do(f"{label}: set {FIELD} to {kind}", project_client.set_project_field, board.id, item_id,
