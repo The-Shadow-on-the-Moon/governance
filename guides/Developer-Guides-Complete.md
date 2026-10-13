@@ -607,7 +607,8 @@ there, which is safer than one large merge at the end.
 the tag keeps unrelated changes out. A separate numbering lineage means the hotfix can never collide
 with a version `main` has already produced or will produce.
 
-Details of cutting and finishing a hotfix are in *Releases, hotfixes and retiring branches*.
+Details of cutting and finishing a hotfix, including one of a release made before the standard was adopted,
+are in *Releases, hotfixes and retiring branches*.
 
 #### 1.4 Parked branch
 
@@ -4042,6 +4043,16 @@ procedure.
 4. **Work as usual:** change, build, test, log, commit, push (see the guide on working and committing).
 5. **Tell the project owner** that a hotfix has been started.
 
+**A release made before the adoption of the standard.** The old commit has none of the automation and no
+standard changelog, and history is not rewritten, so the first commit on the hotfix branch, the *overlay*,
+adds what the hotfix steps need, taken from the current `main`: every file the automation manifest
+(`.github/automation-manifest.json`) lists, copied unchanged, with the manifest itself, `AGENTS.md` and
+`.gitattributes`, an ignore file that leaves out `__pycache__/` when the old tree has none, and a new `CHANGELOG.md` with a title and one finalized heading for the release being fixed
+(a single build and a `REF` block saying that the earlier history is in the old changelog, as in the guide on
+adopting the standard, section 4.2). Then activate the hooks and go on with step 3, which adds the
+`WIP-Version` heading above it, and the rest as for any hotfix. The overlay is made once, in a commit of its
+own, before the fix.
+
 #### 2.2 Finish
 
 6. **Verify the hotfix** the same way as any release (section 1.1).
@@ -4073,6 +4084,9 @@ and 2.2. The rules for the procedure are these:
 - **Rule:** verify the hotfix before finishing it, as for any release.
 - **Rule:** the developer starts and finishes a hotfix, and tells the project owner when it is started and
   when it is released.
+- **Rule:** a hotfix of a release made before the adoption starts with the overlay commit and differs from
+  its tag only by the overlay and the fix. The overlay never goes into `main`: the forward-port carries the
+  fix alone.
 - **Recommendation:** keep a hotfix to the fix itself, and nothing else.
 
 **Why.**
@@ -4083,6 +4097,9 @@ and 2.2. The rules for the procedure are these:
 - *Developer-driven* because a critical problem in a released version is urgent, and waiting for approval
   would cost time the situation does not have. The project owner is told so that nothing happens without
   their knowledge.
+- *An overlay, and not a rewrite* because a hotfix must be possible whatever the age of the release, and a
+  hotfix is never merged, so files that exist only on its branch cannot reach `main`. The old tag and the
+  history stay as they were.
 - *A separate forward-port* because the fix still has to be part of `main`'s history, through the normal
   flow, with its own ticket, verification and version.
 
@@ -4163,6 +4180,8 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] A ticket exists for the fix (Type *Bug*, Priority *Critical* or *Urgent*), assigned to me and
       *InProgress*.
 - [ ] The branch is created from the release tag and named `hotfix-v…`.
+- [ ] If the release is from before the adoption, the first commit is the overlay (automation, hooks and a
+      new `CHANGELOG.md` with a baseline heading for that release), and the hooks are active.
 - [ ] The changelog has a `WIP-Version` heading with no marker.
 - [ ] I worked as usual, and the project owner is told it started.
 - [ ] The hotfix is verified, and the hotfix-finalize step was run with the explicit version (for example
@@ -5224,7 +5243,9 @@ announced.
 2. **Tags.** Give each existing tag a name in the standard form. A tag that marks a real release becomes
    `released/V<major>.<sub>.<mod>`. A tag with no use is left alone and recorded as history, or removed by the
    administrator when the team agrees. Put the new tag on the same commit as the old one, push it, and keep
-   the old tag until everybody has moved.
+   the old tag until everybody has moved. Then the administrator deletes the old tag (the commit stays
+   reachable under the new one), or, when something outside the team depends on the name, records it as an
+   accepted deviation, so the audit stops reporting it.
 3. **The integration line.** A project whose real line is not `main` follows section 5.1.
 
 - **Rule:** no tag is moved to another commit, and no branch is deleted before its tag exists.
@@ -5318,6 +5339,11 @@ A project whose work is integrated in `develop`, `staging` or a release branch c
 The version the project continues from is written in the baseline heading (stage 2). Releases that really
 happened are tagged `released/V<major>.<sub>.<mod>` on the commits that were released, when those commits are
 known (stage 4). A release whose commit is not known is not tagged: a wrong tag is worse than a missing one.
+
+A release made before the adoption can still be fixed by a hotfix: the hotfix branch starts from its tag and
+its first commit is the overlay that brings the automation and a baseline changelog (guide on releases,
+hotfixes and retiring branches, section 2.1). A release without a tag cannot be fixed this way, because there
+is nothing to start from.
 
 #### 5.3 Clones of the team
 
@@ -5485,6 +5511,7 @@ branching and merging.
 | I want to keep working on a merged branch | Sync `main` into it first, then open a new `WIP-Version` heading. | Starting work, section 3.3 |
 | I want to restart a suspended or abandoned branch | Recreate it from its tag, and sync `main` first. | Starting work, section 3.4 |
 | a critical problem is found in a released version | Start a hotfix from the release tag. | Releases, hotfixes and retiring branches, section 2 |
+| the released version is from before the adoption | Start the hotfix from its tag; the first commit is the overlay (automation and a baseline changelog). | Releases, hotfixes and retiring branches, section 2.1 |
 | I want to declare a version a release | Verify it, run the release step, and tell the project owner. | Releases, hotfixes and retiring branches, section 1 |
 | a release was declared by mistake | Delete the tag and put the Version ticket and its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
 

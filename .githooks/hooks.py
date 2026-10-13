@@ -177,7 +177,8 @@ def pre_push(lines, cwd=None):
             continue
         _, local_sha, _, remote_sha = parts
         base = remote_sha if remote_sha != ZEROS else ("origin/main" if has_main else None)
-        if has_main:
+        if has_main and not parts[0].startswith("refs/heads/hotfix-v"):
+            # A hotfix starts from a release tag and is never merged into main, so being behind it is normal.
             _, behind = git("rev-list", "--count", f"{local_sha}..origin/main", cwd=cwd)
             if behind.strip() not in ("", "0"):
                 warnings.append(f"The branch is {behind.strip()} commit(s) behind main: merge main into it, rebuild and retest "

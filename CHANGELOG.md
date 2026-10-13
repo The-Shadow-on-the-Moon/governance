@@ -1,6 +1,23 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013004156 (branch audit-tools)
+#### #175 — Hooks: no behind-main warning on a hotfix branch
+- .githooks/hooks.py: the pre-push hook no longer warns that a branch is behind `main` when the pushed branch is named `hotfix-v…`: a hotfix starts from a release tag and is never merged into `main`.
+- tests/test_hooks.py: a hotfix branch behind `main` gets no warning (another branch still does).
+- .github/automation-manifest.json: rewritten for the two files above, with the standard V0.12.1 (provisional: to be checked against the finalized version after the merge).
+
+#### #170 — Guides: hotfix of a release made before the cut-over (overlay commit), and the end of a converted tag
+- guides/08-releases-hotfixes-and-retiring-branches.md: section 2.1 defines the overlay, the first commit of the hotfix branch of a release made before the adoption (the files of the automation manifest, `AGENTS.md`, `.gitattributes` from `main` and a new `CHANGELOG.md` with a baseline heading for the release); a rule and a reason in section 2.4, and a line in the checklist.
+- guides/11-adopting-the-standard-in-an-existing-project.md: section 5.2 says an old release that is tagged can be hotfixed through the overlay (one without a tag cannot); section 4.4 defines the end of a converted tag (the administrator deletes it once everybody has moved, or it is recorded as an accepted deviation).
+- guides/02-branching-and-merging-strategy.md, guides/appendix-b-cheat-sheet-if-then.md and doc/wiki/Adopting-the-Standard.md: the pointer, a row and a section on a critical fix in a release from before the adoption.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
+#### #174 — Test: overlay commit for a hotfix of a pre-adoption release
+- Trial on this repository, with throwaway material (ticket #176, Version ticket #177, branches `hotfix-v9-9-9-dummy-trial-174` and `hotfix-v9-9-8-dummy-trial-174`, tags under `test/`, the input `trial` ticked): a hotfix branch started from a tag on the initial commit (no `.github/`, no changelog), whose first commit was the overlay of guide 08, section 2.1 (the 62 manifest files, `AGENTS.md`, `.gitattributes`, `.gitignore` and a new `CHANGELOG.md` with a baseline heading). The manifest check reported every file unchanged; the hooks stamped the build; the workflow started from the branch ran the preflight and the hotfix step (dry run, then for real): the heading renamed to V9.9.8-HF1 on the branch, the tag `test/released/V9.9.8-HF1`, the ticket's Delivery, Version and Build, and the Version ticket created, closed and linked. The preflight reads no history, so it does not depend on the branch descending from `main`.
+- Result: no change to the automation is needed for the overlay. One defect found, not specific to the overlay: the pre-push hook warns that a hotfix branch is behind `main` (Bug ticket #175).
+- Cleanup: #176 and #177 closed as Invalid (Abandoned); the unfinished trial branch retired with `test/abandoned/2026-10-12_hotfix-v9-9-9-dummy-trial-174_dummy-trial-174`; the finished one deleted without a retirement tag, its release tag keeping the history.
+
 ### Build 20261012225317 (branch audit-tools)
 #### #166 — Guides: file tables and README claims agree with the repo
 - guides/03-project-structure.md: the `.github/` row of section 2.1 now names the manifest of the automation files, the saved board views and the audit baseline, and a root row for `.git-blame-ignore-revs` is added. The names `conditions.py` (section 4.3) now sit in an In GitHub block.

@@ -54,6 +54,7 @@ branching and merging.
 | I want to keep working on a merged branch | Sync `main` into it first, then open a new `WIP-Version` heading. | Starting work, section 3.3 |
 | I want to restart a suspended or abandoned branch | Recreate it from its tag, and sync `main` first. | Starting work, section 3.4 |
 | a critical problem is found in a released version | Start a hotfix from the release tag. | Releases, hotfixes and retiring branches, section 2 |
+| the released version is from before the adoption | Start the hotfix from its tag; the first commit is the overlay (automation and a baseline changelog). | Releases, hotfixes and retiring branches, section 2.1 |
 | I want to declare a version a release | Verify it, run the release step, and tell the project owner. | Releases, hotfixes and retiring branches, section 1 |
 | a release was declared by mistake | Delete the tag and put the Version ticket and its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
 

@@ -89,6 +89,16 @@ procedure.
 4. **Work as usual:** change, build, test, log, commit, push (see the guide on working and committing).
 5. **Tell the project owner** that a hotfix has been started.
 
+**A release made before the adoption of the standard.** The old commit has none of the automation and no
+standard changelog, and history is not rewritten, so the first commit on the hotfix branch, the *overlay*,
+adds what the hotfix steps need, taken from the current `main`: every file the automation manifest
+(`.github/automation-manifest.json`) lists, copied unchanged, with the manifest itself, `AGENTS.md` and
+`.gitattributes`, an ignore file that leaves out `__pycache__/` when the old tree has none, and a new `CHANGELOG.md` with a title and one finalized heading for the release being fixed
+(a single build and a `REF` block saying that the earlier history is in the old changelog, as in the guide on
+adopting the standard, section 4.2). Then activate the hooks and go on with step 3, which adds the
+`WIP-Version` heading above it, and the rest as for any hotfix. The overlay is made once, in a commit of its
+own, before the fix.
+
 ### 2.2 Finish
 
 6. **Verify the hotfix** the same way as any release (section 1.1).
@@ -120,6 +130,9 @@ and 2.2. The rules for the procedure are these:
 - **Rule:** verify the hotfix before finishing it, as for any release.
 - **Rule:** the developer starts and finishes a hotfix, and tells the project owner when it is started and
   when it is released.
+- **Rule:** a hotfix of a release made before the adoption starts with the overlay commit and differs from
+  its tag only by the overlay and the fix. The overlay never goes into `main`: the forward-port carries the
+  fix alone.
 - **Recommendation:** keep a hotfix to the fix itself, and nothing else.
 
 **Why.**
@@ -130,6 +143,9 @@ and 2.2. The rules for the procedure are these:
 - *Developer-driven* because a critical problem in a released version is urgent, and waiting for approval
   would cost time the situation does not have. The project owner is told so that nothing happens without
   their knowledge.
+- *An overlay, and not a rewrite* because a hotfix must be possible whatever the age of the release, and a
+  hotfix is never merged, so files that exist only on its branch cannot reach `main`. The old tag and the
+  history stay as they were.
 - *A separate forward-port* because the fix still has to be part of `main`'s history, through the normal
   flow, with its own ticket, verification and version.
 
@@ -210,6 +226,8 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] A ticket exists for the fix (Type *Bug*, Priority *Critical* or *Urgent*), assigned to me and
       *InProgress*.
 - [ ] The branch is created from the release tag and named `hotfix-v…`.
+- [ ] If the release is from before the adoption, the first commit is the overlay (automation, hooks and a
+      new `CHANGELOG.md` with a baseline heading for that release), and the hooks are active.
 - [ ] The changelog has a `WIP-Version` heading with no marker.
 - [ ] I worked as usual, and the project owner is told it started.
 - [ ] The hotfix is verified, and the hotfix-finalize step was run with the explicit version (for example

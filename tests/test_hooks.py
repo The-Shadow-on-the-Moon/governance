@@ -185,6 +185,17 @@ class WarningTests(Repo):
         warnings = hooks.pre_push([f"refs/heads/csv-export {sha} refs/heads/csv-export {hooks.ZEROS}"], self.dir)
         self.assertIn("1 commit(s) behind main", warnings[0])
 
+    def test_pre_push_does_not_warn_that_a_hotfix_branch_is_behind_main(self):
+        run("switch", "-q", "main", cwd=self.dir)
+        write(os.path.join(self.dir, "m.txt"), "m\n")
+        run("add", "-A", cwd=self.dir)
+        run("commit", "-q", "-m", "main moves", cwd=self.dir)
+        run("update-ref", "refs/remotes/origin/main", "main", cwd=self.dir)
+        run("switch", "-q", "csv-export", cwd=self.dir)
+        sha = run("rev-parse", "HEAD", cwd=self.dir).stdout.strip()
+        ref = "refs/heads/hotfix-v1-25-0-fix-totals"
+        self.assertEqual(hooks.pre_push([f"{ref} {sha} {ref} {hooks.ZEROS}"], self.dir), [])
+
     def test_pre_push_warns_about_a_leftover_placeholder(self):
         run("update-ref", "refs/remotes/origin/main", "main", cwd=self.dir)
         write(os.path.join(self.dir, "CHANGELOG.md"), WIP_ONE)

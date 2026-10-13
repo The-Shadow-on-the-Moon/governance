@@ -220,7 +220,9 @@ announced.
 2. **Tags.** Give each existing tag a name in the standard form. A tag that marks a real release becomes
    `released/V<major>.<sub>.<mod>`. A tag with no use is left alone and recorded as history, or removed by the
    administrator when the team agrees. Put the new tag on the same commit as the old one, push it, and keep
-   the old tag until everybody has moved.
+   the old tag until everybody has moved. Then the administrator deletes the old tag (the commit stays
+   reachable under the new one), or, when something outside the team depends on the name, records it as an
+   accepted deviation, so the audit stops reporting it.
 3. **The integration line.** A project whose real line is not `main` follows section 5.1.
 
 - **Rule:** no tag is moved to another commit, and no branch is deleted before its tag exists.
@@ -314,6 +316,11 @@ A project whose work is integrated in `develop`, `staging` or a release branch c
 The version the project continues from is written in the baseline heading (stage 2). Releases that really
 happened are tagged `released/V<major>.<sub>.<mod>` on the commits that were released, when those commits are
 known (stage 4). A release whose commit is not known is not tagged: a wrong tag is worse than a missing one.
+
+A release made before the adoption can still be fixed by a hotfix: the hotfix branch starts from its tag and
+its first commit is the overlay that brings the automation and a baseline changelog (guide on releases,
+hotfixes and retiring branches, section 2.1). A release without a tag cannot be fixed this way, because there
+is nothing to start from.
 
 ### 5.3 Clones of the team
 

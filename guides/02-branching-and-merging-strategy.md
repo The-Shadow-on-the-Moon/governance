@@ -65,7 +65,8 @@ there, which is safer than one large merge at the end.
 the tag keeps unrelated changes out. A separate numbering lineage means the hotfix can never collide
 with a version `main` has already produced or will produce.
 
-Details of cutting and finishing a hotfix are in *Releases, hotfixes and retiring branches*.
+Details of cutting and finishing a hotfix, including one of a release made before the standard was adopted,
+are in *Releases, hotfixes and retiring branches*.
 
 ### 1.4 Parked branch
 

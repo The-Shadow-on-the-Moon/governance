@@ -1,6 +1,6 @@
 {
   "files": {
-    ".githooks/hooks.py": "59ac024edf876aecc1121903a7eb60955e4092cbb4af7358e782a0dfc25b0722",
+    ".githooks/hooks.py": "ecb3fea40ec4016cb0745c67bc94db1f6797d8c96e8e3faae221a29f2b62f94b",
     ".githooks/pre-commit": "f86667331650708ee35eafa3d3488f94980d81eb8c5400508a3d4af4c23329b0",
     ".githooks/pre-push": "d412bf26d76779df894f7186892e31d653b026bde10610418d78494f7eff86dc",
     ".githooks/prepare-commit-msg": "cb514c67decc934a0351ee40cc757ec82e135cce10fa8c3199d3de23c0a6b1de",
@@ -44,7 +44,7 @@
     "tests/test_dates.py": "0f810f7082f3b18bfa0bbdc20ca8be28505dc964b8df565ed6a549f25797b7b4",
     "tests/test_fields.py": "c4d8e31f1fd893c90996a568848e5a83cdd82e231a29129d2b81970d0af6e859",
     "tests/test_finalize.py": "4dd1e96f4beb434ab6105cbeac612b4dcacdfab4ca6ec2e85f9d5a171923129f",
-    "tests/test_hooks.py": "612e63bfd9ba3ca203c2b72c2ad852b0541940fec9c64140ee5a87bb3802c2ed",
+    "tests/test_hooks.py": "2650756b79e8bd41af6346fa22e0b82d682354f53e452527b3c4a98745cd6f30",
     "tests/test_hotfix.py": "71c5f54d442752ca8fd6f0625bb0291b2024b1fb1235b0d801eedd502bc51461",
     "tests/test_implemented.py": "2e58aea17fbf2e72bb19ef0b724787bfc66615468691fb7b66b920cb93b8c506",
     "tests/test_manifest.py": "c7885dbd402e2610299b12a5f503149aba55d3cb6c054b6f959a9705bf7c0693",
@@ -60,5 +60,5 @@
     "tests/test_watch.py": "bd66b0017b84182e70da7a44696111003c8ec9c602f45518192bd3e37d4056ee",
     "tests/test_workflow.py": "99cd1029af2868b3925e46fcc5ee904701c0347484d557f454b7a26555f4c431"
   },
-  "standard": "V0.11.1"
+  "standard": "V0.12.1"
 }

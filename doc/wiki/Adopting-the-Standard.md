@@ -43,6 +43,15 @@ This page is the route through them. The measure is the [audit tools](Audit-Tool
    and run the audit with `--since <cut-over>` so the old history is left out.
 6. **Re-audit.** Done when there is no failed rule that is not recorded.
 
+## A critical fix in a release from before the adoption
+
+It is a normal hotfix with one extra commit. Start the hotfix branch from the release's tag (the tag of stage 4;
+a release without a tag cannot be fixed this way). The first commit on the branch, the *overlay*, copies from the
+current `main` the files the automation manifest lists (with the manifest), `AGENTS.md` and `.gitattributes`, and adds a new
+`CHANGELOG.md` with one finalized heading for the release being fixed. Activate the hooks, then fix and finish as
+in guide 08, section 2. The overlay never goes into `main`; the forward-port carries the fix alone.
+The old tag and the history are not touched.
+
 ## Useful commands
 
 ```
