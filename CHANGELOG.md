@@ -1,6 +1,11 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013013217 (branch audit-tools)
+#### #173 — Wiki: end-to-end walkthrough
+- doc/wiki/Walkthrough-CSV-Export.md: added. The invented ticket #201 followed in one piece: the ticket, the start and the branch, the changelog entries and the build stamp, the first push, the sync, the backfill of a `REF`, the pull request, the merge and the version it makes, verification, the release, and a hotfix with its forward-port, with the changelog at each stage and a pointer to the guide section for each step. doc/wiki/Home.md links to it.
+- tests/test_tools.py: the test of the changelog examples also parses the changelog blocks of the walkthrough page.
+
 ### Build 20261013010041 (branch audit-tools)
 #### #171 — Guides: scope limits and a defective release
 - guides/README.md: "What the standard assumes" says a project is one repository (coordination across repositories is out of scope) and that an old release is maintained by hotfixes from its tag, not by a branch per maintained line.

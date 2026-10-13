@@ -363,10 +363,12 @@ class GuideValueTests(unittest.TestCase):
 
         parser = self.automation("changelog")
         checked = 0
-        for name in sorted(os.listdir(os.path.join(ROOT, "guides"))):
-            if not name.endswith(".md") or name == "Developer-Guides-Complete.md":
-                continue
-            for block in re.findall(r"```[a-z]*\n(.*?)```", self.guide(name), re.S):
+        texts = [self.guide(name) for name in sorted(os.listdir(os.path.join(ROOT, "guides")))
+                 if name.endswith(".md") and name != "Developer-Guides-Complete.md"]
+        with open(os.path.join(ROOT, "doc", "wiki", "Walkthrough-CSV-Export.md"), encoding="utf-8") as handle:
+            texts.append(handle.read())  # the walkthrough page of the wiki has changelog examples too
+        for text in texts:
+            for block in re.findall(r"```[a-z]*\n(.*?)```", text, re.S):
                 if not re.search(r"^## (WIP-Version|V\d)", block, re.M):
                     continue
                 if re.search(r"^#{2,4} .*\S {3,}\S", block, re.M):
