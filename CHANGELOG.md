@@ -1,8 +1,22 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013054128 (branch audit-tools)
+#### #190 — Consistency sweep of the guides, wiki and tools
+- doc/wiki/Board-Views.md: the Roadmap ticket is suspended, not at ToDo.
+- guides/README.md, guides/10-new-project-bootstrap.md, guides/11-adopting-the-standard-in-an-existing-project.md: the assumption of an organization (the standard's assumptions, the project token, the stage 1 checklist) also names the personal account with the field Kind.
+- guides/appendix-f-board-views-layout.md: the five columns every table view shows, stated without an order the Fix and Versions views do not have.
+- doc/wiki/Walkthrough-CSV-Export.md, guides/03-project-structure.md, guides/04-starting-work.md, guides/05-working-and-committing.md: the example REF token is earlier than the build stamp that follows it; the backfill example in guide 05 uses V2.3.1, as the other examples of that version do.
+- doc/wiki/Automation.md: the script table lists reenable_schedule.py and no longer claims a test file for each script; the manual finalize run also does the sweeps that follow a push to main.
+- doc/wiki/Home.md: the appendices in order, and the last heading is More pages. guides/02-branching-and-merging-strategy.md: Type Alert. guides/03-project-structure.md: a line wrapped.
+- guides/03-project-structure.md (section 3.3): a ticket title has no type prefix such as fix: or docs:, because it becomes the commit's summary line. doc/wiki/Audit-Tools.md: the GitHub and Board rows name the field Kind.
+- guides/02-branching-and-merging-strategy.md, guides/03-project-structure.md (sections 5.2, 5.4 and 7.5), doc/wiki/Walkthrough-CSV-Export.md: the Version ticket description, the bypass Alert and the AUTO-REF entry are shown as the automation writes them (the AUTO-REF in its own build, as alerts.py adds it); the bump reason of a mod version is the generic one.
+- tests/test_tools.py: a test builds those texts with the automation and finds them in the guides; the main guard is at the end of the file.
+- tools/combine.py: the docstring names guides 01 to 11 and appendices A to G. AGENTS.md: the list of automation files names the re-enabling workflow and the saved views file, as the manifest does.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
 ### Build 20261013032905 (branch audit-tools)
-#### #189 — Docs: the Kind field in the remaining places
+#### #189 — Guides and wiki: the Kind field in the remaining places
 - guides/10-new-project-bootstrap.md: the preflight list and the rule of section 2.5 name the field Kind and the variable `TYPE_SOURCE`; the color recommendation of section 5.2 and the first-ticket rule of section 8 cover the field Kind as well as the issue types. doc/wiki/Adopting-the-Standard.md: stage 1 offers the Kind field for a personal account.
 - tools/audit_board.py and tools/audit_github.py: the header descriptions say the Type is the issue type or the field Kind.
 - guides/Developer-Guides-Complete.md: rebuilt.
@@ -12,7 +26,7 @@
 - .github/scripts/ticket_type.py: `type_filter`, the issues query for an issue type, empty when the Type lives in the field Kind. .github/scripts/implemented.py (`version_ticket`) and alerts.py (`stale_planned`) use it and find the Version ticket by its title, skipping pull requests.
 - tests/test_ticket_type.py: both lookups with and without the filter; the manifest is rewritten (standard V0.12.1, provisional).
 
-#### #186 — Test: the Kind field mode end to end
+#### #186 — Kind field mode tested end to end
 - Trial on a throwaway private repository and a throwaway project owned by the personal account (the scripts of this repository run locally with the account's token; nothing stored as a secret): the preflight finds the board linked to the repository and the source `field`; `fields.py` created the 15 fields and Kind with its eight values and colors; the Status values were set through the API; `views.py` created the seven views through the `/users/…` paths with `kind:` filters and a second run found them all up to date; two tickets (a Feature and a Bug with their Kind) merged and `finalize.py` made V0.2.0 (a sub bump read from the Kind of the Feature), set Delivery, Version and Build, and created the Version ticket with Kind Version; `release.py` tagged and set Released, skipping the Version ticket by its Kind; `hotfix.py` made V0.2.0-HF1 from the tag; an Alert got Kind Alert; the date, Watch, conditions and Version format readers read the board; the audit judged the Kind field, the views and the ticket Types, and found the owner and the issue types not a problem.
 - One defect found (#188), fixed. Observed, not changed: the options of the built-in Status field can be set through the API (`updateProjectV2Field`), which the bootstrap guide says is done by hand.
 - Cleanup: the throwaway project deleted; the throwaway repository archived (to be deleted by its owner, the token cannot).
@@ -53,7 +67,7 @@
 - guides/Developer-Guides-Complete.md: rebuilt.
 
 ### Build 20261013021053 (branch audit-tools)
-#### #179 — Docs: README and Automation page agree with the repo
+#### #179 — README and Automation page agree with the repo
 - README.md: the guides are 01 to 11 and the appendices A to G; the `tools/` row names every audit script.
 - doc/wiki/Automation.md: the pre-push hook does not warn about a hotfix branch being behind `main`; the hotfix-finalize step points to the overlay commit for a release made before the adoption.
 
@@ -61,7 +75,7 @@
 - doc/Evaluation/Combined-eval.md: a status section (section 5) says which ticket handled each finding E1 to E13; the evaluation itself is unchanged. The working copy now has Unix line endings, as git stores it.
 - #137 and #138 checked against guide 11, appendix G, the audit tools and the wiki: covered; commented and moved to Review.
 
-#### #181 — Test: counts and descriptions in README, Home and the Automation page
+#### #181 — Counts and descriptions in README, Home and the Automation page tested
 - tests/test_tools.py: `StatementsAboutTheRepositoryTests` compare the guides and appendices named in the root README, the wiki Home and the guide index with the files, every tool with the README, and every hook with the Automation page.
 
 ### Build 20261013015511 (branch audit-tools)
@@ -99,7 +113,7 @@
 - guides/02-branching-and-merging-strategy.md, guides/appendix-b-cheat-sheet-if-then.md and doc/wiki/Adopting-the-Standard.md: the pointer, a row and a section on a critical fix in a release from before the adoption.
 - guides/Developer-Guides-Complete.md: rebuilt.
 
-#### #174 — Test: overlay commit for a hotfix of a pre-adoption release
+#### #174 — Overlay commit for a hotfix of a pre-adoption release tested
 - Trial on this repository, with throwaway material (ticket #176, Version ticket #177, branches `hotfix-v9-9-9-dummy-trial-174` and `hotfix-v9-9-8-dummy-trial-174`, tags under `test/`, the input `trial` ticked): a hotfix branch started from a tag on the initial commit (no `.github/`, no changelog), whose first commit was the overlay of guide 08, section 2.1 (the 62 manifest files, `AGENTS.md`, `.gitattributes`, `.gitignore` and a new `CHANGELOG.md` with a baseline heading). The manifest check reported every file unchanged; the hooks stamped the build; the workflow started from the branch ran the preflight and the hotfix step (dry run, then for real): the heading renamed to V9.9.8-HF1 on the branch, the tag `test/released/V9.9.8-HF1`, the ticket's Delivery, Version and Build, and the Version ticket created, closed and linked. The preflight reads no history, so it does not depend on the branch descending from `main`.
 - Result: no change to the automation is needed for the overlay. One defect found, not specific to the overlay: the pre-push hook warns that a hotfix branch is behind `main` (Bug ticket #175).
 - Cleanup: #176 and #177 closed as Invalid (Abandoned); the unfinished trial branch retired with `test/abandoned/2026-10-12_hotfix-v9-9-9-dummy-trial-174_dummy-trial-174`; the finished one deleted without a retirement tag, its release tag keeping the history.
@@ -120,7 +134,7 @@
 - guides/02-branching-and-merging-strategy.md, guides/06-syncing-and-merging.md, guides/appendix-a-cheat-sheet-daily-flow.md and guides/appendix-b-cheat-sheet-if-then.md: point to guide 07, section 5.2 instead of repeating or sending the reader through guide 05.
 - guides/README.md: a "Triaging an Alert" row in "Where a rule lives".
 
-#### #169 — Test: Appendix F against views.json
+#### #169 — Appendix F tested against views.json
 - guides/Developer-Guides-Complete.md: rebuilt after the edits of #166 to #168.
 - tests/test_tools.py: `AppendixFTests` read the tables of Appendix F and compare them with `.github/views.json`: the column order of every table view, its sort and grouping, and the columns, rows, card fields and sort of every board view.
 

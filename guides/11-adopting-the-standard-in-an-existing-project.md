@@ -356,8 +356,8 @@ A one-page summary of the guide. It adds no new rules.
 
 **Stages** (section 4)
 
-- [ ] 1: the repository belongs to an organization, the types and labels exist (old labels mapped first), only
-      merge commits are allowed, `main` is the default.
+- [ ] 1: the repository belongs to an organization (or keeps the Type in the field Kind), the types and labels
+      exist (old labels mapped first), only merge commits are allowed, `main` is the default.
 - [ ] 2: line endings renormalized in a commit of its own; structure and automation in place; hooks active;
       the old changelog kept and a baseline heading written.
 - [ ] 3: the token, the board and the preflight are in order.

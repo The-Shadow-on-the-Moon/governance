@@ -103,7 +103,9 @@ roles (see *Project structure*, section 10.6).
 
 ## What the standard assumes
 
-- The project is hosted on GitHub, in an organization, with issues, a project board and workflows.
+- The project is hosted on GitHub, in an organization or a personal account (a personal account has no issue
+  types, so the Type lives in a board field; see *New-project bootstrap*, section 5.1), with issues, a project
+  board and workflows.
 - Compiling and testing are done by the developer, locally. There is no continuous integration.
 - The local hooks and the workflow come with the standard, and the hooks need their runtime (Python 3).
 - A project is one repository. Coordinating several repositories that must release together is out of scope.

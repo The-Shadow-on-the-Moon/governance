@@ -105,7 +105,9 @@ roles (see *Project structure*, section 10.6).
 
 ## What the standard assumes
 
-- The project is hosted on GitHub, in an organization, with issues, a project board and workflows.
+- The project is hosted on GitHub, in an organization or a personal account (a personal account has no issue
+  types, so the Type lives in a board field; see *New-project bootstrap*, section 5.1), with issues, a project
+  board and workflows.
 - Compiling and testing are done by the developer, locally. There is no continuous integration.
 - The local hooks and the workflow come with the standard, and the hooks need their runtime (Python 3).
 - A project is one repository. Coordinating several repositories that must release together is out of scope.
@@ -1068,14 +1070,15 @@ Naming them tells the developer where the safeguard is their own care.
 
 > **In GitHub.** The warnings are the advisory check on the pull request and the local git hooks, which
 > fail open and are skipped with `--no-verify`. The detection runs from the automation on every push to
-> `main` and opens an issue of type Alert with Priority `Critical` and the `process` label. A generated
+> `main` and opens an issue of Type Alert with Priority `Critical` and the `process` label. A generated
 > changelog entry looks like this:
 >
 > ```
+> ### Build 20261005164000 (branch main)
 > #### AUTO-REF 20261005164000 (tracked as #187)
-> - **Auto-flagged: this merge's result is not identical to the source branch's tip.** The sync-first
->   rule was not followed, or a conflict was resolved during the merge itself rather than beforehand on
->   the branch. Issue #187 opened automatically for review: document the change once triaged.
+> - **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+>   followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+>   opened automatically for review: document the change once triaged.
 > ```
 >
 > The administrator bypass of branch protection, where the hosting plan offers it, is deliberately left
@@ -1291,8 +1294,9 @@ back to why the change was made.
 #### 3.3 Titles, descriptions and comments
 
 - **Title (recommended):** short and specific, stating the problem or the outcome. No prefix such as
-  `[bug]`, because the Type already says that. Settle it early: if the ticket is renamed after changelog
-  entries were written, those entries keep the old title.
+  `[bug]`, because the Type already says that, and none such as `fix:`, `docs:` or `test:`: the title becomes the
+  commit's summary line, where guide 05 (section 5.2) forbids a type prefix. Settle it early: if the ticket is
+  renamed after changelog entries were written, those entries keep the old title.
 - **Description (recommended):** the problem or the need, in as much detail as is useful, written for
   someone who was not there. Include the background, who is affected and how, the expected result,
   constraints, and what "done" looks like. For a bug, add how to reproduce it, what was expected versus
@@ -1683,8 +1687,9 @@ of them are complete. A Version ticket does no work and is never verified.
 | **Released** | A release is cut on that version. The automation posts a comment with the date and the tag name. | Released | stays closed |
 | **Planned, then dropped** | The version never happened under that number. A person marks it. | Dropped | closed, with a comment saying what replaced it |
 
-- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (which
-  ticket gave it, or the marker that forced it), the pull request, and the tickets with their Type.
+- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (the
+  tickets whose Type gave a sub bump, the marker that forced it, or that it is the first version), the pull
+  request, and the tickets with their Type.
   Build holds the last build of the version.
 - **Rule:** at every finalize, and on a manual run, the automation also attaches the tickets with Delivery
   *Implemented* that are not yet sub-issues of any Version ticket, by their Version: a blank Version gets
@@ -1746,8 +1751,8 @@ The automation generates these texts. The names, numbers and dates are invented 
 | **Sub-issues** | #204 |
 | **Progress, Priority, Size, Risk, Area** | none |
 
-> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, because #204 is a Bug. Last
-> build: 20261005143045.
+> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, from the ticket Types (no Feature or
+> Enhancement). Last build: 20261005143045.
 >
 > Tickets:
 > - #204 Report totals ignore the last day of the month (Bug)
@@ -1769,12 +1774,14 @@ When a release is cut on this version, the automation sets Delivery to *Released
 | **Version** | V002.004.001 |
 
 > Detected on the push of 2026-10-05 16:40 UTC to `main` (commit `abc1234`): this merge's result is not
-> identical to its branch's final state. The branch was not synced first, or a conflict was resolved
-> during the merge itself.
+> identical to its branch's final state. The sync-first rule was not followed, or a conflict was resolved
+> during the merge itself rather than beforehand on the branch.
 >
-> **To do.** Confirm that the merged result was built and tested, document anything that changed in the
-> changelog (in the entry for V2.4.1 that points at this ticket, or in a new block in the current
-> version).
+> Flagged commits:
+> - `abc1234` Merge pull request #186 from report-fixes (not-identical, by Sam)
+>
+> **To do.** Confirm that the merged result was built and tested, and document anything that changed in
+> the changelog (in the entry that points at this ticket, or in a new block in the current version).
 
 ##### Alert ticket for stale planned versions: "Stale planned Version tickets after V2.4.1"
 
@@ -1974,17 +1981,19 @@ triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the b
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
 - tests: added a test that compares the exported file with the page for three reports.
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261006090500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 
 ## V2.4.1 — 2026-10-05 16:41 UTC
+### Build 20261005164000 (branch main)
+#### AUTO-REF 20261005164000 (tracked as #187)
+- **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+  followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+  opened automatically for review: document the change once triaged.
 ### Build 20261005143045 (branch report-fixes)
 #### #204 — Report totals ignore the last day of the month
 - report totals: the last day of the month is now included in the sum.
 - tests: added a test for months of 28, 29, 30 and 31 days.
-#### AUTO-REF 20261005164000 (tracked as #187)
-- Auto-flagged: this merge's result is not identical to its branch's final state. Issue #187 opened
-  automatically for review: document the change once triaged.
 ```
 
 > **In GitHub.** The changelog is a `CHANGELOG.md` file at the repository root. The local hooks replace
@@ -2396,7 +2405,7 @@ The same start for a change without a ticket:
 ```
 ## WIP-Version
 ### WIP-Build
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261006090500 — no ticket yet (typo in the settings help text)
 ```
 
 > **In GitHub.** Edit `CHANGELOG.md` at the repository root. To produce a `REF` token, run
@@ -2831,7 +2840,7 @@ A `REF` only:
 ```
 settings help text: fixed the spelling of "authentication".
 
-REF 20261006091500 — no ticket yet (typo in the settings help text)
+REF 20261006090500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -2887,7 +2896,7 @@ its ticket or description existed. It is a loan, and this section is how it is r
 The placeholder in a finalized version:
 
 ```
-#### REF 20261005101500 — no ticket yet (typo in the settings help text)
+#### REF 20260301101500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -2902,7 +2911,7 @@ Or documented in a new block in the current version, leaving the placeholder as 
 
 ```
 #### #233 — Fix the spelling of "authentication" in the settings help text
-- Documents REF 20261005101500 (V2.4.1): fixed the spelling of "authentication" in the settings help text.
+- Documents REF 20260301101500 (V2.3.1): fixed the spelling of "authentication" in the settings help text.
 ```
 
 #### 6.2 Documenting an AUTO-REF
@@ -4747,7 +4756,7 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 #### 4.1 What it is and why it is needed
 
 The automation writes to the board: it sets Delivery, Version, Build, the dates and the Attention flags,
-advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to an organization's board,
+advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to a project board (an organization's or a person's),
 so the project keeps its own token, stored as a secret. The same token lets the preflight store the board's
 number in a repository variable. Without it the automation still versions, and the board steps are
 skipped, with a clear message; the run then ends red once its other steps are done, so that GitHub sends
@@ -5397,8 +5406,8 @@ A one-page summary of the guide. It adds no new rules.
 
 **Stages** (section 4)
 
-- [ ] 1: the repository belongs to an organization, the types and labels exist (old labels mapped first), only
-      merge commits are allowed, `main` is the default.
+- [ ] 1: the repository belongs to an organization (or keeps the Type in the field Kind), the types and labels
+      exist (old labels mapped first), only merge commits are allowed, `main` is the default.
 - [ ] 2: line endings renormalized in a commit of its own; structure and automation in place; hooks active;
       the old changelog kept and a baseline heading written.
 - [ ] 3: the token, the board and the preflight are in order.
@@ -6367,8 +6376,8 @@ second field). The fields below are the ones drawn on each card.
 
 ### 3. Why these columns
 
-- Every table view starts with the same five columns (Title, Assignees, Status, Type, Labels), so a ticket
-  reads the same wherever it is listed. All is the complete list: every field.
+- Every table view shows the same five columns (Title, Assignees, Status, Type, Labels) and then its own, so a
+  ticket reads the same wherever it is listed. All is the complete list: every field.
 - The short views add what their job needs: Attention and Waiting to decide, Waiting, Size, Risk and
   Resolution to follow up, Fix and the rule columns to fix, Delivery, Resolution and Build to see what a
   version holds. Delivery and Version are on all of them, to tell at a glance whether the work is merged or

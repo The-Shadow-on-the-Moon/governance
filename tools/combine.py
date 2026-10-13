@@ -1,7 +1,7 @@
 """Rebuild guides/Developer-Guides-Complete.md from the separate guide files.
 
 The separate files are the source of truth. The combined file is a derived copy for reading in one place:
-the README as front matter, a linked table of contents, guides 01 to 10 and appendices A to F, with every
+the README as front matter, a linked table of contents, guides 01 to 11 and appendices A to G, with every
 heading demoted by one level.
 
 Usage:

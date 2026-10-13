@@ -50,8 +50,8 @@ second field). The fields below are the ones drawn on each card.
 
 ## 3. Why these columns
 
-- Every table view starts with the same five columns (Title, Assignees, Status, Type, Labels), so a ticket
-  reads the same wherever it is listed. All is the complete list: every field.
+- Every table view shows the same five columns (Title, Assignees, Status, Type, Labels) and then its own, so a
+  ticket reads the same wherever it is listed. All is the complete list: every field.
 - The short views add what their job needs: Attention and Waiting to decide, Waiting, Size, Risk and
   Resolution to follow up, Fix and the rule columns to fix, Delivery, Resolution and Build to see what a
   version holds. Delivery and Version are on all of them, to tell at a glance whether the work is merged or

@@ -522,14 +522,15 @@ Naming them tells the developer where the safeguard is their own care.
 
 > **In GitHub.** The warnings are the advisory check on the pull request and the local git hooks, which
 > fail open and are skipped with `--no-verify`. The detection runs from the automation on every push to
-> `main` and opens an issue of type Alert with Priority `Critical` and the `process` label. A generated
+> `main` and opens an issue of Type Alert with Priority `Critical` and the `process` label. A generated
 > changelog entry looks like this:
 >
 > ```
+> ### Build 20261005164000 (branch main)
 > #### AUTO-REF 20261005164000 (tracked as #187)
-> - **Auto-flagged: this merge's result is not identical to the source branch's tip.** The sync-first
->   rule was not followed, or a conflict was resolved during the merge itself rather than beforehand on
->   the branch. Issue #187 opened automatically for review: document the change once triaged.
+> - **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+>   followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+>   opened automatically for review: document the change once triaged.
 > ```
 >
 > The administrator bypass of branch protection, where the hosting plan offers it, is deliberately left

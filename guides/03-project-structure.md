@@ -206,8 +206,9 @@ back to why the change was made.
 ### 3.3 Titles, descriptions and comments
 
 - **Title (recommended):** short and specific, stating the problem or the outcome. No prefix such as
-  `[bug]`, because the Type already says that. Settle it early: if the ticket is renamed after changelog
-  entries were written, those entries keep the old title.
+  `[bug]`, because the Type already says that, and none such as `fix:`, `docs:` or `test:`: the title becomes the
+  commit's summary line, where guide 05 (section 5.2) forbids a type prefix. Settle it early: if the ticket is
+  renamed after changelog entries were written, those entries keep the old title.
 - **Description (recommended):** the problem or the need, in as much detail as is useful, written for
   someone who was not there. Include the background, who is affected and how, the expected result,
   constraints, and what "done" looks like. For a bug, add how to reproduce it, what was expected versus
@@ -598,8 +599,9 @@ of them are complete. A Version ticket does no work and is never verified.
 | **Released** | A release is cut on that version. The automation posts a comment with the date and the tag name. | Released | stays closed |
 | **Planned, then dropped** | The version never happened under that number. A person marks it. | Dropped | closed, with a comment saying what replaced it |
 
-- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (which
-  ticket gave it, or the marker that forced it), the pull request, and the tickets with their Type.
+- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (the
+  tickets whose Type gave a sub bump, the marker that forced it, or that it is the first version), the pull
+  request, and the tickets with their Type.
   Build holds the last build of the version.
 - **Rule:** at every finalize, and on a manual run, the automation also attaches the tickets with Delivery
   *Implemented* that are not yet sub-issues of any Version ticket, by their Version: a blank Version gets
@@ -661,8 +663,8 @@ The automation generates these texts. The names, numbers and dates are invented 
 | **Sub-issues** | #204 |
 | **Progress, Priority, Size, Risk, Area** | none |
 
-> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, because #204 is a Bug. Last
-> build: 20261005143045.
+> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, from the ticket Types (no Feature or
+> Enhancement). Last build: 20261005143045.
 >
 > Tickets:
 > - #204 Report totals ignore the last day of the month (Bug)
@@ -684,12 +686,14 @@ When a release is cut on this version, the automation sets Delivery to *Released
 | **Version** | V002.004.001 |
 
 > Detected on the push of 2026-10-05 16:40 UTC to `main` (commit `abc1234`): this merge's result is not
-> identical to its branch's final state. The branch was not synced first, or a conflict was resolved
-> during the merge itself.
+> identical to its branch's final state. The sync-first rule was not followed, or a conflict was resolved
+> during the merge itself rather than beforehand on the branch.
 >
-> **To do.** Confirm that the merged result was built and tested, document anything that changed in the
-> changelog (in the entry for V2.4.1 that points at this ticket, or in a new block in the current
-> version).
+> Flagged commits:
+> - `abc1234` Merge pull request #186 from report-fixes (not-identical, by Sam)
+>
+> **To do.** Confirm that the merged result was built and tested, and document anything that changed in
+> the changelog (in the entry that points at this ticket, or in a new block in the current version).
 
 #### Alert ticket for stale planned versions: "Stale planned Version tickets after V2.4.1"
 
@@ -889,17 +893,19 @@ triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the b
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
 - tests: added a test that compares the exported file with the page for three reports.
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261006090500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 
 ## V2.4.1 — 2026-10-05 16:41 UTC
+### Build 20261005164000 (branch main)
+#### AUTO-REF 20261005164000 (tracked as #187)
+- **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+  followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+  opened automatically for review: document the change once triaged.
 ### Build 20261005143045 (branch report-fixes)
 #### #204 — Report totals ignore the last day of the month
 - report totals: the last day of the month is now included in the sum.
 - tests: added a test for months of 28, 29, 30 and 31 days.
-#### AUTO-REF 20261005164000 (tracked as #187)
-- Auto-flagged: this merge's result is not identical to its branch's final state. Issue #187 opened
-  automatically for review: document the change once triaged.
 ```
 
 > **In GitHub.** The changelog is a `CHANGELOG.md` file at the repository root. The local hooks replace

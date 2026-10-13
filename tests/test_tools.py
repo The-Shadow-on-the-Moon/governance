@@ -245,9 +245,6 @@ class StatementsAboutTheRepositoryTests(unittest.TestCase):
                 self.assertIn(f"`{name}`", text, name)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class GuideValueTests(unittest.TestCase):
     """Values that the guides repeat in several places must agree with each other and with the automation.
@@ -575,3 +572,31 @@ class GuideValueTests(unittest.TestCase):
                 self.assertIn(f"**{value}**", reference, f"{row[0]}: {value}")
                 checked += 1
         self.assertGreater(checked, 40)
+
+    def test_the_texts_the_automation_writes_are_shown_in_the_guides_as_they_are_written(self):
+        import re
+
+        alerts, finalize, checks = self.automation("alerts"), self.automation("finalize"), self.automation("checks")
+
+        def flat(text):
+            return re.sub(r"\s+", " ", re.sub(r"(?m)^>\s?", "", text)).strip()
+
+        structure = flat(self.guide("03-project-structure.md"))
+        version = alerts.Version(2, 4, 1)
+        found = [checks.Finding("abc1234def", checks.NOT_IDENTICAL, "Merge pull request #186 from report-fixes", "Sam")]
+        title, body = alerts.bypass_alert(found, False, version, "abc1234def0", "2026-10-05 16:40")
+        self.assertIn(title, structure)
+        self.assertIn(flat(body), structure)
+        description = finalize.version_description(version, "2026-10-05 16:41", finalize.bump_reason({204: "Bug"}, "", False), 186,
+                                                   "20261005143045", [(204, "Report totals ignore the last day of the month", "Bug")])
+        self.assertIn(flat(description), structure)
+        _, explanation = alerts.bypass_headline(found, False)
+        entry = alerts.add_autoref("## WIP-Version\n", "20261005164000", 187, explanation, False).splitlines()
+        bullet = flat(entry[3])
+        for name in (("guides", "02-branching-and-merging-strategy.md"), ("guides", "03-project-structure.md"),
+                     ("doc", "wiki", "Walkthrough-CSV-Export.md")):
+            self.assertIn(bullet, flat(self.read(*name)), name[-1])
+
+
+if __name__ == "__main__":
+    unittest.main()

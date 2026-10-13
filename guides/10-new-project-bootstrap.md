@@ -191,7 +191,7 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 ### 4.1 What it is and why it is needed
 
 The automation writes to the board: it sets Delivery, Version, Build, the dates and the Attention flags,
-advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to an organization's board,
+advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to a project board (an organization's or a person's),
 so the project keeps its own token, stored as a secret. The same token lets the preflight store the board's
 number in a repository variable. Without it the automation still versions, and the board steps are
 skipped, with a clear message; the run then ends red once its other steps are done, so that GitHub sends

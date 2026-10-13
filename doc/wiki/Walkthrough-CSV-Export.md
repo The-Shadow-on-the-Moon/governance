@@ -50,7 +50,7 @@ the way: it has no ticket, so Sam logs it as a `REF` with a UTC token instead of
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
 - tests: added a test that compares the exported file with the page for three reports.
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261006090500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -80,7 +80,7 @@ See *Syncing and merging*, section 1.
 ## 6. Get ready, then the pull request
 
 - The `REF` is backfilled: Sam creates #206 ("Fix the spelling of "authentication" in the settings help
-  text", Bug, Origin **Backfilled**, REF `20261006091500`) and replaces the placeholder in place:
+  text", Bug, Origin **Backfilled**, REF `20261006090500`) and replaces the placeholder in place:
 
 ```
 #### #206 — Fix the spelling of "authentication" in the settings help text
@@ -113,6 +113,11 @@ Sam merges with a merge commit and keeps the branch. The versioning workflow run
 - settings help text: fixed the spelling of "authentication".
 
 ## V2.4.1 — 2026-10-05 16:41 UTC
+### Build 20261005164000 (branch main)
+#### AUTO-REF 20261005164000 (tracked as #187)
+- **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+  followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+  opened automatically for review: document the change once triaged.
 ### Build 20261005143045 (branch report-fixes)
 #### #204 — Report totals ignore the last day of the month
 - report totals: the last day of the month is now included in the sum.
