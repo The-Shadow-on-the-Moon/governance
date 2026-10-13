@@ -4646,7 +4646,8 @@ anything else:
 2. that the **project token** exists and works;
 3. which **board belongs to the repository**: it identifies the board from the repository and stores its
    number in a repository variable, so that nothing needs the number typed in;
-4. that the board has **the fields and values** the automation needs.
+4. that the board has **the fields and values** the automation needs, including the field *Kind* when the Type
+   of a ticket lives in a field and not in the issue type (section 5.1).
 
 It also compares the **repository settings** it can read with section 3 of this guide: the merge methods,
 automatic branch deletion, the default branch, issues and projects, the wiki (when the repository syncs to
@@ -4668,7 +4669,9 @@ or more than one, it stops at step 3 and asks the administrator to say which.
 #### 2.5 Rules
 
 - **Rule:** the automation is copied unchanged from the standard. The project's own values are never
-  written into its files: the board is identified by the preflight and stored in a repository variable.
+  written into its files: the board is identified by the preflight and stored in a repository variable, and
+  the one optional setting, where the Type of a ticket comes from, is the repository variable `TYPE_SOURCE`
+  (section 5.1).
 - **Rule:** the automation's tests are part of the repository and are run before any change to it (see the
   guide on working and committing, section 3).
 - **Rule:** the preflight runs first, before any other step of the automation.
@@ -4809,7 +4812,8 @@ other board fields (section 6.1).
 - **Rule:** each label carries its meaning from the *Ticket fields reference* as its description, so the
   meaning shows wherever the label is used.
 - **Recommendation:** each label takes the hex color that the *Ticket fields reference* gives it, and each
-  issue type the color that table gives it, so that a ticket reads the same in every project.
+  issue type (or option of the field *Kind*) the color that table gives it, so that a ticket reads the same in
+  every project.
 - **Rule:** the labels a new repository starts with that are not on this list (for example `bug`,
   `enhancement`, `duplicate`, `invalid`, `question`, `wontfix`, `good first issue`, `help wanted` and
   `accessibility`; the set changes over time) are deleted. `documentation` stays, because it is on the list.
@@ -4918,8 +4922,8 @@ build stamp stored in a number field is rejected by the hosting service.
 - **Rule:** the first merge is a real change, logged and merged by pull request like any other, so that
   the first version comes from the normal flow.
 - **Recommendation:** make that first change the initial structure of the project.
-- **Rule:** create the ticket for that first change only after the issue types, the labels and the board exist
-  (sections 5 and 6): a ticket needs a Type, an Area and its board fields, and the first version needs a ticket
+- **Rule:** create the ticket for that first change only after the issue types (or the field *Kind*), the labels and the board
+  exist (sections 5 and 6): a ticket needs a Type, an Area and its board fields, and the first version needs a ticket
   to attach to.
 
 **Why.** A first version that comes from the normal flow proves the flow works, and it avoids a bypass

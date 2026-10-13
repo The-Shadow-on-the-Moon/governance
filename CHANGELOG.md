@@ -1,6 +1,12 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013032905 (branch audit-tools)
+#### #189 — Docs: the Kind field in the remaining places
+- guides/10-new-project-bootstrap.md: the preflight list and the rule of section 2.5 name the field Kind and the variable `TYPE_SOURCE`; the color recommendation of section 5.2 and the first-ticket rule of section 8 cover the field Kind as well as the issue types. doc/wiki/Adopting-the-Standard.md: stage 1 offers the Kind field for a personal account.
+- tools/audit_board.py and tools/audit_github.py: the header descriptions say the Type is the issue type or the field Kind.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
 ### Build 20261013031037 (branch audit-tools)
 #### #188 — Automation: the Version ticket lookup fails for a personal account
 - .github/scripts/ticket_type.py: `type_filter`, the issues query for an issue type, empty when the Type lives in the field Kind. .github/scripts/implemented.py (`version_ticket`) and alerts.py (`stale_planned`) use it and find the Version ticket by its title, skipping pull requests.

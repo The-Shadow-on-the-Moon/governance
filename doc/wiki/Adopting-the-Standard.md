@@ -31,7 +31,7 @@ This page is the route through them. The measure is the [audit tools](Audit-Tool
 
    | Stage | What | Who |
    |---|---|---|
-   | 1 GitHub settings | Organization, issue types, labels (map old labels first), merge methods, default branch. | Administrator |
+   | 1 GitHub settings | Organization (or, for a personal account, the Kind field in place of issue types), issue types, labels (map old labels first), merge methods, default branch. | Administrator |
    | 2 Adoption branch | Line endings in a commit of their own, structure, automation, hooks, the old changelog kept and a baseline heading. | Developer |
    | 3 Token, board, preflight | The project token, the board with its fields and views, the preflight. | Administrator |
    | 4 Git names | Retire or rename branches, add standard tags beside the old ones, make `main` the integration line. | Developer, project owner |

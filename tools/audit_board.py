@@ -1,7 +1,7 @@
 """Audit the project board and its tickets against the guides.
 
 Reads, through the `gh` command line tool, the board linked to the repository: its fields and their values, its saved
-views (against `.github/views.json`) and every ticket on it (issue type, Size, Status against open or closed, Resolution,
+views (against `.github/views.json`) and every ticket on it (Type, that is the issue type or the field Kind, Size, Status against open or closed, Resolution,
 Origin and REF, the form of Version, the Version and Alert tickets). Read-only. It needs `gh` signed in with the `project`
 scope; what it cannot read is reported as not-checkable. Throwaway tickets (label `dummy`) and pull requests are skipped.
 

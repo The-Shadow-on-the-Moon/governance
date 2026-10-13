@@ -1,7 +1,8 @@
 """Audit the GitHub repository settings of an existing project against the guides.
 
 Reads, through the `gh` command line tool, the repository's merge methods, default branch, features, branch protection,
-Actions, secret and variable names, labels and the organization's issue types. Read-only. It needs `gh` signed in with
+Actions, secret and variable names, labels and the organization's issue types (not needed when the Type is kept in the board field Kind, see the variable
+TYPE_SOURCE). Read-only. It needs `gh` signed in with
 enough access (administration to read protection and secrets); what it cannot read is reported as not-checkable.
 
 Usage:
