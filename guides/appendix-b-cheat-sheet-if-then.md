@@ -40,7 +40,7 @@ branching and merging.
 | a ticket needs more work after it is *Completed* | Reopen it only if its own scope is unmet. Otherwise create a new ticket and link the two. | Issues and the board in practice, section 4.3 |
 | work is set aside to resume later | Suspend the ticket, with a comment, and the branch too. | Issues and the board in practice, section 4.1 |
 | work is being dropped | Abandon it with a Resolution and a comment, and the branch too. | Issues and the board in practice, section 4.2 |
-| an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5 |
+| an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5.2 |
 | the automation flagged my ticket (*Watch*, *Caution* or *AtRisk*) | Read its comment, decide, act, and tick *Fine*, or *Handled elsewhere* if it is handled elsewhere. | Issues and the board in practice, section 2.4 |
 | an Alert was raised in error | Abandon it with Resolution *Invalid* and a comment, and raise a Bug against the automation. | Issues and the board in practice, section 5 |
 | a planned version will not happen | Mark it *Dropped*, close it, and comment what replaced it. | Issues and the board in practice, section 6 |
@@ -54,7 +54,9 @@ branching and merging.
 | I want to keep working on a merged branch | Sync `main` into it first, then open a new `WIP-Version` heading. | Starting work, section 3.3 |
 | I want to restart a suspended or abandoned branch | Recreate it from its tag, and sync `main` first. | Starting work, section 3.4 |
 | a critical problem is found in a released version | Start a hotfix from the release tag. | Releases, hotfixes and retiring branches, section 2 |
+| the released version is from before the adoption | Start the hotfix from its tag; the first commit is the overlay (automation and a baseline changelog). | Releases, hotfixes and retiring branches, section 2.1 |
 | I want to declare a version a release | Verify it, run the release step, and tell the project owner. | Releases, hotfixes and retiring branches, section 1 |
+| a release turns out to be defective | Keep its tag. Fix it with a hotfix of that release, or release a newer version from `main`. | Releases, hotfixes and retiring branches, section 1.1 |
 | a release was declared by mistake | Delete the tag and put the Version ticket and its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
 
 ## Assistants and new projects
@@ -64,3 +66,5 @@ branching and merging.
 | I am an assistant and the action is risky, outward-facing, or a commit, push or merge into `main` or a shared branch | Ask first, and propose the commit message. Syncing `main` into the person's own branch is routine. | Working with an assistant, section 3 |
 | I am an assistant and there is a real choice to make | Present the options with a recommendation and ask. | Working with an assistant, section 3 |
 | I am starting a new project | Follow the bootstrap checklist. | New-project bootstrap, section 9 |
+| the project already exists and I want it to follow the standard | Audit it, triage the findings, then do the stages in order. | Adopting the standard, sections 2 to 4; appendix G |
+| the audit reports a failure in the past (commits, tags) | Do not rewrite history. Record it as accepted with a reason, and judge from the cut-over. | Adopting the standard, section 3 |

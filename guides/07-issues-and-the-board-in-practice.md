@@ -99,11 +99,13 @@ The board has seven saved views, in this order:
 
 Every view except All leaves out pull requests and test tickets by ending its filter with `is:issue AND -label:dummy`
 (see *Ticket fields reference*; the automation puts each pull request on the board so that All has no gaps).
-The views are defined in a file, `.github/views.json`, and created by a script, `views.py`, so every project
+The views are defined in a file kept in the repository and created by a script, so every project
 has the same ones. To change a view, change the file and run the script. Two settings of *All* are made by
 hand when it is created, because the API cannot reach them: the sort *Created, ascending* and *Show hierarchy* off
 (guide on the new-project bootstrap, section 6). Setting them up is part of
 configuring the board, which is the administrator's job.
+
+> **In GitHub.** The file is `.github/views.json` and the script is `.github/scripts/views.py`.
 
 ### 2.3 Rules
 
@@ -167,8 +169,10 @@ minute or so instead of waiting for the next scheduled run.
 ### 2.5 The conditions the board shows
 
 Everything the board draws attention to is a *condition*, and each has one of three natures, which is also
-the view it shows in. The list below is the registry in `conditions.py`; a new condition is one new entry
+the view it shows in. The list below is the registry of the automation; a new condition is one new entry
 there.
+
+> **In GitHub.** The registry is `.github/scripts/conditions.py`, and a refresh on request is the workflow mode `conditions`.
 
 | Id | Name | View | Cleared by |
 |---|---|---|---|
@@ -201,7 +205,7 @@ there.
   you have write access).
   An *Implemented* ticket waiting for its Version is attached just before it, so it is not shown as broken.
   A change to a board field alone starts no run: if Fix still shows a ticket you have just corrected, it
-  goes when you close the issue, or at the next refresh, or ask for one (the workflow mode `conditions`).
+  goes when you close the issue, or at the next refresh, or ask for one.
 
 
 ---
@@ -310,9 +314,11 @@ covers who takes it and what to do with it.
 
 ### 5.2 Triage
 
-- **A bypass or a merge without entries:** the steps are in the guide on working and committing,
-  section 6.2. Confirm that the result was built and tested, document what changed, comment, and move the
-  Alert to *Review* for a human to complete.
+- **A bypass or a merge without entries:** confirm that the merged result was built and tested. Document
+  what changed, either by replacing the generated `AUTO-REF` note in place or, preferably, by describing
+  it in a new block in the current version (the placeholder then stays where it is, as the record of how
+  the change first appeared; the guide on working and committing, section 6.2, shows both). Comment on
+  the Alert with what you found, and move it to *Review* for a human to complete.
 - **A changelog that could not be read:** no version was finalized. Correct `CHANGELOG.md` by hand (one
   open `WIP-Version` heading, with at most one marker and no other text), run the finalize step again,
   comment on the Alert with what was wrong, and move it to *Review*.

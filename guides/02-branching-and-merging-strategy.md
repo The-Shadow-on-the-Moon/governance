@@ -65,7 +65,8 @@ there, which is safer than one large merge at the end.
 the tag keeps unrelated changes out. A separate numbering lineage means the hotfix can never collide
 with a version `main` has already produced or will produce.
 
-Details of cutting and finishing a hotfix are in *Releases, hotfixes and retiring branches*.
+Details of cutting and finishing a hotfix, including one of a release made before the standard was adopted,
+are in *Releases, hotfixes and retiring branches*.
 
 ### 1.4 Parked branch
 
@@ -280,7 +281,7 @@ is defined in *Concepts*.)
 A version is not a release. Every merge creates a version; declaring one of them a release is a
 separate, deliberate step (section 2.2).
 
-> **In GitHub.** The Type is the issue's native Issue Type. A `## WIP-Version` heading with a marker
+> **In GitHub.** The Type is the issue's native Issue Type (or its board field Kind, in a project owned by a personal account). A `## WIP-Version` heading with a marker
 > sits at the top of `CHANGELOG.md`. The finalizing job reads the ticket numbers listed in that
 > section, looks up each issue's Type, applies any marker, and renames the heading to the resulting
 > version on merge.
@@ -485,11 +486,9 @@ The response is the same for all of them, and it never blocks the person who nee
 
 What the developer does afterwards:
 
-- **Recommendation:** triage the Alert promptly. Confirm that the result was built and tested, document
-  what changed, either by replacing the generated note in the changelog or, preferably, by describing
-  it in a new block in the current version.
-- Every move of the Alert after creation is manual: a person starts it (`InProgress`), says they believe
-  it is handled (`Review`), and a human verifies it (`Completed`). Shipping a version never moves it.
+- **Recommendation:** triage the Alert promptly. What to do, and how the Alert moves afterwards (every
+  move is manual, and shipping a version never moves it), is in the guide on issues and the board,
+  section 5.
 
 **Why.** A bypass is not a failure to be hidden; it is a decision that needs follow-up. Creating the
 ticket at the moment of the event means the follow-up exists even if the person who bypassed is too busy
@@ -523,14 +522,15 @@ Naming them tells the developer where the safeguard is their own care.
 
 > **In GitHub.** The warnings are the advisory check on the pull request and the local git hooks, which
 > fail open and are skipped with `--no-verify`. The detection runs from the automation on every push to
-> `main` and opens an issue of type Alert with Priority `Critical` and the `process` label. A generated
+> `main` and opens an issue of Type Alert with Priority `Critical` and the `process` label. A generated
 > changelog entry looks like this:
 >
 > ```
+> ### Build 20261005164000 (branch main)
 > #### AUTO-REF 20261005164000 (tracked as #187)
-> - **Auto-flagged: this merge's result is not identical to the source branch's tip.** The sync-first
->   rule was not followed, or a conflict was resolved during the merge itself rather than beforehand on
->   the branch. Issue #187 opened automatically for review: document the change once triaged.
+> - **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+>   followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+>   opened automatically for review: document the change once triaged.
 > ```
 >
 > The administrator bypass of branch protection, where the hosting plan offers it, is deliberately left

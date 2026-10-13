@@ -344,7 +344,7 @@ A `REF` only:
 ```
 settings help text: fixed the spelling of "authentication".
 
-REF 20261006091500 — no ticket yet (typo in the settings help text)
+REF 20261006090500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -400,7 +400,7 @@ its ticket or description existed. It is a loan, and this section is how it is r
 The placeholder in a finalized version:
 
 ```
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20260301101500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -415,15 +415,15 @@ Or documented in a new block in the current version, leaving the placeholder as 
 
 ```
 #### #233 — Fix the spelling of "authentication" in the settings help text
-- Documents REF 20261006091500 (V2.4.1): fixed the spelling of "authentication" in the settings help text.
+- Documents REF 20260301101500 (V2.3.1): fixed the spelling of "authentication" in the settings help text.
 ```
 
-### 6.2 Triaging an Alert and its AUTO-REF
+### 6.2 Documenting an AUTO-REF
 
-1. Confirm that the merged result was built and tested.
-2. Document what changed, in place or in a new block under the Alert's ticket, as above.
-3. Comment on the Alert with what you found.
-4. Move it to *Review*; a human completes it.
+The person who triages an Alert documents the change its `AUTO-REF` stands for, in the same two ways as a
+`REF` above: replace the generated note in place under the Alert's ticket, or, preferably, describe the
+change in a new block in the current version and leave the `AUTO-REF` as it was. The rest of the triage (what
+to confirm, the comment, the move to *Review*) is in the guide on issues and the board, section 5.2.
 
 ### 6.3 Rules
 

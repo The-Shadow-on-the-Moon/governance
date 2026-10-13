@@ -1,117 +1,162 @@
-# Combined evaluation of the guides and the project
+# Combined evaluation of the guides
 
-Date: 2026-10-08. Sources: `Project-eval.md`, `Gemini-eval.md`, `Copilot-eval.md`. Every finding below was checked against the guides, the code or the live GitHub state where possible. Analysis only: nothing has been changed.
+Date: 2026-10-11. Ticket #165. Subject: guides 01 to 11 and appendices A to G as they are now (the combined file, 6,466 lines).
+Sources: my own evaluation (part 1), `Copilot-eval.md` and `Gemini-eval.md` (part 2), both redone against the latest guides.
+This is a new analysis and rests on no earlier evaluation. Analysis only: nothing in the guides was changed.
 
-## How the three evaluations compare
+**How it was done.** I read the whole combined file, then checked every claim against the guides themselves, the tools and tests, and the live files:
+`xref_check.py` (280 references, 0 problems), `combine.py --check` (the combined file is current), a comparison of Appendix F with `.github/views.json`
+and of Appendix G with the checks the audit scripts report, and a search of the guides for each term and value in question.
+The unit tests (`python -m unittest discover -s tests`) pass: 612 tests, `OK`, run on the working tree with the uncommitted changes of the open version. The tests therefore show that the guides, tools and automation agree where they are tied together; the findings below fall where no test looks.
 
-| | Scope | Verdict | Quality |
-|---|---|---|---|
-| Project evaluation | Guides (all files) and the project: tests, repo settings, board, tickets, pull requests, history | Several real contradictions and gaps; the project follows the guides closely, with a few deviations | Concrete and checked against code and live data |
-| Gemini | Combined guide file only | "High / Very High" | Two real gaps. Most other findings are "check that…" prompts that turned out fine |
-| Copilot | Combined guide file only | "Strong", no major contradictions | Generic. Mostly editorial or out of scope. The "no contradictions" verdict is wrong |
+## 1. My evaluation
 
-Neither Gemini nor Copilot looked at the project, so only the project evaluation covers whether the project follows its own guides.
+### Verdict
 
-## 1. Address: guide defects (confirmed)
-
-Ordered by importance. "Fix" says what to change; each fix is a small documentation edit unless stated.
-
-| # | Finding | Source | Fix |
-|---|---|---|---|
-| G1 | **Test-result rule contradicts itself.** 05 §4.2 says "nothing more is prescribed", 05 §4.3 makes recording a Rule, the file location is only a Recommendation, yet checklists 05 §8 and 06 §2.1 treat the file as mandatory. "Recorded test result" is never defined. | Project evaluation | Decide the intent, then make every place say it. Suggested: results are required only when the person verifies or reviews a ticket and when a release is verified (08 §1.1); routine unit-test runs need no stored file. Define "recorded result". Make `tests/results/` a Rule only for those cases, and align 05 §4.2, 05 §4.3, 05 §8, 06 §2.1, 07 §3 and 03 §2.1. |
-| G2 | **Alert causes listed as three, automation raises four.** The changelog-error Alert (02 §3.3, `alerts.changelog_error_alert`) is missing from 03 §5.3 and §5.4, Appendix E §5, guide 07 §5 and Appendix C. | Project evaluation | Add the fourth cause to those places, with its assignee rule and triage steps ("correct `CHANGELOG.md`, then re-run finalize", from the Alert's own text). |
-| G3 | **Scheduled run is never defined.** Version#, the Implemented attach, Watch flags and field rules all depend on it. Only Appendix C says "three a day". 03 and 07 use the term undefined; bootstrap 10 §2.1 doesn't list the schedule or the `reenable-schedule.yml` workflow (needed because GitHub disables schedules after 60 days of inactivity); the glossary has no entry. | Project evaluation | Add a short "scheduled run" section in guide 03 (what it does, how often, why it exists), a glossary entry in guide 01, and add the schedule and the re-enable workflow to the bootstrap guide's list and checklist. |
-| G4 | **Guide 01 says the only labels are the 14 Area labels.** The standard also requires `dummy` (10 §5.2, Appendix C, 07 §7.1). | Project evaluation | Reword guide 01 §8: "the 14 Area labels plus the `dummy` marker label". |
-| G5 | **Five-minute versus two-hour wait.** 03 §4.3 says five minutes with no exception; 03 §4.4 and Appendix C say two hours for the Delivery and Version rules. | Project evaluation | State both in 03 §4.3: five minutes by default, two hours for the Delivery and Version rules. |
-| G6 | **`WIP-Build` must be re-added before every commit.** The hook only stamps an existing placeholder. Guide 04 introduces it once; guide 05 never says to add a fresh one for each later commit. | Gemini (confirmed in `hooks.py`) | In 05 §1/§2 and checklist 05 §8: "before each commit that logs a change, add a `### WIP-Build` block under the open version". Add one line to Appendix A. |
-| G7 | **Assistant and merging is ambiguous.** 09 §3.1 requires approval for any "merge", but syncing `main` into a branch is a merge that guides 04 and 06 treat as routine. 09 §3.2 implies syncing is gated. | Project evaluation | In 09 §2.1 list "syncing `main` into the person's branch" as routine, and keep merging into `main` as ask-first. Align 09 §3.2. |
-| G8 | **Appendix C: "Critical needs a comment"**, but automation-created Alerts and hotfix tickets are Critical. | Project evaluation | Add "except Alerts, which the automation creates as Critical". |
-| G9 | **Hotfix version assignment.** Guide 01 §1 says a version is assigned "when a branch merges into main"; a hotfix version is assigned at finish. | Project evaluation | Add "or, for a hotfix, when it is finished". |
-| G10 | **Wrong cross-reference in Appendix B** for the skipped-hooks fallback ("Working and committing §5"). It's in guide 04 §5.1. | Project evaluation | Change the "See" column. `xref_check` can't catch this because the section exists. |
-| G11 | **Root contents table is incomplete.** 03 §2.2 says the root holds only what the table lists; `LICENSE*` and `.gitattributes` aren't in it. | Project evaluation | Add rows for license files and for `.gitattributes`. |
-| G12 | **Bootstrap omits `.gitattributes`.** Windows line endings broke the hooks and parser once (ticket #14). | Project evaluation | Add `.gitattributes` with `* text=auto eol=lf` to guide 10 §1 and the checklist. |
-| G13 | **Trialing automation changes isn't a procedure.** The DUMMY-ticket convention is only in Appendix C and `AGENTS.md`. | Project evaluation | Add a short subsection to guide 05 §3.2 (or 10 §8) covering the title, label, closing as Invalid, and tagging branches before deleting. |
-| G14 | **Build blocks within a version: order is not stated.** | Project evaluation | Add "newest build first" to 03 §7.3. |
-| G15 | **Push rejected on a shared branch.** Guide 06 doesn't say to merge `origin/<branch>` and never rebase. | Gemini | Add a note to 06 §1: fetch, merge the remote branch, rebuild, push. |
-| G16 | **`AUTO-REF` after a new-block triage.** Only implied that it stays. | Gemini (partly covered) | One sentence in 03 §7.4: the generated entry stays as the record, same as `REF`. |
-| G17 | **Template for personal assistant-preference files.** 09 §6.1 only says they exist. | Copilot | Add a short optional template to 09 §6, flagged as optional. |
-| G18 | **Smaller edits.** Fix guide 01 §5's heading ("Branches and tags' words"). Add Appendix D and the individual guides to the wiki Home. Add a note about tool-attribution trailers to `AGENTS.md`. | Project evaluation | Direct edits. |
-
-### Structural recommendation (the root cause of G2, G5 and G8)
-
-Each Attention, Delivery and Version rule is restated in 4–6 places (03, Appendix C, Appendix E, guide 07, the wiki `Automation.md`, the changelog). Ticket #104 had to edit five files for two rules. Copilot made a related point about the Version field.
-
-Fix: keep one canonical location per rule (the fields reference, Appendix C, is the natural one). Elsewhere, link to it and keep only a one-line summary. Add a test in `tests/test_tools.py` for any value that appears in several places (the idle thresholds, the wait times, the Alert causes, the label list), so drift fails the build. The existing tests already do this for the wiki page and `views.json`.
-
-## 2. Address: project deviations (confirmed)
-
-| # | Finding | Fix |
+| | Verdict | Why |
 |---|---|---|
-| P1 | **No test results stored** (`tests/results/` missing). 45 of 60 Completed work tickets have no comment naming a build. | Settle G1 first. Then either start recording results in the cases G1 defines, or accept the lighter rule. The comment-naming-a-build point is only a Recommendation, so no retrofit is needed. |
-| P2 | **Changelog entries describe board actions**, not file changes (#70, #72, #82, #99, #100, #101). | Under the guides' own rule, earlier entries aren't edited except for a critical correction, so leave history alone. Keep such statements in ticket comments from now on. |
-| P3 | **Collaborator `claudia-tsom` (read access) isn't in `Roles-and-Access.md` or `AGENTS.md`.** | Confirm who it is. Either add a "read-only" line to the roles page or remove the access. |
-| P4 | **Leftover registered workflow "Ubuntu 26.04 trial"** (file gone, shown as active). Local tags `released/V9.9.9` and `-HF1` exist only locally. | Run `git fetch --prune --prune-tags` for the tags. The workflow entry disappears from the Actions list once its runs are deleted or GitHub ages it out; this is housekeeping. Ask first before deleting anything on the remote. |
-| P5 | **Label and type descriptions drift** from Appendix C (`config` loses "service definitions"; US versus UK spelling). | Update the `config` label description. Pick one spelling for the issue types and match Appendix C. |
-| P6 | **Untracked `.anchor` file.** | Add `.anchor` to `.gitignore` (personal or tool file). |
+| **Coherence** | Strong | One model runs through everything: ticket → branch → commits → pull request → version → release. Judgment belongs to people, facts to the automation. Every procedural guide has Rule / Recommendation / In GitHub markers and a checklist. The README's "Where a rule lives" table gives each rule one home, and tests in `tests/test_tools.py` hold the values that repeat (idle times, Alert kinds, labels, the bump per Type, board fields and colors, the conditions table). |
+| **Consistency** | Good, with a short list of real slips | No contradiction in a rule. The slips are in the tables that list what exists (files, stages), a stale word, and one rule that is restated in three places. |
+| **Completeness** | Good for the stated scope | The normal flow, exceptions, bootstrap, adoption, audit and assistants are all covered. The gaps are at the edges: a release made before adoption, the limits of scope, and one failure case. |
 
-## 3. Irrelevant or incorrect findings (and why)
+### Findings, most important first
 
-| Finding | Source | Why it doesn't need action |
-|---|---|---|
-| Version ticket title inconsistency (with or without `V`) | Gemini | The guides state the rule explicitly and apply it consistently: title `Version 2.4.1`, field `V2.4.1`. |
-| Attention thresholds might differ across guides | Gemini | Checked. They match in guides 03 and 07, Appendix C and `watch.py` (7 days, 30, 182, 14). It was a "please verify", not a defect. |
-| Internal anchor links might be wrong | Gemini | The combined file has 96 links. Three end in `-1`, which is GitHub's suffix for duplicate headings, so they work. |
-| Hook lifecycle (`pre-commit` versus `prepare-commit-msg`) is blurry | Gemini | A nitpick. The guides say what each hook does and don't misstate it. |
-| `AtRisk` is "reserved", which confuses readers | Copilot | Intentional and documented in 03 §4.3 and Appendix C. It is a design choice, not a defect. Revisit only if you want to give it a rule. |
-| "No major contradictions or process dead ends" | Copilot | Incorrect. G1–G5 are contradictions and gaps. |
-| "Scaling beyond one team", broader secrets guidance, beginner setup help | Copilot | Out of scope: the standard targets a small team on one repository. A scaling section would need real input first. |
-| Reduce repeated role-collapsing text; "see above" wording | Copilot | Role-collapsing is explained once in 03 §10.6. The guides use precise section references. |
-| "Exceptionally rigorous / very high completeness" | Gemini | Generous. Several of the gaps above were visible only by checking against the code and the live repository. |
+Each is a small documentation edit unless stated. Type: **C** consistency, **M** completeness (missing), **H** coherence.
 
-## 4. Suggested order of work
-
-1. **Tickets first** (the project's own rule): one ticket per group below, each with a Size, and each logged in the open changelog.
-2. **Group A (content, one ticket):** G1 (decide the intent first, because it changes P1), then G2, G4, G5, G8, G9.
-3. **Group B (one ticket):** G3, G12, G13, G14 (the bootstrap and scheduled-run gaps).
-4. **Group C (one ticket):** G6, G7, G10, G11, G15–G18.
-5. **Group D (structural, one ticket):** the single-source-of-truth refactor plus the drift tests. This is the largest piece and the one that prevents G2/G5-type bugs coming back. It can wait.
-6. **Housekeeping tickets:** P3–P6.
-7. After each guide edit: `python tools/combine.py`, `python tools/xref_check.py` (expect `problems: 0`) and `python -m unittest discover -s tests`. Guides aren't automation files, so the manifest isn't affected.
-
-Decision needed from you first: **G1**, because it determines whether the project (P1) is non-compliant or the rule is simply too strict.
-
-## 5. How the tickets address the findings (added 2026-10-08)
-
-Decisions taken on 2026-10-08, and the tickets created from them. All five are assigned to the administrator and are in *ToDo*. They come from the analysis in #108.
-
-### Decisions
-
-| Item | Decision |
-|---|---|
-| G1 test results | Recording becomes a strong recommendation everywhere, with no exception for releases or hotfixes (so 08 §1.1, §2.4 and the checklists change too). The project then counts as compliant (P1 closed). |
-| G7 assistant sync | Option A: syncing `main` into the person's own branch is routine. Merging into `main` or any shared branch stays ask-first. |
-| G12 `.gitattributes` | Option A: a rule in the bootstrap guide and the root table. |
-| G13, G14, G15, G17 | All included. |
-
-### Ticket map
-
-| Ticket | Type, Size | Findings it addresses | What it changes |
+| # | Type | Finding | Suggested fix |
 |---|---|---|---|
-| **#109** Fix contradictions and stale statements in the guides | Task, M | G1, G2, G4, G5, G8, G9, G10, G16, G18 | The guides say the same thing in every place: recording test results, the fourth Alert type, the label list, the two waits, the Critical-comment exception, hotfix version assignment, the Appendix B cross-reference, the `AUTO-REF` note, the guide 01 §5 heading, the wiki Home page and the attribution note in `AGENTS.md`. |
-| **#110** Add missing guidance to the guides | Enhancement, M | G3, G6, G11, G12, G13, G14, G15, G17 | New text: the scheduled run (definition, glossary, bootstrap list and checklist, including `reenable-schedule.yml`), a fresh `WIP-Build` before each commit, root-table rows and the `.gitattributes` rule, the DUMMY-ticket procedure, build order, rejected pushes on shared branches, and a personal-preferences template. |
-| **#111** Let an assistant sync main into the person's own branch without asking | Change, XS | G7 | Guide 09 §2.1, §3.1, §3.2 and its checklist. |
-| **#112** Housekeeping found by the guidelines analysis | Task, S | P3, P4, P5, P6 | The undocumented collaborator, the leftover workflow and local tags, label and issue-type descriptions, and the `.anchor` entry in `.gitignore`. Needs the administrator's approval for each setting. |
-| **#113** Keep each rule in one place in the guides, with tests against drift | Refactor, L | The structural recommendation (the cause of G2, G5 and G8) | One canonical place per rule, links elsewhere, and tests for values that appear in several places. Low priority, after the others, since it rewrites the text they change. |
+| E1 | C | **The file tables are incomplete.** Guide 03 §2.2 says the repository holds "only what the table lists", but guide 11 §4.2 has the project add `.git-blame-ignore-revs` to the root, and guide 11 §3 and Appendix G put `.github/audit-baseline.json` in `.github/`. `.github/automation-manifest.json` and `.github/views.json` are named only in guides 07 and 10. None of these is in guide 03 §2.1, whose `.github/` row names only "workflows and their scripts, and the pull request template". | Extend the `.github/` row (manifest, saved views, audit baseline) and add a root row for `.git-blame-ignore-revs` ("present only after a line-endings commit"). Check that guide 10 §1 and the audit's `files.location.*` checks still agree. |
+| E2 | C | **A stale term.** Appendix E §1 (Planning row) says "a person, except Build, **Version#**, the real Version and the dates". No guide or board field called Version# exists. | Delete "Version#,". |
+| E3 | C/H | **Alert triage is stated in three places and has no home in the table.** Guide 02 §6.3, guide 05 §6.2 and guide 07 §5.2 each say what to do with an Alert. Guide 03 §7.4 sends the reader to guide 07, guide 07 sends them to guide 05 §6.2, and the README's "Where a rule lives" has no row for it. The README promises "each rule is set out in one place". | Give triage one home (guide 07 §5.2 is the natural one, since it already covers every Alert kind), reduce 05 §6.2 to the AUTO-REF documenting step, make 02 §6.3 and 06 §5.2 / §6.2 point to it, and add the row. Consequence: guide 06 and Appendix A/B references change, and the combined file is rebuilt. |
+| E4 | M | **The guides do not say how to hotfix a release made before the cut-over.** Details below. | A decision is needed (see §4). The points to correct are listed under "E4 in detail". |
+| E5 | M | **Scope limits are not stated.** The standard is silent on several repositories that must release together, and on several maintained lines (`release-1.x`, `release-2.x`). Guide 02 §1.1 forbids long-lived integration branches, and a hotfix from the release tag (up to nine per release) is in practice the answer for old lines, but no sentence says so. | Add two lines to "What the standard assumes" in the README: coordination across repositories is out of scope, and an old release is maintained by hotfixes from its tag. |
+| E6 | M | **A release that was declared correctly and turned out bad is not named.** Guide 08 §1.1 covers a *mistaken tag* (delete it and redo). It says nothing about a real release found defective: the tag stays, a hotfix or a newer version replaces it. | Two sentences in guide 08 §1.1 and a row in Appendix B. |
+| E7 | C | **"Seven stages" is stage 0 plus seven.** The README, guide 11 and the wiki say "the seven stages" while the guide numbers 0 to 7. | Say "stage 0 and seven stages" everywhere, or number the stages 1 to 8. |
+| E8 | M | **The end of a converted tag is not defined.** Guide 11 §4.4 adds the standard tag and "keeps the old tag until everybody has moved", then stops. The audit check `git.tag.names` flags the old tag as long as it exists. | State the end: the administrator deletes the old tag once everyone has moved (the commit stays reachable under the new one), or the old tag is recorded as accepted history. |
+| E9 | C | **Tool names outside "In GitHub" blocks.** The README says only two places name GitHub or its tooling outside the blocks. Guide 03 §4.3 (Fix) and guide 07 §2.2 and §2.5 name `conditions.py`, `views.json`, `views.py` and the workflow mode `conditions` in the main text. | Move those names into "In GitHub" blocks, or widen the README's statement. |
+| E10 | C | **Appendix F is hand-kept.** Each column position and sort in it is correct today (I compared every view with `views.json`), but no test guards it, unlike the wiki's board-views page. | Add a test that reads Appendix F's table and compares it with `views.json`. |
+| E11 | M | **The coherence of the delivery states has to be assembled.** The moves of Delivery (Pushed ↔ Merged ↔ Released, Implemented, Dropped, back to Pushed on new work) are spread over guide 03 §4.3, Appendix C and Appendix E §3's side paths. | One small "from → to → caused by" table in Appendix E §3. |
+| E12 | H | **No single walkthrough.** The invented ticket #201 (CSV export) appears in guides 03, 04, 05 and 06, but nobody follows it from ticket to release in one piece. | Optional. A worked example as a *wiki page*, not a guide (guides and cheat sheets add no rules, and a copy of the rules would drift). Its changelog snippets can be checked by the existing test of the examples. |
+| E13 | C | A typo: "analyzes and investigations" in guide 03 §9.1 (should be "analyses"). | Direct edit. |
 
-### Findings with no ticket
+### E4 in detail
 
-| Finding | Why |
+**What the guides say today.**
+- A hotfix branch starts from a `released/V…` tag, never from `main` (guide 02 §1.3, guide 04 §3.2, guide 08 §2.1 step 2).
+- Guide 11 §5.2 says a release that really happened is tagged `released/V…` on its commit when that commit is known, and left untagged otherwise.
+- Guide 08 §2.1 steps 3 and 4 add a `## WIP-Version` heading (no marker) and work with the hooks. Step 7 runs the hotfix-finalize step with an explicit version.
+
+**Why that fails for an old release.** I checked the automation:
+- The hotfix step is the workflow's `hotfix` mode. It runs only when started from a branch (`versioning.yml`, `github.ref_type == 'branch'`), and it checks out that branch and runs `.github/scripts/hotfix.py` from it. So the workflow file and the script must exist on the hotfix branch.
+- `hotfix.py` stops with "the changelog has no open WIP-Version heading to finalize" unless the branch changelog has the standard heading.
+- A commit from before the adoption has none of this: no `.github/`, no `.githooks/`, and a changelog in another format (guide 11 §4.2 keeps the old one in `doc/`).
+- Guide 11 §1 forbids rewriting history and moving tags, so the old commit cannot be given these files.
+
+**What is undecided, and so what a correction has to settle.**
+1. Whether the standard supports a hotfix of a pre-adoption release at all.
+2. If not (option a, recommended): which versions have a hotfix lineage. Say that `-HF` numbering and the `released/` hotfix tags start with the first release made after the cut-over, and that a defect in an older release is fixed on a normal branch from `main` and released as a newer version (consistent with guide 02 §2.2, "a release that needs that many fixes should be replaced").
+3. If so (option b): how the branch gets the automation and a changelog. It would have to be copied onto a branch started from the old tag, with a fresh changelog and baseline heading, and the guide would have to say that branch is allowed to differ from the tag in those files only.
+
+**Places to change, for either option.**
+
+| File | Change |
 |---|---|
-| P1 no stored test results | Closed by the G1 decision: recording is a recommendation, so the project is compliant. |
-| P2 board actions described in the changelog | Earlier entries are not edited. Keep such statements in ticket comments from now on. |
-| Section 3, irrelevant or incorrect findings | Not defects, so nothing to fix. |
-| Scaling to large organizations, wider secrets guidance, beginner setup help (Copilot) | Out of scope for a small-team standard. |
+| `guides/11-adopting-the-standard-in-an-existing-project.md` §5.2 | State the rule (point 2 or 3 above). Say that tagging an old release does not make it hotfixable. |
+| `guides/08-releases-hotfixes-and-retiring-branches.md` §2 | A rule that a hotfix is only for a release made after the cut-over (or the extra steps of option b), and a line in the checklist (§4). |
+| `guides/02-branching-and-merging-strategy.md` §1.3 | One line pointing to the above, so the branch rules are not read as covering every tag. |
+| `guides/appendix-b-cheat-sheet-if-then.md` | A row: "a critical problem is found in a release from before the adoption". The existing row "a critical problem is found in a released version" should say "made after the adoption". |
+| `doc/wiki/Adopting-the-Standard.md` | Same statement in the wiki page. |
+| `tests/test_tools.py` | Nothing is needed for option a. For option b, add a test that the steps agree between guides 08 and 11. |
+| After editing | `python tools/combine.py`, `python tools/xref_check.py` (expect `problems: 0`) and the unit tests. No automation file changes, so the manifest is unaffected. |
 
-### Order
+**Side effects to keep in mind.** Option a changes no code and no tests. Option b means the automation would run on a branch that does not descend from the project's current `main`, which the finalize and preflight steps were not built for (they read `main`); it needs trial runs on a throwaway tag (guide 05 §4.4).
 
-#109 first (it settles the wording #110 and #111 build on), then #110 and #111, then #112 whenever the administrator is ready, and #113 last.
+### What I checked and found sound
+
+- **Cross-references**: 280, none broken, and I found no pointer to the wrong guide or section among those I followed (Appendices A and B, the glossary tables).
+- **Appendix G is complete**: it has a row for every check the audit scripts can report (87 ids), and a test fails if one is missing.
+- **Appendix F matches `views.json`**, view by view and column by column (E10 is only about keeping it so).
+- **The padded and short forms of a version** are used correctly: three-digit on the board and in Version ticket titles, short in the changelog, tags and branch names (guide 01 §1, guide 03 §4.3, Appendix C).
+- **Roles, the Rule / Recommendation split, and the enforcement stance** (warn, allow a bypass, record it) are the same in every guide.
+- **Checklists** add no rules, and the ones I compared with their guides match.
+- **The assistant rules** (guide 09) agree with guides 03 §10 and 04 on who sets what.
+
+## 2. The Copilot and Gemini evaluations, checked
+
+### Copilot
+
+Copilot's overall ratings (coherence 9.5, consistency 9.5, completeness 9.5, "no significant contradictions") are generous but not far off; I find no contradiction of a rule, only the slips above. Each of its findings:
+
+| Copilot finding | Verdict | Evidence |
+|---|---|---|
+| "Where a rule lives" is the strongest part | **Right, with a qualification.** | It is, and tests back it. Alert triage (E3) is an exception to "each rule in one place". |
+| Implemented / Merged / Released are hard to tell apart; add a lifecycle diagram | **Partly right.** | The moves are scattered (E11), so a transitions table is worth adding. Copilot's own sketch cannot be used as written: it leaves out *Committed*, *Dropped*, the return to *Pushed* on new work, and *OnDeck*, *Suspended* and *Abandoned*. |
+| Backfilled vs Backdated is easy to miss; add a comparison table | **Not needed.** | Appendix C's Origin table already contrasts them with an example each, and guide 01 §4, guide 03 §4.3 and guide 11 §4.5 define them. Copilot's wording of the difference ("during the process" vs "before adoption") is looser than the guides'. |
+| Why are pull requests on the board? Rationale appears late | **Wrong.** | Guide 03 §6.2, the first place pull requests are described, gives the reason (they share their numbers with tickets, so *All* would have gaps) and guide 07 §2.2 repeats it. |
+| No scenario for a release found bad | **Right, small** (E6). | Only a mistaken tag is covered. |
+| Multi-repository coordination is not addressed | **Right** (E5). | No mention anywhere. |
+| Several maintained support lines are not addressed | **Right, but the answer exists** (E5). | Hotfix from the release tag covers it; it is not said. |
+| Guide 01 is very large | **Wrong.** | Guide 01 is 303 lines, one of the shortest. The large one is guide 03 (1,094 lines, 17% of the guides). I would not split it: the section numbers it carries are referenced from every other guide and from the "Where a rule lives" table. |
+| REF, AUTO-REF and Alert tickets appear before they are explained; add a "for now" note | **Adequate as is.** | The glossary gives each a one-line meaning and a "See" column. A note would add words without adding a rule. |
+| Add one end-to-end example | **Right, as an option** (E12). | Best as a wiki page. |
+| "About 14k lines" | **Wrong.** | The guides are about 6,300 lines. |
+| "No significant contradictions" | **Right.** | I found none in a rule. |
+
+### Gemini
+
+Gemini's summary says there are internal contradictions and minor formatting discrepancies. I could confirm none of the four as a contradiction.
+
+| Gemini finding | Verdict | Evidence |
+|---|---|---|
+| Priority: guide 03 §4.3 says it defaults to *Normal*, but guide 03 §10 and Appendix C say the creator proposes and the project owner sets it | **Not a contradiction.** | A default, a proposal and a decision are different steps, and guides 03, 04, 07 and Appendix C agree (Normal by default, proposed at creation, the owner can change it at any time). A clause in 03 §4.3 ("the project owner can change it") would only repeat 07 §1. |
+| Padded version numbers are mixed with unpadded in guides 02 and 03 outside the board | **Not found.** | Guide 02 §2.2 and §3.1 are unpadded, as are tags and branch names. Padded forms in guide 03 §5.2 and §5.4 appear only in board contexts (the Version field, Version ticket titles). I read every example. |
+| Progress: automation advances to *InProgress* (03 §4.3) vs the person sets it (04 §2.1) | **Not a contradiction.** | Setting it is the rule (guide 04 §2.1, guide 07 §7, Appendix C); the automation's advance is the safety net, and guide 03 §4.3 says so ("the only change it makes"). The guides could say "safety net" in 03 §4.3; I do not count it a defect. |
+| Guide 03 "§2.4" mentions the manifest hashes | **Wrong citation.** | Guide 03 has no §2.4 (it stops at §2.3). The manifest is in guide 10 §2.4. |
+| Guide 03 §2.1's layout table omits `.github/automation-manifest.json` | **Right, and broader** (E1). | The table omits the manifest, the views file and the audit baseline. |
+| Verify that guide 07 §2.2's views match Appendix F | **Right to ask, and they match** (E10). | I compared them. No test guards it. |
+| Rating "complete" for the stated scope | **Fair**, but see E4 to E6. | |
+
+### Comparison of the three
+
+| | Mine | Copilot | Gemini |
+|---|---|---|---|
+| Read | the whole guides, the tools, the live files | the guides, structure and samples | the guides |
+| Findings that stand | 13 | 4 clearly (E5, E6, E11, E12), 1 partly (E3 via "single source") | 2 (E1, E10) |
+| Findings that fail | | 5 (PR rationale, size of guide 01, Backfilled/Backdated, REF note, line count) | 3 contradictions, and 1 citation to a section that does not exist |
+| Strength | evidence for each | the right questions about scope and onboarding | pointing at the layout table and Appendix F |
+| Weakness | not an outside reader's first impression | some claims not checked against the text | claimed contradictions that are not |
+
+## 3. Suggested order of work
+
+1. **Group A, consistency (E1, E2, E7, E9, E13)**: direct edits, one ticket, size S. Then `python tools/combine.py`, `python tools/xref_check.py` and the unit tests.
+2. **Group B, completeness (E4, E5, E6, E8, E11)**: new text, one ticket, size M. E4 needs a decision first.
+3. **Group C, structure (E3, E10)**: moving the Alert triage text and a new test, one ticket, size M. It changes references in guides 02, 05, 06 and 07 and Appendices A and B.
+4. **Optional (E12)**: the walkthrough as a wiki page.
+
+## 4. Decisions needed
+
+- **E4**: how a release from before the cut-over is fixed. (a) A normal branch released as a newer version, and hotfix numbering from the first release after the cut-over (recommended: it needs no new mechanism, and old changelogs stay untouched). (b) Define a hotfix on an old tag: it needs the automation on that branch, which means editing history or copying files onto an old commit.
+- **E3**: which guide owns Alert triage. I recommend guide 07.
+- **E12**: whether to write the walkthrough, and as a wiki page (recommended) or an appendix.
+
+## 5. Status of the findings (added 2026-10-13)
+
+The sections above are the evaluation as it was made on 2026-10-11 and are not rewritten. This table records what became of each finding.
+
+| Finding | Ticket | Outcome |
+|---|---|---|
+| E1 file tables incomplete | #166 | Guide 03 section 2.1 extended (manifest, saved views, audit baseline, `.git-blame-ignore-revs`). |
+| E2 stale term Version# | #167 | Removed from appendix E. |
+| E3 Alert triage in three places | #168 | Guide 07 section 5.2 owns the triage; guides 02, 05 and 06, the appendices and the README point to it. |
+| E4 hotfix of a release from before the cut-over | #170, #174, #175 | Decision changed from option (a) to a hotfix with an overlay commit (guide 08, section 2.1); proven by a trial (#174), which also found the pre-push warning fixed in #175. |
+| E5 scope limits | #171 | Two lines in the README. |
+| E6 defective release | #171 | Guide 08 section 1.1 and a row in appendix B. |
+| E7 "seven stages" | #167 | "Stage 0 and the seven stages" in the README (the wiki and guide 11 did not use the phrase). |
+| E8 end of a converted tag | #170 | Guide 11 section 4.4. |
+| E9 tool names outside In GitHub blocks | #166 | Moved into In GitHub blocks in guides 03 and 07. |
+| E10 appendix F not guarded | #169 | `AppendixFTests` in `tests/test_tools.py`. |
+| E11 delivery transitions | #172 | "Delivery moves" table in appendix E section 3. |
+| E12 walkthrough | #173 | Wiki page Walkthrough-CSV-Export. |
+| E13 typo | #167 | Corrected in guide 03 section 9.1. |
+
+Found afterwards: the invented examples of the guides disagreed with the rules and with each other (#178), and the README and Automation page were stale (#179, guarded by the tests of #181).

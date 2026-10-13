@@ -10,7 +10,7 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 |---|---|
 | `pre-commit` | Replaces `### WIP-Build` in the staged changelog with `### Build <UTC stamp> (branch <name>)`. Warns about a commit with no changelog entry, a merge that needs a rebuild, or a conflict resolved by hand. |
 | `prepare-commit-msg` | Drafts the commit message from the new changelog entries: the ticket title, or "Multiple tickets", or the first bullet for a `REF`, then a block per ticket. |
-| `pre-push` | Warns when the branch is behind `main`, when a pushed changelog still has its placeholder, or when the push carries a merge. |
+| `pre-push` | Warns when the branch is behind `main` (not on a `hotfix-v…` branch, which starts from a release tag and is never merged), when a pushed changelog still has its placeholder, or when the push carries a merge. |
 
 ## The versioning workflow
 
@@ -23,11 +23,11 @@ Activate once per clone: `git config core.hooksPath .githooks`. The hooks warn a
 | A push to another branch | The preflight; then the fallback for skipped hooks (a pushed changelog that still has `### WIP-Build` gets its build heading filled in with the commit's time and hash, a note in the first entry, and a commit on the branch); then the push step: for each ticket in the changelog entries the push added, Delivery becomes *Pushed* and Build the ticket's latest build, *ToDo* and *OnDeck* tickets become *InProgress*, and a ticket that is *Completed*, *Abandoned*, *Review* or *Suspended* and already had work pushed or delivered (recognized by its recorded Build being older than the pushed one, or by Delivery *Implemented*, which has no Build) gets a *Caution* flag with a comment naming the build (not on its first push, not when the Delivery was only set by hand, and not again while a *Caution* or *AtRisk* is open). |
 | Three times a day (08:17, 16:17 and 20:17 UTC; 4am, noon and 4pm ET in summer time, an hour earlier in winter), or on request with mode `scheduled` | The preflight, then attaching *Implemented* tickets to their versions, putting Version in the board form, the date sweep, the Watch flags and the refresh of the Fix field. It never commits. |
 | An issue is edited, closed, reopened, assigned or labeled; someone comments on an issue; or someone ticks a box in a comment the automation wrote | The job `team` asks whether the person has write access; if so, the job `conditions`: the preflight, attaching the *Implemented* tickets, and the refresh of the Fix field for the whole board. It does not go past `team` for a person without write access, and does not start for a pull request. |
-| On request with mode `finalize` | The preflight and the finalize step, as a dry run unless told otherwise. Safe to repeat. |
+| On request with mode `finalize` | The preflight and the finalize step, then the steps that follow it after a push to `main` (the check for stale planned versions, Version in the board form, the date sweep, the Watch flags, the refresh of the Fix field), as a dry run unless told otherwise. Safe to repeat. |
 
 The preflight checks that the repository is reachable (the workflow's own token does not report its rights, so write access is confirmed through the project token), that `PROJECT_TOKEN` works (and warns two weeks before it expires), which board belongs to the repository (its number is kept in the repository variable `BOARD_NUMBER`) and that the board has every field and value the automation needs. It also warns, and only warns, about a repository setting that differs from the bootstrap guide: merge commits allowed and squash and rebase merging off, head branches not deleted automatically, the default branch `main`, issues and projects enabled, the wiki enabled when the repository has the wiki-sync workflow, and the protection of `main` (a pull request required, the branch up to date, the administrator bypass left open), the last read through the project token. A setting the response lacks, and protection that the plan does not offer or the token cannot read, are skipped without a warning.
 
-The finalize step decides the bump from the tickets' Types or the marker, renames the open `WIP-Version` heading in a commit of its own, sets Delivery, Version (in the board form) and Build on each ticket, and creates and closes the Version ticket with the tickets as sub-issues. If the board cannot be updated, the version is still finalized.
+The preflight also decides where the Type of a ticket comes from (the variable `TYPE_SOURCE`, or the owner of the repository: an organization has issue types, a personal account the board field Kind) and, for a personal account, that the REST calls for the board's fields and views use `/users/…` and not `/orgs/…`. The finalize step decides the bump from the tickets' Types or the marker, renames the open `WIP-Version` heading in a commit of its own, sets Delivery, Version (in the board form) and Build on each ticket, and creates and closes the Version ticket with the tickets as sub-issues. If the board cannot be updated, the version is still finalized.
 
 ## The scheduled run
 
@@ -65,7 +65,7 @@ Every flag the automation raises is one comment that starts with a hidden marker
 
 ## The scripts
 
-All in `.github/scripts/`, with a test file for each in `tests/`. Each can be run by hand with `--dry-run` (it needs `GITHUB_REPOSITORY`, `GITHUB_TOKEN` and `PROJECT_TOKEN` in the environment) except where noted.
+All in `.github/scripts/`, with their tests in `tests/`. Each can be run by hand with `--dry-run` (it needs `GITHUB_REPOSITORY`, `GITHUB_TOKEN` and `PROJECT_TOKEN` in the environment) except where noted.
 
 | Script | What it does |
 |---|---|
@@ -81,8 +81,10 @@ All in `.github/scripts/`, with a test file for each in `tests/`. Each can be ru
 | `conditions.py` | The registry of conditions, the rules that span fields, the refresh of the Fix field and of the checkbox comments. |
 | `condition_comments.py` | The text of the checkbox comments and how a tick is read. |
 | `failures.py`, `board_status.py` | The trace of failed board writes, and the last step that ends the job red or stamps the board. |
+| `ticket_type.py` | Where the Type of a ticket comes from: the issue type, or the board field Kind for a personal account (the repository variable `TYPE_SOURCE`, or the owner of the repository). The Type is read from the issue type and, when the issue has none, from Kind; for Kind the preflight also requires the field, `fields.py` creates it, and the Version and Alert tickets get it set. |
 | `fields.py` | Creates the board fields the board lacks, from the table of the preflight. By hand only, with `PROJECT_TOKEN`; a dry run unless `--apply` is given. |
 | `views.py` | Creates, recreates and removes the board's saved views from `.github/views.json` (grouping and sorting can only be set when a view is created, so a changed view is created again and the old one deleted after it; GitHub never deletes the last view of a board). By hand only, with `PROJECT_TOKEN`; it is a dry run unless `--apply` is given: `--only NAME`, `--delete NAME`, `--delete-unlisted`, `--show` (prints the board's views in the file's format), `--definition PATH`. Board settings are the administrator's, so it is run only when the administrator asks. |
+| `reenable_schedule.py` | Enables the versioning workflow again when GitHub disabled it for inactivity (see the scheduled run), and only then. It is run by the workflow `reenable-schedule.yml` on every push, and needs only the workflow token. |
 | `check_manifest.py` | The manifest check and its rewrite (no tokens needed). |
 | `changelog.py`, `versions.py`, `github_api.py`, `checks.py`, `alerts.py` | The shared library: changelog parsing, version rules, the GitHub client, git analysis, Alert tickets. |
 
@@ -109,7 +111,7 @@ Declaring a finalized version a release is a deliberate step, started by hand (t
 
 ## The hotfix-finalize step
 
-A hotfix starts from a release tag, never from `main`, and is never merged, so its version is stated explicitly (`V1.25.0-HF1`, a single digit from 1 to 9 per release). Run on the hotfix branch (named `hotfix-v<major>-<sub>-<mod>-<description>`), `hotfix.py` renames the open `WIP-Version` heading to that version in a commit of its own on the branch, tags that commit `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets straight to *Released*. It refuses a marker on the heading, a branch that is not named for that release, an open version with no ticket entry, a branch that does not contain the release tag (or the previous hotfix's tag), a hotfix number outside 1 to 9, and a version that is already finalized or already has its tag. Afterwards the branch is deleted without a retirement tag, and the fix reaches `main` separately through an ordinary branch and pull request.
+A hotfix starts from a release tag, never from `main`, and is never merged, so its version is stated explicitly (`V1.25.0-HF1`, a single digit from 1 to 9 per release). Run on the hotfix branch (named `hotfix-v<major>-<sub>-<mod>-<description>`), `hotfix.py` renames the open `WIP-Version` heading to that version in a commit of its own on the branch, tags that commit `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets straight to *Released*. It refuses a marker on the heading, a branch that is not named for that release, an open version with no ticket entry, a branch that does not contain the release tag (or the previous hotfix's tag), a hotfix number outside 1 to 9, and a version that is already finalized or already has its tag. Afterwards the branch is deleted without a retirement tag, and the fix reaches `main` separately through an ordinary branch and pull request. For a release made before the project adopted the standard, the branch has no workflow or scripts of its own: its first commit, the overlay, brings them from `main` together with a baseline changelog (guide 08, section 2.1), and the step then runs from that branch as usual.
 
 ## The retire step
 

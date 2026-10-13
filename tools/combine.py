@@ -1,7 +1,7 @@
 """Rebuild guides/Developer-Guides-Complete.md from the separate guide files.
 
 The separate files are the source of truth. The combined file is a derived copy for reading in one place:
-the README as front matter, a linked table of contents, guides 01 to 10 and appendices A to F, with every
+the README as front matter, a linked table of contents, guides 01 to 11 and appendices A to G, with every
 heading demoted by one level.
 
 Usage:
@@ -26,6 +26,7 @@ GUIDES = [
     ("08", "08-releases-hotfixes-and-retiring-branches.md"),
     ("09", "09-working-with-an-ai-assistant.md"),
     ("10", "10-new-project-bootstrap.md"),
+    ("11", "11-adopting-the-standard-in-an-existing-project.md"),
 ]
 APPENDICES = [
     "appendix-a-cheat-sheet-daily-flow.md",
@@ -34,6 +35,7 @@ APPENDICES = [
     "appendix-d-ticket-examples.md",
     "appendix-e-ticket-model.md",
     "appendix-f-board-views-layout.md",
+    "appendix-g-audit-findings-and-fixes.md",
 ]
 
 

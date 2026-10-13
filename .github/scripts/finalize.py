@@ -18,6 +18,7 @@ import preflight
 import versions
 from versions import Version
 import failures
+import ticket_type
 from github_api import Client, GitHubError
 
 CHANGELOG = "CHANGELOG.md"
@@ -136,6 +137,8 @@ def record_version_ticket(run, repo_client, project_client, board, version, when
     if board and project_client:
         try:
             item_id = run.do(f"{title}: add to the board", project_client.add_to_project, board.id, node_id)
+            if ticket_type.field_mode(repo_client) and not existing:
+                ticket_type.set_kind(run, project_client, board, item_id, "Version", title)
             for name, text, value in (("Delivery", delivery, {"singleSelectOptionId": board.fields["Delivery"]["options"][delivery]}),
                                       ("Version", version.board(), {"text": version.board()}),
                                       ("Build", last_build, {"text": last_build})):

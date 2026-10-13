@@ -213,7 +213,7 @@ The same start for a change without a ticket:
 ```
 ## WIP-Version
 ### WIP-Build
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261006090500 — no ticket yet (typo in the settings help text)
 ```
 
 > **In GitHub.** Edit `CHANGELOG.md` at the repository root. To produce a `REF` token, run

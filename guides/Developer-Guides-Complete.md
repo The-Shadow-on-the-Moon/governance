@@ -35,6 +35,7 @@ situations on a page each.
 | **08 Releases, hotfixes and retiring branches** | Declaring a release, fixing a released version, and retiring a branch. | you release, hotfix or retire |
 | **09 Working with an AI assistant** | What an assistant may do alone, what it must ask, how it handles tickets, the changelog and commits, and how a project instructs it. | an assistant works on the project |
 | **10 New-project bootstrap** | Applying the standard to a new repository: structure, automation, settings, token, labels, board, first version, and a trial. | you start a project |
+| **11 Adopting the standard in an existing project** | What is different when the project is not empty: the audit as the measure, the cut-over, triaging the findings, stage 0 and the seven stages, and recording what cannot change. | a project already exists |
 
 | Appendix | What it holds |
 |---|---|
@@ -44,6 +45,7 @@ situations on a page each.
 | **D Ticket examples** | Example tickets for each Type, as full forms. |
 | **E Ticket model** | The design of a ticket as a whole: the questions it answers, why each has its own field, and its life from creation to release. |
 | **F Board views, columns and sorting** | What each saved view of the board shows: its columns, sort order and grouping. |
+| **G Audit findings and how to fix them** | Every finding the audit tools can report, with its class, stage, role, whether it can be undone, and the fix. |
 
 ## Where to start
 
@@ -55,6 +57,7 @@ situations on a page each.
 - **Releasing or fixing a release:** 08.
 - **Working with an assistant, or instructing one:** 09.
 - **Starting a project:** 10.
+- **Bringing an existing project into line:** run the audit tools, then 11 with appendix G.
 
 ## Ideas that run through the guides
 
@@ -81,6 +84,7 @@ in one place. Checklists and cheat sheets add no rules.
 | Syncing, landing, bypass and enforcement | *Branching and merging*, sections 4 to 6 |
 | Ticket fields: the rules, Attention causes, idle times and waits | *Project structure*, section 4 |
 | Version and Alert tickets | *Project structure*, section 5 |
+| Triaging an Alert | *Issues and the board in practice*, section 5.2 |
 | The scheduled run | *Project structure*, section 2.3 |
 | The changelog's structure | *Project structure*, section 7 |
 | The value of every field and who sets it | *Appendix C* |
@@ -101,9 +105,14 @@ roles (see *Project structure*, section 10.6).
 
 ## What the standard assumes
 
-- The project is hosted on GitHub, in an organization, with issues, a project board and workflows.
+- The project is hosted on GitHub, in an organization or a personal account (a personal account has no issue
+  types, so the Type lives in a board field; see *New-project bootstrap*, section 5.1), with issues, a project
+  board and workflows.
 - Compiling and testing are done by the developer, locally. There is no continuous integration.
 - The local hooks and the workflow come with the standard, and the hooks need their runtime (Python 3).
+- A project is one repository. Coordinating several repositories that must release together is out of scope.
+- An old release is maintained by hotfixes from its release tag (*Releases, hotfixes and retiring branches*,
+  section 2), not by a long-lived branch for each maintained line: the standard has one integration branch.
 - The tool-neutral text applies on any platform. The "In GitHub" blocks name the GitHub specifics. Two
   places name GitHub outside the blocks, because they are about GitHub itself: the fixed file names of
   the project structure (such as `.github/`), and the whole bootstrap guide, which sets up a GitHub
@@ -197,6 +206,13 @@ roles (see *Project structure*, section 10.6).
   - [7. The first version and the roles](#7-the-first-version-and-the-roles)
   - [8. Prove the setup](#8-prove-the-setup)
   - [9. Checklist](#9-checklist)
+- [Guide 11: Adopting the Standard in an Existing Project](#guide-11-adopting-the-standard-in-an-existing-project)
+  - [1. The principles](#1-the-principles)
+  - [2. Before you start (stage 0)](#2-before-you-start-stage-0)
+  - [3. Triage the report](#3-triage-the-report)
+  - [4. The stages](#4-the-stages)
+  - [5. Special cases](#5-special-cases)
+  - [6. Checklist](#6-checklist-1)
 - [Appendix A: Cheat sheet, the daily flow](#appendix-a-cheat-sheet-the-daily-flow)
 - [Appendix B: Cheat sheet, if this then that](#appendix-b-cheat-sheet-if-this-then-that)
 - [Appendix C: Ticket fields reference](#appendix-c-ticket-fields-reference)
@@ -214,6 +230,12 @@ roles (see *Project structure*, section 10.6).
   - [2. Board views](#2-board-views)
   - [3. Why these columns](#3-why-these-columns)
   - [4. Notes](#4-notes)
+- [Appendix G: Audit findings and how to fix them](#appendix-g-audit-findings-and-how-to-fix-them)
+  - [1. Files (`audit_files.py`)](#1-files-auditfilespy)
+  - [2. Git (`audit_git.py`)](#2-git-auditgitpy)
+  - [3. GitHub (`audit_github.py`)](#3-github-auditgithubpy)
+  - [4. Board (`audit_board.py`)](#4-board-auditboardpy)
+  - [5. The baseline (`audit.py`)](#5-the-baseline-auditpy)
 
 ---
 
@@ -285,7 +307,7 @@ There are three formats, and the year always has four digits: a **stamp**, a **d
 | Compile stamp | `yyyymmddhhmmss` | UTC | `20261005143045` |
 | `REF` token, written by hand | `yyyymmddhhmmss` | UTC | `20261005180000` |
 | `AUTO-REF` token, written by the automation | `yyyymmddhhmmss` | UTC | `20261005164000` |
-| Finalized version heading, and the times the automation writes in tickets and comments | `yyyy-mm-dd hh:mm`, then ` UTC` | UTC | `2026-10-05 14:32 UTC` |
+| Finalized version heading, and the times the automation writes in tickets and comments | `yyyy-mm-dd hh:mm`, then ` UTC` | UTC | `2026-10-05 16:41 UTC` |
 | Tag date, and the Start and End dates | `yyyy-mm-dd` | UTC | `2026-10-05` |
 | A date or time a person writes (a record's file name, a note in a comment) | `yyyy-mm-dd` or `yyyy-mm-dd hh:mm`, and optionally a zone after a space | the writer's local time | `2026-10-05`, `2026-10-05 10:32 ET` |
 
@@ -324,7 +346,7 @@ with where it is explained. Nothing here is new: it collects what the other guid
 | **Changelog** | The file in the repository that records every change to files, grouped by version, then build, then ticket. | project structure, section 7 |
 | **Open version** | The `## WIP-Version` heading on a branch: the version being worked on. It has no number until the branch merges. | starting work, section 4 |
 | **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one version. | branching and merging, section 3.3 |
-| **Finalized version** | A `## V2.4.1 — 2026-10-05 14:32 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
+| **Finalized version** | A `## V2.4.1 — 2026-10-05 16:41 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
 | **`WIP-Build`** | The placeholder build heading for the commit being made. The local hook replaces it at commit time. | starting work, section 5 |
 | **Build heading** | `### Build 20261005143045 (branch <name>)`: one commit's worth of changes, stamped with the UTC time of the commit. If a commit was made without the hook, the automation writes a form that also carries the commit's hash. | project structure, section 7 |
 | **Build block** | A build heading with the ticket blocks under it: everything one commit added to the changelog. | working and committing, section 1 |
@@ -432,6 +454,11 @@ Nothing here is new: it collects what the other guides define.
 | **Regression checks** | The checks that show a version still does what the one before it did. They are run to verify a version before it is declared a release. | releases and hotfixes, section 1.1 |
 | **Project token** | The credential, stored as a secret, that lets the automation write to the board. | new-project bootstrap, section 4 |
 | **Manifest** | The file that lists the version of the standard a project follows and a hash of each automation file. | new-project bootstrap, section 2.4 |
+| **Audit** | A read-only check of an existing project against the guides, by the audit tools. It reports each rule and recommendation as passed, failed or not checkable. | adopting the standard, section 2 |
+| **Adoption** | Bringing a project that already exists into line with the standard, in stages, through the normal flow. | adopting the standard, section 1 |
+| **Cut-over** | The merge that lands the adoption on `main`. The rules apply from it; what came before is history. | adopting the standard, section 1 |
+| **Baseline heading** | The one finalized version heading written by hand when a project adopts the standard: the version it continues from. | adopting the standard, section 4.2 |
+| **Accepted deviation** | Something that differs from the standard and is recorded with a reason, a date and who agreed, instead of being fixed (the past, or a rule that does not apply). The audit shows it as accepted. | adopting the standard, section 3 |
 
 
 
@@ -496,9 +523,10 @@ other guides define.
 
 | Term | What it means | See |
 |---|---|---|
-| **Organization** | The account that owns the repository and the board. The standard needs one, because issue types are an organization feature. | new-project bootstrap, section 5 |
+| **Organization** | The account that owns the repository and the board. Issue types are an organization feature, so a project owned by an organization keeps the Type in the issue type, and one owned by a personal account keeps it in the board field Kind. | new-project bootstrap, section 5 |
 | **Issue** | A ticket. | project structure, section 3 |
 | **Issue type** | The native single value on an issue that says what sort of ticket it is. It carries the Type. | fields reference |
+| **Kind** | The board field that carries the Type in a project owned by a personal account, where there are no issue types. It has the same eight values. | new-project bootstrap, section 5 |
 | **Label** | A tag on an issue. The only labels are the 14 Area labels and the marker label `dummy`. | fields reference |
 | **Sub-issue** | An issue attached to another, which has one parent. | project structure, section 5 |
 | **Closing keyword** | A word such as *Closes*, *Fixes* or *Resolves* followed by a ticket number, which closes the ticket automatically when the pull request merges. The process never uses one. | syncing and merging, section 3 |
@@ -585,7 +613,8 @@ there, which is safer than one large merge at the end.
 the tag keeps unrelated changes out. A separate numbering lineage means the hotfix can never collide
 with a version `main` has already produced or will produce.
 
-Details of cutting and finishing a hotfix are in *Releases, hotfixes and retiring branches*.
+Details of cutting and finishing a hotfix, including one of a release made before the standard was adopted,
+are in *Releases, hotfixes and retiring branches*.
 
 #### 1.4 Parked branch
 
@@ -800,7 +829,7 @@ is defined in *Concepts*.)
 A version is not a release. Every merge creates a version; declaring one of them a release is a
 separate, deliberate step (section 2.2).
 
-> **In GitHub.** The Type is the issue's native Issue Type. A `## WIP-Version` heading with a marker
+> **In GitHub.** The Type is the issue's native Issue Type (or its board field Kind, in a project owned by a personal account). A `## WIP-Version` heading with a marker
 > sits at the top of `CHANGELOG.md`. The finalizing job reads the ticket numbers listed in that
 > section, looks up each issue's Type, applies any marker, and renames the heading to the resulting
 > version on merge.
@@ -1005,11 +1034,9 @@ The response is the same for all of them, and it never blocks the person who nee
 
 What the developer does afterwards:
 
-- **Recommendation:** triage the Alert promptly. Confirm that the result was built and tested, document
-  what changed, either by replacing the generated note in the changelog or, preferably, by describing
-  it in a new block in the current version.
-- Every move of the Alert after creation is manual: a person starts it (`InProgress`), says they believe
-  it is handled (`Review`), and a human verifies it (`Completed`). Shipping a version never moves it.
+- **Recommendation:** triage the Alert promptly. What to do, and how the Alert moves afterwards (every
+  move is manual, and shipping a version never moves it), is in the guide on issues and the board,
+  section 5.
 
 **Why.** A bypass is not a failure to be hidden; it is a decision that needs follow-up. Creating the
 ticket at the moment of the event means the follow-up exists even if the person who bypassed is too busy
@@ -1043,14 +1070,15 @@ Naming them tells the developer where the safeguard is their own care.
 
 > **In GitHub.** The warnings are the advisory check on the pull request and the local git hooks, which
 > fail open and are skipped with `--no-verify`. The detection runs from the automation on every push to
-> `main` and opens an issue of type Alert with Priority `Critical` and the `process` label. A generated
+> `main` and opens an issue of Type Alert with Priority `Critical` and the `process` label. A generated
 > changelog entry looks like this:
 >
 > ```
+> ### Build 20261005164000 (branch main)
 > #### AUTO-REF 20261005164000 (tracked as #187)
-> - **Auto-flagged: this merge's result is not identical to the source branch's tip.** The sync-first
->   rule was not followed, or a conflict was resolved during the merge itself rather than beforehand on
->   the branch. Issue #187 opened automatically for review: document the change once triaged.
+> - **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+>   followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+>   opened automatically for review: document the change once triaged.
 > ```
 >
 > The administrator bypass of branch protection, where the hosting plan offers it, is deliberately left
@@ -1149,10 +1177,11 @@ branch they came through.
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
 | **`.githooks/`** | The local git hooks. |
-| **`.github/`** | Server-side workflows and their scripts, and the pull request template. |
+| **`.github/`** | Server-side workflows and their scripts, the pull request template, the manifest of the automation files, the saved board views and, in an adopted project, the audit baseline. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
 | **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
+| **`.git-blame-ignore-revs`** (root) | The commits that only changed line endings, so that blame skips them. Present only after a line-endings commit in an adopted project. |
 | **License files** (root) | The project's license, when it has one. |
 
 #### 2.2 Rules
@@ -1265,8 +1294,9 @@ back to why the change was made.
 #### 3.3 Titles, descriptions and comments
 
 - **Title (recommended):** short and specific, stating the problem or the outcome. No prefix such as
-  `[bug]`, because the Type already says that. Settle it early: if the ticket is renamed after changelog
-  entries were written, those entries keep the old title.
+  `[bug]`, because the Type already says that, and none such as `fix:`, `docs:` or `test:`: the title becomes the
+  commit's summary line, where guide 05 (section 5.2) forbids a type prefix. Settle it early: if the ticket is
+  renamed after changelog entries were written, those entries keep the old title.
 - **Description (recommended):** the problem or the need, in as much detail as is useful, written for
   someone who was not there. Include the background, who is affected and how, the expected result,
   constraints, and what "done" looks like. For a bug, add how to reproduce it, what was expected versus
@@ -1599,13 +1629,15 @@ ticket planned for a later version that ships earlier fixes itself.
   boxes, so that the person is notified; when the rule stops being broken the comment is edited to say
   "✅ fixed on" and the date. A rule that breaks again gets a new comment.
 - **Rule:** nobody sets or clears Fix, and it has no *Fine* or *Acknowledged*: a person fixes the cause, and
-  the id goes. The rules and their ids are the list in `conditions.py`; a new rule is a new entry there.
+  the id goes. The rules and their ids are one list kept with the automation; a new rule is a new entry there.
 - **Rule:** the refresh runs after a merge to `main`, on every scheduled run, on request and on the events
   of section 2.3. A change to a board field alone starts no workflow, so it shows at the next of those.
 
 *Why.* An inconsistency is not a judgment: it is true or false from the other fields. Showing it as a stored
 set that is recomputed means two broken rules both have to be fixed before the ticket drops out, with no flag
 to forget to close.
+
+> **In GitHub.** The list of rules is the registry in `.github/scripts/conditions.py`.
 
 #### 4.4 Rules that span fields
 
@@ -1625,7 +1657,7 @@ to forget to close.
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
 | A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
-> **In GitHub.** Type is the native issue type. Area is a set of labels. The other fields are board
+> **In GitHub.** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values). Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start
 > date and End date are date fields. The automation reads Type from the issue and writes the other fields
 > to the board.
@@ -1655,8 +1687,9 @@ of them are complete. A Version ticket does no work and is never verified.
 | **Released** | A release is cut on that version. The automation posts a comment with the date and the tag name. | Released | stays closed |
 | **Planned, then dropped** | The version never happened under that number. A person marks it. | Dropped | closed, with a comment saying what replaced it |
 
-- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (which
-  ticket gave it, or the marker that forced it), the pull request, and the tickets with their Type.
+- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (the
+  tickets whose Type gave a sub bump, the marker that forced it, or that it is the first version), the pull
+  request, and the tickets with their Type.
   Build holds the last build of the version.
 - **Rule:** at every finalize, and on a manual run, the automation also attaches the tickets with Delivery
   *Implemented* that are not yet sub-issues of any Version ticket, by their Version: a blank Version gets
@@ -1715,16 +1748,14 @@ The automation generates these texts. The names, numbers and dates are invented 
 | **Delivery** | Merged |
 | **Version** | V002.004.001 |
 | **Build** | 20261005143045 |
-| **Sub-issues** | #201, #204, #205 |
+| **Sub-issues** | #204 |
 | **Progress, Priority, Size, Risk, Area** | none |
 
-> Finalized 2026-10-05 14:32 UTC from pull request #187. Bump: sub, because #201 is a Feature. Last
-> build: 20261005143045.
+> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, from the ticket Types (no Feature or
+> Enhancement). Last build: 20261005143045.
 >
 > Tickets:
-> - #201 Add CSV export to the reports page (Feature)
 > - #204 Report totals ignore the last day of the month (Bug)
-> - #205 Write the user guide for the export feature (Task)
 
 When a release is cut on this version, the automation sets Delivery to *Released* and adds a comment:
 "Released 2026-10-12 09:15 UTC. Tag: `released/V2.4.1`."
@@ -1743,12 +1774,14 @@ When a release is cut on this version, the automation sets Delivery to *Released
 | **Version** | V002.004.001 |
 
 > Detected on the push of 2026-10-05 16:40 UTC to `main` (commit `abc1234`): this merge's result is not
-> identical to its branch's final state. The branch was not synced first, or a conflict was resolved
-> during the merge itself.
+> identical to its branch's final state. The sync-first rule was not followed, or a conflict was resolved
+> during the merge itself rather than beforehand on the branch.
 >
-> **To do.** Confirm that the merged result was built and tested, document anything that changed in the
-> changelog (in the entry for V2.4.1 that points at this ticket, or in a new block in the current
-> version).
+> Flagged commits:
+> - `abc1234` Merge pull request #186 from report-fixes (not-identical, by Sam)
+>
+> **To do.** Confirm that the merged result was built and tested, and document anything that changed in
+> the changelog (in the entry that points at this ticket, or in a new block in the current version).
 
 ##### Alert ticket for stale planned versions: "Stale planned Version tickets after V2.4.1"
 
@@ -1847,7 +1880,7 @@ and syncing, so they are worth recording whenever there is something to say.
 > #### #205 — Write the user guide for the export feature
 > - Covered by the change described under #201.
 >
-> **Tested on build** 20261004101530. `main` was merged into the branch on 2026-10-04 with no conflicts, and
+> **Tested on build** 20261006153000. `main` was merged into the branch on 2026-10-06 with no conflicts, and
 > the branch was rebuilt and retested afterwards.
 
 > **In GitHub.** The source and target branches and the commits appear automatically in the pull request.
@@ -1879,7 +1912,7 @@ section describes what the file contains and how it is structured.
 - what changed
 #### REF 20261005180000 — <reason>     a change with no ticket yet
 #### AUTO-REF 20261005164000 (tracked as #187)   written by the automation
-## V2.4.1 — 2026-10-05 14:32 UTC       a finalized version (UTC date and time)
+## V2.4.1 — 2026-10-05 16:41 UTC       a finalized version (UTC date and time)
 ```
 
 | Heading | Meaning |
@@ -1948,17 +1981,19 @@ triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the b
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
 - tests: added a test that compares the exported file with the page for three reports.
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261006090500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 
-## V2.4.1 — 2026-10-05 14:32 UTC
+## V2.4.1 — 2026-10-05 16:41 UTC
+### Build 20261005164000 (branch main)
+#### AUTO-REF 20261005164000 (tracked as #187)
+- **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+  followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+  opened automatically for review: document the change once triaged.
 ### Build 20261005143045 (branch report-fixes)
 #### #204 — Report totals ignore the last day of the month
 - report totals: the last day of the month is now included in the sum.
 - tests: added a test for months of 28, 29, 30 and 31 days.
-#### AUTO-REF 20261005164000 (tracked as #187)
-- Auto-flagged: this merge's result is not identical to its branch's final state. Issue #187 opened
-  automatically for review: document the change once triaged.
 ```
 
 > **In GitHub.** The changelog is a `CHANGELOG.md` file at the repository root. The local hooks replace
@@ -2009,7 +2044,7 @@ Documentation lives in three places, and each answers a different question.
 |---|---|---|
 | **Readme** (root) | What the project is, its requirements, and how to build and use it. The entry point: kept short, and linking to the wiki for detail. | Yes |
 | **Wiki** (`doc/wiki/`) | Current-state reference pages: how the project works now. One topic per page, with a `Home` page as the index. | Yes, whenever what a page describes changes |
-| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyzes and investigations, measurements. | No: dated, and not rewritten afterwards |
+| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyses and investigations, measurements. | No: dated, and not rewritten afterwards |
 
 #### 9.2 Rules
 
@@ -2107,7 +2142,7 @@ developer may also set the optional *Committed* marker in Delivery.
 | Item | Who does it |
 |---|---|
 | Repository settings, branch protection and its bypass | the administrator |
-| Issue types, labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
+| Issue types (or the Kind field), labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
 | The project token and other secrets | the administrator holds and renews them |
 | Installing and updating the automation | the administrator |
 
@@ -2370,7 +2405,7 @@ The same start for a change without a ticket:
 ```
 ## WIP-Version
 ### WIP-Build
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261006090500 — no ticket yet (typo in the settings help text)
 ```
 
 > **In GitHub.** Edit `CHANGELOG.md` at the repository root. To produce a `REF` token, run
@@ -2805,7 +2840,7 @@ A `REF` only:
 ```
 settings help text: fixed the spelling of "authentication".
 
-REF 20261006091500 — no ticket yet (typo in the settings help text)
+REF 20261006090500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -2861,7 +2896,7 @@ its ticket or description existed. It is a loan, and this section is how it is r
 The placeholder in a finalized version:
 
 ```
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20260301101500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 ```
 
@@ -2876,15 +2911,15 @@ Or documented in a new block in the current version, leaving the placeholder as 
 
 ```
 #### #233 — Fix the spelling of "authentication" in the settings help text
-- Documents REF 20261006091500 (V2.4.1): fixed the spelling of "authentication" in the settings help text.
+- Documents REF 20260301101500 (V2.3.1): fixed the spelling of "authentication" in the settings help text.
 ```
 
-#### 6.2 Triaging an Alert and its AUTO-REF
+#### 6.2 Documenting an AUTO-REF
 
-1. Confirm that the merged result was built and tested.
-2. Document what changed, in place or in a new block under the Alert's ticket, as above.
-3. Comment on the Alert with what you found.
-4. Move it to *Review*; a human completes it.
+The person who triages an Alert documents the change its `AUTO-REF` stands for, in the same two ways as a
+`REF` above: replace the generated note in place under the Alert's ticket, or, preferably, describe the
+change in a new block in the current version and leave the `AUTO-REF` as it was. The rest of the triage (what
+to confirm, the comment, the move to *Review*) is in the guide on issues and the board, section 5.2.
 
 #### 6.3 Rules
 
@@ -3273,8 +3308,8 @@ After a merge to `main`, the automation:
 1. **Pull `main`** and see that the heading was renamed to the version you expected.
 2. **See that the Version ticket exists** and lists your tickets.
 3. **See that your tickets show Delivery *Merged*** and the right Version.
-4. **If an Alert was raised for your merge,** triage it. It is assigned to you (see the guide on working
-   and committing, section 6).
+4. **If an Alert was raised for your merge,** triage it. It is assigned to you (see the guide on issues
+   and the board, section 5.2).
 5. **If the board was not updated,** the version is still finalized. The board step is skipped when the
    project token is missing or the hosting service reports an error. Re-run the finalize step, which is safe to
    repeat and skips what is already done, or correct the fields by hand.
@@ -3326,7 +3361,7 @@ both are detected afterwards (see the guide on branching and merging, section 6.
 
 1. **Do it deliberately,** and say why in the pull request, the commit message or a comment on the ticket.
 2. **Expect the Alert.** It is assigned to you, and the automation also writes a placeholder entry in the
-   changelog. Triage it promptly (see the guide on working and committing, section 6).
+   changelog. Triage it promptly (see the guide on issues and the board, section 5.2).
 3. **Pull `main` right afterwards, then build and test it.** You skipped the sync that would have caught a
    mismatch, so this is the check you owe.
 4. **Never hide it,** for example by editing history. The record is what makes the bypass recoverable.
@@ -3511,11 +3546,13 @@ The board has seven saved views, in this order:
 
 Every view except All leaves out pull requests and test tickets by ending its filter with `is:issue AND -label:dummy`
 (see *Ticket fields reference*; the automation puts each pull request on the board so that All has no gaps).
-The views are defined in a file, `.github/views.json`, and created by a script, `views.py`, so every project
+The views are defined in a file kept in the repository and created by a script, so every project
 has the same ones. To change a view, change the file and run the script. Two settings of *All* are made by
 hand when it is created, because the API cannot reach them: the sort *Created, ascending* and *Show hierarchy* off
 (guide on the new-project bootstrap, section 6). Setting them up is part of
 configuring the board, which is the administrator's job.
+
+> **In GitHub.** The file is `.github/views.json` and the script is `.github/scripts/views.py`.
 
 #### 2.3 Rules
 
@@ -3579,8 +3616,10 @@ minute or so instead of waiting for the next scheduled run.
 #### 2.5 The conditions the board shows
 
 Everything the board draws attention to is a *condition*, and each has one of three natures, which is also
-the view it shows in. The list below is the registry in `conditions.py`; a new condition is one new entry
+the view it shows in. The list below is the registry of the automation; a new condition is one new entry
 there.
+
+> **In GitHub.** The registry is `.github/scripts/conditions.py`, and a refresh on request is the workflow mode `conditions`.
 
 | Id | Name | View | Cleared by |
 |---|---|---|---|
@@ -3613,7 +3652,7 @@ there.
   you have write access).
   An *Implemented* ticket waiting for its Version is attached just before it, so it is not shown as broken.
   A change to a board field alone starts no run: if Fix still shows a ticket you have just corrected, it
-  goes when you close the issue, or at the next refresh, or ask for one (the workflow mode `conditions`).
+  goes when you close the issue, or at the next refresh, or ask for one.
 
 
 ---
@@ -3722,9 +3761,11 @@ covers who takes it and what to do with it.
 
 #### 5.2 Triage
 
-- **A bypass or a merge without entries:** the steps are in the guide on working and committing,
-  section 6.2. Confirm that the result was built and tested, document what changed, comment, and move the
-  Alert to *Review* for a human to complete.
+- **A bypass or a merge without entries:** confirm that the merged result was built and tested. Document
+  what changed, either by replacing the generated `AUTO-REF` note in place or, preferably, by describing
+  it in a new block in the current version (the placeholder then stays where it is, as the record of how
+  the change first appeared; the guide on working and committing, section 6.2, shows both). Comment on
+  the Alert with what you found, and move it to *Review* for a human to complete.
 - **A changelog that could not be read:** no version was finalized. Correct `CHANGELOG.md` by hand (one
   open `WIP-Version` heading, with at most one marker and no other text), run the finalize step again,
   comment on the Alert with what was wrong, and move it to *Review*.
@@ -3982,6 +4023,9 @@ The steps:
   version whatever any tag says, and a tag on the wrong commit, or on a version that was not meant to be a
   release, harms nothing once it is removed. After deleting it, put the Version ticket and its tickets
   back to *Merged*.
+- **A release that was declared correctly and later found defective keeps its tag.** The tag records what was
+  released, so it is not deleted. The defect is fixed by a hotfix of that release (section 2) or, when `main`
+  has moved on and the fix belongs there, by a newer version released from `main`.
 
 **Why.** A release is a statement that a version is fit to be used, so it has to be verified, and the tag
 has to point at exactly what was verified; tagging the tip would be wrong whenever `main` has moved on.
@@ -4012,6 +4056,16 @@ procedure.
    allowed on a hotfix branch.
 4. **Work as usual:** change, build, test, log, commit, push (see the guide on working and committing).
 5. **Tell the project owner** that a hotfix has been started.
+
+**A release made before the adoption of the standard.** The old commit has none of the automation and no
+standard changelog, and history is not rewritten, so the first commit on the hotfix branch, the *overlay*,
+adds what the hotfix steps need, taken from the current `main`: every file the automation manifest
+(`.github/automation-manifest.json`) lists, copied unchanged, with the manifest itself, `AGENTS.md` and
+`.gitattributes`, an ignore file that leaves out `__pycache__/` when the old tree has none, and a new
+`CHANGELOG.md` with a title and one finalized heading for the release being fixed (a single build and a `REF` block saying that the earlier history is in the old changelog, as in the guide on
+adopting the standard, section 4.2). Then activate the hooks and go on with step 3, which adds the
+`WIP-Version` heading above it, and the rest as for any hotfix. The overlay is made once, in a commit of its
+own, before the fix.
 
 #### 2.2 Finish
 
@@ -4044,6 +4098,9 @@ and 2.2. The rules for the procedure are these:
 - **Rule:** verify the hotfix before finishing it, as for any release.
 - **Rule:** the developer starts and finishes a hotfix, and tells the project owner when it is started and
   when it is released.
+- **Rule:** a hotfix of a release made before the adoption starts with the overlay commit and differs from
+  its tag only by the overlay and the fix. The overlay never goes into `main`: the forward-port carries the
+  fix alone.
 - **Recommendation:** keep a hotfix to the fix itself, and nothing else.
 
 **Why.**
@@ -4054,6 +4111,9 @@ and 2.2. The rules for the procedure are these:
 - *Developer-driven* because a critical problem in a released version is urgent, and waiting for approval
   would cost time the situation does not have. The project owner is told so that nothing happens without
   their knowledge.
+- *An overlay, and not a rewrite* because a hotfix must be possible whatever the age of the release, and a
+  hotfix is never merged, so files that exist only on its branch cannot reach `main`. The old tag and the
+  history stay as they were.
 - *A separate forward-port* because the fix still has to be part of `main`'s history, through the normal
   flow, with its own ticket, verification and version.
 
@@ -4134,6 +4194,8 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] A ticket exists for the fix (Type *Bug*, Priority *Critical* or *Urgent*), assigned to me and
       *InProgress*.
 - [ ] The branch is created from the release tag and named `hotfix-v…`.
+- [ ] If the release is from before the adoption, the first commit is the overlay (automation, hooks and a
+      new `CHANGELOG.md` with a baseline heading for that release), and the hooks are active.
 - [ ] The changelog has a `WIP-Version` heading with no marker.
 - [ ] I worked as usual, and the project owner is told it started.
 - [ ] The hotfix is verified, and the hotfix-finalize step was run with the explicit version (for example
@@ -4257,6 +4319,9 @@ says it did.
 - **Anything outward-facing:** sending content to an external service publishes it, and it may be cached
   or indexed even if it is deleted later.
 - **A major version bump:** adding a `+V` marker.
+- **Settings and shared git state during an adoption:** changes to repository, organization or board settings,
+  to labels, issue types and the Kind field, and to tags, and renaming, retiring or deleting branches. Running the audit tools
+  is routine, because they only read.
 - **Real decisions:** when there are several valid approaches, an ambiguous requirement or trade-offs, the
   assistant presents the options with a recommendation and asks which. It does not silently pick one, and
   it does not ask a plain yes or no in place of the choice.
@@ -4274,6 +4339,10 @@ says it did.
   never covers anything on `main`, tags, releases, hotfix finalize,
   deleting or retiring branches, force pushes or skipping hooks: those are decided each time.
 - **Rule:** for a real decision, the assistant presents the options, recommends one, and asks.
+- **Rule:** when a project adopts the standard (guide on adopting the standard in an existing project), the
+  assistant changes repository, organization and board settings, tags and branches only when the administrator
+  tells it to, and it never rewrites history (no rebase, squash, filter or force-push) to make a check
+  pass: the past is recorded as accepted instead.
 - **Rule:** the assistant never bypasses a rule on its own initiative: no skipping hooks, no force push,
   no direct push to `main`. A bypass is a deliberate decision of the person (see the guide on branching
   and merging, section 6).
@@ -4465,6 +4534,8 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] Risky, out-of-scope and outward-facing actions were asked about. An approval covered only what was
       asked, and any durable authorization is written in `AGENTS.md`.
 - [ ] A real decision was put as options with a recommendation, and asked.
+- [ ] In an adoption, only the audit was run on its own; settings, tags and branches were changed on the
+      administrator's word, and history was not rewritten.
 - [ ] No rule was bypassed on the assistant's own initiative (no skipped hooks, no force push, no direct
       push to `main`), and a major bump was asked about.
 
@@ -4496,7 +4567,8 @@ itself.
 
 This guide is the checklist for applying the standard to a new repository: the files and folders, the
 automation, the repository and board settings, the issue types and labels, the first version, and a trial
-run that proves the setup works. Most of it is work for the administrator role. The pieces it refers to
+run that proves the setup works. A project that already exists, with a history, follows the guide on adopting
+the standard in an existing project, which uses this one for the settings. Most of it is work for the administrator role. The pieces it refers to
 (the structure, tickets, fields, the changelog) are defined in the guide on project structure, and the
 rules about versions and branches are in the guide on branching and merging.
 
@@ -4583,7 +4655,8 @@ anything else:
 2. that the **project token** exists and works;
 3. which **board belongs to the repository**: it identifies the board from the repository and stores its
    number in a repository variable, so that nothing needs the number typed in;
-4. that the board has **the fields and values** the automation needs.
+4. that the board has **the fields and values** the automation needs, including the field *Kind* when the Type
+   of a ticket lives in a field and not in the issue type (section 5.1).
 
 It also compares the **repository settings** it can read with section 3 of this guide: the merge methods,
 automatic branch deletion, the default branch, issues and projects, the wiki (when the repository syncs to
@@ -4605,7 +4678,9 @@ or more than one, it stops at step 3 and asks the administrator to say which.
 #### 2.5 Rules
 
 - **Rule:** the automation is copied unchanged from the standard. The project's own values are never
-  written into its files: the board is identified by the preflight and stored in a repository variable.
+  written into its files: the board is identified by the preflight and stored in a repository variable, and
+  the one optional setting, where the Type of a ticket comes from, is the repository variable `TYPE_SOURCE`
+  (section 5.1).
 - **Rule:** the automation's tests are part of the repository and are run before any change to it (see the
   guide on working and committing, section 3).
 - **Rule:** the preflight runs first, before any other step of the automation.
@@ -4681,7 +4756,7 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 #### 4.1 What it is and why it is needed
 
 The automation writes to the board: it sets Delivery, Version, Build, the dates and the Attention flags,
-advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to an organization's board,
+advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to a project board (an organization's or a person's),
 so the project keeps its own token, stored as a secret. The same token lets the preflight store the board's
 number in a repository variable. Without it the automation still versions, and the board steps are
 skipped, with a clear message; the run then ends red once its other steps are done, so that GitHub sends
@@ -4724,10 +4799,18 @@ the preflight's warning means the board does not stop updating without notice.
 - **Rule:** the eight issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
   *Refactor*, *Task*, *Version* and *Alert*. Each carries its short definition from the *Ticket fields
   reference* as its description.
-- **Prerequisite:** the repository belongs to an organization, because issue types are an organization
-  feature.
+- **Rule:** the Type has one source, chosen by who owns the repository. A project owned by an organization
+  keeps it in the eight issue types, which need an organization. A project owned by a personal account has
+  no issue types and keeps it in the board field *Kind* (section 6.1), with the same eight values and the
+  same definitions. Everything else in the standard is the same in both.
+- **Rule:** the repository variable `TYPE_SOURCE` names the source, `issue-type` or `field`. When it is not
+  set, the source is `issue-type` for an organization and `field` for a personal account.
+- **Recommendation:** use an organization when the project has a team. The issue type is part of an issue,
+  so it shows in every list and search and cannot be missing from a board item; the field exists only on
+  the board.
 
-They are set up once, by the administrator, for the organization.
+The issue types are set up once, by the administrator, for the organization. The field is created with the
+other board fields (section 6.1).
 
 #### 5.2 Labels
 
@@ -4738,7 +4821,8 @@ They are set up once, by the administrator, for the organization.
 - **Rule:** each label carries its meaning from the *Ticket fields reference* as its description, so the
   meaning shows wherever the label is used.
 - **Recommendation:** each label takes the hex color that the *Ticket fields reference* gives it, and each
-  issue type the color that table gives it, so that a ticket reads the same in every project.
+  issue type (or option of the field *Kind*) the color that table gives it, so that a ticket reads the same in
+  every project.
 - **Rule:** the labels a new repository starts with that are not on this list (for example `bug`,
   `enhancement`, `duplicate`, `invalid`, `question`, `wontfix`, `good first issue`, `help wanted` and
   `accessibility`; the set changes over time) are deleted. `documentation` stays, because it is on the list.
@@ -4782,13 +4866,14 @@ fields reference*.
 | Build | text | |
 | Start date, End date | date | |
 | Fix | text | |
+| Kind | single select | Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert (only when the Type source is the field) |
 
-Type is the issue type and Area is labels, so neither is a board field. Every field above is a kind that a
+Area is labels, and Type is the issue type, so neither is a board field; when the Type source is the field, Type is the board field *Kind*. Every field above is a kind that a
 script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
 (the colors and descriptions of the *Ticket fields reference*, gray and none otherwise), as a dry run until it is given `--apply`, with the project token.
 It never changes a field that exists: one of the wrong type, or lacking a value, is listed for the
 administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
-the automation is switched on, because the preflight requires every field in the table.
+the automation is switched on, because the preflight requires every field in the table (Kind only when the Type source is the field).
 
 **Saved views:** All, Backlog, Board, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
@@ -4814,7 +4899,7 @@ every run, and a view that is created again loses them, so make them again.
 **Why.** The automation reads and writes these fields by name, so a board that differs breaks it, and a
 build stamp stored in a number field is rejected by the hosting service.
 
-> **In GitHub.** The board is a GitHub Project owned by the organization and linked to the repository. The
+> **In GitHub.** The board is a GitHub Project owned by the organization (or the personal account) and linked to the repository. The
 > fields are added in the project's settings, and the saved views are views of the project. A new board has
 > one default view, and GitHub never deletes a board's last view, so the script creates the new views first and
 > then deletes the default one (`--delete-unlisted`).
@@ -4846,8 +4931,8 @@ build stamp stored in a number field is rejected by the hosting service.
 - **Rule:** the first merge is a real change, logged and merged by pull request like any other, so that
   the first version comes from the normal flow.
 - **Recommendation:** make that first change the initial structure of the project.
-- **Rule:** create the ticket for that first change only after the issue types, the labels and the board exist
-  (sections 5 and 6): a ticket needs a Type, an Area and its board fields, and the first version needs a ticket
+- **Rule:** create the ticket for that first change only after the issue types (or the field *Kind*), the labels and the board
+  exist (sections 5 and 6): a ticket needs a Type, an Area and its board fields, and the first version needs a ticket
   to attach to.
 
 **Why.** A first version that comes from the normal flow proves the flow works, and it avoids a bypass
@@ -4888,9 +4973,9 @@ exists and lists the tickets, and the tickets show Delivery *Merged*.
 - **Rule:** check the result of the first merge, as in the guide on syncing and merging (section 5.2).
 - **Recommendation:** if something fails on the first real merge, correct the board by hand and fix the
   cause. The version number stays as it is.
-- **Recommendation:** when the standard is applied to a project that already exists, first audit it with the
-  audit tools (`tools/audit.py` in the standard's repository, pointed at the project), to see which rules it already
-  follows and what differs. The audits only read.
+- **Recommendation:** when the standard is applied to a project that already exists, follow the guide on adopting
+  the standard in an existing project (section 2 there starts with an audit of the project with the audit tools,
+  `tools/audit.py` in the standard's repository). The audits only read.
 
 **Why.** Level 1 finds nearly every setup mistake with nothing to clean up, and the first merge shows what
 only a live run can: whether the automation really writes to the board. Keeping the trial out of the real
@@ -4934,7 +5019,7 @@ A one-page summary of the guide. It adds no new rules.
 
 **Issue types and labels** (section 5)
 
-- [ ] The eight issue types exist with their descriptions.
+- [ ] The eight issue types exist with their descriptions (or, for a personal account, the board field Kind has the eight values and `TYPE_SOURCE` is `field`).
 - [ ] The 14 Area labels and `dummy` exist with their descriptions, and the default labels not on the list
       are deleted.
 
@@ -4960,6 +5045,379 @@ A one-page summary of the guide. It adds no new rules.
       show Delivery *Merged*.
 
 **In one line:** structure, automation, settings, token, labels, board, roles, proof.
+
+---
+
+## Guide 11: Adopting the Standard in an Existing Project
+
+This guide is the procedure for bringing a project that already exists, with its history, branches, tags,
+issues and habits, into line with the standard. It does not repeat how each piece is set up: the guide on
+new-project bootstrap holds the settings, the automation, the labels and the board, and the other guides hold
+the rules. This one says what is different when the project is not empty: what to measure, what can be changed,
+what can only be accepted, and in what order to do it. The measure is the audit tools (see the wiki page on
+them), and appendix G says what to do about each finding.
+
+**How to read it.** Each step states what to do and why. Statements are marked:
+
+- **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
+- **Recommendation**: good practice with reasons, but the person decides.
+- **Strong recommendation**: a recommendation with more weight. Follow it unless there is a reason not to,
+  and say why when you do not.
+- **In GitHub**: how the step looks with GitHub and plain git. Everything outside these blocks is
+  tool-neutral.
+
+**Roles, and responsible, not necessarily manual.** Most steps that change repository, organization or board
+settings belong to the administrator role; the rest belong to the developer. One person may hold several
+roles. Where this guide names a role it means the person responsible; the step may be done by hand, by an
+assistant, or by a script or command that person runs, and it is still that person's action.
+
+---
+
+### 1. The principles
+
+An existing project cannot be made to look as if it had followed the standard from its first commit, and it
+should not try. These rules say how adoption stays honest.
+
+- **Rule:** history is never rewritten to make a rule pass. No rebase, squash, filter or force-push of
+  `main` or of any published branch, and no tag moved. The past stays as it was, and what differs is
+  recorded.
+- **Rule:** the standard applies from a **cut-over**: the commit at which the adoption lands on `main`.
+  Before it, deviations are history. After it, a deviation is a failure like any other.
+- **Rule:** the adoption goes through the normal flow it introduces: a ticket per piece of work, an adoption
+  branch, a changelog entry, a pull request and a merge commit. It is not done by pushing to `main`.
+- **Rule:** the audit is the measure. The project is adopted when a re-audit reports no failed rule after the
+  cut-over, and every other deviation is recorded with a reason (section 3).
+- **Rule:** changes to repository, organization and board settings are made only by the administrator, or by
+  an assistant the administrator told to (guide on working with an AI assistant). The audit tools only read.
+- **Recommendation:** work in the order of section 4. Each stage depends on the ones before it, and the cheap,
+  reversible ones come first.
+- **Recommendation:** keep the project working. Work in progress continues; the adoption is planned around it
+  (section 2), not the other way round.
+
+**Why.** A standard that asked projects to falsify their past would be abandoned, and one that ignored the
+past would never let a project reach a clean report. Separating "what the project did" from "what the project
+does from now on" keeps both true. Using the normal flow for the adoption proves, with the first real merge,
+that the project now works the way the standard says.
+
+---
+
+### 2. Before you start (stage 0)
+
+Decide these and write them in the adoption ticket (a ticket of its own, with a sub-ticket per stage if the
+project owner wants the stages tracked separately).
+
+1. **Run the audit first and keep it.** Run the audit tools against the project and keep the report as the
+   starting point (`audit.py <project> --md before.md --json before.json`). It shows how far the project is,
+   and it is what the final report is compared with.
+2. **Choose the cut-over.** It is the merge of the adoption pull request. Nothing needs to be dated in
+   advance, but the team must know that from that merge the rules apply.
+3. **Decide how the version continues.** The topmost finalized version heading of the changelog is the
+   single source of truth (guide on branching and merging, section 3.1). Take the project's current version,
+   write it in the form `V<major>.<sub>.<mod>` without padding, and the next merge continues from it. A
+   project with no version of its own starts at `V0.1.0` as a new project does (guide on new-project
+   bootstrap, section 7.1).
+4. **Take a backup.** A mirror clone of the repository (`git clone --mirror`), kept outside the project, so
+   nothing done in the next stages can lose anything.
+5. **Settle the open work.** List the open branches and pull requests. Branches that will keep going are
+   brought up to date with `main` after the adoption lands (guide on syncing and merging, section 1). Branches
+   nobody will resume are retired in stage 4. Changes that rewrite every file (line endings, stage 2) wait
+   until no branch is mid-conflict.
+6. **Record the roles.** Who holds the administrator, project owner and developer roles (guide on new-project
+   bootstrap, section 7.2).
+
+- **Rule:** the audit report, the cut-over, the version the project continues from and the backup exist
+  before any stage starts.
+- **Rule:** a project with more than one deployment line, such as a `develop` or `staging` branch, decides
+  here which commit becomes `main` (section 5.1).
+- **Recommendation:** announce the cut-over to everyone who pushes to the repository, with the date and what
+  changes for them (merge commits only, hooks, tickets, branch names).
+
+**Why.** Every later decision depends on these. The backup removes the fear that makes people skip a step, and
+the first audit is the only way to show progress later.
+
+> **In GitHub.** `git clone --mirror <url> backup.git` makes the backup. `python tools/audit.py <project>
+> --md before.md --json before.json` makes the first report (add `--offline` if `gh` is not available yet).
+> After the cut-over, `--since <cut-over commit>` judges the history from there.
+
+---
+
+### 3. Triage the report
+
+Every finding of the audit falls into one of four classes. The class decides what is done with it.
+
+| Class | Meaning | What is done | Example |
+|---|---|---|---|
+| **Fix now** | A missing or wrong thing that can be put right cheaply and without harm. | Do it in its stage. | No `.githooks/` folder. |
+| **Convert** | Existing material in the wrong form, changed once. | Do it in its stage, with care for what points at it. | Tags named `v1.2`; labels not on the list; a changelog in another format. |
+| **Accept as history** | The past, which cannot change without rewriting history. | Record it with a reason; do not touch it. | Commits on `main` that are not merges; `fix:` subjects. |
+| **Not applicable** | A rule the project has a real reason not to follow. | Record it with the reason, and have the project owner agree. | No GitHub wiki, because the plan does not offer one. |
+
+- **Rule:** an accepted or not-applicable deviation is recorded in the project, in the file
+  `.github/audit-baseline.json`, with the check it belongs to, the reason, the date and who agreed. A
+  deviation nobody recorded is a failure.
+- **Rule:** only a deviation in the past, or one the project owner agrees is not applicable, may be accepted.
+  A deviation that is still being made (a direct commit after the cut-over) is a failure to fix, never to
+  accept.
+- **Recommendation:** accept the smallest set. A deviation that can be fixed without rewriting history is
+  fixed.
+- **Recommendation:** run the audit with `--since` (the cut-over, as a date or a commit) to judge the history
+  only from there, and keep the baseline file for what is left. The audit shows the recorded deviations as
+  accepted, and reports an entry that accepts nothing any more. Both are described in the wiki page on the
+  audit tools.
+- **Recommendation:** read the adoption plan at the end of the audit report: it groups the open findings by
+  stage, with their class and role, in the order of this guide.
+
+Appendix G lists every finding the audit can report, with the class it usually has, the stage that deals
+with it, what to do, who does it and whether it can be undone. Use it as the work list: go through the report
+finding by finding.
+
+**Why.** Four classes keep the work small and the record honest. Most findings fall in the first two and are a
+matter of doing the stages; the third is the one that would otherwise make adoption look impossible, and
+writing it down turns an unfixable failure into a known fact.
+
+---
+
+### 4. The stages
+
+Do the stages in order. Each ends with a re-run of the audit for the area it covers, and a check that the
+project still works (the build, the tests, a push).
+
+#### 4.1 Stage 1: GitHub settings
+
+Administrator. These settings do not change the code, and most can be undone, so they come first.
+
+1. **Ownership.** Issue types exist only in an organization. If the repository belongs to a person, either
+   transfer it to an organization (the administrator decides who owns it; links to the old address are
+   redirected by the host, but clones should update their remote), or keep it and let the Type live in the
+   board field Kind (guide on new-project bootstrap, section 5.1); the audit then judges the field and not the
+   issue types.
+2. **Issue types and labels.** Create the eight issue types (not for a project that keeps the Type in the
+   field Kind) and the 14 Area labels and `dummy`
+   (guide on new-project bootstrap, section 5). Before deleting a label that is not on the list, move its
+   issues to the Area label that replaces it, because deleting a label removes it from every issue that has
+   it.
+3. **Merge methods and branches.** Allow only merge commits, turn off automatic deletion of head branches, and
+   make `main` the default branch (guide on new-project bootstrap, section 3). Protection of `main` comes after
+   the first compliant merge (stage 6), so the adoption itself can land.
+
+- **Rule:** settings that change how the team works (merge methods, protection) are announced before they are
+  changed.
+- **Rule:** map every old label to an Area label (or to none) before deleting any, and write the mapping in
+  the adoption ticket.
+- **Recommendation:** leave the protection of `main` and the administrator bypass for stage 6.
+
+**Why.** These are the cheapest changes, and the later stages depend on them: the board needs the types and
+the labels, and the automation needs `main` and merge commits.
+
+#### 4.2 Stage 2: the adoption branch, files and automation
+
+Developer, with the administrator for the workflow. Create one branch for the adoption (for example
+`adopt-the-standard`) from an up-to-date `main` (guide on starting work, section 3). Everything in this stage
+is committed on it.
+
+1. **Line endings first, on their own.** Add `.gitattributes` with `* text=auto eol=lf` and renormalize the
+   files in a commit of its own, so the change is one reviewable step. List that commit in
+   `.git-blame-ignore-revs` so the history of each line stays readable.
+2. **Structure.** Add what is missing of the locations in the guide on project structure (section 2.1): the
+   readme, `doc/` with `doc/wiki/`, `.githooks/`, `.github/`, `tests/` where there is code, the ignore file
+   and `AGENTS.md`, with the roles and the pointer to the guides.
+3. **Automation.** Copy the automation files from the standard unchanged, keep the hook scripts executable,
+   activate the hooks and run the tests (guide on new-project bootstrap, section 2).
+4. **The changelog.** Keep the old changelog as the record of the earlier history, in `doc/` under a name
+   that says so (for example `doc/changelog-before-the-standard.md`). Start the new `CHANGELOG.md` with a
+   title and **one** finalized heading for the version the project continues from, with a single build and a
+   `REF` block that says the earlier history is in that file. This is the only finalized heading written by
+   hand. The adoption itself is logged above it in a `WIP-Version` heading, with the ticket of the adoption.
+5. **Tests.** Where the automation has its own scripts, the tests come with them.
+
+- **Rule:** the line-endings change is a commit of its own, made when no other branch is waiting to merge.
+- **Rule:** the old changelog is kept, not deleted and not edited.
+- **Rule:** the baseline heading is the only finalized version written by hand, and it states the version the
+  project had at the cut-over.
+- **Rule:** the adoption commits go through the hooks like any other (guide on starting work, section 5): the
+  hooks are in place before the second commit.
+- **Recommendation:** announce to other developers that they need `git config core.hooksPath .githooks` after
+  the merge.
+
+**Why.** Renormalizing mixes with nothing else, so it can be reviewed and ignored by blame. The old changelog
+cannot be converted entry by entry without inventing builds and tickets it never had, so it stays as it is, and
+the new one starts with a baseline.
+
+#### 4.3 Stage 3: token, board and preflight
+
+Administrator (guide on new-project bootstrap, sections 4 and 6).
+
+1. **The project token** is created and stored as `PROJECT_TOKEN`.
+2. **The board** is created and linked to the repository, with the fields, values and views of the standard
+   (`fields.py` and `views.py` create them).
+3. **Run the preflight** and fix what it reports before going on.
+
+- **Rule:** the preflight reports no problem before the adoption branch is merged.
+
+**Why.** The first merge needs the token and the board, or the automation can finalize the version but cannot
+write the tickets.
+
+#### 4.4 Stage 4: git names, branches and tags
+
+Developer, with the project owner agreeing what is retired. These changes act on shared git state, so each is
+announced.
+
+1. **Branches.** For each branch that is not `main`:
+   - one that is merged: retire it as *archived*;
+   - one nobody will resume: retire it as *abandoned*;
+   - one that is set aside: retire it as *suspended*;
+   - one that is still active: rename it to kebab-case (create the new name, push it, move any pull request,
+     then retire the old name).
+
+   Retiring means tag first and delete second (guide on releases, hotfixes and retiring branches, section 3).
+2. **Tags.** Give each existing tag a name in the standard form. A tag that marks a real release becomes
+   `released/V<major>.<sub>.<mod>`. A tag with no use is left alone and recorded as history, or removed by the
+   administrator when the team agrees. Put the new tag on the same commit as the old one, push it, and keep
+   the old tag until everybody has moved. Then the administrator deletes the old tag (the commit stays
+   reachable under the new one), or, when something outside the team depends on the name, records it as an
+   accepted deviation, so the audit stops reporting it.
+3. **The integration line.** A project whose real line is not `main` follows section 5.1.
+
+- **Rule:** no tag is moved to another commit, and no branch is deleted before its tag exists.
+- **Rule:** after the cut-over, every branch and tag is created in the standard form.
+- **Recommendation:** do not rename tags other people or other systems depend on without telling them; record
+  such a tag as accepted instead.
+
+**Why.** Branches and tags are cheap to add and the retire procedure is already the standard's. Moving a tag
+would change what a version means, so a rename is always an addition.
+
+#### 4.5 Stage 5: the tickets
+
+Project owner, with the developers. The board lists the project's work, and it checks itself against the open
+and closed state of the issues.
+
+1. **Bring the issues onto the board.** Add every open issue, and the closed issues the team still needs (for
+   example those the old changelog cites). Older closed issues may stay off the board.
+2. **Give each one its fields.** The Type (the issue type, or the field Kind), the Area label, the Size and, for a closed issue, the Status
+   *Completed* or *Abandoned* and a Resolution. An open issue is not *Completed* or *Abandoned*.
+3. **Mark late tickets.** A ticket written now to document work that happened before the process is given the
+   Origin *Backdated*; one written after the work to replace a `REF` is *Backfilled* and keeps the `REF` token
+   (guide on project structure, section 4.3).
+4. **Open work.** Open issues continue as they were, on the board, from their Status.
+
+- **Rule:** every ticket on the board has a Type (an issue type, or Kind), and every work ticket has a Size (guide on project
+  structure, section 3).
+- **Rule:** a closed work ticket is *Completed* or *Abandoned*, and Resolution is set exactly when it is.
+- **Rule:** a ticket written after the work is not given dates or builds it never had.
+- **Recommendation:** triage the open backlog once, with the project owner (guide on issues and the board in
+  practice, section 1), instead of editing the issues one by one.
+
+**Why.** A board that mixes finished and unfinished work, or leaves types and sizes empty, cannot be trusted,
+and the automation relies on these fields. Marking late tickets keeps the difference between tracked work and
+documented work visible.
+
+#### 4.6 Stage 6: land and prove
+
+Developer and administrator.
+
+1. **Run level 1 of the proof** (guide on new-project bootstrap, section 8.1): the preflight, the tests, the
+   finalize step in dry-run mode, and a throwaway commit to see the hooks.
+2. **Open the pull request** for the adoption branch and land it as any pull request is landed (guide on
+   syncing and merging, sections 2 to 5). Its merge is the **cut-over**, and the version it produces continues
+   from the baseline of stage 2.
+3. **Check the result** as for a first merge (guide on syncing and merging, section 5.2): the heading is
+   renamed, the Version ticket lists the tickets, and the tickets show Delivery *Merged*.
+4. **Turn on protection** of `main` where the plan offers it, with the administrator bypass left open.
+5. **Re-audit.** Run the audit tools again. Every failed rule is fixed, or recorded as accepted or not
+   applicable, and nothing the project still does wrong is among them.
+
+- **Rule:** the adoption lands by pull request and a merge commit, and nothing is pushed to `main` for it.
+- **Rule:** the project is adopted when the re-audit shows no failed rule that is not recorded under section
+  3.
+- **Recommendation:** keep the first and the final report in the adoption ticket, as the record of the
+  work.
+
+**Why.** The first merge is the proof that the setup does what it should, and the second audit is the proof
+that the project does.
+
+#### 4.7 Stage 7: keep it
+
+Everyone.
+
+- **Rule:** the accepted deviations are reviewed at each release: a deviation that can now be fixed is fixed.
+- **Recommendation:** re-run the audit before each release and after any change to the repository settings or
+  the board.
+- **Recommendation:** when the standard changes, update the automation (guide on new-project bootstrap,
+  section 2.4) and re-run the audit.
+
+**Why.** A project drifts. The audit is cheap enough to run whenever something changes.
+
+---
+
+### 5. Special cases
+
+#### 5.1 A line other than `main`
+
+A project whose work is integrated in `develop`, `staging` or a release branch changes its integration line to
+`main`. This is the largest change of the adoption, so it is planned on its own.
+
+1. Agree which branch holds the current state of the project. Nothing is lost: its commits stay reachable.
+2. Make `main` that state by merging the line into `main` with a merge commit, not by moving `main`.
+3. Move the open pull requests to `main`, and tell everyone the old line is closed.
+4. Retire the old line as *archived* once its last commit is reachable from `main`.
+
+- **Rule:** `main` is brought up to the state of the real line by a merge, and no branch is force-pushed.
+- **Rule:** the old line is retired with its tag, never just deleted.
+
+#### 5.2 Existing versions and releases
+
+The version the project continues from is written in the baseline heading (stage 2). Releases that really
+happened are tagged `released/V<major>.<sub>.<mod>` on the commits that were released, when those commits are
+known (stage 4). A release whose commit is not known is not tagged: a wrong tag is worse than a missing one.
+
+A release made before the adoption can still be fixed by a hotfix: the hotfix branch starts from its tag and
+its first commit is the overlay that brings the automation and a baseline changelog (guide on releases,
+hotfixes and retiring branches, section 2.1). A release without a tag cannot be fixed this way, because there
+is nothing to start from.
+
+#### 5.3 Clones of the team
+
+After the cut-over every developer updates their clone: fetch, switch to `main`, activate the hooks, delete the
+local copies of the retired branches. A clone that skips the hooks is warned by the remote automation on its
+next push.
+
+#### 5.4 When the plan lacks a feature
+
+If the hosting plan does not offer branch protection or a wiki for a private repository, the matching
+findings are *not applicable* and are recorded as such. A plan without issue types (a personal account) keeps
+the Type in the field Kind instead (stage 1), and its findings are judged for the field. The finding stays in the report as a reminder
+and is revisited when the plan changes.
+
+---
+
+### 6. Checklist
+
+A one-page summary of the guide. It adds no new rules.
+
+**Before** (section 2)
+
+- [ ] The audit report is saved; the cut-over, the continuing version, the backup and the roles are decided;
+      open branches and pull requests are settled.
+
+**Triage** (section 3)
+
+- [ ] Every finding has a class, and accepted or not-applicable ones are recorded with a reason, a date and who
+      agreed.
+
+**Stages** (section 4)
+
+- [ ] 1: the repository belongs to an organization (or keeps the Type in the field Kind), the types and labels
+      exist (old labels mapped first), only merge commits are allowed, `main` is the default.
+- [ ] 2: line endings renormalized in a commit of its own; structure and automation in place; hooks active;
+      the old changelog kept and a baseline heading written.
+- [ ] 3: the token, the board and the preflight are in order.
+- [ ] 4: branches retired or renamed; tags given standard names by addition; the integration line is `main`.
+- [ ] 5: issues are on the board with type, label, Size, Status and Resolution; late tickets marked.
+- [ ] 6: level 1 of the proof passed; the adoption landed by pull request; the first merge checked; protection
+      on; the audit shows no unrecorded failure.
+- [ ] 7: deviations reviewed at each release; the audit re-run when something changes.
+
+**In one line:** audit, decide, settings, branch, board, names, tickets, land, re-audit.
 
 ---
 
@@ -5008,7 +5466,7 @@ explains it. It adds no new rules.
 
 13. **Pull `main` and check:** the heading is renamed to the expected version, the Version ticket lists your
     tickets, and they show Delivery *Merged* (*Syncing and merging*, section 5).
-14. **Triage any Alert** assigned to you (*Issues and the board in practice*, section 5), and decide any
+14. **Triage any Alert** assigned to you (*Issues and the board in practice*, section 5.2), and decide any
     Attention flag on your tickets (*Issues and the board in practice*, section 2.4).
 15. **Verify** (a person), before or after the merge: set Resolution *Done* and Progress *Completed*
     together, and close the issue
@@ -5070,7 +5528,7 @@ branching and merging.
 | a ticket needs more work after it is *Completed* | Reopen it only if its own scope is unmet. Otherwise create a new ticket and link the two. | Issues and the board in practice, section 4.3 |
 | work is set aside to resume later | Suspend the ticket, with a comment, and the branch too. | Issues and the board in practice, section 4.1 |
 | work is being dropped | Abandon it with a Resolution and a comment, and the branch too. | Issues and the board in practice, section 4.2 |
-| an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5 |
+| an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5.2 |
 | the automation flagged my ticket (*Watch*, *Caution* or *AtRisk*) | Read its comment, decide, act, and tick *Fine*, or *Handled elsewhere* if it is handled elsewhere. | Issues and the board in practice, section 2.4 |
 | an Alert was raised in error | Abandon it with Resolution *Invalid* and a comment, and raise a Bug against the automation. | Issues and the board in practice, section 5 |
 | a planned version will not happen | Mark it *Dropped*, close it, and comment what replaced it. | Issues and the board in practice, section 6 |
@@ -5084,7 +5542,9 @@ branching and merging.
 | I want to keep working on a merged branch | Sync `main` into it first, then open a new `WIP-Version` heading. | Starting work, section 3.3 |
 | I want to restart a suspended or abandoned branch | Recreate it from its tag, and sync `main` first. | Starting work, section 3.4 |
 | a critical problem is found in a released version | Start a hotfix from the release tag. | Releases, hotfixes and retiring branches, section 2 |
+| the released version is from before the adoption | Start the hotfix from its tag; the first commit is the overlay (automation and a baseline changelog). | Releases, hotfixes and retiring branches, section 2.1 |
 | I want to declare a version a release | Verify it, run the release step, and tell the project owner. | Releases, hotfixes and retiring branches, section 1 |
+| a release turns out to be defective | Keep its tag. Fix it with a hotfix of that release, or release a newer version from `main`. | Releases, hotfixes and retiring branches, section 1.1 |
 | a release was declared by mistake | Delete the tag and put the Version ticket and its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
 
 ### Assistants and new projects
@@ -5094,6 +5554,8 @@ branching and merging.
 | I am an assistant and the action is risky, outward-facing, or a commit, push or merge into `main` or a shared branch | Ask first, and propose the commit message. Syncing `main` into the person's own branch is routine. | Working with an assistant, section 3 |
 | I am an assistant and there is a real choice to make | Present the options with a recommendation and ask. | Working with an assistant, section 3 |
 | I am starting a new project | Follow the bootstrap checklist. | New-project bootstrap, section 9 |
+| the project already exists and I want it to follow the standard | Audit it, triage the findings, then do the stages in order. | Adopting the standard, sections 2 to 4; appendix G |
+| the audit reports a failure in the past (commits, tags) | Do not rewrite history. Record it as accepted with a reason, and judge from the cut-over. | Adopting the standard, section 3 |
 
 ---
 
@@ -5103,7 +5565,7 @@ Every ticket field with its values, what they mean, who sets them and when. The 
 and the rules that tie the fields together, are in section 4 of *Project structure*. How the fields work
 together over a ticket's life is in *Appendix E: Ticket model*.
 
-**Where each field lives (GitHub).** Type is the native issue type, Area is a set of labels, and every
+**Where each field lives (GitHub).** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values), Area is a set of labels, and every
 other field is a board field.
 
 **Colors.** The Color column of each table is the standard's color for that option, so that a ticket reads
@@ -5118,7 +5580,8 @@ does not check colors.
 
 ### Type
 
-One value per ticket. Says what sort of ticket it is and why the change is made.
+One value per ticket. Says what sort of ticket it is and why the change is made. In a project owned by a
+personal account the values are the options of the board field Kind.
 
 | Value | Color | Meaning | Version bump |
 |---|---|---|---|
@@ -5719,7 +6182,7 @@ code has shipped).
 
 | Space | Question | Where it lives (GitHub) | Set by |
 |---|---|---|---|
-| **Type** | What sort of ticket is this, and why is the change being made? | the issue type | a person (the automation for Version and Alert tickets) |
+| **Type** | What sort of ticket is this, and why is the change being made? | the issue type (or the board field Kind) | a person (the automation for Version and Alert tickets) |
 | **Area** | What kind of work does it involve? | labels, several per ticket | a person |
 | **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | board fields | a person |
 | **Progress** | Where is the work? | the board's Status field | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
@@ -5728,7 +6191,7 @@ code has shipped).
 | **Resolution** | How did it end? | board field | a person |
 | **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Fix** | Which of the rules that span fields do its fields break? | board field | the automation |
-| **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, Version#, the real Version and the dates |
+| **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, the real Version and the dates |
 
 Two principles decide who sets a field. **Judgment belongs to people, facts belong to the automation**:
 whether the work is done, verified or urgent is a person's call, while where the code is, which build it is
@@ -5789,6 +6252,25 @@ Side paths:
   automation attaches it to that version's Version ticket.
 - **Late tickets.** A ticket created after the work has Origin *Backfilled* (with REF) or, for history from
   before the process, *Backdated*.
+
+#### Delivery moves
+
+Delivery depends only on the work (guide on project structure, section 4.3). These are all its moves:
+
+| From | To | Caused by | Who |
+|---|---|---|---|
+| blank | *Committed* | the work is committed locally and not pushed (optional marker) | the developer, by hand |
+| blank or *Committed* | *Pushed* | a push that contains a changelog entry for the ticket | the automation |
+| *Pushed* | *Merged* | the branch is merged to `main` and the version is finalized | the automation |
+| blank | *Implemented* | the work is in effect and changed no file | a person, with the Version |
+| *Merged* or *Implemented* | *Released* | a release is cut at or above its version | the automation |
+| *Pushed*, on a hotfix branch | *Released* | the hotfix is finished (it skips *Merged*) | the automation |
+| *Pushed* | *Dropped* | the branch is retired as abandoned | the automation |
+| planned Version ticket | *Dropped* | the version will never be delivered | a person |
+| *Merged*, *Implemented*, *Released* or *Dropped* | *Pushed* | new work is pushed on the ticket | the automation |
+
+A suspended branch moves nothing: its ticket keeps *Pushed*. A ticket with newer work pushed than the version
+being released keeps *Pushed* at the release.
 
 #### Attention
 
@@ -5894,8 +6376,8 @@ second field). The fields below are the ones drawn on each card.
 
 ### 3. Why these columns
 
-- Every table view starts with the same five columns (Title, Assignees, Status, Type, Labels), so a ticket
-  reads the same wherever it is listed. All is the complete list: every field.
+- Every table view shows the same five columns (Title, Assignees, Status, Type, Labels) and then its own, so a
+  ticket reads the same wherever it is listed. All is the complete list: every field.
 - The short views add what their job needs: Attention and Waiting to decide, Waiting, Size, Risk and
   Resolution to follow up, Fix and the rule columns to fix, Delivery, Resolution and Build to see what a
   version holds. Delivery and Version are on all of them, to tell at a glance whether the work is merged or
@@ -5904,8 +6386,170 @@ second field). The fields below are the ones drawn on each card.
 ### 4. Notes
 
 - **Type** is the issue type, not a board field. The API does not report it among a view's visible fields,
-  so `views.py` does not compare it, and the order of the columns is not compared either (only which fields
-  are shown).
+  so `views.py` does not compare it. When the Type source is the field Kind, the column is *Kind*, a board
+  field like the others, and the filters use `kind:` where the views use `type:`. The order of the columns is
+  not compared either (only which fields are shown).
 - The sort and grouping of a view can only be set when it is created (see *Issues and the board in
   practice*, section 2.3), so changing them recreates the view. Recreating All also loses its two hand-made
   settings (sort by Created, ascending, and *Show hierarchy* off).
+
+---
+
+## Appendix G: Audit findings and how to fix them
+
+The audit tools (see the wiki page on them) report findings by check id. This appendix lists every check the
+audits can report, with what the finding means and how to deal with it when a project adopts the standard (guide
+11). Use it as the work list: take the audit report finding by finding, find its id here, and do what the row says
+in the stage it names.
+
+**How to read the tables.**
+
+- **Id** is the id in the report and in the JSON file. A placeholder in angle brackets (`<field>`) stands for
+  each of the values it can take.
+- **Class** is the usual triage class (guide 11, section 3): *Fix* (fix now), *Convert* (change existing
+  material once), *History* (the past, accepted and recorded), *N/A* (not applicable, recorded with a reason).
+  A row names two when it depends on the project.
+- **Stage** is the stage of guide 11, section 4, that deals with it: 1 GitHub settings, 2 adoption branch (files
+  and automation), 3 token, board and preflight, 4 git names, 5 tickets, 6 land and prove, 7 keep it. A dash
+  means the finding is not fixed by a stage.
+- **Role** is who makes the change: **Admin** (administrator), **Owner** (project owner), **Dev** (developer).
+- **Undo** says whether the change can be undone: *Yes*, *With care* (it affects clones or links), or *No* (the
+  past cannot be changed).
+- A check that reports *not-checkable* is not a finding. Its row says what to provide so the audit can tell.
+
+Strength (rule or recommendation) and the guide section behind each check are in the audit report itself and in
+the wiki page on the audit tools; the rows here say what to do. Nothing here adds a rule.
+
+---
+
+### 1. Files (`audit_files.py`)
+
+| Id | Class | Stage | Role | Undo | What it means and what to do |
+|---|---|---|---|---|---|
+| `files.location.README.md` | Fix | 2 | Dev | Yes | There is no `README.md` in the root. Write one that says what the project is and how to set it up, including the command that activates the hooks. |
+| `files.location.CHANGELOG.md` | Convert | 2 | Dev | Yes | There is no `CHANGELOG.md`. Keep the project's old changelog (if any) in `doc/` under a name that says it is earlier history, and start a new `CHANGELOG.md` with a baseline heading (guide 11, section 4.2). |
+| `files.location.doc` | Fix | 2 | Dev | Yes | There is no `doc/` folder. Create it; the project's documentation goes there. |
+| `files.location.doc.wiki` | Fix | 2 | Dev | Yes | There is no `doc/wiki/` folder. Create it with a `Home.md` and move the project's wiki pages in, one Markdown file per page. |
+| `files.location.githooks` | Fix | 2 | Dev | Yes | There is no `.githooks/` folder. Copy the hooks from the standard unchanged. |
+| `files.location.github` | Fix | 2 | Dev | Yes | There is no `.github/` folder. It is created with the workflow, scripts, template and manifest. |
+| `files.location.AGENTS.md` | Fix | 2 | Dev | Yes | There is no `AGENTS.md`. Create it: the roles, the pointer to the guides, what the project's build and tests are. |
+| `files.location.gitignore` | Fix | 2 | Dev | Yes | There is no `.gitignore`. Add one for the project's tools and build output. |
+| `files.location.gitattributes` | Fix | 2 | Dev | Yes | There is no `.gitattributes`. Add it with the line `* text=auto eol=lf` (see `files.gitattributes.eol`). |
+| `files.location.license` | Fix / N/A | 2 | Owner | Yes | There is no license file. Add the project's license, or record that the project has none on purpose. |
+| `files.gitattributes.eol` | Convert | 2 | Dev | With care | The line `* text=auto eol=lf` is missing. Add it, then renormalize the files in a commit of its own and list that commit in `.git-blame-ignore-revs` (guide 11, section 4.2). Do it when no branch is waiting to merge: it touches every line of the files whose endings change. |
+| `files.changelog.readable` | Fix | 2 | Dev | Yes | The audit cannot read `CHANGELOG.md`. Create it (see `files.location.CHANGELOG.md`). |
+| `files.changelog.eol` | Convert | 2 | Dev | Yes | The changelog has Windows line endings. Convert it with the renormalizing commit of `files.gitattributes.eol`. |
+| `files.changelog.no-bug-plan-sections` | Convert | 2 | Dev | Yes | The changelog has *Known bugs* or *Planned* sections. Move each item into a ticket and delete the sections. The changelog records changes to files and nothing else. |
+| `files.changelog.wip-heading` | Fix | 2 | Dev | Yes | A `WIP-Version` heading has text after it other than one `+V`, `+s` or `+m`. Remove the extra text. |
+| `files.changelog.one-wip` | Fix | 2 | Dev | Yes | More than one `WIP-Version` heading is open. Keep one, at the top, and merge the entries of the others into it. |
+| `files.changelog.version-heading` | Convert | 2 | Dev | Yes | A version heading is not `## V<major>.<sub>.<mod> — yyyy-mm-dd hh:mm UTC`. For an old changelog kept as history, leave it in its file in `doc/` and start the new one with the baseline heading; for the live changelog, rewrite the heading (UTC, no padding). |
+| `files.changelog.has-version` | Fix | 2 | Dev | Yes | The changelog has no finalized version. Write the baseline heading for the version the project continues from (guide 11, section 4.2). |
+| `files.changelog.newest-first` | Convert | 2 | Dev | Yes | Versions are not in descending order. Reorder them, or start the new changelog with the baseline. |
+| `files.changelog.wip-on-top` | Fix | 2 | Dev | Yes | The `WIP-Version` heading is below a finalized version. Move it to the top. |
+| `files.changelog.headings` | Convert | 2 | Dev | Yes | A build or ticket heading is not in the forms of the guide (`### Build <stamp> (branch <name>)`, `#### #<n> — <title>`, `#### REF <token> — <reason>`). Do not invent stamps for old entries: keep the old changelog as history and start the new one in the standard form. |
+| `files.hooks.present` | Fix | 2 | Dev | Yes | One of `pre-commit`, `pre-push`, `prepare-commit-msg` is missing from `.githooks/`. Copy it from the standard; keep it executable. |
+| `files.hooks.active` | Fix | 2 | Dev | Yes | This clone does not use the hooks. Run `git config core.hooksPath .githooks`. Every developer does this once per clone. Not-checkable when the folder has no `.git`. |
+| `files.wiki.home` | Fix | 2 | Dev | Yes | `doc/wiki/Home.md` is missing. Add it as the index of the wiki. |
+| `files.wiki.names` | Convert | 2 | Dev | Yes | A wiki file is not a Markdown file named by its title with hyphens. Rename it (for example `Getting-Started.md`) and update the links to it. |
+| `files.automation.workflow` | Fix | 2 | Admin | Yes | There is no workflow in `.github/workflows/`. Copy the workflow and its scripts from the standard unchanged. |
+| `files.automation.pr-template` | Fix | 2 | Dev | Yes | There is no `.github/pull_request_template.md`. Copy it from the standard. |
+| `files.automation.manifest` | Fix | 2 | Dev | Yes | There is no `.github/automation-manifest.json`. Generate it with the manifest script of the standard. |
+| `files.automation.tests` | Fix | 2 | Dev | Yes | The project has its own automation scripts but no `tests/`. Copy the tests that come with the scripts. |
+| `files.agents.guides` | Fix | 2 | Dev | Yes | `AGENTS.md` does not mention the guides. Add the pointer: the assistant follows the guides and works from their checklists. Not-checkable when `AGENTS.md` is missing. |
+
+---
+
+### 2. Git (`audit_git.py`)
+
+Branches and tags are read from the local clone: run `git fetch` first to include the remote ones.
+
+| Id | Class | Stage | Role | Undo | What it means and what to do |
+|---|---|---|---|---|---|
+| `git.repository` | Fix | — | Dev | Yes | The folder is not a git repository. Point the audit at a clone. |
+| `git.branch.main` | Convert | 4 | Admin | With care | No branch is called `main`. Rename the integration branch to `main` and make it the default (guide 11, section 5.1). |
+| `git.branch.single-line` | Convert | 4 | Owner | With care | A long-lived `develop`, `staging` or `release` branch exists. Merge it into `main` with a merge commit and retire it as *archived* (guide 11, section 5.1). |
+| `git.branch.no-slash` | Convert | 4 | Dev | With care | A branch name contains `/`. Create the branch again with hyphens, push it, move its pull request, and retire the old name. |
+| `git.branch.kebab-case` | Convert | 4 | Dev | With care | A branch is not in lowercase words with hyphens (or the hotfix form). Rename it as above; branches nobody will resume are retired instead (guide on releases, hotfixes and retiring branches, section 3). |
+| `git.tag.names` | Convert / History | 4 | Dev | With care | A tag is not in the standard form. For a tag that marks a real release, add `released/V<major>.<sub>.<mod>` on the same commit and keep the old tag until everybody has moved. A tag with no use is left alone and recorded as history. Never move a tag. |
+| `git.tag.released-on-main` | History | 4 | Dev | No | A `released/` tag is on a commit that `main` does not contain. If it is a mistake, add the right tag; otherwise record it as history. |
+| `git.history.merge-commits` | History | 6 | Owner | No | Commits on `main` are not merges (direct, squashed or rebased). History cannot be rewritten: record it as history, and use the audit's judging from the cut-over when the tools offer it. After the cut-over, every change lands by pull request and a merge commit. |
+| `git.message.no-type-prefix` | History | 6 | Owner | No | Commit subjects with a prefix such as `fix:` or `feat:`. The past stays; from the cut-over the subject is the ticket's title. |
+| `git.message.no-assistant-attribution` | History | 6 | Owner | No | Commit messages with an assistant's co-author or "generated with" line. The past stays; from the cut-over leave the line out. |
+| `git.tag.released-in-changelog` | Convert | 2 | Dev | Yes | A `released/` tag names a version that has no heading in the changelog. Add the version to the baseline heading, or tag the right version. Not-checkable when the changelog cannot be read. |
+
+---
+
+### 3. GitHub (`audit_github.py`)
+
+The audit reads the settings with `gh`, signed in to an account that can read the repository; protection and
+secrets need administration access. A refused read is *not-checkable*, not a failure.
+
+| Id | Class | Stage | Role | Undo | What it means and what to do |
+|---|---|---|---|---|---|
+| `github.remote` | Fix | — | Dev | Yes | The project has no `github.com` origin remote, so the GitHub and board audits did not run. Give the remote, or pass `--repo owner/name`. |
+| `github.repository` | Fix | — | Admin | Yes | `gh` cannot read the repository: it is missing, not signed in, or the account has no access. Run `gh auth login`. |
+| `github.setting.allow_merge_commit` | Fix | 1 | Admin | Yes | Merge commits are not allowed. Turn them on: they are the only way work lands. |
+| `github.setting.allow_squash_merge` | Fix | 1 | Admin | Yes | Squash merging is on. Turn it off. Tell the team first: open pull requests will need a merge commit. |
+| `github.setting.allow_rebase_merge` | Fix | 1 | Admin | Yes | Rebase merging is on. Turn it off, with the same warning. |
+| `github.setting.delete_branch_on_merge` | Fix | 1 | Admin | Yes | Head branches are deleted automatically. Turn it off: a branch is tagged first and deleted second. |
+| `github.setting.has_issues` | Fix | 1 | Admin | Yes | Issues are off. Turn them on: tickets are issues. |
+| `github.setting.has_projects` | Fix | 1 | Admin | Yes | Projects are off. Turn them on: the board is a project. |
+| `github.setting.has_wiki` | Fix / N/A | 1 | Admin | Yes | The wiki is off. Turn it on and create a first page, or record that the plan does not offer it for the repository. |
+| `github.setting.default_branch` | Convert | 1 | Admin | With care | The default branch is not `main`. Create or rename `main` and make it the default (guide 11, section 5.1). |
+| `github.setting.owner-type` | Convert | 1 | Admin | With care | The repository belongs to a person and the Type is not kept in the field Kind. Either transfer it to an organization (issue types exist only there; clones must update their remote), or keep it and set the variable `TYPE_SOURCE` to `field`, so that the Type lives in the board field Kind. |
+| `github.type-source` | Fix | 1 | Admin | Yes | The repository variable `TYPE_SOURCE` is neither `issue-type` nor `field`. Set it to one of them, or delete it: the source is then `issue-type` for an organization and `field` for a person. Not-checkable when the variable cannot be read. |
+| `github.protection.pull-request` | Fix / N/A | 6 | Admin | Yes | `main` does not require a pull request. Turn on protection (or a ruleset) after the first compliant merge, where the plan offers it. Not-checkable when protection cannot be read. |
+| `github.protection.up-to-date` | Fix / N/A | 6 | Admin | Yes | `main` does not require branches to be up to date. Turn it on with the protection. |
+| `github.protection.admin-bypass` | Fix | 6 | Admin | Yes | The protection also applies to administrators. Leave the administrator bypass open: a bypass is allowed, with an Alert as its record. |
+| `github.actions.enabled` | Fix | 1 | Admin | Yes | Actions is off. Turn it on: the automation runs there. |
+| `github.token.secret` | Fix | 3 | Admin | Yes | The secret `PROJECT_TOKEN` does not exist. Create the token and store it (guide on new-project bootstrap, section 4). Not-checkable without administration access. |
+| `github.board.variable` | Fix | 3 | Admin | Yes | The variable `BOARD_NUMBER` is not set. Run the preflight, which stores it. |
+| `github.labels.exact` | Convert | 1 | Admin | With care | The repository's labels are not exactly the 14 Area labels and `dummy`. Move the issues from each extra label to the Area label that replaces it, then delete it, because deleting a label removes it from its issues. Create the missing ones. |
+| `github.labels.descriptions` | Fix | 1 | Admin | Yes | A label has no description. Give each its meaning from Appendix C. |
+| `github.labels.colors` | Fix | 1 | Admin | Yes | A label has another color than the standard. Use the colors of Appendix C. |
+| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the eight types (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert). Not needed, and passed, when the Type is kept in the field Kind. Not-checkable when the types cannot be read. |
+| `github.issue-types.descriptions` | Fix | 1 | Admin | Yes | A type has no description. Give it the definition of Appendix C. |
+| `github.issue-types.colors` | Fix | 1 | Admin | Yes | A type has another color than the standard. Use the colors of Appendix C. |
+
+---
+
+### 4. Board (`audit_board.py`)
+
+The audit reads the board linked to the repository with `gh` and the `project` scope (`gh auth refresh -s
+project`). Tickets labeled `dummy` and pull requests are skipped.
+
+| Id | Class | Stage | Role | Undo | What it means and what to do |
+|---|---|---|---|---|---|
+| `board.remote` | Fix | — | Dev | Yes | No `github.com` remote, so the board audit did not run. Give the remote, or pass `--repo owner/name`. |
+| `board.linked` | Fix | 3 | Admin | Yes | No board is linked to the repository. Create the board and link it (guide on new-project bootstrap, section 6). Not-checkable when the boards cannot be read. |
+| `board.fields` | Fix | 3 | Admin | Yes | The board's fields could not be read. Check the `project` scope of `gh`. |
+| `board.field.<field>` | Fix | 3 | Admin | Yes | The board lacks the field. Create it with `fields.py`. |
+| `board.field.<field>.type` | Fix | 3 | Admin | With care | The field is of the wrong kind (Build and Version must be text). Delete and create it again: the values of the old field are lost, so copy them first. |
+| `board.field.<field>.values` | Fix | 3 | Admin | With care | The field's values are not exactly the standard's. Add the missing ones and remove the extra ones by hand; move the tickets off an extra value first (for example the built-in Status values). |
+| `board.field.<field>.colors` | Fix | 3 | Admin | Yes | A value has another color than the standard. Use the colors of Appendix C. |
+| `board.views` | Fix | 3 | Admin | Yes | The board's views could not be read, or the definition file `.github/views.json` is missing or invalid. Copy the file from the standard. |
+| `board.views.present` | Fix | 3 | Admin | Yes | A view of `.github/views.json` is missing. Run `views.py --apply`. |
+| `board.views.no-extra` | Fix / N/A | 3 | Owner | Yes | The board has a view that `views.json` does not list. Delete it (`views.py --delete-unlisted`), or add it to the file. |
+| `board.views.match` | Fix | 3 | Admin | Yes | A view differs from its definition: the report names the view and the setting. Run `views.py --apply` (it creates the view again) or correct `views.json`. |
+| `board.tickets` | Fix | 5 | Admin | Yes | The board's tickets could not be read. Check the `project` scope. |
+| `board.ticket.type` | Fix | 5 | Owner | Yes | A ticket has no Type (no issue type, or no value in the field Kind). Set it. For many old issues, set the type through the API in one pass. |
+| `board.ticket.size` | Fix | 5 | Owner | Yes | A work ticket has no Size. Estimate it and set the Size. |
+| `board.ticket.closed-status` | Convert | 5 | Owner | Yes | A closed work ticket is not *Completed* or *Abandoned*. Set the Status to match (or reopen the ticket if it is not done). |
+| `board.ticket.open-status` | Convert | 5 | Owner | Yes | An open work ticket is *Completed* or *Abandoned*. Close the issue or move the Status back. |
+| `board.ticket.resolution` | Convert | 5 | Owner | Yes | Resolution is not set exactly when the ticket is *Completed* or *Abandoned*. Set it on finished tickets (*Done* for finished work) and clear it on open ones. |
+| `board.ticket.backfilled-ref` | Fix | 5 | Owner | Yes | A ticket with Origin *Backfilled* has no REF. Set the REF to the token of the placeholder it replaced, or change the Origin to *Backdated* if it documents older work. |
+| `board.ticket.version-form` | Fix | 5 | Owner | Yes | A Version value is not in the board form (`V000.010.001`). The scheduled run rewrites it, or type the three-digit form. |
+| `board.ticket.version-title` | Fix | 5 | Owner | Yes | A Version ticket is not titled `Version 000.010.001`. Retitle it in the board form. |
+| `board.ticket.alert-priority` | Fix | 5 | Owner | Yes | An Alert does not have Priority *Critical*. Set it. |
+| `board.ticket.area` | Fix | 5 | Owner | Yes | A work ticket has no Area label. Add one. |
+
+---
+
+### 5. The baseline (`audit.py`)
+
+`audit.py` reads the accepted deviations from `.github/audit-baseline.json` in the audited project (or the file
+given with `--baseline`) and shows the failures they accept as *accepted*. It adds one check of its own.
+
+| Id | Class | Stage | Role | Undo | What it means and what to do |
+|---|---|---|---|---|---|
+| `baseline.stale` | Fix | 7 | Owner | Yes | An entry of the baseline accepts nothing now: the check passes, or the items it names are gone. Remove the entry, so the file lists only what is still deviating. |

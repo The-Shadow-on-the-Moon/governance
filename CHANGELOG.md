@@ -1,5 +1,199 @@
 # Changelog
 
+## WIP-Version
+### Build 20261013054128 (branch audit-tools)
+#### #190 — Consistency sweep of the guides, wiki and tools
+- doc/wiki/Board-Views.md: the Roadmap ticket is suspended, not at ToDo.
+- guides/README.md, guides/10-new-project-bootstrap.md, guides/11-adopting-the-standard-in-an-existing-project.md: the assumption of an organization (the standard's assumptions, the project token, the stage 1 checklist) also names the personal account with the field Kind.
+- guides/appendix-f-board-views-layout.md: the five columns every table view shows, stated without an order the Fix and Versions views do not have.
+- doc/wiki/Walkthrough-CSV-Export.md, guides/03-project-structure.md, guides/04-starting-work.md, guides/05-working-and-committing.md: the example REF token is earlier than the build stamp that follows it; the backfill example in guide 05 uses V2.3.1, as the other examples of that version do.
+- doc/wiki/Automation.md: the script table lists reenable_schedule.py and no longer claims a test file for each script; the manual finalize run also does the sweeps that follow a push to main.
+- doc/wiki/Home.md: the appendices in order, and the last heading is More pages. guides/02-branching-and-merging-strategy.md: Type Alert. guides/03-project-structure.md: a line wrapped.
+- guides/03-project-structure.md (section 3.3): a ticket title has no type prefix such as fix: or docs:, because it becomes the commit's summary line. doc/wiki/Audit-Tools.md: the GitHub and Board rows name the field Kind.
+- guides/02-branching-and-merging-strategy.md, guides/03-project-structure.md (sections 5.2, 5.4 and 7.5), doc/wiki/Walkthrough-CSV-Export.md: the Version ticket description, the bypass Alert and the AUTO-REF entry are shown as the automation writes them (the AUTO-REF in its own build, as alerts.py adds it); the bump reason of a mod version is the generic one.
+- tests/test_tools.py: a test builds those texts with the automation and finds them in the guides; the main guard is at the end of the file.
+- tools/combine.py: the docstring names guides 01 to 11 and appendices A to G. AGENTS.md: the list of automation files names the re-enabling workflow and the saved views file, as the manifest does.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
+### Build 20261013032905 (branch audit-tools)
+#### #189 — Guides and wiki: the Kind field in the remaining places
+- guides/10-new-project-bootstrap.md: the preflight list and the rule of section 2.5 name the field Kind and the variable `TYPE_SOURCE`; the color recommendation of section 5.2 and the first-ticket rule of section 8 cover the field Kind as well as the issue types. doc/wiki/Adopting-the-Standard.md: stage 1 offers the Kind field for a personal account.
+- tools/audit_board.py and tools/audit_github.py: the header descriptions say the Type is the issue type or the field Kind.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
+### Build 20261013031037 (branch audit-tools)
+#### #188 — Automation: the Version ticket lookup fails for a personal account
+- .github/scripts/ticket_type.py: `type_filter`, the issues query for an issue type, empty when the Type lives in the field Kind. .github/scripts/implemented.py (`version_ticket`) and alerts.py (`stale_planned`) use it and find the Version ticket by its title, skipping pull requests.
+- tests/test_ticket_type.py: both lookups with and without the filter; the manifest is rewritten (standard V0.12.1, provisional).
+
+#### #186 — Kind field mode tested end to end
+- Trial on a throwaway private repository and a throwaway project owned by the personal account (the scripts of this repository run locally with the account's token; nothing stored as a secret): the preflight finds the board linked to the repository and the source `field`; `fields.py` created the 15 fields and Kind with its eight values and colors; the Status values were set through the API; `views.py` created the seven views through the `/users/…` paths with `kind:` filters and a second run found them all up to date; two tickets (a Feature and a Bug with their Kind) merged and `finalize.py` made V0.2.0 (a sub bump read from the Kind of the Feature), set Delivery, Version and Build, and created the Version ticket with Kind Version; `release.py` tagged and set Released, skipping the Version ticket by its Kind; `hotfix.py` made V0.2.0-HF1 from the tag; an Alert got Kind Alert; the date, Watch, conditions and Version format readers read the board; the audit judged the Kind field, the views and the ticket Types, and found the owner and the issue types not a problem.
+- One defect found (#188), fixed. Observed, not changed: the options of the built-in Status field can be set through the API (`updateProjectV2Field`), which the bootstrap guide says is done by hand.
+- Cleanup: the throwaway project deleted; the throwaway repository archived (to be deleted by its owner, the token cannot).
+
+### Build 20261013024346 (branch audit-tools)
+#### #182 — Automation: read the Type from the issue type or the Kind field
+- .github/scripts/ticket_type.py: new. Decides where the Type of a ticket comes from (the repository variable `TYPE_SOURCE`, or the owner of the repository), reads it (the issue type of the issue, or else the Kind of its board item) and holds the colors and descriptions of the options of Kind.
+- .github/scripts/github_api.py: `Client.issue_type` falls back to the Kind of the issue's board item when there is no issue type; the client keeps its reader, and the owner's REST path for the board.
+- .github/scripts/conditions.py, dates.py, release.py, version_format.py, watch.py: the board queries also ask for Kind, and the Type of an item is its issue type or its Kind.
+- .github/scripts/preflight.py: decides the source, requires the field Kind and its eight values when the source is the field, and prints where the Type comes from. .github/scripts/fields.py creates Kind (with the colors and descriptions of the Type table of appendix C).
+- tests/test_ticket_type.py: new, with the source, the readers, the preflight, the fields and the board queries; tests/test_tools.py checks the Kind row of the bootstrap table and the colors and descriptions against the guides. .github/scripts/check_manifest.py lists the new test; the manifest is rewritten (standard V0.12.1, provisional).
+- doc/wiki/Automation.md: the new script and how the preflight decides the source.
+
+#### #183 — Automation: set the Kind of Version and Alert tickets
+- .github/scripts/github_api.py: with the field Kind, `create_issue` sends no issue type. .github/scripts/finalize.py and alerts.py set Kind to Version or Alert on the board item of the Version and Alert tickets they create.
+- tests/test_ticket_type.py: both modes, for the Version ticket, the Alert and the client.
+
+#### #184 — Board views and API paths for the Kind field and personal accounts
+- .github/scripts/views.py: with the field Kind the filters use `kind:` and the column Type is the column Kind, translated from the same views.json (`for_source`).
+- .github/scripts/github_api.py and preflight.py: the REST paths of the board's fields and views are `/users/{owner}/…` for a board owned by a personal account.
+- tests/test_views.py and tests/test_ticket_type.py: the translation, the paths.
+- doc/wiki/Board-Views.md: the Kind column and qualifier.
+
+#### #185 — Audit: checks that depend on where the Type comes from
+- tools/audit_common.py: `type_source` and `Variables` (the variable and the owner, read with `gh`). tools/audit_github.py: the new check `github.type-source`; the owner check and the issue types check follow the source. tools/audit_board.py: the fields (Kind), the views and the tickets follow the source. tools/audit.py passes the source to the board audit.
+- tests/test_audit_github.py and tests/test_audit_board.py: both sources, an invalid or unreadable variable.
+- guides/appendix-g-audit-findings-and-fixes.md and doc/wiki/Audit-Tools.md: the new check and the changed ones.
+
+#### #187 — views.py --delete ends with a NameError
+- .github/scripts/views.py: the deletion no longer ends with a NameError; tests/test_views.py: the command is run with `--delete`.
+
+#### #136 — Address implementation of issue type in personal accounts
+- The Type of a ticket has one source, chosen by the owner of the repository: the native issue type for an organization, or, for a personal account (which has no issue types), a board field **Kind** with the same eight values; the repository variable `TYPE_SOURCE` (`issue-type` or `field`) names it. Everything else is the same in both.
+- guides/10-new-project-bootstrap.md: section 5.1 states the rule and the variable and recommends an organization for a team; section 6.1 adds the field Kind to the table of board fields (only for the field source); the checklist and the note on where the board lives are adjusted.
+- guides/11-adopting-the-standard-in-an-existing-project.md: stage 1 offers, for a project owned by a person, to transfer it or to keep the Type in Kind; the tickets, the rules and section 5.4 speak of "a Type" and say a personal account keeps it in Kind.
+- guides/01-concepts-and-vocabulary.md, 02, 03, 09, appendices C, E and F and doc/wiki/Ticket-Model.md: the Type is the issue type or the field Kind; appendix F says the column and the filter qualifier for that source.
+- The automation, views and audit support for the field is in #182 to #185; appendix G and the audit wiki page follow #185.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
+### Build 20261013021053 (branch audit-tools)
+#### #179 — README and Automation page agree with the repo
+- README.md: the guides are 01 to 11 and the appendices A to G; the `tools/` row names every audit script.
+- doc/wiki/Automation.md: the pre-push hook does not warn about a hotfix branch being behind `main`; the hotfix-finalize step points to the overlay commit for a release made before the adoption.
+
+#### #180 — Evaluation: record which ticket closed each finding; settle #137 and #138
+- doc/Evaluation/Combined-eval.md: a status section (section 5) says which ticket handled each finding E1 to E13; the evaluation itself is unchanged. The working copy now has Unix line endings, as git stores it.
+- #137 and #138 checked against guide 11, appendix G, the audit tools and the wiki: covered; commented and moved to Review.
+
+#### #181 — Counts and descriptions in README, Home and the Automation page tested
+- tests/test_tools.py: `StatementsAboutTheRepositoryTests` compare the guides and appendices named in the root README, the wiki Home and the guide index with the files, every tool with the README, and every hook with the Automation page.
+
+### Build 20261013015511 (branch audit-tools)
+#### #178 — Guides: make the example versions and tickets agree
+- guides/03-project-structure.md: the Version ticket example of V2.4.1 lists only #204 and gives the bump as mod because #204 is a Bug (a Feature would have made a sub bump and another number); it is finalized from pull request #186 (the number #187 belongs to the Alert) at 16:41 UTC, after the push that the Alert reports (16:40 UTC); the pull request example for #201 and #205 is tested and synced on 2026-10-06, after the V2.4.1 of 2026-10-05.
+- guides/01-concepts-and-vocabulary.md: the examples of the finalized heading carry the same time.
+- guides/05-working-and-committing.md: the `REF` placeholder shown in a finalized version (V2.4.1) has a token from before that version was finalized.
+- doc/wiki/Walkthrough-CSV-Export.md: starts from V2.4.1, so the feature makes V2.5.0 and the hotfix V2.5.0-HF1, as the timeline of the guides' examples gives.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
+### Build 20261013013217 (branch audit-tools)
+#### #173 — Wiki: end-to-end walkthrough
+- doc/wiki/Walkthrough-CSV-Export.md: added. The invented ticket #201 followed in one piece: the ticket, the start and the branch, the changelog entries and the build stamp, the first push, the sync, the backfill of a `REF`, the pull request, the merge and the version it makes, verification, the release, and a hotfix with its forward-port, with the changelog at each stage and a pointer to the guide section for each step. doc/wiki/Home.md links to it.
+- tests/test_tools.py: the test of the changelog examples also parses the changelog blocks of the walkthrough page.
+
+### Build 20261013010041 (branch audit-tools)
+#### #171 — Guides: scope limits and a defective release
+- guides/README.md: "What the standard assumes" says a project is one repository (coordination across repositories is out of scope) and that an old release is maintained by hotfixes from its tag, not by a branch per maintained line.
+- guides/08-releases-hotfixes-and-retiring-branches.md: section 1.1 says a release found defective keeps its tag and is fixed by a hotfix or a newer version; the overlay paragraph of section 2.1 is re-wrapped.
+- guides/appendix-b-cheat-sheet-if-then.md: a row for a release that turns out to be defective.
+
+#### #172 — Appendix E: delivery-state transitions table
+- guides/appendix-e-ticket-model.md: a "Delivery moves" table in section 3 with every move of Delivery (from, to, caused by, who), including the optional *Committed* marker, the hotfix going straight to *Released*, *Dropped*, and the return to *Pushed* on new work.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
+### Build 20261013004156 (branch audit-tools)
+#### #175 — Hooks: no behind-main warning on a hotfix branch
+- .githooks/hooks.py: the pre-push hook no longer warns that a branch is behind `main` when the pushed branch is named `hotfix-v…`: a hotfix starts from a release tag and is never merged into `main`.
+- tests/test_hooks.py: a hotfix branch behind `main` gets no warning (another branch still does).
+- .github/automation-manifest.json: rewritten for the two files above, with the standard V0.12.1 (provisional: to be checked against the finalized version after the merge).
+
+#### #170 — Guides: hotfix of a release made before the cut-over (overlay commit), and the end of a converted tag
+- guides/08-releases-hotfixes-and-retiring-branches.md: section 2.1 defines the overlay, the first commit of the hotfix branch of a release made before the adoption (the files of the automation manifest, `AGENTS.md`, `.gitattributes` from `main` and a new `CHANGELOG.md` with a baseline heading for the release); a rule and a reason in section 2.4, and a line in the checklist.
+- guides/11-adopting-the-standard-in-an-existing-project.md: section 5.2 says an old release that is tagged can be hotfixed through the overlay (one without a tag cannot); section 4.4 defines the end of a converted tag (the administrator deletes it once everybody has moved, or it is recorded as an accepted deviation).
+- guides/02-branching-and-merging-strategy.md, guides/appendix-b-cheat-sheet-if-then.md and doc/wiki/Adopting-the-Standard.md: the pointer, a row and a section on a critical fix in a release from before the adoption.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
+#### #174 — Overlay commit for a hotfix of a pre-adoption release tested
+- Trial on this repository, with throwaway material (ticket #176, Version ticket #177, branches `hotfix-v9-9-9-dummy-trial-174` and `hotfix-v9-9-8-dummy-trial-174`, tags under `test/`, the input `trial` ticked): a hotfix branch started from a tag on the initial commit (no `.github/`, no changelog), whose first commit was the overlay of guide 08, section 2.1 (the 62 manifest files, `AGENTS.md`, `.gitattributes`, `.gitignore` and a new `CHANGELOG.md` with a baseline heading). The manifest check reported every file unchanged; the hooks stamped the build; the workflow started from the branch ran the preflight and the hotfix step (dry run, then for real): the heading renamed to V9.9.8-HF1 on the branch, the tag `test/released/V9.9.8-HF1`, the ticket's Delivery, Version and Build, and the Version ticket created, closed and linked. The preflight reads no history, so it does not depend on the branch descending from `main`.
+- Result: no change to the automation is needed for the overlay. One defect found, not specific to the overlay: the pre-push hook warns that a hotfix branch is behind `main` (Bug ticket #175).
+- Cleanup: #176 and #177 closed as Invalid (Abandoned); the unfinished trial branch retired with `test/abandoned/2026-10-12_hotfix-v9-9-9-dummy-trial-174_dummy-trial-174`; the finished one deleted without a retirement tag, its release tag keeping the history.
+
+### Build 20261012225317 (branch audit-tools)
+#### #166 — Guides: file tables and README claims agree with the repo
+- guides/03-project-structure.md: the `.github/` row of section 2.1 now names the manifest of the automation files, the saved board views and the audit baseline, and a root row for `.git-blame-ignore-revs` is added. The names `conditions.py` (section 4.3) now sit in an In GitHub block.
+- guides/07-issues-and-the-board-in-practice.md: the file `views.json`, the script `views.py`, the registry `conditions.py` and the workflow mode `conditions` moved out of the main text of sections 2.2 and 2.5 into In GitHub blocks, so the README's statement about where GitHub is named holds.
+
+#### #167 — Guides: stale term, typo and "seven stages" wording
+- guides/appendix-e-ticket-model.md: removed the Version# field, which no longer exists, from the Planning row.
+- guides/03-project-structure.md: "analyzes" corrected to "analyses" (section 9.1).
+- guides/README.md: guide 11 is described as "stage 0 and the seven stages", as the guide numbers them 0 to 7.
+
+#### #168 — Guides: one home for Alert triage
+- guides/07-issues-and-the-board-in-practice.md: section 5.2 now holds the whole triage of a bypass or a merge without entries (confirm, document in place or in a new block, comment, Review).
+- guides/05-working-and-committing.md: section 6.2 is reduced to documenting an `AUTO-REF` and points to guide 07, section 5.2.
+- guides/02-branching-and-merging-strategy.md, guides/06-syncing-and-merging.md, guides/appendix-a-cheat-sheet-daily-flow.md and guides/appendix-b-cheat-sheet-if-then.md: point to guide 07, section 5.2 instead of repeating or sending the reader through guide 05.
+- guides/README.md: a "Triaging an Alert" row in "Where a rule lives".
+
+#### #169 — Appendix F tested against views.json
+- guides/Developer-Guides-Complete.md: rebuilt after the edits of #166 to #168.
+- tests/test_tools.py: `AppendixFTests` read the tables of Appendix F and compare them with `.github/views.json`: the column order of every table view, its sort and grouping, and the columns, rows, card fields and sort of every board view.
+
+### Build 20261012024016 (branch audit-tools)
+#### #155 — Audit tools: usage instructions and full list of checks
+- doc/wiki/Audit-Tools.md: added where the report goes, step-by-step instructions, and a table with one row for every check of the four audit scripts.
+
+#### #156 — Audit tool: write the report to a Markdown file
+- tools/audit.py: besides the screen, the report is written as Markdown with every check, passes included: the project, the date, the totals of rules and recommendations, then one table per audit (result, id, strength, guide section, check, detail and fix). It goes to `audit-report.md` in the current directory, or to the file given with the new option `--md <file>`, and an existing file is overwritten.
+- tests/test_audit.py: the report lists every check and the totals, escapes pipes and line breaks, is dated, and defaults to `audit-report.md` in the current directory; the other tests write to a temporary file.
+- doc/wiki/Audit-Tools.md: where the report goes and the `--md` option.
+
+#### #157 — Audit tools: list every offender, and an option to detail passed checks
+- tools/audit_common.py: a check keeps `details`, one line per item it looked at; the text report prints them under the check, and `Report.as_dict(verbose)` leaves out the details of a passed check unless `verbose`.
+- tools/audit_files.py, tools/audit_git.py, tools/audit_github.py and tools/audit_board.py: every check lists all its offenders instead of a sample (each commit with its full hash and subject, each branch, tag, label, issue type, changelog line, ticket with what is wrong, and for a board view each differing setting with the board's value and the one in views.json, and the columns that are missing or extra). The messages now count the offenders. A passed check records what it examined.
+- tools/audit.py and the four scripts: new option `--verbose` (default off) that also prints the passed checks with their details, on the screen, in the Markdown report and in the JSON file. The Markdown report lists the details as bullets under each table.
+- tests: every offender is listed (more than five), the details of passed checks appear only with `--verbose`, the Markdown bullets and the JSON `details`.
+- doc/wiki/Audit-Tools.md: the bullets, the `--verbose` option and the `details` field.
+
+#### #158 — Guide 11: adopting the standard in an existing project
+- guides/11-adopting-the-standard-in-an-existing-project.md: new procedural guide. The principles (history is never rewritten, the rules apply from a cut-over, the adoption goes through the normal flow, the audit is the measure), what to decide before starting (first audit kept, cut-over, continuing version, backup, open work, roles), the triage of an audit report into fix now, convert, accept as history and not applicable (with a record of the accepted ones), the seven stages (GitHub settings; the adoption branch with line endings, structure, automation and a baseline changelog heading; token, board and preflight; branches and tags; tickets; landing and proving; keeping it), the special cases (a line other than `main`, existing versions and releases, the team's clones, a plan that lacks a feature) and a checklist.
+- tools/combine.py and tools/xref_check.py: the new guide is built into the combined copy and its cross-references are checked. guides/Developer-Guides-Complete.md rebuilt.
+
+#### #159 — Appendix G: audit findings and how to fix them
+- guides/appendix-g-audit-findings-and-fixes.md: added. One row for every check the four audits can report, in four tables (files, git, GitHub, board): the usual triage class, the adoption stage, the role, whether it can be undone, what the finding means and what to do.
+- tools/combine.py: the appendix is built into the combined copy. guides/Developer-Guides-Complete.md rebuilt.
+- tests/test_tools.py: a test fails when an audit check has no row in the appendix, or a row names a check no audit reports; the combined-copy test also expects appendix G; the guide count includes guide 11.
+
+#### #160 — Adoption: cross-links, vocabulary and assistant rules
+- guides/README.md: guide 11 and appendix G in the tables, and a line in Where to start. guides/10-new-project-bootstrap.md: the intro and the recommendation of section 8.3 point to guide 11.
+- guides/09-working-with-an-ai-assistant.md: during an adoption the assistant runs the audit on its own, changes settings, tags and branches only when the administrator tells it to, and never rewrites history to make a check pass (section 3 and the checklist).
+- guides/01-concepts-and-vocabulary.md: audit, adoption, cut-over, baseline heading and accepted deviation. guides/appendix-b-cheat-sheet-if-then.md: two situations for an existing project.
+- guides/11-adopting-the-standard-in-an-existing-project.md: the baseline file, `--since` and the adoption plan are named where the guide spoke of them in general.
+- tools/audit.py: the report points to appendix G for what to do about each finding. guides/Developer-Guides-Complete.md rebuilt.
+
+#### #161 — Adoption: wiki page
+- doc/wiki/Adopting-the-Standard.md: added. The ideas, the route from the first audit to the re-audit (decide, triage, the seven stages with who does them, the baseline and `--since`), useful commands and where to read more. doc/wiki/Home.md links to it and lists guide 11 and appendix G; doc/wiki/Audit-Tools.md points to it.
+
+#### #162 — Audit tools: --since option to audit history from a cut-over
+- tools/audit_git.py: `audit(root, since)` and the option `--since <date or commit>` judge the history only from a cut-over: the merge commits on `main`, the commit messages and the tags that point at commits made after a UTC date or after a commit. Branch names stay the present state. The history checks say which cut-over they judged from. A value that is neither a date nor a commit is a bad argument (exit code 2).
+- tools/audit.py: the same option; the Markdown report names the cut-over (`History judged from`) and the JSON file has a `since` key.
+- tests/test_audit_git.py and tests/test_audit.py: the whole history without the option, a cut-over by commit and by date, what comes after it still judged, a bad value, and the reports.
+- doc/wiki/Audit-Tools.md: the option and which checks it applies to.
+
+#### #163 — Audit tools: baseline of accepted deviations
+- tools/audit_baseline.py: new. Reads `.github/audit-baseline.json` of the audited project (or the file of `--baseline`): entries with a check id, a reason, a date, who agreed and optional items. A failed check that an entry accepts becomes *accepted* (new result, counted apart, never a failure); items accept only the detail lines they start. The check `baseline.stale` (a recommendation) lists entries that accept nothing now. An invalid file, or a `--baseline` file that does not exist, is a bad argument (exit code 2).
+- tools/audit_common.py and tools/audit.py: the *accepted* result and its counts on the screen, in the Markdown report (an Accepted column) and in the JSON file.
+- tests/test_audit_baseline.py and tests/test_audit.py: loading and refusing files, whole-check and item entries, partial coverage, stale entries, the option, and the exit codes.
+- guides/appendix-g-audit-findings-and-fixes.md: a row for `baseline.stale`. doc/wiki/Audit-Tools.md: the baseline.
+
+#### #164 — Audit tools: adoption plan in the report
+- tools/audit_plan.py: new. Groups the failed checks by the adoption stage of guide 11, with the class, the role and whether the change can be undone, read from the tables of appendix G; checks that could not be made are listed apart as to confirm, and findings that appendix G does not list under no stage.
+- tools/audit.py: the plan is printed after the checks, written as an Adoption plan section (a table per stage) in the Markdown report, and added to the JSON file as `plan`.
+- tests/test_audit_plan.py and tests/test_audit.py: the stages equal the headings of guide 11, grouping and order, placeholders, passes, accepted and unknown ids, the checks to confirm, and the three outputs.
+- doc/wiki/Audit-Tools.md: the plan.
+
+#### #165 — New combined evaluation of the guides
+- doc/Evaluation/Combined-eval.md: rewritten as a new, independent evaluation of the guides: a verdict on coherence, consistency and completeness with 13 findings and suggested fixes, a check of every finding in the Copilot and Gemini evaluations, a comparison of the three, an order of work and the decisions needed.
+
 ## V0.12.0 — 2026-10-11 20:29 UTC
 ### Build 20261011202606 (branch audit-tools)
 #### #148 — Audit tool: files and local git checks

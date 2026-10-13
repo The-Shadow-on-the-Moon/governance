@@ -31,7 +31,7 @@ class CombineTests(unittest.TestCase):
         for num, _ in combine.GUIDES:
             self.assertIn("## Guide {}:".format(num), document)
 
-        for letter in "ABCDE":
+        for letter in "ABCDEFG":
             self.assertIn("## Appendix {}:".format(letter), document)
 
     def test_combined_file_is_up_to_date(self):
@@ -123,8 +123,127 @@ class BoardViewsPageTests(unittest.TestCase):
             self.assertNotIn("creates them in the web interface", self.read(*parts), parts)
 
 
-if __name__ == "__main__":
-    unittest.main()
+class AppendixFTests(unittest.TestCase):
+    """Appendix F (board views, columns and sorting) must say what .github/views.json says."""
+
+    @classmethod
+    def setUpClass(cls):
+        import json
+
+        with open(os.path.join(ROOT, "guides", "appendix-f-board-views-layout.md"), encoding="utf-8") as handle:
+            cls.text = handle.read()
+        with open(os.path.join(ROOT, ".github", "views.json"), encoding="utf-8") as handle:
+            cls.views = {view["name"]: view for view in json.load(handle)["views"]}
+
+    def table(self, heading):
+        """The rows of the first table after a heading, as lists of cells with the bold marks removed."""
+        section = self.text.split(heading, 1)[1]
+        rows = []
+        for line in section.splitlines():
+            if line.startswith("|"):
+                rows.append([cell.strip().replace("**", "") for cell in line.strip().strip("|").split("|")])
+            elif rows:
+                break
+        return rows[2:]  # leave out the header and the separator
+
+    def sort_text(self, view):
+        parts = ["{}, {}ending".format(field, direction) for field, direction in view["sort_by"]]
+        return ", then ".join(parts)
+
+    def test_the_table_views_have_the_columns_in_the_order_of_the_file(self):
+        rows = self.table("## 1. Table views")
+        names = [cell for cell in self.text.split("## 1. Table views", 1)[1].splitlines()
+                 if cell.startswith("| Field")][0].strip("|").split("|")
+        names = [name.strip() for name in names][1:]
+        self.assertEqual(set(names), {n for n, v in self.views.items() if v["layout"] == "table"})
+        for column, name in enumerate(names, start=1):
+            positions = {}
+            for row in rows:
+                if row[column].isdigit():
+                    positions[int(row[column])] = row[0]
+            shown = [positions[n] for n in sorted(positions)]
+            self.assertEqual(shown, self.views[name]["visible_fields"], name)
+
+    def test_the_table_views_have_the_sort_and_grouping_of_the_file(self):
+        rows = {row[0]: row for row in self.table("## 1. Table views") if not row[1].isdigit() and row[1] != "·"}
+        names = [n.strip() for n in [c for c in self.text.splitlines() if c.startswith("| Field")][0].strip("|").split("|")][1:]
+        for column, name in enumerate(names, start=1):
+            view = self.views[name]
+            self.assertEqual(rows["Sort"][column], self.sort_text(view), name)
+            group = view.get("group_by")
+            if group:
+                self.assertTrue(rows["Group"][column].startswith(group), name)
+            else:
+                self.assertEqual(rows["Group"][column], "none", name)
+
+    def test_the_board_views_have_the_columns_rows_card_fields_and_sort_of_the_file(self):
+        rows = self.table("## 2. Board views")
+        self.assertEqual({row[0] for row in rows}, {n for n, v in self.views.items() if v["layout"] == "board"})
+        for name, layout, columns, swimlanes, card, sort in rows:
+            view = self.views[name]
+            self.assertEqual(layout, "board", name)
+            self.assertEqual(columns, view["vertical_group_by"], name)
+            self.assertEqual(swimlanes, view.get("group_by") or "none", name)
+            # Title is always drawn and Type is not reported by the API, so neither is listed.
+            shown = {field for field in view["visible_fields"] if field not in ("Title", "Type")}
+            self.assertEqual(set(card.split(", ")), shown, name)
+            self.assertEqual(sort, self.sort_text(view), name)
+
+    def test_every_view_of_the_file_is_in_the_appendix(self):
+        for name in self.views:
+            self.assertIn(name, self.text)
+
+
+class StatementsAboutTheRepositoryTests(unittest.TestCase):
+    """The counts and descriptions of the README, the wiki Home and the guide index must match the files."""
+
+    def read(self, *parts):
+        with open(os.path.join(ROOT, *parts), encoding="utf-8") as handle:
+            return handle.read()
+
+    def guides_and_appendices(self):
+        names = os.listdir(os.path.join(ROOT, "guides"))
+        guides = sorted(n[:2] for n in names if n[:2].isdigit() and n.endswith(".md"))
+        appendices = sorted(n.split("-")[1].upper() for n in names if n.startswith("appendix-"))
+        return guides, appendices
+
+    def test_the_root_readme_names_the_guides_and_appendices_there_are(self):
+        import re
+
+        guides, appendices = self.guides_and_appendices()
+        text = self.read("README.md")
+        self.assertIn(f"The guides (01 to {guides[-1]})", text)
+        self.assertIn(f"the appendices (A to {appendices[-1]})", text)
+        self.assertEqual(guides, [f"{n:02d}" for n in range(1, len(guides) + 1)])
+        self.assertEqual(appendices, [chr(ord("A") + n) for n in range(len(appendices))])
+
+    def test_the_wiki_home_names_the_guides_and_appendices_there_are(self):
+        guides, appendices = self.guides_and_appendices()
+        text = self.read("doc", "wiki", "Home.md")
+        self.assertIn(f"guides 01 to {guides[-1]} and appendices A to {appendices[-1]}", text)
+        words = {10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen"}
+        self.assertIn(f"The {words[len(guides)]} guides:", text)
+
+    def test_the_guide_index_has_a_row_for_every_guide_and_appendix(self):
+        import re
+
+        guides, appendices = self.guides_and_appendices()
+        text = self.read("guides", "README.md")
+        self.assertEqual(re.findall(r"^\| \*\*(\d\d) ", text, re.M), guides)
+        self.assertEqual(re.findall(r"^\| \*\*([A-G]) ", text, re.M), appendices)
+
+    def test_the_root_readme_names_every_tool(self):
+        text = self.read("README.md")
+        for name in sorted(os.listdir(os.path.join(ROOT, "tools"))):
+            if name.endswith(".py"):
+                self.assertIn(f"`{name}`", text, name)
+
+    def test_the_automation_page_describes_every_hook(self):
+        text = self.read("doc", "wiki", "Automation.md")
+        for name in sorted(os.listdir(os.path.join(ROOT, ".githooks"))):
+            if name not in ("hooks.py", "__pycache__"):
+                self.assertIn(f"`{name}`", text, name)
+
 
 
 class GuideValueTests(unittest.TestCase):
@@ -251,11 +370,36 @@ class GuideValueTests(unittest.TestCase):
         for name in ("03-project-structure.md", "10-new-project-bootstrap.md"):
             self.assertIn(f"`{line}`", self.guide(name), name)
 
+    def test_appendix_g_has_a_row_for_every_check_the_audits_can_report(self):
+        import re
+
+        import audit_files
+        import audit_github
+
+        emitted = set()
+
+        for name in ("audit.py", "audit_baseline.py", "audit_files.py", "audit_git.py", "audit_github.py",
+                     "audit_board.py"):
+            source = self.read("tools", name)
+            emitted |= {i for i in re.findall(r'"((?:files|git|github|board|baseline)\.[A-Za-z0-9_.\-]+)"', source)
+                        if not i.endswith(".")}
+
+        source = self.read("tools", "audit_board.py")
+        emitted |= {"board.ticket." + i for i in re.findall(r'^    add\("([a-z-]+)"', source, re.M)}
+        emitted |= {"github.setting." + key for key, *_ in audit_github.SETTINGS}
+        emitted |= {"files.location." + n.strip(".").replace("/", ".") for n, *_ in audit_files.LOCATIONS}
+        emitted |= {"board.field.<field>" + suffix for suffix in ("", ".type", ".values", ".colors")}
+        # the ids built from a name in the source are listed through the three families above
+        emitted -= {"board.field", "board.field.name"}
+        documented = set(re.findall(r"^\| `([^`]+)` \|", self.guide("appendix-g-audit-findings-and-fixes.md"), re.M))
+        self.assertEqual(sorted(emitted - documented), [], "audit checks with no row in appendix G")
+        self.assertEqual(sorted(documented - emitted), [], "rows of appendix G that no audit reports")
+
     def test_every_guide_defines_the_markers_it_uses(self):
         import glob
 
         names = sorted(glob.glob(os.path.join(ROOT, "guides", "[0-1][0-9]-*.md"))) + [os.path.join(ROOT, "guides", "README.md")]
-        self.assertEqual(len(names), 11)
+        self.assertEqual(len(names), 12)
         for name in names:
             with open(name, encoding="utf-8") as handle:
                 text = handle.read()
@@ -267,10 +411,12 @@ class GuideValueTests(unittest.TestCase):
 
         parser = self.automation("changelog")
         checked = 0
-        for name in sorted(os.listdir(os.path.join(ROOT, "guides"))):
-            if not name.endswith(".md") or name == "Developer-Guides-Complete.md":
-                continue
-            for block in re.findall(r"```[a-z]*\n(.*?)```", self.guide(name), re.S):
+        texts = [self.guide(name) for name in sorted(os.listdir(os.path.join(ROOT, "guides")))
+                 if name.endswith(".md") and name != "Developer-Guides-Complete.md"]
+        with open(os.path.join(ROOT, "doc", "wiki", "Walkthrough-CSV-Export.md"), encoding="utf-8") as handle:
+            texts.append(handle.read())  # the walkthrough page of the wiki has changelog examples too
+        for text in texts:
+            for block in re.findall(r"```[a-z]*\n(.*?)```", text, re.S):
                 if not re.search(r"^## (WIP-Version|V\d)", block, re.M):
                     continue
                 if re.search(r"^#{2,4} .*\S {3,}\S", block, re.M):
@@ -342,6 +488,10 @@ class GuideValueTests(unittest.TestCase):
             listed = [v.strip() for v in values.strip().split(", ") if v.strip()]
             for name in [n.strip() for n in names.split(",")]:
                 from_guide[name] = (kinds[kind], listed or None)
+        ticket_type = self.automation("ticket_type")
+        kind = from_guide.pop(ticket_type.FIELD)  # only when the Type lives in the field
+        self.assertEqual(kind[0], "SINGLE_SELECT")
+        self.assertEqual([re.sub(r" \(.*\)$", "", v) for v in kind[1]], ticket_type.VALUES)
         self.assertEqual(from_guide, dict(preflight.REQUIRED_FIELDS))
         self.assertEqual(list(from_guide), list(preflight.REQUIRED_FIELDS))
 
@@ -362,6 +512,16 @@ class GuideValueTests(unittest.TestCase):
                 descriptions[name] = re.sub(r"[*`]", "", meaning) if title != "Size" else f"Estimated effort: {meaning}."
         self.assertEqual(colors, dict(preflight.OPTION_COLORS))
         self.assertEqual(descriptions, dict(preflight.OPTION_DESCRIPTIONS))
+        ticket_type = self.automation("ticket_type")
+        type_colors, type_descriptions = {}, {}
+        for section in re.split(r"^## ", text, flags=re.M)[1:]:
+            title, _, body = section.partition(chr(10))
+            if title == "Type":
+                for name, color, meaning in re.findall(r"^\| \*\*(.*?)\*\* \| (.*?) \| (.*?) \|", body, re.M):
+                    type_colors[name] = color
+                    type_descriptions[name] = re.sub(r"[*`]", "", meaning)
+        self.assertEqual(type_colors, ticket_type.COLORS)
+        self.assertEqual(type_descriptions, ticket_type.DESCRIPTIONS)
         self.assertLessEqual(set(colors.values()), {"GRAY", "BLUE", "GREEN", "YELLOW", "ORANGE", "RED", "PINK", "PURPLE"})
         areas = re.findall(r"^\| `(\w+)` \| ([0-9A-F]{6}) \|", text, re.M)
         self.assertEqual(len(areas), 15)  # the 14 Area labels and dummy
@@ -412,3 +572,31 @@ class GuideValueTests(unittest.TestCase):
                 self.assertIn(f"**{value}**", reference, f"{row[0]}: {value}")
                 checked += 1
         self.assertGreater(checked, 40)
+
+    def test_the_texts_the_automation_writes_are_shown_in_the_guides_as_they_are_written(self):
+        import re
+
+        alerts, finalize, checks = self.automation("alerts"), self.automation("finalize"), self.automation("checks")
+
+        def flat(text):
+            return re.sub(r"\s+", " ", re.sub(r"(?m)^>\s?", "", text)).strip()
+
+        structure = flat(self.guide("03-project-structure.md"))
+        version = alerts.Version(2, 4, 1)
+        found = [checks.Finding("abc1234def", checks.NOT_IDENTICAL, "Merge pull request #186 from report-fixes", "Sam")]
+        title, body = alerts.bypass_alert(found, False, version, "abc1234def0", "2026-10-05 16:40")
+        self.assertIn(title, structure)
+        self.assertIn(flat(body), structure)
+        description = finalize.version_description(version, "2026-10-05 16:41", finalize.bump_reason({204: "Bug"}, "", False), 186,
+                                                   "20261005143045", [(204, "Report totals ignore the last day of the month", "Bug")])
+        self.assertIn(flat(description), structure)
+        _, explanation = alerts.bypass_headline(found, False)
+        entry = alerts.add_autoref("## WIP-Version\n", "20261005164000", 187, explanation, False).splitlines()
+        bullet = flat(entry[3])
+        for name in (("guides", "02-branching-and-merging-strategy.md"), ("guides", "03-project-structure.md"),
+                     ("doc", "wiki", "Walkthrough-CSV-Export.md")):
+            self.assertIn(bullet, flat(self.read(*name)), name[-1])
+
+
+if __name__ == "__main__":
+    unittest.main()

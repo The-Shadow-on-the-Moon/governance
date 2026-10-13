@@ -9,8 +9,8 @@ that work with them, and it is meant to apply unchanged to any project.
 
 | Folder | What it holds |
 |---|---|
-| [`guides/`](guides/README.md) | The guides (01 to 10), the appendices (A to E) and a combined copy for reading in one place. Start with [`guides/README.md`](guides/README.md). |
-| [`tools/`](tools/) | `combine.py` rebuilds the combined copy from the separate files. `xref_check.py` checks that every cross-reference between the guides points at a section that exists. `audit.py` (with `audit_files.py`, `audit_git.py`, `audit_github.py` and `audit_board.py`) reports which rules of the guides an existing project already follows; see the [audit tools](doc/wiki/Audit-Tools.md). |
+| [`guides/`](guides/README.md) | The guides (01 to 11), the appendices (A to G) and a combined copy for reading in one place. Start with [`guides/README.md`](guides/README.md). |
+| [`tools/`](tools/) | `combine.py` rebuilds the combined copy from the separate files. `xref_check.py` checks that every cross-reference between the guides points at a section that exists. `audit.py` (with `audit_files.py`, `audit_git.py`, `audit_github.py` and `audit_board.py`, the shared `audit_common.py`, and `audit_baseline.py` and `audit_plan.py`) reports which rules of the guides an existing project already follows, and what to do about each finding; see the [audit tools](doc/wiki/Audit-Tools.md). |
 | [`tests/`](tests/) | Tests for the tools and for the automation. They also fail if the combined copy is out of date, a cross-reference is broken, or an automation file differs from the manifest. |
 | [`.githooks/`](.githooks/) | The local hooks: they stamp the build, draft the commit message and warn. |
 | [`.github/`](.github/) | The versioning workflow and its scripts (`scripts/`), the manifest of the automation files, the wiki-sync workflow, the workflow that switches the schedule back on after GitHub disables it for inactivity, and the pull request template. |

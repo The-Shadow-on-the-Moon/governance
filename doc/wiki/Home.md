@@ -12,15 +12,16 @@ The guides are kept in the repository, and this page only points to them.
 | Guide | What it covers |
 |---|---|
 | [Start here: the guide index](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/README.md) | The reading order, the ideas that run through the guides, the roles, and what the standard assumes. |
-| [All guides in one file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/Developer-Guides-Complete.md) | The README, guides 01 to 10 and appendices A to E, for reading in one place. |
+| [All guides in one file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/Developer-Guides-Complete.md) | The README, guides 01 to 11 and appendices A to G, for reading in one place. |
 | [Appendix A: the daily flow](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-a-cheat-sheet-daily-flow.md) | The whole flow on one page. |
 | [Appendix B: if this then that](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-b-cheat-sheet-if-then.md) | Common situations, what to do, and where to read more. |
-| [Appendix E: ticket model](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-e-ticket-model.md) | The design of a ticket as a whole, and its life from creation to release. |
 | [Appendix C: ticket fields](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-c-ticket-fields-reference.md) | Every ticket field with its values and who sets them. |
 | [Appendix D: ticket examples](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-d-ticket-examples.md) | Example tickets for each Type, as full forms. |
+| [Appendix E: ticket model](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-e-ticket-model.md) | The design of a ticket as a whole, and its life from creation to release. |
 | [Appendix F: board views](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-f-board-views-layout.md) | The columns, sort order and grouping of each saved view. |
+| [Appendix G: audit findings and how to fix them](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-g-audit-findings-and-fixes.md) | Every finding the audit tools can report, with its class, stage, role and fix. |
 
-The ten guides:
+The eleven guides:
 [01 Concepts and vocabulary](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/01-concepts-and-vocabulary.md),
 [02 Branching and merging strategy](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/02-branching-and-merging-strategy.md),
 [03 Project structure](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/03-project-structure.md),
@@ -30,7 +31,8 @@ The ten guides:
 [07 Issues and the board in practice](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/07-issues-and-the-board-in-practice.md),
 [08 Releases, hotfixes and retiring branches](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/08-releases-hotfixes-and-retiring-branches.md),
 [09 Working with an AI assistant](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/09-working-with-an-ai-assistant.md),
-[10 New-project bootstrap](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/10-new-project-bootstrap.md).
+[10 New-project bootstrap](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/10-new-project-bootstrap.md),
+[11 Adopting the standard in an existing project](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/11-adopting-the-standard-in-an-existing-project.md).
 
 ## Working on the guides
 
@@ -41,10 +43,12 @@ The separate files in `guides/` are the source of truth, and the combined file i
 
 The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tests/`, and the workflows, scripts and hooks) is under the MIT license. See the [license file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/LICENSE) for which paths fall under which. Copyright (c) 2026 The Shadow on the Moon, Inc.
 
-## Roles and board
+## More pages
 
 - [Ticket model](Ticket-Model)
 - [Automation](Automation)
 - [Roles and access](Roles-and-Access)
 - [Board views](Board-Views)
 - [Audit tools](Audit-Tools)
+- [Adopting the standard in an existing project](Adopting-the-Standard)
+- [Walkthrough: one change from ticket to release, and a hotfix](Walkthrough-CSV-Export)

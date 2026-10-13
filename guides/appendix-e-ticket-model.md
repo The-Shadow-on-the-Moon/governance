@@ -16,7 +16,7 @@ code has shipped).
 
 | Space | Question | Where it lives (GitHub) | Set by |
 |---|---|---|---|
-| **Type** | What sort of ticket is this, and why is the change being made? | the issue type | a person (the automation for Version and Alert tickets) |
+| **Type** | What sort of ticket is this, and why is the change being made? | the issue type (or the board field Kind) | a person (the automation for Version and Alert tickets) |
 | **Area** | What kind of work does it involve? | labels, several per ticket | a person |
 | **Origin**, **REF** | Was the ticket created after the work, and which placeholder did it replace? | board fields | a person |
 | **Progress** | Where is the work? | the board's Status field | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
@@ -25,7 +25,7 @@ code has shipped).
 | **Resolution** | How did it end? | board field | a person |
 | **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
 | **Fix** | Which of the rules that span fields do its fields break? | board field | the automation |
-| **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, Version#, the real Version and the dates |
+| **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, the real Version and the dates |
 
 Two principles decide who sets a field. **Judgment belongs to people, facts belong to the automation**:
 whether the work is done, verified or urgent is a person's call, while where the code is, which build it is
@@ -86,6 +86,25 @@ Side paths:
   automation attaches it to that version's Version ticket.
 - **Late tickets.** A ticket created after the work has Origin *Backfilled* (with REF) or, for history from
   before the process, *Backdated*.
+
+### Delivery moves
+
+Delivery depends only on the work (guide on project structure, section 4.3). These are all its moves:
+
+| From | To | Caused by | Who |
+|---|---|---|---|
+| blank | *Committed* | the work is committed locally and not pushed (optional marker) | the developer, by hand |
+| blank or *Committed* | *Pushed* | a push that contains a changelog entry for the ticket | the automation |
+| *Pushed* | *Merged* | the branch is merged to `main` and the version is finalized | the automation |
+| blank | *Implemented* | the work is in effect and changed no file | a person, with the Version |
+| *Merged* or *Implemented* | *Released* | a release is cut at or above its version | the automation |
+| *Pushed*, on a hotfix branch | *Released* | the hotfix is finished (it skips *Merged*) | the automation |
+| *Pushed* | *Dropped* | the branch is retired as abandoned | the automation |
+| planned Version ticket | *Dropped* | the version will never be delivered | a person |
+| *Merged*, *Implemented*, *Released* or *Dropped* | *Pushed* | new work is pushed on the ticket | the automation |
+
+A suspended branch moves nothing: its ticket keeps *Pushed*. A ticket with newer work pushed than the version
+being released keeps *Pushed* at the release.
 
 ### Attention
 

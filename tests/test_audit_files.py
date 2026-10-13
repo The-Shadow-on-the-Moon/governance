@@ -76,6 +76,17 @@ class AuditFilesTests(unittest.TestCase):
         write(self.root, "CHANGELOG.md", GOOD_CHANGELOG + "\n### Known bugs (not yet fixed)\n- x\n")
         self.assertIn("files.changelog.no-bug-plan-sections", failed(audit_files.audit(self.root)))
 
+    def test_the_details_list_every_offending_line(self):
+        write(self.root, "CHANGELOG.md", GOOD_CHANGELOG + "\n### Known bugs\n- x\n### Planned\n- y\n")
+        lines = GOOD_CHANGELOG.count("\n") + 2
+        check = next(c for c in audit_files.audit(self.root).checks if c.id == "files.changelog.no-bug-plan-sections")
+        self.assertEqual(check.details, ["line %d: ### Known bugs" % lines, "line %d: ### Planned" % (lines + 2)])
+
+    def test_the_details_of_a_missing_hook_name_all_three(self):
+        os.remove(os.path.join(self.root, ".githooks", "pre-push"))
+        check = next(c for c in audit_files.audit(self.root).checks if c.id == "files.hooks.present")
+        self.assertEqual(check.details, ["pre-commit: found", "pre-push: missing", "prepare-commit-msg: found"])
+
     def test_changelog_with_carriage_returns(self):
         write(self.root, "CHANGELOG.md", GOOD_CHANGELOG.replace("\n", "\r\n"))
         self.assertIn("files.changelog.eol", failed(audit_files.audit(self.root)))

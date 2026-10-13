@@ -29,6 +29,7 @@ import failures
 import finalize
 import preflight
 import versions
+import ticket_type
 from github_api import Client, GitHubError
 
 DECIDE, FOLLOW_UP, FIX = "decide", "follow-up", "fix"
@@ -180,7 +181,7 @@ def fix_value(broken):
 # --- reading the board --------------------------------------------------------------------------------------
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
-         "pageInfo{hasNextPage endCursor} nodes{id updatedAt "
+         "pageInfo{hasNextPage endCursor} nodes{id updatedAt " + ticket_type.SELECTION +
          "content{... on Issue{number state updatedAt issueType{name}}} "
          "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "resolution:fieldValueByName(name:\"Resolution\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
@@ -209,7 +210,7 @@ def board_tickets(project_client, board):
 
             found.append({"item": node["id"], "number": content["number"], "item_updated": node["updatedAt"],
                           "issue_updated": content["updatedAt"], "state": content["state"],
-                          "type": (content.get("issueType") or {}).get("name"),
+                          "type": ticket_type.of_node(node, content),
                           "status": name("status"), "delivery": name("delivery"), "resolution": name("resolution"), "waiting": name("waiting"),
                           "origin": name("origin"), "attention": name("attention"),
                           "ref": (node.get("ref") or {}).get("text") or "",

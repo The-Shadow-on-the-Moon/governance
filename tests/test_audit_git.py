@@ -97,6 +97,71 @@ class AuditGitTests(unittest.TestCase):
         commit(self.root, "Straight onto main")
         self.assertIn("git.history.merge-commits", failed(audit_git.audit(self.root)))
 
+    def test_every_direct_commit_is_listed_with_its_full_hash_and_subject(self):
+        self.merge_branch()
+
+        for n in range(7):
+            commit(self.root, "Direct %d" % n)
+
+        check = next(c for c in audit_git.audit(self.root).checks if c.id == "git.history.merge-commits")
+        self.assertEqual(check.message, "7 commit(s) on main's first-parent line are not merges")
+        self.assertEqual(len(check.details), 7)
+        self.assertTrue(all(len(d.split(" ", 1)[0]) == 40 for d in check.details))
+        self.assertIn("Direct 0", check.details[-1])
+        self.assertIn("Direct 6", check.details[0])
+
+    def test_every_prefixed_subject_is_listed(self):
+        for n in range(6):
+            commit(self.root, "fix: thing %d" % n)
+
+        check = next(c for c in audit_git.audit(self.root).checks if c.id == "git.message.no-type-prefix")
+        self.assertEqual(len(check.details), 6)
+
+    def test_a_passed_check_says_what_was_examined(self):
+        self.merge_branch()
+        check = next(c for c in audit_git.audit(self.root).checks if c.id == "git.message.no-type-prefix")
+        self.assertEqual(check.result, audit_common.PASS)
+        self.assertEqual(check.details, ["3 commit(s) on all branches examined"])
+
+    def old_history_then_a_cutover(self):
+        """A direct commit with a prefix and a stray tag before the cut-over; returns the cut-over commit."""
+        commit(self.root, "fix: old direct commit")
+        run(self.root, "tag", "v1.0")
+        cut = audit_git.git(self.root, "rev-parse", "HEAD")[1]
+        self.merge_branch()
+        return cut
+
+    def test_the_whole_history_is_judged_without_since(self):
+        self.old_history_then_a_cutover()
+        bad = failed(audit_git.audit(self.root))
+        self.assertTrue({"git.history.merge-commits", "git.message.no-type-prefix", "git.tag.names"} <= bad)
+
+    def test_since_a_commit_leaves_the_older_history_out(self):
+        cut = self.old_history_then_a_cutover()
+        report = audit_git.audit(self.root, cut)
+        self.assertEqual(failed(report), set())
+        check = next(c for c in report.checks if c.id == "git.history.merge-commits")
+        self.assertIn("judged from " + cut, check.details[-1])
+
+    def test_since_a_commit_still_judges_what_comes_after(self):
+        cut = self.old_history_then_a_cutover()
+        commit(self.root, "fix: new direct commit")
+        run(self.root, "tag", "v2.0")
+        bad = failed(audit_git.audit(self.root, cut))
+        self.assertTrue({"git.history.merge-commits", "git.message.no-type-prefix", "git.tag.names"} <= bad)
+
+    def test_since_a_date(self):
+        self.old_history_then_a_cutover()
+        self.assertEqual(failed(audit_git.audit(self.root, "2099-01-01")), set())
+        self.assertIn("git.history.merge-commits", failed(audit_git.audit(self.root, "2000-01-01 00:00")))
+
+    def test_since_that_is_neither_a_date_nor_a_commit(self):
+        with self.assertRaises(ValueError):
+            audit_git.audit(self.root, "not-a-commit")
+
+        self.assertEqual(audit_git.main(["audit_git.py", self.root, "--since", "not-a-commit"]), 2)
+        self.assertEqual(audit_git.main(["audit_git.py", self.root, "--since"]), 2)
+
     def test_automation_commits_on_main_are_allowed(self):
         self.merge_branch()
         commit(self.root, "Finalize V1.0.1")

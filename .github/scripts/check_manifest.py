@@ -27,6 +27,7 @@ PATTERNS = [
     ".github/views.json",
     ".github/pull_request_template.md",
     "tests/test_automation_library.py",
+    "tests/test_ticket_type.py",
     "tests/test_preflight.py",
     "tests/test_hooks.py",
     "tests/test_finalize.py",

@@ -89,10 +89,11 @@ branch they came through.
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
 | **`.githooks/`** | The local git hooks. |
-| **`.github/`** | Server-side workflows and their scripts, and the pull request template. |
+| **`.github/`** | Server-side workflows and their scripts, the pull request template, the manifest of the automation files, the saved board views and, in an adopted project, the audit baseline. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
 | **Ignore file** (`.gitignore`) | What stays out of the repository. |
 | **`.gitattributes`** (root) | Line-ending settings: the line `* text=auto eol=lf`. |
+| **`.git-blame-ignore-revs`** (root) | The commits that only changed line endings, so that blame skips them. Present only after a line-endings commit in an adopted project. |
 | **License files** (root) | The project's license, when it has one. |
 
 ### 2.2 Rules
@@ -205,8 +206,9 @@ back to why the change was made.
 ### 3.3 Titles, descriptions and comments
 
 - **Title (recommended):** short and specific, stating the problem or the outcome. No prefix such as
-  `[bug]`, because the Type already says that. Settle it early: if the ticket is renamed after changelog
-  entries were written, those entries keep the old title.
+  `[bug]`, because the Type already says that, and none such as `fix:`, `docs:` or `test:`: the title becomes the
+  commit's summary line, where guide 05 (section 5.2) forbids a type prefix. Settle it early: if the ticket is
+  renamed after changelog entries were written, those entries keep the old title.
 - **Description (recommended):** the problem or the need, in as much detail as is useful, written for
   someone who was not there. Include the background, who is affected and how, the expected result,
   constraints, and what "done" looks like. For a bug, add how to reproduce it, what was expected versus
@@ -539,13 +541,15 @@ ticket planned for a later version that ships earlier fixes itself.
   boxes, so that the person is notified; when the rule stops being broken the comment is edited to say
   "✅ fixed on" and the date. A rule that breaks again gets a new comment.
 - **Rule:** nobody sets or clears Fix, and it has no *Fine* or *Acknowledged*: a person fixes the cause, and
-  the id goes. The rules and their ids are the list in `conditions.py`; a new rule is a new entry there.
+  the id goes. The rules and their ids are one list kept with the automation; a new rule is a new entry there.
 - **Rule:** the refresh runs after a merge to `main`, on every scheduled run, on request and on the events
   of section 2.3. A change to a board field alone starts no workflow, so it shows at the next of those.
 
 *Why.* An inconsistency is not a judgment: it is true or false from the other fields. Showing it as a stored
 set that is recomputed means two broken rules both have to be fixed before the ticket drops out, with no flag
 to forget to close.
+
+> **In GitHub.** The list of rules is the registry in `.github/scripts/conditions.py`.
 
 ### 4.4 Rules that span fields
 
@@ -565,7 +569,7 @@ to forget to close.
 | A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
 | A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
-> **In GitHub.** Type is the native issue type. Area is a set of labels. The other fields are board
+> **In GitHub.** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values). Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start
 > date and End date are date fields. The automation reads Type from the issue and writes the other fields
 > to the board.
@@ -595,8 +599,9 @@ of them are complete. A Version ticket does no work and is never verified.
 | **Released** | A release is cut on that version. The automation posts a comment with the date and the tag name. | Released | stays closed |
 | **Planned, then dropped** | The version never happened under that number. A person marks it. | Dropped | closed, with a comment saying what replaced it |
 
-- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (which
-  ticket gave it, or the marker that forced it), the pull request, and the tickets with their Type.
+- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (the
+  tickets whose Type gave a sub bump, the marker that forced it, or that it is the first version), the pull
+  request, and the tickets with their Type.
   Build holds the last build of the version.
 - **Rule:** at every finalize, and on a manual run, the automation also attaches the tickets with Delivery
   *Implemented* that are not yet sub-issues of any Version ticket, by their Version: a blank Version gets
@@ -655,16 +660,14 @@ The automation generates these texts. The names, numbers and dates are invented 
 | **Delivery** | Merged |
 | **Version** | V002.004.001 |
 | **Build** | 20261005143045 |
-| **Sub-issues** | #201, #204, #205 |
+| **Sub-issues** | #204 |
 | **Progress, Priority, Size, Risk, Area** | none |
 
-> Finalized 2026-10-05 14:32 UTC from pull request #187. Bump: sub, because #201 is a Feature. Last
-> build: 20261005143045.
+> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, from the ticket Types (no Feature or
+> Enhancement). Last build: 20261005143045.
 >
 > Tickets:
-> - #201 Add CSV export to the reports page (Feature)
 > - #204 Report totals ignore the last day of the month (Bug)
-> - #205 Write the user guide for the export feature (Task)
 
 When a release is cut on this version, the automation sets Delivery to *Released* and adds a comment:
 "Released 2026-10-12 09:15 UTC. Tag: `released/V2.4.1`."
@@ -683,12 +686,14 @@ When a release is cut on this version, the automation sets Delivery to *Released
 | **Version** | V002.004.001 |
 
 > Detected on the push of 2026-10-05 16:40 UTC to `main` (commit `abc1234`): this merge's result is not
-> identical to its branch's final state. The branch was not synced first, or a conflict was resolved
-> during the merge itself.
+> identical to its branch's final state. The sync-first rule was not followed, or a conflict was resolved
+> during the merge itself rather than beforehand on the branch.
 >
-> **To do.** Confirm that the merged result was built and tested, document anything that changed in the
-> changelog (in the entry for V2.4.1 that points at this ticket, or in a new block in the current
-> version).
+> Flagged commits:
+> - `abc1234` Merge pull request #186 from report-fixes (not-identical, by Sam)
+>
+> **To do.** Confirm that the merged result was built and tested, and document anything that changed in
+> the changelog (in the entry that points at this ticket, or in a new block in the current version).
 
 #### Alert ticket for stale planned versions: "Stale planned Version tickets after V2.4.1"
 
@@ -787,7 +792,7 @@ and syncing, so they are worth recording whenever there is something to say.
 > #### #205 — Write the user guide for the export feature
 > - Covered by the change described under #201.
 >
-> **Tested on build** 20261004101530. `main` was merged into the branch on 2026-10-04 with no conflicts, and
+> **Tested on build** 20261006153000. `main` was merged into the branch on 2026-10-06 with no conflicts, and
 > the branch was rebuilt and retested afterwards.
 
 > **In GitHub.** The source and target branches and the commits appear automatically in the pull request.
@@ -819,7 +824,7 @@ section describes what the file contains and how it is structured.
 - what changed
 #### REF 20261005180000 — <reason>     a change with no ticket yet
 #### AUTO-REF 20261005164000 (tracked as #187)   written by the automation
-## V2.4.1 — 2026-10-05 14:32 UTC       a finalized version (UTC date and time)
+## V2.4.1 — 2026-10-05 16:41 UTC       a finalized version (UTC date and time)
 ```
 
 | Heading | Meaning |
@@ -888,17 +893,19 @@ triaging an Alert, including its `AUTO-REF`, is in the guide on issues and the b
 #### #201 — Add CSV export to the reports page
 - reports page: added an Export button that downloads the current report as CSV.
 - tests: added a test that compares the exported file with the page for three reports.
-#### REF 20261006091500 — no ticket yet (typo in the settings help text)
+#### REF 20261006090500 — no ticket yet (typo in the settings help text)
 - settings help text: fixed the spelling of "authentication".
 
-## V2.4.1 — 2026-10-05 14:32 UTC
+## V2.4.1 — 2026-10-05 16:41 UTC
+### Build 20261005164000 (branch main)
+#### AUTO-REF 20261005164000 (tracked as #187)
+- **Auto-flagged: This merge's result is not identical to its branch's final state. The sync-first rule was not
+  followed, or a conflict was resolved during the merge itself rather than beforehand on the branch.** Issue #187
+  opened automatically for review: document the change once triaged.
 ### Build 20261005143045 (branch report-fixes)
 #### #204 — Report totals ignore the last day of the month
 - report totals: the last day of the month is now included in the sum.
 - tests: added a test for months of 28, 29, 30 and 31 days.
-#### AUTO-REF 20261005164000 (tracked as #187)
-- Auto-flagged: this merge's result is not identical to its branch's final state. Issue #187 opened
-  automatically for review: document the change once triaged.
 ```
 
 > **In GitHub.** The changelog is a `CHANGELOG.md` file at the repository root. The local hooks replace
@@ -949,7 +956,7 @@ Documentation lives in three places, and each answers a different question.
 |---|---|---|
 | **Readme** (root) | What the project is, its requirements, and how to build and use it. The entry point: kept short, and linking to the wiki for detail. | Yes |
 | **Wiki** (`doc/wiki/`) | Current-state reference pages: how the project works now. One topic per page, with a `Home` page as the index. | Yes, whenever what a page describes changes |
-| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyzes and investigations, measurements. | No: dated, and not rewritten afterwards |
+| **Records** (`doc/`, outside the wiki) | Point-in-time documents: design records (why something was decided), analyses and investigations, measurements. | No: dated, and not rewritten afterwards |
 
 ### 9.2 Rules
 
@@ -1047,7 +1054,7 @@ developer may also set the optional *Committed* marker in Delivery.
 | Item | Who does it |
 |---|---|
 | Repository settings, branch protection and its bypass | the administrator |
-| Issue types, labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
+| Issue types (or the Kind field), labels, and the board's fields and views (the views are created from a file by a script) | the administrator |
 | The project token and other secrets | the administrator holds and renews them |
 | Installing and updating the automation | the administrator |
 

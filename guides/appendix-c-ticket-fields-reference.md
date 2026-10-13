@@ -4,7 +4,7 @@ Every ticket field with its values, what they mean, who sets them and when. The 
 and the rules that tie the fields together, are in section 4 of *Project structure*. How the fields work
 together over a ticket's life is in *Appendix E: Ticket model*.
 
-**Where each field lives (GitHub).** Type is the native issue type, Area is a set of labels, and every
+**Where each field lives (GitHub).** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values), Area is a set of labels, and every
 other field is a board field.
 
 **Colors.** The Color column of each table is the standard's color for that option, so that a ticket reads
@@ -19,7 +19,8 @@ does not check colors.
 
 ## Type
 
-One value per ticket. Says what sort of ticket it is and why the change is made.
+One value per ticket. Says what sort of ticket it is and why the change is made. In a project owned by a
+personal account the values are the options of the board field Kind.
 
 | Value | Color | Meaning | Version bump |
 |---|---|---|---|

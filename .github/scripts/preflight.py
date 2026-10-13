@@ -13,6 +13,7 @@ import sys
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
+import ticket_type
 from github_api import Client, GitHubError
 
 BOARD_VARIABLE = "BOARD_NUMBER"
@@ -175,6 +176,7 @@ class Report:
     warnings: list = field(default_factory=list)
     repository: dict = None  # what GET /repos/{repo} returned, for the settings check
     candidate: Board = None  # the board that was identified, even when its fields are not right (fields.py needs it)
+    type_source: str = ticket_type.ISSUE_TYPE  # where the Type of a ticket comes from (guide 10, section 5.1)
 
     @property
     def ok(self):
@@ -193,6 +195,8 @@ class Report:
             mark = "skipped" if check.skipped else ("ok" if check.ok else "FAILED")
             lines.append(f"[{mark}] {check.name}: {check.message}")
         lines += [f"[warning] {warning}" for warning in self.warnings]
+        where = f"the board field {ticket_type.FIELD}" if self.type_source == ticket_type.FIELD_SOURCE else "its issue type"
+        lines.append(f"the Type of a ticket is {where}")
         lines.append("preflight: " + ("passed" if self.ok else "failed"))
         return "\n".join(lines)
 
@@ -218,6 +222,16 @@ def check_repository(repo_client, report, project_client=None):
                                           "token (the workflow token declares its own rights)")
         return report.add(name, False, "neither the workflow token nor the project token reports write access to the repository")
     return report.add(name, False, "the workflow token does not report write access and there is no project token to confirm it")
+
+
+def check_type_source(repo_client, project_client, report):
+    """Decide where the Type of a ticket comes from, and make the issue type fall back to the field Kind."""
+    reader = project_client if project_client is not None and project_client.token else None
+    report.type_source = ticket_type.source(report.repository, reader)
+    if ((report.repository or {}).get("owner") or {}).get("type") == "User" and project_client is not None:
+        project_client.owner_kind = "users"  # the REST paths of the board's fields and views
+    if report.type_source == ticket_type.FIELD_SOURCE:
+        repo_client.kind_reader = ticket_type.reader(project_client)
 
 
 def _state(value):
@@ -321,8 +335,14 @@ def find_board(project_client, report, store=True):
     return Board(node["id"], node["number"], node["title"])
 
 
+def required_fields(type_source=ticket_type.ISSUE_TYPE):
+    """The fields the board needs: those of the table, and Kind when the Type lives in the field."""
+    return {**REQUIRED_FIELDS, **ticket_type.required_fields(type_source, SELECT)}
+
+
 def check_fields(project_client, board, report):
     name = "board fields"
+    required = required_fields(report.type_source)
     try:
         nodes = project_client.graphql(BOARD_FIELDS, {"id": board.id})["node"]["fields"]["nodes"]
     except GitHubError as error:
@@ -332,7 +352,7 @@ def check_fields(project_client, board, report):
             options = {o["name"]: o["id"] for o in node.get("options", [])}
             board.fields[node["name"]] = {"id": node["id"], "type": node["dataType"], "options": options}
     problems = []
-    for field_name, (kind, values) in REQUIRED_FIELDS.items():
+    for field_name, (kind, values) in required.items():
         found = board.fields.get(field_name)
         if found is None:
             problems.append(f"missing field {field_name}")
@@ -344,13 +364,14 @@ def check_fields(project_client, board, report):
                 problems.append(f"field {field_name} lacks the values {', '.join(absent)}")
     if problems:
         return report.add(name, False, "; ".join(problems))
-    return report.add(name, True, f"all {len(REQUIRED_FIELDS)} fields and their values are present")
+    return report.add(name, True, f"all {len(required)} fields and their values are present")
 
 
 def run(repo_client, project_client, store=True, root=None):
     """Run every check in order and return the report. Dependent checks are skipped on failure."""
     report = Report()
     check_repository(repo_client, report, project_client)
+    check_type_source(repo_client, project_client, report)
     root = root if root is not None else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
     check_settings(report, wiki_sync=os.path.exists(os.path.join(root, WIKI_SYNC_WORKFLOW)))
     check_protection(report, project_client)

@@ -8,6 +8,7 @@ See the guide on project structure (section 5.3) and on issues and the board (se
 import re
 
 import checks
+import ticket_type
 from github_api import GitHubError
 from versions import Version
 
@@ -73,9 +74,9 @@ def stale_planned(repo_client, version):
         return []
     found = []
     for page in range(1, 11):
-        issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=open&type=Version&per_page=100&page={page}"))
+        issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=open{ticket_type.type_filter(repo_client, 'Version')}&per_page=100&page={page}"))
         for issue in issues:
-            match = _PLANNED.match(issue["title"])
+            match = None if "pull_request" in issue else _PLANNED.match(issue["title"])
             if match and Version.parse("V" + match.group(1)).number() < version.number():
                 found.append((issue["number"], issue["title"]))
         if len(issues) < 100:
@@ -93,6 +94,8 @@ def create_alert(run, repo_client, project_client, board, title, body, assignee=
         return number
     try:
         item = run.do(f"Alert \"{title}\": add to the board", project_client.add_to_project, board.id, created["node_id"] if created else None)
+        if ticket_type.field_mode(repo_client):
+            ticket_type.set_kind(run, project_client, board, item, "Alert", f"Alert \"{title}\"")
         for name, value in (("Priority", "Critical"), ("Status", "ToDo")):
             run.do(f"Alert \"{title}\": set {name} to {value}", project_client.set_project_field, board.id, item,
                    board.fields[name]["id"], {"singleSelectOptionId": board.fields[name]["options"][value]})

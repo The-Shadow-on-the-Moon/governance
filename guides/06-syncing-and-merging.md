@@ -284,8 +284,8 @@ After a merge to `main`, the automation:
 1. **Pull `main`** and see that the heading was renamed to the version you expected.
 2. **See that the Version ticket exists** and lists your tickets.
 3. **See that your tickets show Delivery *Merged*** and the right Version.
-4. **If an Alert was raised for your merge,** triage it. It is assigned to you (see the guide on working
-   and committing, section 6).
+4. **If an Alert was raised for your merge,** triage it. It is assigned to you (see the guide on issues
+   and the board, section 5.2).
 5. **If the board was not updated,** the version is still finalized. The board step is skipped when the
    project token is missing or the hosting service reports an error. Re-run the finalize step, which is safe to
    repeat and skips what is already done, or correct the fields by hand.
@@ -337,7 +337,7 @@ both are detected afterwards (see the guide on branching and merging, section 6.
 
 1. **Do it deliberately,** and say why in the pull request, the commit message or a comment on the ticket.
 2. **Expect the Alert.** It is assigned to you, and the automation also writes a placeholder entry in the
-   changelog. Triage it promptly (see the guide on working and committing, section 6).
+   changelog. Triage it promptly (see the guide on issues and the board, section 5.2).
 3. **Pull `main` right afterwards, then build and test it.** You skipped the sync that would have caught a
    mismatch, so this is the check you owe.
 4. **Never hide it,** for example by editing history. The record is what makes the bypass recoverable.

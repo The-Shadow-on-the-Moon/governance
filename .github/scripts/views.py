@@ -29,10 +29,12 @@ when the administrator asks.
 """
 import json
 import os
+import re
 import sys
 
 import finalize
 import preflight
+import ticket_type
 from github_api import Client, GitHubError
 
 DEFINITION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "views.json")
@@ -103,6 +105,22 @@ def load_definition(path=DEFINITION):
                 raise ViewsError(f"{label}: a roadmap has no visible_fields")
         if entry.get("vertical_group_by") and entry["layout"] != "board":
             raise ViewsError(f"{label}: vertical_group_by is only for a board")
+    return views
+
+
+def for_source(definition, type_source):
+    """The definition for where the Type lives. With the field Kind, the filters use `kind:` where the file has the issue type's
+    `type:`, and the column Type is the column Kind. The file itself is written for the issue type."""
+    if type_source != ticket_type.FIELD_SOURCE:
+        return definition
+    views = []
+    for entry in definition:
+        entry = dict(entry)
+        if entry.get("filter"):
+            entry["filter"] = re.sub(r"(?<![A-Za-z])type:", "kind:", entry["filter"])
+        if entry.get("visible_fields") is not None:
+            entry["visible_fields"] = [ticket_type.FIELD if name == "Type" else name for name in entry["visible_fields"]]
+        views.append(entry)
     return views
 
 
@@ -268,6 +286,7 @@ def main(argv=None):
     if report.board is None:
         print("views: no board was identified, nothing to do")
         return 1
+    definition = []  # a deletion has no definition and so no manual steps to remind of
     try:
         if "--show" in args:
             nodes = project_client.project_views(report.board.id)
@@ -277,7 +296,7 @@ def main(argv=None):
         if "--delete" in args:
             run = delete_named(project_client, report.board, option("--delete") or "", "--apply" not in args)
         else:
-            definition = load_definition(option("--definition") or DEFINITION)
+            definition = for_source(load_definition(option("--definition") or DEFINITION), report.type_source)
             run = sync(project_client, report.board, definition, option("--only"), "--delete-unlisted" in args, "--apply" not in args)
     except (ViewsError, GitHubError) as error:
         print(f"views refused: {error}")

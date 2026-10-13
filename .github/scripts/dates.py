@@ -18,6 +18,7 @@ import finalize
 import preflight
 import versions
 import failures
+import ticket_type
 from github_api import Client, GitHubError
 
 STARTED = ("InProgress", "Review", "Completed", "Suspended", "Abandoned")
@@ -25,7 +26,7 @@ ENDED = ("Completed", "Abandoned")
 NO_DATES = ("Version", "Alert")
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
-         "pageInfo{hasNextPage endCursor} nodes{id content{... on Issue{number issueType{name}}} "
+         "pageInfo{hasNextPage endCursor} nodes{id " + ticket_type.SELECTION + "content{... on Issue{number issueType{name}}} "
          "status:fieldValueByName(name:\"Status\"){... on ProjectV2ItemFieldSingleSelectValue{name}} "
          "start:fieldValueByName(name:\"Start date\"){... on ProjectV2ItemFieldDateValue{date}} "
          "end:fieldValueByName(name:\"End date\"){... on ProjectV2ItemFieldDateValue{date}}}}}}}")
@@ -41,7 +42,7 @@ def board_items(project_client, board):
             if not content.get("number"):
                 continue
             found.append({"item": node["id"], "number": content["number"],
-                          "type": (content.get("issueType") or {}).get("name"),
+                          "type": ticket_type.of_node(node, content),
                           "status": (node.get("status") or {}).get("name"),
                           "start": (node.get("start") or {}).get("date"),
                           "end": (node.get("end") or {}).get("date")})

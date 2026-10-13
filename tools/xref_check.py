@@ -23,6 +23,7 @@ FILES = {
     "08": "08-releases-hotfixes-and-retiring-branches.md",
     "09": "09-working-with-an-ai-assistant.md",
     "10": "10-new-project-bootstrap.md",
+    "11": "11-adopting-the-standard-in-an-existing-project.md",
 }
 
 NAMES = [
@@ -35,6 +36,7 @@ NAMES = [
     (r"releases and hotfixes|releases, hotfixes and retiring branches", "08"),
     (r"working with an (?:AI )?assistant", "09"),
     (r"new-project bootstrap", "10"),
+    (r"adopting the standard", "11"),
     (r"concepts", "01"),
 ]
 

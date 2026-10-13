@@ -33,6 +33,7 @@ situations on a page each.
 | **08 Releases, hotfixes and retiring branches** | Declaring a release, fixing a released version, and retiring a branch. | you release, hotfix or retire |
 | **09 Working with an AI assistant** | What an assistant may do alone, what it must ask, how it handles tickets, the changelog and commits, and how a project instructs it. | an assistant works on the project |
 | **10 New-project bootstrap** | Applying the standard to a new repository: structure, automation, settings, token, labels, board, first version, and a trial. | you start a project |
+| **11 Adopting the standard in an existing project** | What is different when the project is not empty: the audit as the measure, the cut-over, triaging the findings, stage 0 and the seven stages, and recording what cannot change. | a project already exists |
 
 | Appendix | What it holds |
 |---|---|
@@ -42,6 +43,7 @@ situations on a page each.
 | **D Ticket examples** | Example tickets for each Type, as full forms. |
 | **E Ticket model** | The design of a ticket as a whole: the questions it answers, why each has its own field, and its life from creation to release. |
 | **F Board views, columns and sorting** | What each saved view of the board shows: its columns, sort order and grouping. |
+| **G Audit findings and how to fix them** | Every finding the audit tools can report, with its class, stage, role, whether it can be undone, and the fix. |
 
 ## Where to start
 
@@ -53,6 +55,7 @@ situations on a page each.
 - **Releasing or fixing a release:** 08.
 - **Working with an assistant, or instructing one:** 09.
 - **Starting a project:** 10.
+- **Bringing an existing project into line:** run the audit tools, then 11 with appendix G.
 
 ## Ideas that run through the guides
 
@@ -79,6 +82,7 @@ in one place. Checklists and cheat sheets add no rules.
 | Syncing, landing, bypass and enforcement | *Branching and merging*, sections 4 to 6 |
 | Ticket fields: the rules, Attention causes, idle times and waits | *Project structure*, section 4 |
 | Version and Alert tickets | *Project structure*, section 5 |
+| Triaging an Alert | *Issues and the board in practice*, section 5.2 |
 | The scheduled run | *Project structure*, section 2.3 |
 | The changelog's structure | *Project structure*, section 7 |
 | The value of every field and who sets it | *Appendix C* |
@@ -99,9 +103,14 @@ roles (see *Project structure*, section 10.6).
 
 ## What the standard assumes
 
-- The project is hosted on GitHub, in an organization, with issues, a project board and workflows.
+- The project is hosted on GitHub, in an organization or a personal account (a personal account has no issue
+  types, so the Type lives in a board field; see *New-project bootstrap*, section 5.1), with issues, a project
+  board and workflows.
 - Compiling and testing are done by the developer, locally. There is no continuous integration.
 - The local hooks and the workflow come with the standard, and the hooks need their runtime (Python 3).
+- A project is one repository. Coordinating several repositories that must release together is out of scope.
+- An old release is maintained by hotfixes from its release tag (*Releases, hotfixes and retiring branches*,
+  section 2), not by a long-lived branch for each maintained line: the standard has one integration branch.
 - The tool-neutral text applies on any platform. The "In GitHub" blocks name the GitHub specifics. Two
   places name GitHub outside the blocks, because they are about GitHub itself: the fixed file names of
   the project structure (such as `.github/`), and the whole bootstrap guide, which sets up a GitHub

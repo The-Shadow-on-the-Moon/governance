@@ -9,8 +9,8 @@ This project
 - Tests: `python tools/xref_check.py` (expect `problems: 0`) and `python -m unittest discover -s tests`
   (expect `OK`).
 - Hooks: activate them once per clone with `git config core.hooksPath .githooks`.
-- Automation files (hooks, `.github/scripts/`, the versioning workflow, the pull request template and the
-  automation's tests) are listed in `.github/automation-manifest.json`. After a change to one, run
+- Automation files (hooks, `.github/scripts/`, the versioning and re-enabling workflows, the saved views file, the pull
+  request template and the automation's tests) are listed in `.github/automation-manifest.json`. After a change to one, run
   `python .github/scripts/check_manifest.py --update --standard <version>`, then the tests. `<version>` is the version the
   open version will become; the marker or the ticket Types can change it at merge, so after the finalize check it against
   the changelog and correct it through a ticket if it differs.

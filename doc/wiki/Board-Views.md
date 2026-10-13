@@ -18,6 +18,10 @@ Every view except All also ends with `AND is:issue AND -label:dummy`, which the 
 
 The columns of each view, in order, and their sorting and grouping are in [Appendix F: board views](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-f-board-views-layout.md).
 
+## When the Type is the field Kind
+
+A project owned by a personal account has no issue types; its Type is the board field **Kind** (see the standard's bootstrap guide, section 5.1). `views.py` then writes `kind:` where `views.json` has the issue type's `type:` in a filter, and shows the column Kind where the file lists Type, so the same file serves both. Nothing else changes.
+
 ## What the condition views show
 
 Everything the board draws attention to is a *condition*, and each of the three natures has its own view: **Decide** (a person must judge it), **Follow up** (a queue) and **Fix** (the fields contradict each other). The conditions are listed once, in the registry `.github/scripts/conditions.py`, and the table of the guide on the board (section 2.5) is checked against it by a test.
@@ -30,4 +34,4 @@ Decide and Follow up read fields people and the automation already set (Attentio
 - A view's grouping, columns and rows, and sorting can only be set when it is created, and the API cannot sort a new view by Created, Updated or Closed. So `views.py` creates a changed view again and then deletes the old one; GitHub never deletes the last view of a board.
 - **By hand, once, when All is created:** set its sort to *Created, ascending* and turn *Show hierarchy* off (otherwise tickets are listed inside their Version ticket). The API cannot do either, `views.py` prints a reminder at the end of every run, and a view that is created again loses them.
 - All lists the board's items in the order they were added, which is the ticket-number order. The API cannot set a sort by Created, Updated or Closed on a new view, so to make the order certain set the sort **Created, ascending** on All by hand in the web interface (the script ignores a sort by Created when it compares, and says so when it creates the view). A pull request takes a ticket number too: the automation puts it on the board as an item (`board_pull_requests.py`) so that All has no gap in the numbers, and the other views leave it out with `is:issue`.
-- Planned, not yet created: a **Roadmap** view (a timeline from Start date to End date, actual dates only), kept in a ticket at *ToDo*.
+- Planned, not yet created: a **Roadmap** view (a timeline from Start date to End date, actual dates only), kept in a ticket that is suspended for now.

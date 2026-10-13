@@ -66,7 +66,7 @@ There are three formats, and the year always has four digits: a **stamp**, a **d
 | Compile stamp | `yyyymmddhhmmss` | UTC | `20261005143045` |
 | `REF` token, written by hand | `yyyymmddhhmmss` | UTC | `20261005180000` |
 | `AUTO-REF` token, written by the automation | `yyyymmddhhmmss` | UTC | `20261005164000` |
-| Finalized version heading, and the times the automation writes in tickets and comments | `yyyy-mm-dd hh:mm`, then ` UTC` | UTC | `2026-10-05 14:32 UTC` |
+| Finalized version heading, and the times the automation writes in tickets and comments | `yyyy-mm-dd hh:mm`, then ` UTC` | UTC | `2026-10-05 16:41 UTC` |
 | Tag date, and the Start and End dates | `yyyy-mm-dd` | UTC | `2026-10-05` |
 | A date or time a person writes (a record's file name, a note in a comment) | `yyyy-mm-dd` or `yyyy-mm-dd hh:mm`, and optionally a zone after a space | the writer's local time | `2026-10-05`, `2026-10-05 10:32 ET` |
 
@@ -105,7 +105,7 @@ with where it is explained. Nothing here is new: it collects what the other guid
 | **Changelog** | The file in the repository that records every change to files, grouped by version, then build, then ticket. | project structure, section 7 |
 | **Open version** | The `## WIP-Version` heading on a branch: the version being worked on. It has no number until the branch merges. | starting work, section 4 |
 | **Marker** | `+V`, `+s` or `+m` written after `WIP-Version`, to force a major, sub or mod bump for that one version. | branching and merging, section 3.3 |
-| **Finalized version** | A `## V2.4.1 — 2026-10-05 14:32 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
+| **Finalized version** | A `## V2.4.1 — 2026-10-05 16:41 UTC` heading: a version that has been merged, with its UTC date and time. | syncing and merging, section 5 |
 | **`WIP-Build`** | The placeholder build heading for the commit being made. The local hook replaces it at commit time. | starting work, section 5 |
 | **Build heading** | `### Build 20261005143045 (branch <name>)`: one commit's worth of changes, stamped with the UTC time of the commit. If a commit was made without the hook, the automation writes a form that also carries the commit's hash. | project structure, section 7 |
 | **Build block** | A build heading with the ticket blocks under it: everything one commit added to the changelog. | working and committing, section 1 |
@@ -213,6 +213,11 @@ Nothing here is new: it collects what the other guides define.
 | **Regression checks** | The checks that show a version still does what the one before it did. They are run to verify a version before it is declared a release. | releases and hotfixes, section 1.1 |
 | **Project token** | The credential, stored as a secret, that lets the automation write to the board. | new-project bootstrap, section 4 |
 | **Manifest** | The file that lists the version of the standard a project follows and a hash of each automation file. | new-project bootstrap, section 2.4 |
+| **Audit** | A read-only check of an existing project against the guides, by the audit tools. It reports each rule and recommendation as passed, failed or not checkable. | adopting the standard, section 2 |
+| **Adoption** | Bringing a project that already exists into line with the standard, in stages, through the normal flow. | adopting the standard, section 1 |
+| **Cut-over** | The merge that lands the adoption on `main`. The rules apply from it; what came before is history. | adopting the standard, section 1 |
+| **Baseline heading** | The one finalized version heading written by hand when a project adopts the standard: the version it continues from. | adopting the standard, section 4.2 |
+| **Accepted deviation** | Something that differs from the standard and is recorded with a reason, a date and who agreed, instead of being fixed (the past, or a rule that does not apply). The audit shows it as accepted. | adopting the standard, section 3 |
 
 
 
@@ -277,9 +282,10 @@ other guides define.
 
 | Term | What it means | See |
 |---|---|---|
-| **Organization** | The account that owns the repository and the board. The standard needs one, because issue types are an organization feature. | new-project bootstrap, section 5 |
+| **Organization** | The account that owns the repository and the board. Issue types are an organization feature, so a project owned by an organization keeps the Type in the issue type, and one owned by a personal account keeps it in the board field Kind. | new-project bootstrap, section 5 |
 | **Issue** | A ticket. | project structure, section 3 |
 | **Issue type** | The native single value on an issue that says what sort of ticket it is. It carries the Type. | fields reference |
+| **Kind** | The board field that carries the Type in a project owned by a personal account, where there are no issue types. It has the same eight values. | new-project bootstrap, section 5 |
 | **Label** | A tag on an issue. The only labels are the 14 Area labels and the marker label `dummy`. | fields reference |
 | **Sub-issue** | An issue attached to another, which has one parent. | project structure, section 5 |
 | **Closing keyword** | A word such as *Closes*, *Fixes* or *Resolves* followed by a ticket number, which closes the ticket automatically when the pull request merges. The process never uses one. | syncing and merging, section 3 |
