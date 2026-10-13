@@ -58,6 +58,9 @@ The steps:
   version whatever any tag says, and a tag on the wrong commit, or on a version that was not meant to be a
   release, harms nothing once it is removed. After deleting it, put the Version ticket and its tickets
   back to *Merged*.
+- **A release that was declared correctly and later found defective keeps its tag.** The tag records what was
+  released, so it is not deleted. The defect is fixed by a hotfix of that release (section 2) or, when `main`
+  has moved on and the fix belongs there, by a newer version released from `main`.
 
 **Why.** A release is a statement that a version is fit to be used, so it has to be verified, and the tag
 has to point at exactly what was verified; tagging the tip would be wrong whenever `main` has moved on.
@@ -93,8 +96,8 @@ procedure.
 standard changelog, and history is not rewritten, so the first commit on the hotfix branch, the *overlay*,
 adds what the hotfix steps need, taken from the current `main`: every file the automation manifest
 (`.github/automation-manifest.json`) lists, copied unchanged, with the manifest itself, `AGENTS.md` and
-`.gitattributes`, an ignore file that leaves out `__pycache__/` when the old tree has none, and a new `CHANGELOG.md` with a title and one finalized heading for the release being fixed
-(a single build and a `REF` block saying that the earlier history is in the old changelog, as in the guide on
+`.gitattributes`, an ignore file that leaves out `__pycache__/` when the old tree has none, and a new
+`CHANGELOG.md` with a title and one finalized heading for the release being fixed (a single build and a `REF` block saying that the earlier history is in the old changelog, as in the guide on
 adopting the standard, section 4.2). Then activate the hooks and go on with step 3, which adds the
 `WIP-Version` heading above it, and the rest as for any hotfix. The overlay is made once, in a commit of its
 own, before the fix.

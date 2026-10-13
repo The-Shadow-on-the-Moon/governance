@@ -1,6 +1,16 @@
 # Changelog
 
 ## WIP-Version
+### Build 20261013010041 (branch audit-tools)
+#### #171 — Guides: scope limits and a defective release
+- guides/README.md: "What the standard assumes" says a project is one repository (coordination across repositories is out of scope) and that an old release is maintained by hotfixes from its tag, not by a branch per maintained line.
+- guides/08-releases-hotfixes-and-retiring-branches.md: section 1.1 says a release found defective keeps its tag and is fixed by a hotfix or a newer version; the overlay paragraph of section 2.1 is re-wrapped.
+- guides/appendix-b-cheat-sheet-if-then.md: a row for a release that turns out to be defective.
+
+#### #172 — Appendix E: delivery-state transitions table
+- guides/appendix-e-ticket-model.md: a "Delivery moves" table in section 3 with every move of Delivery (from, to, caused by, who), including the optional *Committed* marker, the hotfix going straight to *Released*, *Dropped*, and the return to *Pushed* on new work.
+- guides/Developer-Guides-Complete.md: rebuilt.
+
 ### Build 20261013004156 (branch audit-tools)
 #### #175 — Hooks: no behind-main warning on a hotfix branch
 - .githooks/hooks.py: the pre-push hook no longer warns that a branch is behind `main` when the pushed branch is named `hotfix-v…`: a hotfix starts from a release tag and is never merged into `main`.

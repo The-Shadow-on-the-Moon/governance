@@ -106,6 +106,9 @@ roles (see *Project structure*, section 10.6).
 - The project is hosted on GitHub, in an organization, with issues, a project board and workflows.
 - Compiling and testing are done by the developer, locally. There is no continuous integration.
 - The local hooks and the workflow come with the standard, and the hooks need their runtime (Python 3).
+- A project is one repository. Coordinating several repositories that must release together is out of scope.
+- An old release is maintained by hotfixes from its release tag (*Releases, hotfixes and retiring branches*,
+  section 2), not by a long-lived branch for each maintained line: the standard has one integration branch.
 - The tool-neutral text applies on any platform. The "In GitHub" blocks name the GitHub specifics. Two
   places name GitHub outside the blocks, because they are about GitHub itself: the fixed file names of
   the project structure (such as `.github/`), and the whole bootstrap guide, which sets up a GitHub

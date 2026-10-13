@@ -108,6 +108,9 @@ roles (see *Project structure*, section 10.6).
 - The project is hosted on GitHub, in an organization, with issues, a project board and workflows.
 - Compiling and testing are done by the developer, locally. There is no continuous integration.
 - The local hooks and the workflow come with the standard, and the hooks need their runtime (Python 3).
+- A project is one repository. Coordinating several repositories that must release together is out of scope.
+- An old release is maintained by hotfixes from its release tag (*Releases, hotfixes and retiring branches*,
+  section 2), not by a long-lived branch for each maintained line: the standard has one integration branch.
 - The tool-neutral text applies on any platform. The "In GitHub" blocks name the GitHub specifics. Two
   places name GitHub outside the blocks, because they are about GitHub itself: the fixed file names of
   the project structure (such as `.github/`), and the whole bootstrap guide, which sets up a GitHub
@@ -4012,6 +4015,9 @@ The steps:
   version whatever any tag says, and a tag on the wrong commit, or on a version that was not meant to be a
   release, harms nothing once it is removed. After deleting it, put the Version ticket and its tickets
   back to *Merged*.
+- **A release that was declared correctly and later found defective keeps its tag.** The tag records what was
+  released, so it is not deleted. The defect is fixed by a hotfix of that release (section 2) or, when `main`
+  has moved on and the fix belongs there, by a newer version released from `main`.
 
 **Why.** A release is a statement that a version is fit to be used, so it has to be verified, and the tag
 has to point at exactly what was verified; tagging the tip would be wrong whenever `main` has moved on.
@@ -4047,8 +4053,8 @@ procedure.
 standard changelog, and history is not rewritten, so the first commit on the hotfix branch, the *overlay*,
 adds what the hotfix steps need, taken from the current `main`: every file the automation manifest
 (`.github/automation-manifest.json`) lists, copied unchanged, with the manifest itself, `AGENTS.md` and
-`.gitattributes`, an ignore file that leaves out `__pycache__/` when the old tree has none, and a new `CHANGELOG.md` with a title and one finalized heading for the release being fixed
-(a single build and a `REF` block saying that the earlier history is in the old changelog, as in the guide on
+`.gitattributes`, an ignore file that leaves out `__pycache__/` when the old tree has none, and a new
+`CHANGELOG.md` with a title and one finalized heading for the release being fixed (a single build and a `REF` block saying that the earlier history is in the old changelog, as in the guide on
 adopting the standard, section 4.2). Then activate the hooks and go on with step 3, which adds the
 `WIP-Version` heading above it, and the rest as for any hotfix. The overlay is made once, in a commit of its
 own, before the fix.
@@ -5513,6 +5519,7 @@ branching and merging.
 | a critical problem is found in a released version | Start a hotfix from the release tag. | Releases, hotfixes and retiring branches, section 2 |
 | the released version is from before the adoption | Start the hotfix from its tag; the first commit is the overlay (automation and a baseline changelog). | Releases, hotfixes and retiring branches, section 2.1 |
 | I want to declare a version a release | Verify it, run the release step, and tell the project owner. | Releases, hotfixes and retiring branches, section 1 |
+| a release turns out to be defective | Keep its tag. Fix it with a hotfix of that release, or release a newer version from `main`. | Releases, hotfixes and retiring branches, section 1.1 |
 | a release was declared by mistake | Delete the tag and put the Version ticket and its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
 
 ### Assistants and new projects
@@ -6219,6 +6226,25 @@ Side paths:
   automation attaches it to that version's Version ticket.
 - **Late tickets.** A ticket created after the work has Origin *Backfilled* (with REF) or, for history from
   before the process, *Backdated*.
+
+#### Delivery moves
+
+Delivery depends only on the work (guide on project structure, section 4.3). These are all its moves:
+
+| From | To | Caused by | Who |
+|---|---|---|---|
+| blank | *Committed* | the work is committed locally and not pushed (optional marker) | the developer, by hand |
+| blank or *Committed* | *Pushed* | a push that contains a changelog entry for the ticket | the automation |
+| *Pushed* | *Merged* | the branch is merged to `main` and the version is finalized | the automation |
+| blank | *Implemented* | the work is in effect and changed no file | a person, with the Version |
+| *Merged* or *Implemented* | *Released* | a release is cut at or above its version | the automation |
+| *Pushed*, on a hotfix branch | *Released* | the hotfix is finished (it skips *Merged*) | the automation |
+| *Pushed* | *Dropped* | the branch is retired as abandoned | the automation |
+| planned Version ticket | *Dropped* | the version will never be delivered | a person |
+| *Merged*, *Implemented*, *Released* or *Dropped* | *Pushed* | new work is pushed on the ticket | the automation |
+
+A suspended branch moves nothing: its ticket keeps *Pushed*. A ticket with newer work pushed than the version
+being released keeps *Pushed* at the release.
 
 #### Attention
 

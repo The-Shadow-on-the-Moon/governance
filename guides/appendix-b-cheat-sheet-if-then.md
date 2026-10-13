@@ -56,6 +56,7 @@ branching and merging.
 | a critical problem is found in a released version | Start a hotfix from the release tag. | Releases, hotfixes and retiring branches, section 2 |
 | the released version is from before the adoption | Start the hotfix from its tag; the first commit is the overlay (automation and a baseline changelog). | Releases, hotfixes and retiring branches, section 2.1 |
 | I want to declare a version a release | Verify it, run the release step, and tell the project owner. | Releases, hotfixes and retiring branches, section 1 |
+| a release turns out to be defective | Keep its tag. Fix it with a hotfix of that release, or release a newer version from `main`. | Releases, hotfixes and retiring branches, section 1.1 |
 | a release was declared by mistake | Delete the tag and put the Version ticket and its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
 
 ## Assistants and new projects

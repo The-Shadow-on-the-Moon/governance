@@ -87,6 +87,25 @@ Side paths:
 - **Late tickets.** A ticket created after the work has Origin *Backfilled* (with REF) or, for history from
   before the process, *Backdated*.
 
+### Delivery moves
+
+Delivery depends only on the work (guide on project structure, section 4.3). These are all its moves:
+
+| From | To | Caused by | Who |
+|---|---|---|---|
+| blank | *Committed* | the work is committed locally and not pushed (optional marker) | the developer, by hand |
+| blank or *Committed* | *Pushed* | a push that contains a changelog entry for the ticket | the automation |
+| *Pushed* | *Merged* | the branch is merged to `main` and the version is finalized | the automation |
+| blank | *Implemented* | the work is in effect and changed no file | a person, with the Version |
+| *Merged* or *Implemented* | *Released* | a release is cut at or above its version | the automation |
+| *Pushed*, on a hotfix branch | *Released* | the hotfix is finished (it skips *Merged*) | the automation |
+| *Pushed* | *Dropped* | the branch is retired as abandoned | the automation |
+| planned Version ticket | *Dropped* | the version will never be delivered | a person |
+| *Merged*, *Implemented*, *Released* or *Dropped* | *Pushed* | new work is pushed on the ticket | the automation |
+
+A suspended branch moves nothing: its ticket keeps *Pushed*. A ticket with newer work pushed than the version
+being released keeps *Pushed* at the release.
+
 ### Attention
 
 Attention is a separate, parallel track on a work ticket. It starts blank. The automation raises *Watch* or
