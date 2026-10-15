@@ -1,5 +1,10 @@
 # Changelog
 
+## WIP-Version
+### Build 20261014001057 (branch manifest-standard)
+#### #195 — Manifest standard corrected to V0.13.0
+- .github/automation-manifest.json: the standard is V0.13.0, the version the finalize step gave the branch audit-tools, where it said the provisional V0.12.1; the hashes are unchanged.
+
 ## V0.13.0 — 2026-10-13 14:11 UTC
 ### Build 20261013054128 (branch audit-tools)
 #### #190 — Consistency sweep of the guides, wiki and tools
