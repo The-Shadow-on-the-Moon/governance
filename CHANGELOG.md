@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.14.0 — 2026-10-15 05:48 UTC
 ### Build 20261015054620 (branch finalize-manifest-standard)
 #### #196 — Finalize writes the manifest standard
 - .github/scripts/check_manifest.py: `--update` without `--standard` writes the placeholder `WIP-Version` as the standard; new `stamp_pending` and `set_standard` replace the placeholder with a version and leave a real version alone.
