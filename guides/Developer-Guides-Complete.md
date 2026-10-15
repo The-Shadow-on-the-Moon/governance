@@ -4670,7 +4670,9 @@ or more than one, it stops at step 3 and asks the administrator to say which.
 #### 2.4 Keeping in step with the standard
 
 - A **manifest file** in the project names the version of the standard it follows, and lists a hash (a
-  fingerprint) of each automation file as it is in that version.
+  fingerprint) of each automation file as it is in that version. A manifest written before the merge that
+  ships the files names the placeholder `WIP-Version`, which the finalize step replaces with that merge's
+  version.
 - A **check script** compares the project's files with the manifest and reports each as unchanged, edited
   locally, or from an older version.
 - To update a project, copy the new files from the standard, replace the manifest, and run the check.

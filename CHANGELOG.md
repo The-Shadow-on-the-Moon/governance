@@ -1,5 +1,17 @@
 # Changelog
 
+## WIP-Version
+### Build 20261015054620 (branch finalize-manifest-standard)
+#### #196 — Finalize writes the manifest standard
+- .github/scripts/check_manifest.py: `--update` without `--standard` writes the placeholder `WIP-Version` as the standard; new `stamp_pending` and `set_standard` replace the placeholder with a version and leave a real version alone.
+- .github/scripts/finalize.py: when the manifest names the placeholder, the `Finalize` commit that renames the changelog heading also sets the standard to the version it gives, so no correction ticket is needed after a merge. A dry run says so.
+- .github/scripts/checks.py: a `Finalize ` commit that touches the changelog and the manifest is exempt from bypass detection, as one that touches only the changelog already was.
+- tests/test_manifest.py, tests/test_finalize.py, tests/test_checks.py: the placeholder, the commit with both files, a real version left alone, a dry run, and the exemption. The manifest is rewritten with the placeholder.
+- AGENTS.md, doc/wiki/Automation.md, guides/10-new-project-bootstrap.md: the instruction to guess the version is replaced by the placeholder.
+
+#### #191 — Versioning workflow comment: the manual finalize mode
+- .github/workflows/versioning.yml: the comment on the manual mode finalize lists the steps that follow the finalize step (and that they are skipped in a dry run). doc/wiki/Automation.md says the same.
+
 ## V0.13.2 — 2026-10-15 05:07 UTC
 ### Build 20261015050405 (branch license-config-files)
 #### #192 — License of the board views file and the manifest

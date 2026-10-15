@@ -204,6 +204,42 @@ class FinalizeTests(Repo):
         self.assertEqual(repo.of("create") + repo.of("sub") + repo.of("close"), [])
         self.assertTrue(any("V0.3.0" in line for line in run.log))
 
+    def write_manifest(self, standard):
+        import check_manifest
+        os.makedirs(os.path.join(self.dir, ".github"), exist_ok=True)
+        check_manifest.write(self.dir, {"standard": standard, "files": {}})
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "manifest")
+        self.git("push", "-q", "origin", "main")
+
+    def manifest_standard(self):
+        import check_manifest
+        return check_manifest.load(os.path.join(self.dir, check_manifest.MANIFEST))["standard"]
+
+    def test_the_manifest_placeholder_becomes_the_version_in_the_same_commit(self):
+        self.write(CHANGELOG.format(marker=""))
+        self.write_manifest("WIP-Version")
+        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW, pull_request=10)
+        self.assertEqual(self.manifest_standard(), "V0.3.0")
+        self.assertEqual(self.git("log", "-1", "--format=%s"), "Finalize V0.3.0\n")
+        files = self.git("show", "--name-only", "--format=", "HEAD").split()
+        self.assertEqual(sorted(files), [".github/automation-manifest.json", "CHANGELOG.md"])
+        self.assertIn("Sets the standard of the automation manifest to V0.3.0", self.git("log", "-1", "--format=%b"))
+
+    def test_a_manifest_with_a_real_version_is_left_alone(self):
+        self.write(CHANGELOG.format(marker=""))
+        self.write_manifest("V0.2.0")
+        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW, pull_request=10)
+        self.assertEqual(self.manifest_standard(), "V0.2.0")
+        self.assertEqual(self.git("show", "--name-only", "--format=", "HEAD").split(), ["CHANGELOG.md"])
+
+    def test_a_dry_run_leaves_the_placeholder_and_says_so(self):
+        self.write(CHANGELOG.format(marker=""))
+        self.write_manifest("WIP-Version")
+        run = finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW, dry_run=True)
+        self.assertEqual(self.manifest_standard(), "WIP-Version")
+        self.assertTrue(any("set the manifest standard to V0.3.0" in line for line in run.log))
+
     def test_running_again_skips_what_is_done(self):
         self.write(CHANGELOG.format(marker=""))
         finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)

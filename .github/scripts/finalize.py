@@ -13,6 +13,7 @@ import subprocess
 import sys
 
 import changelog
+import check_manifest
 import implemented
 import preflight
 import versions
@@ -151,13 +152,14 @@ def record_version_ticket(run, repo_client, project_client, board, version, when
     return number
 
 
-def commit_heading(root, version, push):
+def commit_heading(root, version, push, manifest=False):
     def git(*args):
         subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
 
-    git("add", CHANGELOG)
+    git("add", CHANGELOG, *([check_manifest.MANIFEST] if manifest else []))
     git("commit", "-m", f"Finalize {version}\n\nRenames the open WIP-Version heading to {version}, "
-        "as the versioning automation does when a branch is merged.")
+        "as the versioning automation does when a branch is merged."
+        + (f" Sets the standard of the automation manifest to {version}." if manifest else ""))
     if push:
         git("push", "origin", "HEAD")  # not a bare push: a clone may have no upstream set
 
@@ -197,11 +199,16 @@ def finalize(root, repo_client, project_client=None, board=None, now=None, pull_
         bump = recorded_bump(sections)
         run.log.append(f"no open WIP-Version heading: re-checking {version}")
     if wip is not None:
+        stamp = check_manifest.stamp_pending(root)
+
         def rename():
             with open(path, "w", encoding="utf-8", newline="") as handle:
                 handle.write(changelog.rename_open_heading(text, version, when))
-            commit_heading(root, version, push)
-        run.do(f"rename the open WIP-Version heading to {version} — {when} UTC and commit it", rename)
+            if stamp:
+                check_manifest.set_standard(root, version)
+            commit_heading(root, version, push, stamp)
+        run.do(f"rename the open WIP-Version heading to {version} — {when} UTC" +
+               (f", set the manifest standard to {version}" if stamp else "") + " and commit it", rename)
     last_build = target.last_build()
     builds = ticket_builds(target)
     titles = {b.number: b.title for b in target.blocks() if b.kind == "ticket"}
