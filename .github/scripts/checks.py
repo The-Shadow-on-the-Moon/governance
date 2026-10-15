@@ -10,6 +10,7 @@ import changelog
 
 ZEROS = "0" * 40
 CHANGELOG = "CHANGELOG.md"
+MANIFEST = ".github/automation-manifest.json"
 
 DIRECT_PUSH = "direct-push"
 NOT_IDENTICAL = "not-identical"
@@ -71,22 +72,23 @@ def _info(root, sha):
     return git(root, "log", "-1", "--format=%s%x00%an", sha)[1].split("\x00")
 
 
-def _only_changelog(root, sha):
+def _only_version_files(root, sha):
+    """True for a commit that touches the changelog, and at most the manifest besides."""
     names = git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", sha)[1].split()
-    return names == [CHANGELOG]
+    return CHANGELOG in names and set(names) <= {CHANGELOG, MANIFEST}
 
 
 def flagged_commits(root, before, after, has_pull_request):
     """The commits of a push to main that bypassed the flow.
 
     `has_pull_request(sha)` says whether a commit came in through a pull request. The version
-    commit the automation makes itself (a heading rename touching only the changelog) is exempt.
+    commit the automation makes itself (a heading rename touching the changelog, and the manifest's standard) is exempt.
     """
     span = f"{before}..{after}" if before != ZEROS else f"{after}^!"
     found = []
     for sha in git(root, "rev-list", "--first-parent", span)[1].split():
         subject, author = _info(root, sha)
-        if subject.startswith("Finalize ") and _only_changelog(root, sha):
+        if subject.startswith("Finalize ") and _only_version_files(root, sha):
             continue
         is_merge = len(parents(root, sha)) > 1
         if not has_pull_request(sha):

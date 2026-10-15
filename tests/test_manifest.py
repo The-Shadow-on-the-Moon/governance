@@ -70,8 +70,23 @@ class ManifestTests(unittest.TestCase):
         self.assertIn("edited locally", text)
         self.assertIn("all files unchanged", cm.render({"a": cm.UNCHANGED}, "V0.3.0"))
 
-    def test_update_needs_a_standard(self):
-        self.assertEqual(cm.main(["--update"]), 1)
+    def test_a_standard_flag_without_a_version_is_refused(self):
+        self.assertEqual(cm.main(["--update", "--standard"]), 1)
+
+    def test_the_placeholder_is_replaced_once_by_the_version(self):
+        cm.write(self.root, cm.build(self.root, cm.PLACEHOLDER))
+        self.assertTrue(cm.stamp_pending(self.root))
+        self.assertTrue(cm.set_standard(self.root, "V0.4.0"))
+        manifest = cm.load(os.path.join(self.root, cm.MANIFEST))
+        self.assertEqual(manifest["standard"], "V0.4.0")
+        self.assertEqual(manifest["files"], cm.build(self.root, "x")["files"])  # the hashes are untouched
+        self.assertFalse(cm.stamp_pending(self.root))
+        self.assertFalse(cm.set_standard(self.root, "V0.5.0"))  # a real version is left as it is
+        self.assertEqual(cm.load(os.path.join(self.root, cm.MANIFEST))["standard"], "V0.4.0")
+
+    def test_no_manifest_means_nothing_to_stamp(self):
+        self.assertFalse(cm.stamp_pending(self.root))
+        self.assertFalse(cm.set_standard(self.root, "V0.4.0"))
 
 
 class RepositoryManifestTests(unittest.TestCase):

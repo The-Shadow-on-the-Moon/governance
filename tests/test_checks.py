@@ -52,6 +52,7 @@ class GitRepo(unittest.TestCase):
 
     def commit(self, files, message):
         for name, content in files.items():
+            os.makedirs(os.path.dirname(os.path.join(self.dir, name)), exist_ok=True)
             with open(os.path.join(self.dir, name), "w", encoding="utf-8", newline="") as handle:
                 handle.write(content)
         self.git("add", "-A")
@@ -151,6 +152,15 @@ class FlaggedTests(GitRepo):
     def test_the_automations_version_commit_is_exempt(self):
         sha = self.commit({"CHANGELOG.md": BASE_LOG.replace("0.2.0", "0.3.0")}, "Finalize V0.3.0")
         self.assertEqual(checks.flagged_commits(self.dir, self.before, sha, lambda s: False), [])
+
+    def test_the_version_commit_may_also_set_the_manifest_standard(self):
+        sha = self.commit({"CHANGELOG.md": BASE_LOG.replace("0.2.0", "0.3.0"), ".github/automation-manifest.json": "{}\n"},
+                          "Finalize V0.3.0")
+        self.assertEqual(checks.flagged_commits(self.dir, self.before, sha, lambda s: False), [])
+
+    def test_a_finalize_commit_with_only_the_manifest_is_not_exempt(self):
+        sha = self.commit({".github/automation-manifest.json": "{}\n"}, "Finalize V0.3.0")
+        self.assertEqual(len(checks.flagged_commits(self.dir, self.before, sha, lambda s: False)), 1)
 
     def test_a_finalize_commit_that_touches_other_files_is_not_exempt(self):
         sha = self.commit({"CHANGELOG.md": BASE_LOG + "\n", "a.txt": "x\n"}, "Finalize V0.3.0")

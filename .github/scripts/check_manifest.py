@@ -8,7 +8,11 @@ new-project bootstrap (section 2.4).
 
     python .github/scripts/check_manifest.py                       check against the project's manifest
     python .github/scripts/check_manifest.py --against NEW.json     check against a newer manifest
-    python .github/scripts/check_manifest.py --update --standard V0.3.0   rewrite the manifest
+    python .github/scripts/check_manifest.py --update                     rewrite the manifest, standard WIP-Version
+    python .github/scripts/check_manifest.py --update --standard V0.3.0   rewrite the manifest, standard stated
+
+A manifest written without a standard names the placeholder WIP-Version. The finalize step replaces
+it with the version it gives the merge, in its own commit, so nobody has to guess the version.
 """
 import fnmatch
 import hashlib
@@ -17,6 +21,7 @@ import os
 import sys
 
 MANIFEST = os.path.join(".github", "automation-manifest.json")
+PLACEHOLDER = "WIP-Version"  # the standard of a manifest written before the merge gave its version
 
 # The automation files: the project copies these unchanged from the standard.
 PATTERNS = [
@@ -89,6 +94,22 @@ def write(root, manifest):
         handle.write("\n")
 
 
+def stamp_pending(root):
+    """True when the manifest of the project names the placeholder as its standard."""
+    path = os.path.join(root, MANIFEST)
+    return os.path.isfile(path) and load(path).get("standard") == PLACEHOLDER
+
+
+def set_standard(root, version):
+    """Replace the placeholder with `version`. Returns False when the standard is not the placeholder."""
+    if not stamp_pending(root):
+        return False
+    manifest = load(os.path.join(root, MANIFEST))
+    manifest["standard"] = str(version)
+    write(root, manifest)
+    return True
+
+
 def check(root, manifest, reference=None):
     """Return {path: state}. With a newer `reference` manifest, files are judged against it."""
     own = manifest["files"]
@@ -125,10 +146,10 @@ def main(argv=None):
     args = argv if argv is not None else sys.argv[1:]
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
     if "--update" in args:
-        if "--standard" not in args:
-            print("--update needs --standard <version>, for example --standard V0.3.0")
+        if "--standard" in args and args.index("--standard") + 1 >= len(args):
+            print("--standard needs a version, for example --standard V0.3.0")
             return 1
-        manifest = build(root, args[args.index("--standard") + 1])
+        manifest = build(root, args[args.index("--standard") + 1] if "--standard" in args else PLACEHOLDER)
         write(root, manifest)
         print(f"wrote {MANIFEST}: {len(manifest['files'])} files, standard {manifest['standard']}")
         return 0
