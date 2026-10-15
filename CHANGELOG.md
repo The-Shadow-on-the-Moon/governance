@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.13.2 — 2026-10-15 05:07 UTC
 ### Build 20261015050405 (branch license-config-files)
 #### #192 — License of the board views file and the manifest
 - LICENSE: .github/views.json and .github/automation-manifest.json, the configuration the code reads, are under the MIT license; the pull request template stays under CC BY 4.0, where the file already listed it.
