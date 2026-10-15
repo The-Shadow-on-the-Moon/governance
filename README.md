@@ -63,6 +63,6 @@ See [`CHANGELOG.md`](CHANGELOG.md) for what has changed.
 ## License
 
 Two licenses, by the kind of file. The guides and other documentation are under
-[CC BY 4.0](LICENSE-CC-BY-4.0.txt). The code (`tools/`, `tests/`, and the workflows, scripts and hooks) is under
+[CC BY 4.0](LICENSE-CC-BY-4.0.txt). The code (`tools/`, `tests/`, the workflows, scripts and hooks, and the configuration files they read) is under
 the [MIT license](LICENSE-MIT.txt). [`LICENSE`](LICENSE) lists which paths fall under which.
 Copyright (c) 2026 The Shadow on the Moon, Inc.

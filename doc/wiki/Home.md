@@ -41,7 +41,7 @@ The separate files in `guides/` are the source of truth, and the combined file i
 
 ## License
 
-The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tests/`, and the workflows, scripts and hooks) is under the MIT license. See the [license file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/LICENSE) for which paths fall under which. Copyright (c) 2026 The Shadow on the Moon, Inc.
+The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tests/`, the workflows, scripts and hooks, and the configuration files they read) is under the MIT license. See the [license file](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/LICENSE) for which paths fall under which. Copyright (c) 2026 The Shadow on the Moon, Inc.
 
 ## More pages
 

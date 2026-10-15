@@ -1,5 +1,11 @@
 # Changelog
 
+## WIP-Version
+### Build 20261015050405 (branch license-config-files)
+#### #192 — License of the board views file and the manifest
+- LICENSE: .github/views.json and .github/automation-manifest.json, the configuration the code reads, are under the MIT license; the pull request template stays under CC BY 4.0, where the file already listed it.
+- README.md, doc/wiki/Home.md: the summary of the MIT paths names the configuration files they read.
+
 ## V0.13.1 — 2026-10-15 04:39 UTC
 ### Build 20261014001057 (branch manifest-standard)
 #### #195 — Manifest standard corrected to V0.13.0
