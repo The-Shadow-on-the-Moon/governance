@@ -136,13 +136,9 @@ class FinishTests(HotfixRepo):
         remote_head = subprocess.run(["git", "rev-parse", BRANCH], cwd=self.remote, capture_output=True, text=True).stdout.strip()
         self.assertEqual(remote_head, head)
         self.assertEqual(repo.created_tags, [("released/V1.25.0-HF1", head)])
-        title, body, kind = repo.issues[0]
-        self.assertEqual((title, kind), ("Version 001.025.000-HF1", "Version"))
-        self.assertIn(f"from the hotfix branch {BRANCH}", body)
-        self.assertIn("hotfix of V1.25.0", body)
-        self.assertEqual(repo.subs, [(90, 301), (90, 302)])
-        self.assertEqual(repo.closed, [90])
-        self.assertIn("Tag: `released/V1.25.0-HF1`", repo.comments[0][1])
+        self.assertEqual((repo.issues, repo.subs, repo.closed, repo.comments), ([], [], [], []))  # no Version ticket
+        self.assertIn("V1.25.0-HF1 released 2026-10-07 11:05 UTC as released/V1.25.0-HF1, a hotfix of V1.25.0", run.log[-1])
+        self.assertIn(f"the hotfix branch {BRANCH} may now be deleted (no retirement tag)", run.log[-1])
 
     def test_the_tickets_go_straight_to_released_with_the_hotfix_version(self):
         self.start()
@@ -153,16 +149,16 @@ class FinishTests(HotfixRepo):
         self.assertNotIn(("I301", "F-Version#"), sets)
         self.assertEqual(sets[("I301", "F-Build")], {"text": "20261007100000"})
         self.assertNotIn("Delivery-Merged", [v.get("singleSelectOptionId") for v in sets.values()])
-        self.assertEqual(sets[("I90", "F-Delivery")], {"singleSelectOptionId": "Delivery-Released"})  # the Version ticket
+        self.assertEqual({item for item, _, _ in project.sets}, {"I301", "I302"})  # the tickets, nothing else
 
     def test_a_trial_hotfix_starts_from_the_trial_base_tag_and_tags_under_test(self):
         self.git("tag", "test/released/V1.25.0", "released/V1.25.0")
         self.git("tag", "-d", "released/V1.25.0")
         self.start(base="test/released/V1.25.0")
         repo, project = FakeRepo(), FakeProject()
-        hotfix.finish(self.dir, repo, project, board(), V("V1.25.0-HF1"), BRANCH, NOW, False, trial=True)
+        run = hotfix.finish(self.dir, repo, project, board(), V("V1.25.0-HF1"), BRANCH, NOW, False, trial=True)
         self.assertEqual([name for name, _ in repo.created_tags], ["test/released/V1.25.0-HF1"])
-        self.assertIn("Tag: `test/released/V1.25.0-HF1`", repo.comments[-1][1])
+        self.assertIn("as test/released/V1.25.0-HF1", run.log[-1])
 
     def test_a_trial_hotfix_needs_the_trial_base_tag(self):
         self.start()  # the real base tag exists, the trial one does not

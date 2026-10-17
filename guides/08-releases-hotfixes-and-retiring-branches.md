@@ -3,7 +3,7 @@
 This guide covers the steps that end or branch off the normal flow: declaring a version a release, fixing a
 version that has already been released, and retiring a branch. It is a procedure: each step says what to do
 and why, and the commands are in the "In GitHub" blocks. The rules and their reasons are in the guide on
-branching and merging; the pieces it refers to (tickets, tags, the Version ticket) are defined in the guide
+branching and merging; the pieces it refers to (tickets, tags, versions) are defined in the guide
 on project structure.
 
 **How to read it.** Each step states what to do and why. Statements are marked:
@@ -32,9 +32,9 @@ The steps:
 2. **Verify it** (section 1.1).
 3. **Run the release step** with that version. By default it is the latest on `main`.
 4. **Check the result.** The tag `released/V<major>.<sub>.<mod>` exists on the commit where that version was
-   finalized. The Version ticket shows Delivery *Released* and a comment with the date and the tag. Every
-   ticket merged or implemented up to that version shows *Released*, unless newer work on it has been
-   pushed since.
+   finalized. Every ticket merged or implemented up to that version shows *Released*, unless newer work on it
+   has been pushed since. No ticket stands for the version: the tag, the changelog entry and the Version
+   field of its tickets are the record.
 5. **Tell the project owner** that the release was made.
 
 ### 1.1 Rules
@@ -56,8 +56,7 @@ The steps:
 - **A mistaken release tag may be deleted and redone.** A release tag is only an indicator that makes a
   version easy to find. Every change that lands on `main` produces its own version, so a version is the
   version whatever any tag says, and a tag on the wrong commit, or on a version that was not meant to be a
-  release, harms nothing once it is removed. After deleting it, put the Version ticket and its tickets
-  back to *Merged*.
+  release, harms nothing once it is removed. After deleting it, put its tickets back to *Merged*.
 - **A release that was declared correctly and later found defective keeps its tag.** The tag records what was
   released, so it is not deleted. The defect is fixed by a hotfix of that release (section 2) or, when `main`
   has moved on and the fix belongs there, by a newer version released from `main`.
@@ -106,11 +105,11 @@ own, before the fix.
 
 6. **Verify the hotfix** the same way as any release (section 1.1).
 7. **Run the hotfix-finalize step** with the explicit version, for example `V1.25.0-HF1`. It renames the
-   heading to that version, tags `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets'
+   heading to that version, tags `released/V1.25.0-HF1`, and sets the tickets'
    Delivery straight to *Released*, because a hotfix is never merged and so skips *Merged*. For a trial,
    tick **trial**: the tag is `test/released/V1.25.0-HF1` and the hotfix must start from
    `test/released/V1.25.0`.
-8. **Check the result:** the heading, the tag, the Version ticket and the tickets.
+8. **Check the result:** the heading, the tag and the tickets.
 9. **Tell the project owner** that the hotfix has been released.
 
 ### 2.3 Forward-port and retire
@@ -166,25 +165,34 @@ The steps:
    - **Archived:** the work is done and merged.
    - **Suspended:** the work is set aside and expected to return.
    - **Abandoned:** the work is discarded.
+   - **Renamed:** not a fate but a new name (guide on branching and merging, section 1.5): the branch is
+     only moving to a kebab-case name. Make the new branch at the same commit, push it, and move any pull
+     request to it first.
 2. **Check the branch.**
    - For *archived*, confirm that all its commits are reachable from `main`. If they are not, it is not
      archived: suspend it or abandon it.
    - For *suspended* or *abandoned*, close any open pull request with a comment saying why.
+   - For *renamed*, the new branch is on the remote and contains the old branch's last commit, and no pull
+     request is left on the old name.
 3. **Update the tickets.**
    - *Archived:* nothing to change.
    - *Suspended:* move the tickets to *Suspended* with a comment. The developer proposes, and the project
      owner decides.
    - *Abandoned:* move the tickets to *Abandoned* with a Resolution and a comment. The automation also sets
      their Delivery to *Dropped*.
+   - *Renamed:* nothing to change; the work goes on under the new name.
 4. **Run the retire step** with the branch name and the outcome, and confirm by typing the branch name
-   again. It tags the branch's last commit and then deletes the branch.
+   again (for *renamed*, with the new name as the comment). It tags the branch's last commit and then deletes
+   the branch; for *renamed* it deletes the old name and makes no tag.
 5. **Check the result.** The tag exists, the branch is gone, and the tickets show what you expect. Delete
    your local copy of the branch.
 
 ### 3.1 Rules
 
-- **Rule:** tag first, delete second. The one exception is a finished hotfix branch, whose release tag is
-  already its record (section 2).
+- **Rule:** tag first, delete second. The exceptions are a finished hotfix branch, whose release tag is
+  already its record (section 2), and a renamed branch, whose new name keeps its history.
+- **Rule:** the branch part of the tag is the branch's name in kebab-case, so an old name such as
+  `boot_process` is tagged `boot-process`; the branch itself is deleted by its own name.
 - **Rule:** the tag is named `<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]`, using the UTC date of the
   branch's last commit.
 - **Rule:** if a tag with that name already exists, add a short comment to make it unique. The retire step
@@ -219,10 +227,8 @@ A one-page summary of the guide. It adds no new rules.
       strong recommendation).
 - [ ] Its tickets are completed (a recommendation).
 - [ ] The release step is run with that version (with **trial** ticked only for a test), and the project owner is told.
-- [ ] The tag is on the commit where the version was finalized, the Version ticket shows *Released* with
-      its comment, and the tickets show *Released*.
-- [ ] If the release was a mistake: the tag is deleted, and the Version ticket and its tickets are back to
-      *Merged*.
+- [ ] The tag is on the commit where the version was finalized, and the tickets show *Released*.
+- [ ] If the release was a mistake: the tag is deleted, and its tickets are back to *Merged*.
 
 **Hotfix** (section 2)
 
@@ -235,16 +241,16 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] I worked as usual, and the project owner is told it started.
 - [ ] The hotfix is verified, and the hotfix-finalize step was run with the explicit version (for example
       `V1.25.0-HF1`).
-- [ ] I checked the heading, the tag, the Version ticket and the tickets, and the project owner is told it
+- [ ] I checked the heading, the tag and the tickets, and the project owner is told it
       is released.
 - [ ] The fix is forward-ported to `main` as its own ticket and pull request, linked to the hotfix ticket.
 - [ ] The hotfix branch is deleted; its release tag keeps its history.
 
 **Retire a branch** (section 3)
 
-- [ ] The outcome is chosen: archived, suspended or abandoned.
+- [ ] The outcome is chosen: archived, suspended, abandoned or renamed.
 - [ ] For *archived*, all commits are reachable from `main`. For *suspended* or *abandoned*, any open pull
-      request is closed with a comment.
+      request is closed with a comment. For *renamed*, the new branch holds the old work and has the pull request.
 - [ ] The tickets are updated: *Suspended*, or *Abandoned* with a Resolution, and a comment.
 - [ ] The retire step is run (tag first, then delete) and confirmed; for a trial, with **trial** ticked.
 - [ ] The tag exists, the branch is gone, and my local copy is deleted.

@@ -4,7 +4,7 @@ Every ticket field with its values, what they mean, who sets them and when. The 
 and the rules that tie the fields together, are in section 4 of *Project structure*. How the fields work
 together over a ticket's life is in *Appendix E: Ticket model*.
 
-**Where each field lives (GitHub).** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values), Area is a set of labels, and every
+**Where each field lives (GitHub).** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same seven values), Area is a set of labels, and every
 other field is a board field.
 
 **Colors.** The Color column of each table is the standard's color for that option, so that a ticket reads
@@ -30,10 +30,9 @@ personal account the values are the options of the board field Kind.
 | **Bug** | PINK | Something that behaves differently from what was intended, and the fix for it. | mod |
 | **Refactor** | ORANGE | Internal restructuring with no change in what the product does. | mod |
 | **Task** | YELLOW | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
-| **Version** | GRAY | Bookkeeping ticket for one version. It does no work and never counts toward a bump. | none |
-| **Alert** | RED | An automatic check that needs a person to review something, such as a detected bypass or a stale planned version. It never counts toward a bump. | none |
+| **Alert** | RED | An automatic check that needs a person to review something, such as a detected bypass. It never counts toward a bump. | none |
 
-Set by a person when the ticket is created; the automation sets it on Version and Alert tickets.
+Set by a person when the ticket is created; the automation sets it on Alert tickets. *Version* was a type of earlier versions of the standard (a bookkeeping ticket for one version, which never counted toward a bump): it is no longer made, and boards that still have such tickets are tolerated.
 
 ## Area
 
@@ -62,7 +61,7 @@ project does on its own. Set by a person.
 
 ## The `dummy` label
 
-Not an Area. A marker for a throwaway ticket or Version ticket made to test the automation (a trial of a
+Not an Area. A marker for a throwaway ticket made to test the automation (a trial of a
 new step, a test of a rule). It is the only label besides the 14 Area labels.
 
 | Label | Hex | Meaning |
@@ -150,8 +149,8 @@ How a ticket ended. Blank while the ticket is open.
 | **Superseded** | BLUE | Replaced by a different approach or ticket: the work was real, but something else took its place. | *Abandoned* |
 | **Obsolete** | PURPLE | No longer relevant because the thing it was about changed or was removed. | *Abandoned* |
 
-Set by the person making the move to *Completed* or *Abandoned*. When it is set and cleared is in *Project
-structure*, section 4.3.
+*Done* is set by the automation when the Progress is *Completed* and cleared when it is not; a reason is set by the person
+making the move to *Abandoned*. When it is set and cleared is in *Project structure*, section 4.3.
 
 ## Delivery
 
@@ -163,13 +162,13 @@ Where the ticket's delivered work is: a fact about the work, independent of Prog
 | **Committed** | BLUE | Optional personal marker: the work is committed locally and not yet pushed. | the developer, by hand only |
 | **Pushed** | GREEN | Code for the ticket is on a branch on the hosting service, not yet merged. | the automation, when a push contains a changelog entry for the ticket |
 | **Merged** | PURPLE | The work is on `main`, in a finalized version. | the automation, at finalize |
-| **Implemented** | GREEN | The work is in effect and involved no file change (a setting, a secret, a check that was run). | a person, with the Version it belongs to; the automation then attaches the ticket to that version's ticket |
+| **Implemented** | GREEN | The work is in effect and involved no file change (a setting, a secret, a check that was run). | a person, with the Version it belongs to; the automation then puts the Version in the board form (a blank one gets the version being finalized) |
 | **Released** | RED | The version containing it has been declared a release. | the automation, when a release is cut |
-| **Dropped** | GRAY | The code or version was planned or pushed but will never be delivered. | the automation when a branch is abandoned; a person for a planned version |
+| **Dropped** | GRAY | The code was pushed but will never be delivered: its branch was retired as abandoned. | the automation when a branch is abandoned |
 
 The rules for Delivery (when it moves back, what *Committed* and *Implemented* are for, and the two
 Delivery and Version rules a *Completed* ticket must meet) are in *Project structure*, sections 4.3 and 4.4.
-How *Implemented* tickets are attached to their Version tickets is in section 5.2 of the same guide, and
+How *Implemented* tickets are settled is in section 4.3 of the same guide, and
 what a release does to Delivery is in *Releases, hotfixes and retiring branches*, section 1.1.
 
 ## Priority
@@ -247,20 +246,23 @@ ticket has none.
 
 ## Which fields apply to which tickets
 
-| Field | Work ticket | Version ticket | Alert ticket |
-|---|---|---|---|
-| Type | the work Type | Version | Alert |
-| Area | suggested | none | `process` |
-| Origin, REF | as needed | none (Origin may stay Backdated on old ones) | blank |
-| Progress | yes | none | yes, all moves manual |
-| Waiting | yes | none | as for any ticket |
-| Attention | yes | none | none |
-| Resolution | yes | none | as for any ticket |
-| Delivery | yes | *Merged*, *Released* or *Dropped* | none |
-| Priority | Normal by default | none | Critical, always |
-| Size | required at creation | none | set by the person who takes it |
-| Risk | proposed by the creator | none | set by the person who takes it |
-| Version, Build | yes | its own version; its last build | the version in which it was raised |
-| Start date, End date | yes | none | none |
-| Fix | yes | none | yes (the Delivery rules do not apply) |
-| Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog; none for stale planned versions |
+| Field | Work ticket | Alert ticket |
+|---|---|---|
+| Type | the work Type | Alert |
+| Area | suggested | `process` |
+| Origin, REF | as needed | blank |
+| Progress | yes | yes, all moves manual |
+| Waiting | yes | as for any ticket |
+| Attention | yes | none |
+| Resolution | yes | as for any ticket |
+| Delivery | yes | none |
+| Priority | Normal by default | Critical, always |
+| Size | required at creation | set by the person who takes it |
+| Risk | proposed by the creator | set by the person who takes it |
+| Version, Build | yes | the version in which it was raised |
+| Start date, End date | yes | none |
+| Fix | yes | yes (the Delivery rules do not apply) |
+| Assignee | assigned to the person who starts the work | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog |
+
+A legacy Version ticket (type *Version*, made by earlier versions of the standard) has none of these fields in
+play: it has no Progress, and the work-ticket rules, the Fix rules and the audit leave it alone.

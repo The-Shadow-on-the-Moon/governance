@@ -274,25 +274,24 @@ After a merge to `main`, the automation:
 - for each ticket in the version: advances it to *InProgress* if it was somehow still *ToDo* or *OnDeck* (the
   push normally did that already), sets Delivery to *Merged*, and sets Version (in the board form) and Build. It never moves a ticket out of *Completed*:
   a ticket verified before the merge stays *Completed*;
-- creates the Version ticket, or reuses a planned one, with a generated description, the last build and
-  the tickets as sub-issues, and closes it;
-- attaches the tickets with Delivery *Implemented* that no Version ticket has yet (section 5.2, item 6);
-- raises an Alert if it detects a bypass or finds stale planned versions.
+- settles the tickets with Delivery *Implemented* (section 5.2, item 6): a blank Version gets this version, and
+  a finalized one is put in the board form;
+- raises an Alert if it detects a bypass.
 
 ### 5.2 What to check
 
 1. **Pull `main`** and see that the heading was renamed to the version you expected.
-2. **See that the Version ticket exists** and lists your tickets.
-3. **See that your tickets show Delivery *Merged*** and the right Version.
+2. **See that your tickets show Delivery *Merged*** and the right Version.
+3. **See the bump the run gave:** its log line says which Types or marker decided it.
 4. **If an Alert was raised for your merge,** triage it. It is assigned to you (see the guide on issues
    and the board, section 5.2).
 5. **If the board was not updated,** the version is still finalized. The board step is skipped when the
    project token is missing or the hosting service reports an error. Re-run the finalize step, which is safe to
    repeat and skips what is already done, or correct the fields by hand.
 6. **If you did work with no file change** (a setting, a secret, a check that was run), set its Delivery
-   to *Implemented* and its Version to the version it belongs to. The next finalize attaches it to that
-   version's ticket. To attach it at once, for example for a version that is already finalized, run the
-   workflow by hand with the dry run off.
+   to *Implemented* and its Version to the version it belongs to. A blank Version is filled with the version
+   being finalized by the next finalize or scheduled run, and a finalized one is put in the board form. To do
+   it at once, run the workflow by hand with the dry run off.
 
 ### 5.3 What next
 
@@ -304,7 +303,7 @@ After a merge to `main`, the automation:
 
 - **Recommendation:** check the result after the merge, as above.
 - **Rule:** a version number is never changed after it is finalized. If the bump was not what you
-  intended, note it in a comment on the Version ticket and fix the ticket's Type. The next version
+  intended, note it in a comment on the tickets and fix the ticket's Type. The next version
   proceeds normally.
 - **Rule:** if you continue on the branch, sync `main` into it first, which brings in the automation's
   commit, and only then open a new `WIP-Version` heading.
@@ -411,8 +410,8 @@ description.
 
 **After the merge** (sections 5 and 7)
 
-- [ ] I pulled `main`: the heading is renamed to the expected version, the Version ticket lists my
-      tickets, and they show Delivery *Merged* and the right Version.
+- [ ] I pulled `main`: the heading is renamed to the expected version, and my
+      tickets show Delivery *Merged* and the right Version.
 - [ ] Any Alert raised for my merge is triaged.
 - [ ] I decided whether to continue the branch (syncing `main` first, then a new `WIP-Version`) or retire
       it.

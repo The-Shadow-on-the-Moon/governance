@@ -14,14 +14,14 @@ Each field answers one question, and the fields are kept separate on purpose.
 | **Progress** | Where is the work? | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
 | **Waiting** | Is it waiting for someone's input? | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | the automation raises flags, a person closes them |
-| **Resolution** | How did it end? | a person |
-| **Delivery** | Where is the delivered work? | the automation (a person sets *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
+| **Resolution** | How did it end? | a person (the automation fills *Done* with *Completed*) |
+| **Delivery** | Where is the delivered work? | the automation (a person sets *Committed* and *Implemented*) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | a person |
 | **Version**, **Build** | Which version and build? | a person may aim it, the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | the automation |
 | **Fix** | Which of the rules that span fields do its fields break? | the automation |
 
-Type lives in the native issue type, or, for a project owned by a personal account (which has no issue types), in the board field **Kind** with the same eight values. Judgment belongs to people and facts belong to the automation.
+Type lives in the native issue type, or, for a project owned by a personal account (which has no issue types), in the board field **Kind** with the same seven values. Judgment belongs to people and facts belong to the automation.
 
 ## The life of a work ticket
 
@@ -33,14 +33,16 @@ Type lives in the native issue type, or, for a project owned by a personal accou
 | First push | InProgress | Pushed |
 | Work done | Review | Pushed |
 | Merged | Review | Merged |
-| Verified by a human | Completed (Resolution Done, issue closed) | Merged |
+| Verified by a human | Completed (issue closed; Resolution Done follows) | Merged |
 | Release cut | Completed | Released |
 
 Side paths: Waiting (*Needs input*) at any open step, sent back from Review to InProgress, Suspended, Abandoned (with a Resolution reason), Attention flags when something looks wrong, and Delivery *Implemented* for work that changes no file.
 
 ## Special tickets
 
-- **Version ticket:** a bookkeeping record for one version, with no Progress. Its Delivery goes Merged, then Released (or Dropped for a planned version that never happened).
-- **Alert ticket:** a check a person must do, raised for a bypass, a merge without changelog entries, or stale planned versions. It is Critical and every move is manual.
+- **Version tickets** are gone: a version has no ticket. Its changelog entry, the Version field of its tickets (the Versions view groups by it) and, for a release, its tag are the record. A ticket that still has the legacy type *Version* is left alone.
+- **Plans:** a Version on a ticket that is open and has not shipped is a plan, and it is advisory; the Plan view lists them, and one that was passed (at or below the highest finalized version) is listed in Fix.
+- **Umbrella ticket:** an ordinary work ticket that groups the tickets of one piece of work as its sub-issues.
+- **Alert ticket:** a check a person must do, raised for a bypass, a merge without changelog entries, or a changelog the automation could not read. It is Critical and every move is manual.
 
 See also [Automation](Automation) for what the automation writes and when.

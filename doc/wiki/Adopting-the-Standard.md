@@ -15,6 +15,9 @@ This page is the route through them. The measure is the [audit tools](Audit-Tool
   are history.
 - **The adoption goes through the normal flow:** a ticket, an adoption branch, a changelog entry, a pull request
   and a merge commit.
+- **Work made before the cut-over is history wherever it lands.** A branch that was open at the cut-over keeps its
+  old commits as history when it is merged afterwards; the merge that lands it is judged. A commit counts as made when
+  it was authored.
 - **The audit is the measure,** and the project is adopted when a re-audit shows no failed rule after the cut-over.
 
 ## The route

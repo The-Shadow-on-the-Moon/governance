@@ -1,18 +1,13 @@
 """Alert tickets and the AUTO-REF changelog entry.
 
-An Alert is raised when a rule was bypassed, a push landed without changelog entries, the
-changelog could not be read, or planned versions can no longer happen. It has Priority
+An Alert is raised when a rule was bypassed, a push landed without changelog entries, or the
+changelog could not be read. It has Priority
 Critical, Area process and Progress ToDo; every later move is a person's.
 See the guide on project structure (section 5.3) and on issues and the board (section 5).
 """
-import re
-
 import checks
 import ticket_type
 from github_api import GitHubError
-from versions import Version
-
-_PLANNED = re.compile(r"^Version (\d+\.\d+\.\d+)$")
 
 HEADLINES = {
     checks.DIRECT_PUSH: ("Direct push to main",
@@ -52,36 +47,11 @@ def bypass_alert(findings, missing, version, push_sha, when):
     return f"{headline} ({version})", "\n".join(lines) + "\n"
 
 
-def stale_alert(version, planned):
-    """(title, body) of the Alert for planned Version tickets that can no longer happen."""
-    listing = ", ".join(f"#{number} {title}" for number, title in planned)
-    body = (f"{version.title()} was finalized. These planned Version tickets have a lower number and cannot "
-            f"happen under it: {listing}.\n\n**To do.** For each one, set Delivery to *Dropped* and close it with a "
-            "comment saying what replaced it, or correct the number if it was a mistake.\n")
-    return f"Stale planned Version tickets after {version}", body
-
-
 def changelog_error_alert(error, push_sha, when):
     body = (f"Detected on the push of {when} UTC to `main` (commit `{push_sha[:7]}`): the changelog could not be read, so no "
             f"version was finalized.\n\n> {error}\n\n**To do.** Correct `CHANGELOG.md` by hand (one open `WIP-Version` "
             "heading, with at most one marker and no other text), then run the finalize step again.\n")
     return "Changelog error on main: no version finalized", body
-
-
-def stale_planned(repo_client, version):
-    """Open planned Version tickets numbered below `version` as (issue number, title). Hotfix versions are not checked."""
-    if version.hotfix:
-        return []
-    found = []
-    for page in range(1, 11):
-        issues = repo_client.request("GET", repo_client.repo_path(f"/issues?state=open{ticket_type.type_filter(repo_client, 'Version')}&per_page=100&page={page}"))
-        for issue in issues:
-            match = None if "pull_request" in issue else _PLANNED.match(issue["title"])
-            if match and Version.parse("V" + match.group(1)).number() < version.number():
-                found.append((issue["number"], issue["title"]))
-        if len(issues) < 100:
-            break
-    return sorted(found)
 
 
 def create_alert(run, repo_client, project_client, board, title, body, assignee=None, version=None):

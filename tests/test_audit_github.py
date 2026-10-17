@@ -61,7 +61,7 @@ class AuditGithubTests(unittest.TestCase):
 
     def test_the_standard_tables_were_read(self):
         self.assertEqual(len(LABELS), 15)
-        self.assertEqual(len(TYPES), 8)
+        self.assertEqual(len(TYPES), 7)
 
     def test_a_conforming_repository_passes(self):
         report = self.audit()

@@ -1,14 +1,14 @@
 """Where the Type of a ticket comes from.
 
 A project owned by an organization keeps the Type in the native issue type. A project owned by a personal
-account has no issue types, and keeps it in a single-select board field named Kind, with the same eight
-values. The repository variable TYPE_SOURCE says which (`issue-type` or `field`); when it is not set, the
+account has no issue types, and keeps it in a single-select board field named Kind, with the same seven
+values (a board made before has an eighth, `Version`, which is tolerated). The repository variable TYPE_SOURCE says which (`issue-type` or `field`); when it is not set, the
 source is `issue-type` for an organization and `field` for a personal account (the owner of the repository).
 See the guide on the new-project bootstrap, section 5.1.
 
 Reading never needs the variable: the issue type is used when the issue has one, and the Kind of its board
 item otherwise. The variable decides what the preflight requires (the field Kind on the board), what
-`fields.py` creates and how the Version and Alert tickets get their Type.
+`fields.py` creates and how the Alert tickets get their Type.
 """
 from github_api import GitHubError
 
@@ -16,10 +16,10 @@ VARIABLE = "TYPE_SOURCE"
 FIELD = "Kind"
 ISSUE_TYPE, FIELD_SOURCE = "issue-type", "field"
 SOURCES = (ISSUE_TYPE, FIELD_SOURCE)
-VALUES = ["Feature", "Enhancement", "Change", "Bug", "Refactor", "Task", "Version", "Alert"]
+VALUES = ["Feature", "Enhancement", "Change", "Bug", "Refactor", "Task", "Alert"]  # "Version" is a legacy type, no longer made
 # The colors and descriptions of the options of Kind (appendix C, the Type table), for fields.py.
 COLORS = {"Feature": "PURPLE", "Enhancement": "GREEN", "Change": "BLUE", "Bug": "PINK", "Refactor": "ORANGE",
-          "Task": "YELLOW", "Version": "GRAY", "Alert": "RED"}
+          "Task": "YELLOW", "Alert": "RED"}
 DESCRIPTIONS = {
     "Feature": "New capability that did not exist before.",
     "Enhancement": "An improvement to something that already works: better performance, smarter behavior, easier use.",
@@ -29,9 +29,8 @@ DESCRIPTIONS = {
     "Refactor": "Internal restructuring with no change in what the product does.",
     "Task": "Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, "
             "and creating a new tool.",
-    "Version": "Bookkeeping ticket for one version. It does no work and never counts toward a bump.",
-    "Alert": "An automatic check that needs a person to review something, such as a detected bypass or a stale planned "
-             "version. It never counts toward a bump.",
+    "Alert": "An automatic check that needs a person to review something, such as a detected bypass. "
+             "It never counts toward a bump.",
 }
 # GraphQL for the Kind of a board item, to add to the selection of an item.
 SELECTION = 'kind:fieldValueByName(name:"Kind"){... on ProjectV2ItemFieldSingleSelectValue{name}} '
@@ -61,12 +60,6 @@ def source(repository, client=None):
 def field_mode(client):
     """True when the Type of a ticket lives in the field Kind (the preflight gave the client a reader)."""
     return getattr(client, "kind_reader", None) is not None
-
-
-def type_filter(client, issue_type):
-    """The issues query for an issue type. With the field Kind there are no issue types and the filter would be refused:
-    the caller picks the issues by their title."""
-    return "" if field_mode(client) else f"&type={issue_type}"
 
 
 def set_kind(run, project_client, board, item_id, kind, label):

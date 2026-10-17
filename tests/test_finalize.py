@@ -144,7 +144,7 @@ class FinalizeTests(Repo):
     def test_the_whole_step(self):
         self.write(CHANGELOG.format(marker=""))
         repo, project = FakeRepo(self.TYPES), FakeProject({201: {"status": "InProgress"}, 205: {"status": "Completed"}})
-        run = finalize.finalize(self.dir, repo, project, board(), NOW, pull_request=10)
+        run = finalize.finalize(self.dir, repo, project, board(), NOW)
         self.assertIn("## V0.3.0 — 2026-10-06 10:00 UTC", self.changelog())
         self.assertNotIn("WIP-Version", self.changelog())
         self.assertEqual(self.git("log", "-1", "--format=%s"), "Finalize V0.3.0\n")
@@ -157,14 +157,8 @@ class FinalizeTests(Repo):
         self.assertEqual(sets[("I201", "F-Delivery")], {"singleSelectOptionId": "Delivery-Merged"})
         self.assertNotIn(("I201", "F-Status"), sets)  # already InProgress
         self.assertNotIn(("I205", "F-Status"), sets)  # a Completed ticket stays Completed
-        title, body = repo.of("create")[0][1:3]
-        self.assertEqual(title, "Version 000.003.000")
-        self.assertIn("Finalized 2026-10-06 10:00 UTC from pull request #10. Bump: sub, from the Type of #201 (Feature).", body)
-        self.assertIn("Last build: 20261006090000.", body)
-        self.assertIn("- #205 Fix the totals (Bug)", body)
-        self.assertEqual([c[2] for c in repo.of("sub")], [201, 205])
-        self.assertEqual(repo.of("close"), [("close", 50)])
-        self.assertTrue(run.log)
+        self.assertEqual(repo.calls, [])  # no Version ticket, no sub-issue, nothing closed
+        self.assertIn("V0.3.0: bump sub, from the Type of #201 (Feature)", run.log)
 
     def test_todo_and_ondeck_advance_to_inprogress(self):
         self.write(CHANGELOG.format(marker=""))
@@ -177,21 +171,19 @@ class FinalizeTests(Repo):
         self.write(CHANGELOG.format(marker=""))
         project = FakeProject({201: None, 205: {"status": "Review"}})
         finalize.finalize(self.dir, FakeRepo(self.TYPES), project, board(), NOW)
-        self.assertEqual(project.added, ["N201", "N50"])  # the ticket, then the Version ticket
+        self.assertEqual(project.added, ["N201"])
 
     def test_a_marker_forces_the_bump(self):
         self.write(CHANGELOG.format(marker=" +m"))
-        repo = FakeRepo(self.TYPES)
-        finalize.finalize(self.dir, repo, FakeProject(), board(), NOW)
+        run = finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
         self.assertIn("## V0.2.1", self.changelog())
-        self.assertIn("mod, forced with the `+m` marker", repo.of("create")[0][2])
+        self.assertTrue(any("bump mod, forced with the `+m` marker" in line for line in run.log))
 
     def test_the_first_version(self):
         self.write(FIRST)
-        repo = FakeRepo({1: "Task"})
-        finalize.finalize(self.dir, repo, FakeProject(), board(), NOW)
+        run = finalize.finalize(self.dir, FakeRepo({1: "Task"}), FakeProject(), board(), NOW)
         self.assertIn("## V0.1.0 — 2026-10-06 10:00 UTC", self.changelog())
-        self.assertIn("the first version is V0.1.0", repo.of("create")[0][2])
+        self.assertTrue(any("the first version is V0.1.0" in line for line in run.log))
 
     def test_dry_run_changes_nothing(self):
         self.write(CHANGELOG.format(marker=""))
@@ -201,7 +193,7 @@ class FinalizeTests(Repo):
         self.assertIn("WIP-Version", self.changelog())
         self.assertEqual(self.git("rev-parse", "HEAD"), head)
         self.assertEqual(project.sets, [])
-        self.assertEqual(repo.of("create") + repo.of("sub") + repo.of("close"), [])
+        self.assertEqual(repo.calls, [])
         self.assertTrue(any("V0.3.0" in line for line in run.log))
 
     def write_manifest(self, standard):
@@ -219,7 +211,7 @@ class FinalizeTests(Repo):
     def test_the_manifest_placeholder_becomes_the_version_in_the_same_commit(self):
         self.write(CHANGELOG.format(marker=""))
         self.write_manifest("WIP-Version")
-        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW, pull_request=10)
+        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
         self.assertEqual(self.manifest_standard(), "V0.3.0")
         self.assertEqual(self.git("log", "-1", "--format=%s"), "Finalize V0.3.0\n")
         files = self.git("show", "--name-only", "--format=", "HEAD").split()
@@ -229,7 +221,7 @@ class FinalizeTests(Repo):
     def test_a_manifest_with_a_real_version_is_left_alone(self):
         self.write(CHANGELOG.format(marker=""))
         self.write_manifest("V0.2.0")
-        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW, pull_request=10)
+        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
         self.assertEqual(self.manifest_standard(), "V0.2.0")
         self.assertEqual(self.git("show", "--name-only", "--format=", "HEAD").split(), ["CHANGELOG.md"])
 
@@ -245,31 +237,31 @@ class FinalizeTests(Repo):
         finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
         done = {201: {"status": "InProgress", "delivery": "Merged", "version": "V000.003.000", "build": "20261006090000"},
                 205: {"status": "Completed", "delivery": "Merged", "version": "V000.003.000", "build": "20261006090000"}}
-        existing = [{"title": "Version 000.003.000", "state": "closed", "number": 50, "node_id": "N50"}]
-        repo, project = FakeRepo(self.TYPES, existing), FakeProject(done)
+        repo, project = FakeRepo(self.TYPES), FakeProject(done)
         head = self.git("rev-parse", "HEAD")
         run = finalize.finalize(self.dir, repo, project, board(), NOW)
         self.assertEqual(self.git("rev-parse", "HEAD"), head)
         self.assertEqual(project.sets, [])
-        self.assertEqual(repo.of("create") + repo.of("sub") + repo.of("close"), [])
-        self.assertIn("already recorded as #50", run.log[-1])
+        self.assertEqual(repo.calls, [])
+        self.assertIn("no open WIP-Version heading: re-checking V0.3.0", run.log)
 
-    def test_a_planned_ticket_is_reused(self):
+    def test_a_run_after_a_partial_one_completes_what_is_missing(self):
         self.write(CHANGELOG.format(marker=""))
-        existing = [{"title": "Version 0.3.0", "state": "open", "number": 33, "node_id": "N33"}]
+        finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(fail=True), board(), NOW)  # the heading, no board update
+        done = {201: {"status": "InProgress", "delivery": "Merged", "version": "V000.003.000", "build": "20261006090000"}}
+        project = FakeProject(done)
+        finalize.finalize(self.dir, FakeRepo(self.TYPES), project, board(), NOW)
+        touched = {(item, field) for item, field, value in project.sets}
+        self.assertNotIn(("I201", "F-Version"), touched)  # already right
+        self.assertIn(("I205", "F-Version"), touched)  # was missed by the first run
+        self.assertIn(("I205", "F-Delivery"), touched)
+
+    def test_a_version_ticket_left_from_before_is_not_touched(self):
+        self.write(CHANGELOG.format(marker=""))
+        existing = [{"title": "Version 000.003.000", "state": "open", "number": 33, "node_id": "N33"}]
         repo = FakeRepo(self.TYPES, existing)
         finalize.finalize(self.dir, repo, FakeProject(), board(), NOW)
-        self.assertEqual(repo.of("create"), [])
-        self.assertEqual(repo.of("close"), [("close", 33)])
-        self.assertEqual([c[1] for c in repo.of("sub")], [33, 33])
-
-    def test_a_planned_ticket_typed_by_hand_is_found_and_given_the_board_form_title(self):
-        self.write(CHANGELOG.format(marker=""))
-        existing = [{"title": "Version 0.3.0", "state": "open", "number": 33, "node_id": "N33"}]
-        repo = FakeRepo(self.TYPES, existing)
-        finalize.finalize(self.dir, repo, FakeProject(), board(), NOW)
-        patched = [c for c in repo.of("request") if c[1] == "PATCH"]
-        self.assertEqual(patched[0][3]["title"], "Version 000.003.000")
+        self.assertEqual(repo.calls, [])
 
     def test_a_board_error_does_not_stop_the_version(self):
         self.write(CHANGELOG.format(marker=""))
@@ -277,7 +269,7 @@ class FinalizeTests(Repo):
         run = finalize.finalize(self.dir, repo, FakeProject(fail=True), board(), NOW)
         self.assertIn("## V0.3.0", self.changelog())
         self.assertTrue(any("board update skipped" in line for line in run.log))
-        self.assertEqual(repo.of("close"), [("close", 50)])
+        self.assertEqual(repo.calls, [])
 
     def test_no_board_skips_the_board_steps(self):
         self.write(CHANGELOG.format(marker=""))
@@ -302,9 +294,8 @@ class FinalizeTests(Repo):
     def test_checking_a_finalized_version_again_gives_the_real_bump(self):
         self.write(CHANGELOG.format(marker=""))
         finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
-        repo = FakeRepo(self.TYPES)
-        finalize.finalize(self.dir, repo, FakeProject(), board(), NOW)
-        self.assertIn("Bump: sub, from V0.2.0 to V0.3.0.", repo.of("create")[0][2])
+        run = finalize.finalize(self.dir, FakeRepo(self.TYPES), FakeProject(), board(), NOW)
+        self.assertIn("V0.3.0: bump sub, from V0.2.0 to V0.3.0", run.log)
 
     def test_recorded_bump_of_the_first_version(self):
         import changelog
@@ -323,11 +314,6 @@ class HelperTests(unittest.TestCase):
         self.assertEqual(finalize.bump_reason({1: "Task"}, "", False), "mod, from the ticket Types (no Feature or Enhancement)")
         self.assertEqual(finalize.bump_reason({1: "Task"}, "+s", False), "sub, forced with the `+s` marker")
         self.assertEqual(finalize.bump_reason({1: "Enhancement"}, "", False), "sub, from the Type of #1 (Enhancement)")
-
-    def test_description(self):
-        text = finalize.version_description(Version(0, 2, 0), "2026-10-05 21:24", "sub", None, None, [(4, "A", "Task")])
-        self.assertTrue(text.startswith("Finalized 2026-10-05 21:24 UTC from the merge to main. Bump: sub. Last build: none."))
-        self.assertTrue(text.endswith("- #4 A (Task)\n"))
 
     def test_nothing_to_finalize(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -198,7 +198,7 @@ def check_labels(report, repo, gh):
 
 def check_issue_types(report, repo, gh, source=ticket_type.ISSUE_TYPE):
     if source == ticket_type.FIELD_SOURCE:
-        report.add("github.issue-types.exact", "10 section 5.1", RULE, "the eight issue types exist", True, "",
+        report.add("github.issue-types.exact", "10 section 5.1", RULE, "the seven issue types exist", True, "",
                    "", ["not needed: the Type is kept in the board field {}".format(ticket_type.FIELD)])
         return
 
@@ -207,14 +207,14 @@ def check_issue_types(report, repo, gh, source=ticket_type.ISSUE_TYPE):
     status, types = gh("orgs/{}/issue-types".format(owner))
 
     if status != 200 or not isinstance(types, list):
-        report.add("github.issue-types.exact", "10 section 5.1", RULE, "the eight issue types exist", None,
+        report.add("github.issue-types.exact", "10 section 5.1", RULE, "the seven issue types exist", None,
                    "issue types could not be read (status {})".format(status), "",
                    ["gh api orgs/{}/issue-types returned status {}".format(owner, status)])
         return
 
     found = {t["name"]: t for t in types if t.get("is_enabled", True)}
     missing = sorted(set(wanted) - set(found))
-    report.add("github.issue-types.exact", "10 section 5.1", RULE, "the eight issue types exist", not missing,
+    report.add("github.issue-types.exact", "10 section 5.1", RULE, "the seven issue types exist", not missing,
                "{} issue type(s) missing".format(len(missing)), "create them in the organization's settings",
                ["missing: " + n for n in missing] or ["found: " + n for n in sorted(wanted)])
     nodesc = sorted(n for n in wanted if n in found and not (found[n].get("description") or "").strip())

@@ -112,7 +112,7 @@ class FakeProject:
     repo = "owner/repo"
 
     def __init__(self, items):
-        self.items, self.sets, self.added = items, [], []
+        self.items, self.sets, self.added, self.clears = items, [], [], []
 
     def graphql(self, query, variables=None):
         number = variables["num"]
@@ -123,6 +123,7 @@ class FakeProject:
                     "status": {"name": item["status"]} if item.get("status") else None,
                     "delivery": {"name": item["delivery"]} if item.get("delivery") else None,
                     "build": {"text": item["build"]} if item.get("build") else None,
+                    "version": {"text": item["version"]} if item.get("version") else None,
                     "attention": {"name": item["attention"]} if item.get("attention") else None}
         return {"repository": {"issue": {"id": f"N{number}", "title": "t", "projectItems": {"nodes": [node] if node else []}}}}
 
@@ -132,6 +133,9 @@ class FakeProject:
 
     def set_project_field(self, project_id, item_id, field_id, value):
         self.sets.append((item_id, field_id, value))
+
+    def clear_project_field(self, project_id, item_id, field_id):
+        self.clears.append((item_id, field_id))
 
 
 class HandlePushTests(GitRepo):
@@ -167,6 +171,46 @@ class HandlePushTests(GitRepo):
             self.assertIn(f"which is {status}: build 20261006090000 (branch feature)", repo.comments[0][1])
             self.assertIn("<!-- condition:new-work-on-finished-ticket -->", repo.comments[0][1])
             self.assertEqual(condition_comments.state(repo.comments[0][1]), "open")
+
+    def test_new_work_on_a_shipped_ticket_clears_its_version_for_every_shipped_delivery(self):
+        for delivery in ("Merged", "Implemented", "Released", "Dropped"):
+            _, repo, project, _ = self.push({201: {"status": "InProgress", "delivery": delivery, "build": EARLIER, "version": "V000.004.000"}},
+                                            text=ONE + delivery)
+            self.assertEqual(project.clears, [("I201", "F-Version")], delivery)
+
+    def test_a_clear_without_a_caution_gets_one_plain_comment_naming_the_old_version(self):
+        _, repo, project, sets = self.push({201: {"status": "InProgress", "delivery": "Merged", "build": EARLIER, "version": "V000.004.000"}})
+        self.assertEqual(len(repo.comments), 1)
+        number, text = repo.comments[0]
+        self.assertEqual(number, 201)
+        self.assertIn("Its Version V000.004.000 is cleared", text)
+        self.assertIn("build 20261006090000, branch feature", text)
+        self.assertNotIn("condition:", text)
+        self.assertNotIn(("I201", "F-Attention"), sets)
+
+    def test_a_clear_with_a_caution_shares_the_one_comment(self):
+        _, repo, project, sets = self.push({201: {"status": "Review", "delivery": "Merged", "build": EARLIER, "version": "V000.004.000"}})
+        self.assertEqual(len(repo.comments), 1)
+        self.assertIn("Attention: Caution.", repo.comments[0][1])
+        self.assertIn("Its Version V000.004.000 is cleared", repo.comments[0][1])
+        self.assertEqual(project.clears, [("I201", "F-Version")])
+        self.assertEqual(sets[("I201", "F-Attention")], {"singleSelectOptionId": "Attention-Caution"})
+
+    def test_a_plan_on_an_unshipped_ticket_is_never_cleared(self):
+        for delivery in (None, "Committed", "Pushed"):
+            _, repo, project, _ = self.push({201: {"status": "InProgress", "delivery": delivery, "version": "V000.009.000"}},
+                                            text=ONE + str(delivery))
+            self.assertEqual((project.clears, repo.comments), ([], []), delivery)
+
+    def test_a_shipped_ticket_with_no_version_has_nothing_to_clear(self):
+        _, repo, project, _ = self.push({201: {"status": "InProgress", "delivery": "Merged", "build": EARLIER}})
+        self.assertEqual((project.clears, repo.comments), ([], []))
+
+    def test_a_dry_run_reports_the_clear_and_writes_nothing(self):
+        run, repo, project, _ = self.push({201: {"status": "InProgress", "delivery": "Merged", "build": EARLIER, "version": "V000.004.000"}},
+                                          dry_run=True)
+        self.assertEqual((project.clears, repo.comments), ([], []))
+        self.assertTrue(any("clear Version V000.004.000 (new work on a ticket that was Merged)" in line for line in run.log))
 
     def test_the_first_push_of_a_finished_ticket_raises_nothing(self):
         # A ticket moved to Review before its first push is the normal flow: no earlier work was delivered.

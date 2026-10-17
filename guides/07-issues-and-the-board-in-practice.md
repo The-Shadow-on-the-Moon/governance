@@ -80,22 +80,25 @@ and 2), *Follow up* (items 3 and 4) and *Fix* (item 5).
 
 ### 2.2 Saved views
 
-The board has seven saved views, in this order:
+The board has eight saved views, in this order:
 
 - **All:** every item on the board, test tickets and pull requests included, with all its fields and in
   ticket-number order, with no gap in the numbers, for finding anything and for audit.
 - **Backlog:** a board of the tickets at *ToDo*, *OnDeck* and *Suspended*, the most urgent first.
 - **Board:** the active work, with the columns *OnDeck*, *InProgress* and *Review* and a row for each Version,
   so you see what each version holds and where each ticket is.
+- **Plan:** the open tickets that are aimed at a version and have not shipped, grouped by that version, with
+  their Status, Priority, Size and Risk: what is intended, in version order (section 6). A plan is advisory, and
+  one at or below the highest finalized version is listed in *Fix*.
 - **Decide:** what the automation noticed and a person must judge: tickets with an open Attention flag
   (*Watch*, *Caution* or *AtRisk*) and open Alerts. Start a work session here.
 - **Follow up:** the ordinary queues: tickets marked *Needs input*, and tickets at *Review* awaiting
   verification.
 - **Fix:** tickets whose fields contradict each other. The refresh lists the broken rules in each ticket's
   Fix field and this view shows every ticket that has any (section 2.5).
-- **Versions:** the work tickets grouped by their Version ticket (the group reads "Version 000.007.000"), with Delivery,
-  Build and Resolution, to see what each version holds and whether it shipped. Tickets only aimed at a version,
-  which have no Version ticket yet, are in a group of their own, ordered by version.
+- **Versions:** every ticket with a Version, grouped by it (the group reads "V000.007.000") and ordered by version,
+  with Delivery, Build and Resolution, to see what each version holds and whether it shipped. The tickets that
+  have not shipped yet are the plan for a later version.
 
 Every view except All leaves out pull requests and test tickets by ending its filter with `is:issue AND -label:dummy`
 (see *Ticket fields reference*; the automation puts each pull request on the board so that All has no gaps).
@@ -191,6 +194,7 @@ there.
 | `backfilled-without-ref` | Backfilled without a REF | Fix | nobody: it goes when the fields agree again |
 | `completed-without-delivery` | Completed without a Delivery | Fix | nobody: it goes when the fields agree again |
 | `shipped-without-version` | Shipped without a Version | Fix | nobody: it goes when the fields agree again |
+| `stale-plan` | Stale plan | Fix | nobody: it goes when the fields agree again |
 | `issue-open` | Issue still open | Fix | nobody: it goes when the fields agree again |
 | `issue-closed` | Issue closed too soon | Fix | nobody: it goes when the fields agree again |
 
@@ -220,8 +224,9 @@ The steps:
    Name the build you verified (the build, and the compile stamp where there is one). Check that the
    changelog entries match what was done, and, where test results were recorded, that they name the build.
 3. **Decide the outcome.**
-   - **It passes:** set Resolution to *Done* and Progress to *Completed* together, and close the issue.
-     Add a comment saying what was verified and on which build.
+   - **It passes:** set Progress to *Completed* and close the issue (the board's own workflow may do it). The
+     automation sets Resolution to *Done* at its next refresh. Add a comment saying what was verified and on
+     which build.
    - **Its own work is wrong or incomplete:** send it back to *InProgress* with a comment saying what
      failed (see the guide on project structure, section 3.4). Its Delivery stays *Merged*, because the
      code is on `main`; it changes when new work is pushed.
@@ -233,7 +238,8 @@ The steps:
 
 - **Rule:** *Completed* is set only by a human who verified the result (see the guide on project
   structure, section 10).
-- **Rule:** set Resolution *Done* together with *Completed*, and close the issue then.
+- **Rule:** set *Completed* and close the issue; Resolution *Done* follows from it and is set by the automation,
+  so it is never set by hand.
 - **Recommendation:** have someone other than the author verify, when that is possible. The author
   verifying their own work is acceptable.
 - **Recommendation:** write a verification comment naming the build, at least when a real review took
@@ -279,7 +285,8 @@ Use it when the work is not going ahead.
 A *Completed* or *Abandoned* ticket needs more work.
 
 1. **Set Progress back** to *InProgress*, or to *ToDo* or *OnDeck* if it is not started.
-2. **Clear Resolution,** and reopen the issue. The automation clears the End date at its next sweep. If
+2. **Reopen the issue.** The automation clears Resolution *Done* and the End date at its next refresh. For an
+   Abandoned ticket, clear the reason yourself. If
    the automation raised an Attention flag for the new work, set it to *Acknowledged* and say the ticket
    was reopened (section 2.4).
 3. **Add a comment** saying why.
@@ -287,8 +294,8 @@ A *Completed* or *Abandoned* ticket needs more work.
 ### 4.4 Rules
 
 - **Rule:** suspending needs a comment, and abandoning needs a Resolution and a comment.
-- **Rule:** reopening clears Resolution, which you do, and the End date, which the automation does (see the
-  guide on project structure, section 4.4).
+- **Rule:** reopening clears Resolution and the End date: the automation does it for *Done* and for the End
+  date, and you clear the reason of an Abandoned ticket (see the guide on project structure, section 4.4).
 - **Recommendation:** reopen a ticket only if its own scope is still unmet. For new work related to it,
   create a new ticket and link the two.
 
@@ -309,8 +316,6 @@ covers who takes it and what to do with it.
 
 - **A bypass, a merge that landed without changelog entries, or a changelog that could not be read:** the
   Alert is assigned to the person who pushed, who triages it.
-- **Stale planned versions:** the Alert starts unassigned. Planned Version tickets belong to the project
-  owner role (see the guide on project structure, section 10), so someone holding that role takes it.
 
 ### 5.2 Triage
 
@@ -322,16 +327,13 @@ covers who takes it and what to do with it.
 - **A changelog that could not be read:** no version was finalized. Correct `CHANGELOG.md` by hand (one
   open `WIP-Version` heading, with at most one marker and no other text), run the finalize step again,
   comment on the Alert with what was wrong, and move it to *Review*.
-- **Stale planned versions:** for each Version ticket the Alert lists, either set its Delivery to
-  *Dropped* and close it with a comment saying what replaced it, or correct the number if it was a
-  mistake. Then move the Alert to *Review*.
 - **An Alert raised in error** (a false positive): abandon it with Resolution *Invalid* and a comment
   saying why.
 
 ### 5.3 Moves
 
 An Alert is *Critical* and starts at *ToDo*. Every move is manual: *InProgress* when someone starts,
-*Review* when they believe it is handled, *Completed* with Resolution *Done* when a human has verified it.
+*Review* when they believe it is handled, *Completed* when a human has verified it (Resolution *Done* follows).
 Shipping a version never moves it. The person who takes it sets its Size and Risk when triaging.
 
 *Done* means that something was done beyond analyzing the Alert, for example documenting the change. An
@@ -365,7 +367,7 @@ coming back.
 - A ticket with no target version is fine. It gets its version when it ships.
 - A ticket with no file change has nothing for the automation to find in the changelog. When its work is in
   effect, the person sets its Delivery to *Implemented* and its Version to the version it belongs to. The
-  automation attaches it to that version's ticket and does not change the field. Leave the Version blank until the
+  automation keeps that Version (in the board form). Leave the Version blank until the
   version is finalized, unless the version already exists: a blank Version gets the version being finalized (or,
   at a scheduled run between two merges, the latest finalized version, which is the version the work was done
   under), and a number you only expect may never exist (the bump is decided at merge). Pure analysis counts
@@ -373,37 +375,29 @@ coming back.
   aimed at a version that was passed (not finalized while a higher version is), the automation raises
   *Caution* on it: set its Version to the version it belongs to, or clear it.
 
-### 6.2 Planned Version tickets
+### 6.2 Aiming tickets at a version
 
-- **Aim tickets with their Version field and nothing else.** The automation creates the Version ticket
-  itself when the version is finalized, so the Version tickets exist in the order the versions shipped.
-  Aimed tickets show on the *Board* view (a row for each Version), in the *Backlog*, and in the *Versions*
-  view's group of tickets with no Version ticket yet, ordered by version.
-- **Creating a Version ticket ahead of time is allowed but not recommended.** It would be titled exactly
-  `Version 002.005.000` (the automation also finds `Version 2.5.0` and renames it when the version ships),
-  with Type *Version*, Delivery blank and the issue open, as a place to record what you plan. The *Versions*
-  view orders its groups by the text of the titles, which is the order of the versions, so a ticket made early
-  does not jump the queue. A planned number is a guess (the bump is decided at merge), so a planned ticket
-  tends to go stale.
-- Before the version is finalized a planned ticket is only a plan. Tickets are not attached to it as
-  sub-issues ahead of time; the target Version field on each ticket says which version it is aimed at, and
-  the automation attaches the tickets when it finalizes the version.
-- When a version ships under that number, the automation reuses a planned ticket (it matches by the exact
-  title). Otherwise it creates one.
-- **If the planned version will not happen** under that number, mark it *Dropped*, close it, and comment
-  what replaced it. Move its tickets' target Version to the new one.
-- The automation's stale-versions Alert tells you when a planned number has been passed (section 5).
+- **Aim a ticket with its Version field and nothing else.** There is no ticket for a version, planned or
+  otherwise. A ticket with a Version that has not shipped is a plan; the *Plan* view lists the plans grouped by
+  version, the *Board* view has a row for each version, and the *Backlog* shows the Version on each card.
+- **A plan is advisory.** The version a merge gets is decided at the merge, from the tickets' Types and any
+  marker, never from a plan. When the work ships, the automation overwrites the field with the version that
+  really shipped, so a ticket aimed at one version that ships in another corrects itself.
+- **A plan that is passed is listed in *Fix*** (the rule `stale-plan`): its Version is at or below the highest
+  finalized version, so that number can no longer happen. Set a Version above it, or clear the Version if the
+  work is not planned for one. The rule makes no comment; the Fix view is where to look.
+- **Work that ships is not a plan.** A ticket that is *Merged*, *Implemented* or *Released* keeps the version it
+  shipped in. When new work is pushed on it, the automation returns it to *Pushed* and clears the Version,
+  because that number belongs to the work that shipped.
+- **To see what a version holds,** open the *Versions* view, or read the changelog entry of the version; a
+  version that was released also has its tag `released/V…`.
 
 ### 6.3 Rules
 
-- **Rule:** target versions and planned Version tickets are set by someone holding the project owner role.
-- **Recommendation:** aim tickets with the Version field, and do not create Version tickets ahead of time
-  (section 6.2).
-- **Rule:** a planned Version ticket, if you create one, is titled exactly `Version X.Y.Z`, so that the
-  automation can reuse it.
-- **Rule:** tickets are not attached to a Version ticket as sub-issues before it is finalized.
-- **Rule:** a planned version that will not happen is marked *Dropped* and closed with a comment saying
-  what replaced it.
+- **Rule:** target versions are set by someone holding the project owner role.
+- **Recommendation:** aim tickets with the Version field. No ticket stands for a version.
+- **Rule:** a plan that is passed (listed in *Fix* as `stale-plan`) is put right, by a Version above the highest
+  finalized version or by clearing it.
 - **Recommendation:** plan ahead where you can. It is the ideal and not a requirement, so a ticket without a
   target version, or a version that was never planned, is normal.
 - **Recommendation:** name a version number only when you are confident of it, and otherwise aim at "the
@@ -411,10 +405,9 @@ coming back.
 
 **Why.** Planning ahead gives the team a shared picture of what is coming. But the number is a guess: the
 bump is decided at merge from the tickets' Types and any marker, so a version planned as 2.5.0 may ship as
-2.4.2 or 3.0.0, and every planned number is something to clean up if it turns out wrong. Keeping the
-tickets unattached until finalize means a plan never has to be undone, and the Version field on each ticket
-already carries the aim. The Version tickets are left to the automation, because the *Versions* view lists them
-in creation order, which is then the order the versions shipped.
+2.4.2 or 3.0.0. Keeping the plan in the Version field of each ticket means a plan never has to be undone and
+no separate record of it can go stale: finalize overwrites the field with the truth, and a plan that was passed
+shows up in *Fix* instead of waiting unnoticed.
 
 
 ---
@@ -437,7 +430,8 @@ was closed without a decision.
    *Fix* view lists the tickets that break them, and each ticket's Fix field names the rules (section 2.5).
    There should be none: correct each.
 5. **Labels:** the Area list and `dummy` are fixed. Remove strays and duplicates.
-6. **Planned Version tickets:** closed if dropped, and none left behind for versions already passed.
+6. **Plans:** the *Fix* view lists the plans that were passed (a Version at or below the highest finalized
+   version); set a Version above it or clear it.
 7. **Branches:** merged branches not yet retired (a week or two up to about a month), and parked branches
    about a month old (suspend or abandon them).
 8. **Placeholders:** search the changelog for `REF` entries that have not been backfilled, and backfill
@@ -488,8 +482,8 @@ A one-page summary of the guide. It adds no new rules.
 **Verify a ticket** (section 3)
 
 - [ ] I verified on a named build, before or after the merge.
-- [ ] It passes: Resolution *Done* and Progress *Completed* set together, the issue closed, and a comment
-      naming the build.
+- [ ] It passes: Progress *Completed* set, the issue closed, and a comment naming the build (Resolution *Done*
+      follows from the automation).
 - [ ] Before I set *Completed*, the Delivery is set (*Merged* if files changed, *Implemented* if none did, even for
       pure analysis).
 - [ ] It fails: back to *InProgress* with a comment, or a new *Bug* linked as "introduced by #123".
@@ -499,14 +493,13 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] Suspend: a comment, Progress *Suspended*, and the branch suspended too if there is one.
 - [ ] Abandon: a Resolution and a comment, Progress *Abandoned*, the issue closed, Waiting cleared, and
       the branch abandoned too if there is one.
-- [ ] Reopen: Progress set back, Resolution cleared, the issue reopened, and a comment.
+- [ ] Reopen: Progress set back, the issue reopened, and a comment (the reason of an Abandoned ticket cleared by you; *Done* by the automation).
 
 **Alerts and planning** (sections 5 and 6)
 
 - [ ] An Alert assigned to me is triaged before other work. A false positive is abandoned with *Invalid*.
-- [ ] Tickets are aimed with their Version field. If I did create a planned Version ticket, it is titled
-      exactly `Version X.Y.Z`, has no tickets attached before it is finalized, and is marked *Dropped* and
-      closed if it will not happen.
+- [ ] Tickets are aimed with their Version field. A plan that was passed is listed in *Fix*, and I set a
+      Version above it or cleared it.
 
 **Housekeeping** (section 7)
 

@@ -28,9 +28,8 @@ import preflight  # noqa: E402
 import ticket_type  # noqa: E402
 import views  # noqa: E402
 
-WORK_EXEMPT = ("Version", "Alert")
+WORK_EXEMPT = ("Version", "Alert")  # Version is a legacy type: tickets that still have it break no work-ticket rule
 BOARD_VERSION = re.compile(r"^V\d{3}\.\d{3}\.\d{3}(-HF\d)?$")
-VERSION_TITLE = re.compile(r"^Version \d{3}\.\d{3}\.\d{3}(-HF\d)?$")
 FINISHED = ("Completed", "Abandoned")
 SELECTS = ("Status", "Size", "Resolution", "Delivery", "Origin", "Priority")
 TEXTS = ("REF", "Version")
@@ -286,9 +285,6 @@ def check_tickets(report, items):
         [t for t in tickets if t["version"] and not BOARD_VERSION.match(t["version"])],
         "the next scheduled run rewrites it; or type the three-digit form",
         lambda t: "Version is {}".format(t["version"]))
-    add("version-title", "03 section 5.2", RULE, "a Version ticket is titled `Version 000.010.001`",
-        [t for t in tickets if t["type"] == "Version" and not VERSION_TITLE.match(t["title"])],
-        "retitle it in the board form", lambda t: "title is not in the board form")
     add("alert-priority", "03 section 5.3", RULE, "an Alert has Priority Critical",
         [t for t in tickets if t["type"] == "Alert" and t["priority"] != "Critical"], "set the Priority to Critical",
         lambda t: "Priority is {}".format(t["priority"] or "empty"))

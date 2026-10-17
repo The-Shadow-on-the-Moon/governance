@@ -34,10 +34,9 @@ Four words that are easy to confuse. Each answers a different question.
 - A recorded test result names the build, and the compile stamp where there is one, of what was tested
   (the guide on working and committing, section 4.3, sets this out).
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
-  Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
-  exception and has no `V` (`Version 2.4.1`).
-- **Rule:** on the board, the Version field and the title of a Version ticket write the version with three
-  digits for each of V, s and m (`V002.004.001`, `Version 002.004.001`; a hotfix `V002.004.001-HF1`), because the
+  Version field and the release tag (`V2.4.1`, `released/V2.4.1`).
+- **Rule:** on the board, the Version field writes the version with three
+  digits for each of V, s and m (`V002.004.001`; a hotfix `V002.004.001-HF1`), because the
   board sorts and groups by text and `V2.10.0` would come before `V2.4.0`. The changelog, the tags and the
   branch names keep the short form (`V2.4.1`).
 - A *release* is a version that has been declared one, and the tag marks it; a version that was not declared a
@@ -147,9 +146,11 @@ design of a ticket as a whole. Nothing here is new: it collects what the other g
 | **Priority, Size, Risk** | How urgent, how big in effort, and how likely to go wrong. | fields reference |
 | **Version, Build** | The version and build a ticket belongs to. On the board a version is written with three digits for each of V, s and m (`V000.010.001`), so that it sorts as text; everywhere else it keeps the short form (`V0.10.1`). | fields reference |
 | **Start date, End date** | The dates the automation noticed the work start and end. | fields reference |
-| **Version ticket** | A bookkeeping record for one version, created by the automation and closed at finalize. | project structure, section 5 |
+| **Plan** | A Version on a ticket that is open and has not shipped. It is advisory: the version a merge gets is decided at the merge, and finalize overwrites the plan with the real version. | issues and the board, section 6 |
+| **Stale plan** | A plan at or below the highest finalized version, which can no longer happen. The refresh lists it in the Fix field. | issues and the board, section 6 |
+| **Legacy Version ticket** | A bookkeeping ticket (type *Version*) that earlier versions of the standard made for each version. It is no longer made; where one still exists it is left alone, and it may be converted into an abandoned ticket. | project structure, section 5.2 |
+| **Umbrella ticket** | A work ticket that groups the tickets of one piece of work as its sub-issues. | project structure, section 5.5 |
 | **Alert** | A ticket the automation raises when a person must review something, such as a bypass. | project structure, section 5 |
-| **Sub-issue** | A ticket attached to another. The automation attaches a version's tickets to its Version ticket. | project structure, section 5 |
 | **Triage** | Looking at a new ticket, completing it, setting its priority and deciding where it goes. | issues and the board, section 1 |
 
 
@@ -203,7 +204,7 @@ Nothing here is new: it collects what the other guides define.
 | **Scheduled run** | The workflow's runs on a timer (three a day) and on request. It sweeps the board for what no event announces: dates, stale and waiting tickets, broken field rules, the form of Version and *Implemented* tickets. A small workflow switches the schedule back on if GitHub turns it off for inactivity. | project structure, section 2.3 |
 | **Hook** | A small script git runs at a set moment, such as before a commit. The hooks stamp the build, draft the message and warn. | working and committing, section 5 |
 | **Workflow** | The hosting service's automation. It finalizes versions, tags, updates the board and raises Alerts. | new-project bootstrap, section 2 |
-| **Finalize** | The automation's step at merge: it renames the open version to the real one, updates the tickets and creates the Version ticket. | syncing and merging, section 5 |
+| **Finalize** | The automation's step at merge: it renames the open version to the real one, updates the tickets' Delivery, Version and Build, and settles the Implemented tickets. | syncing and merging, section 5 |
 | **Preflight** | The automation's first step: it checks it can reach the repository and the board, identifies the board, and checks the settings and fields. | new-project bootstrap, section 2.3 |
 | **Advisory** | A check or warning that tells you something and never blocks you. | branching and merging, section 6 |
 | **Fail open** | When a check cannot run or hits an error, work continues and the check says so. | branching and merging, section 6 |
@@ -285,9 +286,9 @@ other guides define.
 | **Organization** | The account that owns the repository and the board. Issue types are an organization feature, so a project owned by an organization keeps the Type in the issue type, and one owned by a personal account keeps it in the board field Kind. | new-project bootstrap, section 5 |
 | **Issue** | A ticket. | project structure, section 3 |
 | **Issue type** | The native single value on an issue that says what sort of ticket it is. It carries the Type. | fields reference |
-| **Kind** | The board field that carries the Type in a project owned by a personal account, where there are no issue types. It has the same eight values. | new-project bootstrap, section 5 |
+| **Kind** | The board field that carries the Type in a project owned by a personal account, where there are no issue types. It has the same seven values. | new-project bootstrap, section 5 |
 | **Label** | A tag on an issue. The only labels are the 14 Area labels and the marker label `dummy`. | fields reference |
-| **Sub-issue** | An issue attached to another, which has one parent. | project structure, section 5 |
+| **Sub-issue** | An issue attached to another, which is its parent. An issue has one parent. | project structure, section 5.5 |
 | **Closing keyword** | A word such as *Closes*, *Fixes* or *Resolves* followed by a ticket number, which closes the ticket automatically when the pull request merges. The process never uses one. | syncing and merging, section 3 |
 | **Pull request** | The proposal to merge a branch into `main`. | project structure, section 6 |
 | **Check** | A status shown on a pull request. The advisory check says whether the branch is behind `main`. | syncing and merging, section 4 |

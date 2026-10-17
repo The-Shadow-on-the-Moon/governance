@@ -257,8 +257,7 @@ The steps:
    comments, the Alerts.
 4. **Close it down.** Close the ticket as *Abandoned* with Resolution *Invalid* and a comment saying what
    was proved. Close any pull request. Retire the branch as abandoned with the input **trial** ticked,
-   tagging it first (a short comment in the tag such as `dummy-test`). Mark any Version ticket the trial
-   made as *Dropped*, and delete any release tag it made.
+   tagging it first (a short comment in the tag such as `dummy-test`). Delete any release tag the trial made.
 
 - **Rule:** a trial uses throwaway tickets, branches and tags only, and never merges into `main`.
 - **Rule:** every release, hotfix-finish and retire run that is a trial is started with the input

@@ -1,8 +1,11 @@
 """The retire step: record where a branch ended up with a tag, then delete it.
 
-Given a branch, an outcome (archived, suspended or abandoned) and the branch name typed again as a
+Given a branch, an outcome (archived, suspended, abandoned or renamed) and the branch name typed again as a
 confirmation, it tags the branch's last commit `<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]` (the UTC date of
-that commit), and only then deletes the remote branch. It refuses `main`, a wrong confirmation, a
+that commit; the branch part is written in kebab-case, so an old name such as `boot_process` gives
+`boot-process`), and only then deletes the remote branch. A renamed branch is the exception: the comment is
+the new name, which must be on the remote and contain the old branch's last commit, and the old name is
+deleted without a tag, because the new branch already keeps its history. It refuses `main`, a wrong confirmation, a
 tag name that already exists, an archived branch whose commits are not all on main, and a suspended or
 abandoned branch that still has an open pull request. For an abandoned branch it sets the Delivery of
 the tickets in the branch's changelog entries to Dropped. A finished hotfix branch (its tip carries a
@@ -22,7 +25,7 @@ import push_step
 import release
 from github_api import Client, GitHubError
 
-OUTCOMES = ("archived", "suspended", "abandoned")
+OUTCOMES = ("archived", "suspended", "abandoned", "renamed")
 COMMENT = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 HOTFIX_TAG = re.compile(r"^(test/)?released/V\d+\.\d+\.\d+-HF\d$")
 
@@ -31,8 +34,13 @@ class RetireError(RuntimeError):
     pass
 
 
+def kebab(branch):
+    """The branch name as the branch part of a tag: lowercase letters and digits with single hyphens."""
+    return re.sub(r"[^a-z0-9]+", "-", branch.lower()).strip("-")
+
+
 def tag_for(outcome, branch, when, comment="", trial=False):
-    return f"{release.TRIAL_LEVEL if trial else ''}{outcome}/{when:%Y-%m-%d}_{branch}" + (f"_{comment}" if comment else "")
+    return f"{release.TRIAL_LEVEL if trial else ''}{outcome}/{when:%Y-%m-%d}_{kebab(branch)}" + (f"_{comment}" if comment else "")
 
 
 def tip(root, branch):
@@ -71,6 +79,16 @@ def retire(root, repo_client, project_client, board, branch, outcome, confirm, c
     if comment and not COMMENT.match(comment):
         raise RetireError("the tag comment must be short and in kebab-case")
     sha = tip(root, branch)
+    if outcome == "renamed":
+        if not comment:
+            raise RetireError("a rename needs the new branch name as the comment")
+        if comment == branch:
+            raise RetireError("the new name is the same as the old one")
+        new_tip = tip(root, comment)
+        if checks.git(root, "merge-base", "--is-ancestor", sha, new_tip)[0] != 0:
+            raise RetireError(f"{comment} does not contain the last commit of {branch}: create it from that commit first")
+    if not kebab(branch):
+        raise RetireError("the branch name has no letter or digit to build a tag name from")
     on_main = checks.git(root, "merge-base", "--is-ancestor", sha, "refs/remotes/origin/main")[0] == 0
     hotfix_done = finished_hotfix(root, branch, sha)
     if outcome == "archived" and not on_main and not hotfix_done:
@@ -78,7 +96,8 @@ def retire(root, repo_client, project_client, board, branch, outcome, confirm, c
     if outcome != "archived" and open_pull_requests(repo_client, branch):
         raise RetireError("the branch still has an open pull request: close it with a comment saying why first")
     tag = tag_for(outcome, branch, commit_date(root, sha), comment, trial)
-    if not hotfix_done:
+    untagged = hotfix_done or outcome == "renamed"
+    if not untagged:
         try:
             repo_client.request("GET", repo_client.repo_path(f"/git/ref/tags/{tag}"))
             raise RetireError(f"the tag {tag} already exists: add a short comment to make the name unique")
@@ -90,9 +109,13 @@ def retire(root, repo_client, project_client, board, branch, outcome, confirm, c
         tickets = push_step.new_ticket_builds(root, checks.ZEROS, f"origin/{branch}")
     if hotfix_done:
         run.log.append(f"{branch} is a finished hotfix: deleted without a retirement tag (its release tag keeps its history)")
+    elif outcome == "renamed":
+        run.log.append(f"{branch} is renamed {comment}: deleted without a retirement tag (the new branch keeps its history)")
     else:
         run.do(f"tag {sha[:7]}, the last commit of {branch}, as {tag}", repo_client.create_tag, tag, sha)
     run.do(f"delete the remote branch {branch}", repo_client.delete_ref, f"heads/{branch}")
+    if outcome == "renamed":
+        run.log.append(f"tell the team: git fetch --prune, then git branch -m {branch} {comment} and git branch -u origin/{comment}")
     if tickets:
         if board is None or project_client is None:
             run.log.append("board steps skipped: no board (the preflight did not identify one)")
@@ -116,7 +139,7 @@ def main(argv=None):
     branch, outcome = os.environ.get("BRANCH", "").strip(), os.environ.get("OUTCOME", "").strip()
     confirm, comment = os.environ.get("CONFIRM", ""), os.environ.get("COMMENT", "").strip()
     if not repo or not branch or not outcome:
-        print("GITHUB_REPOSITORY, BRANCH, OUTCOME (archived, suspended or abandoned) and CONFIRM must be set")
+        print("GITHUB_REPOSITORY, BRANCH, OUTCOME (archived, suspended, abandoned or renamed) and CONFIRM must be set")
         return 1
     repo_client = Client(os.environ.get("GITHUB_TOKEN", ""), repo)
     project_client = Client(os.environ.get("PROJECT_TOKEN", ""), repo)

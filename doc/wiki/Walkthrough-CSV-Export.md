@@ -100,7 +100,6 @@ Sam merges with a merge commit and keeps the branch. The versioning workflow run
 
 - The heading is renamed. The tickets are a Feature and a Bug, and the highest Type wins, so the bump is
   **sub**: V2.4.1 becomes V2.5.0.
-- The Version ticket "Version 002.005.000" is created, with #201 and #206 as sub-issues.
 - #201 and #206 get Delivery **Merged**, Version `V002.005.000` and their Build.
 
 ```
@@ -123,7 +122,7 @@ Sam merges with a merge commit and keeps the branch. The versioning workflow run
 - report totals: the last day of the month is now included in the sum.
 ```
 
-Sam pulls `main` and checks the heading, the Version ticket and the Delivery of both tickets. See *Syncing and
+Sam pulls `main` and checks the heading and the Delivery and Version of both tickets. See *Syncing and
 merging*, section 5, and *Project structure*, section 5.
 
 ## 8. Verification and closing
@@ -136,8 +135,8 @@ this. See *Issues and the board in practice*, section 3.
 
 Every merge made a version; a release is a deliberate choice. Sam runs the regression checks on V2.5.0 and
 records the result with the build, then starts the release step of the workflow with the version. The tag
-`released/V2.5.0` goes on the commit where V2.5.0 was finalized, the Version ticket becomes **Released**
-with a comment, and so do the tickets whose Delivery was **Merged**. See *Releases, hotfixes and retiring
+`released/V2.5.0` goes on the commit where V2.5.0 was finalized, and the tickets whose Delivery was **Merged**
+become **Released**. See *Releases, hotfixes and retiring
 branches*, section 1.
 
 ## 10. A critical problem in V2.5.0: the hotfix
@@ -150,7 +149,7 @@ moved on, so it is fixed in V2.5.0 itself.
 3. The changelog gets `## WIP-Version` with **no marker** (markers are not allowed on a hotfix), and Sam works as
    usual.
 4. Sam verifies the fix, then runs the hotfix step of the workflow **from that branch** with the explicit
-   version `V2.5.0-HF1`. It renames the heading, tags `released/V2.5.0-HF1`, creates the Version ticket and sets
+   version `V2.5.0-HF1`. It renames the heading, tags `released/V2.5.0-HF1`, and sets
    #240 straight to **Released** (a hotfix is never merged, so it skips Merged).
 
 ```

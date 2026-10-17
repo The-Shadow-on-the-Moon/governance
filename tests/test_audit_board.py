@@ -218,7 +218,12 @@ class AuditBoardTests(unittest.TestCase):
         bad = failed(self.audit())
         self.assertEqual({i[len("board.ticket."):] for i in bad},
                          {"type", "size", "closed-status", "open-status", "resolution", "backfilled-ref",
-                          "version-form", "version-title", "alert-priority", "area"})
+                          "version-form", "alert-priority", "area"})
+
+    def test_a_legacy_version_ticket_breaks_no_rule_whatever_its_title(self):
+        self.fake.items += [item(30, title="Version 1.25.4", issue_type="Version", labels=(), Status="Completed", Resolution="Done"),
+                            item(31, title="Version 000.001.001", issue_type="Version", labels=())]
+        self.assertEqual(failed(self.audit()), set())
 
     def test_the_details_list_every_ticket(self):
         self.fake.items += [item(n, "Ticket %d" % n, Status="ToDo") for n in range(11, 19)]

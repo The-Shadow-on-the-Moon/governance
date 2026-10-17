@@ -129,6 +129,50 @@ class RetireTests(Repo):
         _, repo, _ = self.retire("hotfix-v1-25-0-fix-sensor", "archived")
         self.assertEqual((repo.created, repo.deleted), ([], ["heads/hotfix-v1-25-0-fix-sensor"]))
 
+    def test_a_branch_name_that_is_not_kebab_case_gets_a_tag_that_is(self):
+        self.branch("Boot_Process", merged=True)
+        run, repo, _ = self.retire("Boot_Process", "archived")
+        self.assertEqual([name for name, _ in repo.created], ["archived/2026-10-06_boot-process"])
+        self.assertEqual(repo.deleted, ["heads/Boot_Process"])  # the branch itself is deleted by its own name
+
+    def test_a_rename_deletes_the_old_name_without_a_tag(self):
+        sha = self.branch("boot_process_enhance")
+        self.git("push", "-q", "origin", f"{sha}:refs/heads/boot-process-enhance")
+        self.git("fetch", "-q", "origin")
+        run, repo, project = self.retire("boot_process_enhance", "renamed", comment="boot-process-enhance")
+        self.assertEqual(repo.created, [])
+        self.assertEqual(repo.deleted, ["heads/boot_process_enhance"])
+        self.assertEqual(project.sets, [])  # no ticket is dropped: the work goes on under the new name
+        self.assertTrue(any("renamed boot-process-enhance: deleted without a retirement tag" in line for line in run.log))
+        self.assertTrue(any("git branch -m boot_process_enhance boot-process-enhance" in line for line in run.log))
+
+    def test_the_new_name_may_have_moved_on_but_must_contain_the_old_tip(self):
+        sha = self.branch("old_name")
+        self.git("switch", "-q", "-c", "new-name", sha)
+        self.commit(WORK.format(branch="new-name") + "- more.\n", "more work under the new name")
+        self.git("push", "-q", "-u", "origin", "new-name")
+        self.git("switch", "-q", "main")
+        run, repo, _ = self.retire("old_name", "renamed", comment="new-name")
+        self.assertEqual(repo.deleted, ["heads/old_name"])
+
+    def test_a_rename_is_refused_without_a_new_name_on_the_remote_holding_the_old_work(self):
+        self.branch("old_name")
+        for comment in ("", "old_name", "not-there"):
+            with self.assertRaises(retire.RetireError):
+                self.retire("old_name", "renamed", comment=comment if comment != "old_name" else "old_name")
+        self.branch("other-name")  # a branch that does not contain the old tip
+        with self.assertRaises(retire.RetireError) as caught:
+            self.retire("old_name", "renamed", comment="other-name")
+        self.assertIn("does not contain the last commit", str(caught.exception))
+
+    def test_a_rename_with_an_open_pull_request_is_refused(self):
+        sha = self.branch("old_name")
+        self.git("push", "-q", "origin", f"{sha}:refs/heads/new-name")
+        self.git("fetch", "-q", "origin")
+        with self.assertRaises(retire.RetireError) as caught:
+            self.retire("old_name", "renamed", comment="new-name", repo=FakeRepo(pulls=[{"number": 5}]))
+        self.assertIn("open pull request", str(caught.exception))
+
     def test_a_comment_is_added_to_the_tag(self):
         self.branch("old-idea")
         _, repo, _ = self.retire("old-idea", "suspended", comment="waiting-for-hardware")
@@ -186,7 +230,7 @@ class RefusalTests(Repo):
         self.branch("csv-export", merged=True)
         self.refused("typed again", "csv-export", "archived", confirm="csv")
 
-    def test_the_outcome_must_be_one_of_the_three(self):
+    def test_the_outcome_must_be_one_of_the_four(self):
         self.refused("outcome must be one of", "csv-export", "dropped")
 
     def test_the_branch_must_be_on_the_remote(self):

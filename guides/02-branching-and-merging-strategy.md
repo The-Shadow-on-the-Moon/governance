@@ -95,6 +95,11 @@ are three outcomes, each with its own tag namespace (section 2.2):
 | **abandoned** | The work is discarded and not expected to return. | No |
 
 - **Rule:** tag first, delete second. The tag is what keeps the branch's history reachable.
+- **Rule:** renaming a branch is not an outcome and makes no tag. The new name is made at the same commit (or
+  carries the old work on), any pull request moves to it, and the old name is deleted by the retire step with the
+  outcome *renamed*, giving the new name as the comment: the new branch already keeps the history, so a tag
+  would only state something untrue (that the work was suspended or dropped). Everyone who has the old name
+  follows with `git fetch --prune`, `git branch -m <old> <new>` and `git branch -u origin/<new>`.
 - **Recommendation:** do not wait too long to retire a branch once its work is merged. What counts
   as too long depends on the team's pace; for a small team that does not work on the project full
   time, anything from a week or two up to about a month is reasonable. Keeping it longer is a
@@ -148,7 +153,8 @@ version would break pure kebab-case, hence the hyphens.
 Where:
 
 - `<yyyy-mm-dd>` is the UTC date of the **last commit on the branch** at the moment it is tagged.
-- `<branch>` is the branch's name in kebab-case.
+- `<branch>` is the branch's name in kebab-case. A name that is not (`boot_process`, made before the standard)
+  is written as `boot-process`: the retire step does it, and the branch itself is deleted by its own name.
 - `<comment>` is optional and kebab-case. Keep it very short. For a longer note, make the tag an
   annotated tag and put the note in its message.
 - Versions are written without padding: `V2.0.0`, not `V02.00.00`.
@@ -236,7 +242,7 @@ is defined in *Concepts*.)
   |---|---|
   | Feature, Enhancement | sub |
   | Change, Bug, Refactor, Task | mod |
-  | Version, Alert | none (ignored) |
+  | Alert | none (ignored) |
 
 - **Rule (override):** the developer can force the result with a marker written after
   `WIP-Version` in the heading:

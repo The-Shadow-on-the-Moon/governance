@@ -198,7 +198,7 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 ### 4.1 What it is and why it is needed
 
 The automation writes to the board: it sets Delivery, Version, Build, the dates and the Attention flags,
-advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to a project board (an organization's or a person's),
+advances a ticket from *ToDo* or *OnDeck* to *InProgress*. The credential a workflow gets by default cannot write to a project board (an organization's or a person's),
 so the project keeps its own token, stored as a secret. The same token lets the preflight store the board's
 number in a repository variable. Without it the automation still versions, and the board steps are
 skipped, with a clear message; the run then ends red once its other steps are done, so that GitHub sends
@@ -238,12 +238,13 @@ the preflight's warning means the board does not stop updating without notice.
 
 ### 5.1 Issue types
 
-- **Rule:** the eight issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
-  *Refactor*, *Task*, *Version* and *Alert*. Each carries its short definition from the *Ticket fields
-  reference* as its description.
+- **Rule:** the seven issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
+  *Refactor*, *Task* and *Alert*. Each carries its short definition from the *Ticket fields
+  reference* as its description. A board made by an earlier version of the standard has an eighth, *Version*:
+  a legacy type that is tolerated and no longer made.
 - **Rule:** the Type has one source, chosen by who owns the repository. A project owned by an organization
-  keeps it in the eight issue types, which need an organization. A project owned by a personal account has
-  no issue types and keeps it in the board field *Kind* (section 6.1), with the same eight values and the
+  keeps it in the seven issue types, which need an organization. A project owned by a personal account has
+  no issue types and keeps it in the board field *Kind* (section 6.1), with the same seven values and the
   same definitions. Everything else in the standard is the same in both.
 - **Rule:** the repository variable `TYPE_SOURCE` names the source, `issue-type` or `field`. When it is not
   set, the source is `issue-type` for an organization and `field` for a personal account.
@@ -308,7 +309,7 @@ fields reference*.
 | Build | text | |
 | Start date, End date | date | |
 | Fix | text | |
-| Kind | single select | Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert (only when the Type source is the field) |
+| Kind | single select | Feature, Enhancement, Change, Bug, Refactor, Task, Alert (only when the Type source is the field) |
 
 Area is labels, and Type is the issue type, so neither is a board field; when the Type source is the field, Type is the board field *Kind*. Every field above is a kind that a
 script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
@@ -317,14 +318,29 @@ It never changes a field that exists: one of the wrong type, or lacking a value,
 administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
 the automation is switched on, because the preflight requires every field in the table (Kind only when the Type source is the field).
 
-**Saved views:** All, Backlog, Board, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
+**Saved views:** All, Backlog, Board, Plan, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
 run until it is given `--apply` and needs the project token; run it once the fields exist.
 
 **Two settings of the *All* view are made by hand, once, when the views are created,** because the API cannot
 reach them: sort it by *Created, ascending* (ticket-number order), and turn off *Show hierarchy*, so that tickets
-are not listed inside their Version ticket and the list is flat. The script prints a reminder of them at the end of
+are not listed inside their parent ticket and the list is flat. The script prints a reminder of them at the end of
 every run, and a view that is created again loses them, so make them again.
+
+The board's own workflows (the *Workflows* page of the project settings) are not part of the standard, and the
+preflight cannot read them. Three matter:
+
+- *Item added to project* stays **off**. It sets a Status on every item that is added, and the standard says that
+  a pull request and some tickets (an Alert, an item added by the automation) do not have one, so the board rules
+  would fail on the first merge.
+- *Auto-close issue* (the issue is closed when the Status becomes *Completed*) may be on. It agrees with the rule
+  that the issue is closed at *Completed*; *Abandoned* has no such workflow, so the person closes the issue then,
+  and the `issue-open` rule in the Fix view reminds them.
+- *Auto-add sub-issues to project* may be on. It puts the sub-issues of an umbrella ticket (guide on project
+  structure, section 5.5) on the board.
+
+Any other built-in workflow is left off unless the project owner decides it, because it would write a field the
+automation also writes.
 
 ### 6.2 Rules
 
@@ -397,15 +413,18 @@ clean up. So the setup is proved in two levels, neither of which leaves anything
    about any repository setting it can read that differs from section 3.
 2. **Run the automation's tests.**
 3. **Run the finalize step in dry-run mode.** It prints every write it would make, such as the heading
-   rename, the ticket updates and the Version ticket, without making any.
+   rename and the ticket updates, without making any. Started by hand from the branch that
+   holds a change (the Actions tab, mode *finalize*, the dry run left on), it reads that branch's scripts and
+   changelog and previews that branch's merge, which is how a change to the automation or to the changelog is
+   proved before it is merged.
 4. **Test the hooks with a throwaway commit** on a local branch that is never pushed. Check that the build
    is stamped, that the message is drafted, and that the warnings appear. Then delete the branch.
 
 ### 8.2 Level 2: the first real merge
 
 The first real change (the initial structure, by pull request) is the live proof. After it merges, check it
-as in the guide on syncing and merging (section 5.2): the heading is renamed to `V0.1.0`, the Version ticket
-exists and lists the tickets, and the tickets show Delivery *Merged*.
+as in the guide on syncing and merging (section 5.2): the heading is renamed to `V0.1.0`, and the tickets
+show Delivery *Merged* and the Version `V000.001.000`.
 
 ### 8.3 Rules
 
@@ -461,7 +480,7 @@ A one-page summary of the guide. It adds no new rules.
 
 **Issue types and labels** (section 5)
 
-- [ ] The eight issue types exist with their descriptions (or, for a personal account, the board field Kind has the eight values and `TYPE_SOURCE` is `field`).
+- [ ] The seven issue types exist with their descriptions (or, for a personal account, the board field Kind has the seven values and `TYPE_SOURCE` is `field`).
 - [ ] The 14 Area labels and `dummy` exist with their descriptions, and the default labels not on the list
       are deleted.
 
@@ -469,7 +488,7 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] The fields and values are exactly the standard's (`fields.py` creates a missing one), Build is text,
       and the built-in Status values are replaced.
-- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Decide, Follow up, Fix, Versions) and `views.py`
+- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Plan, Decide, Follow up, Fix, Versions) and `views.py`
       reports them up to date.
 - [ ] On the All view, the sort is *Created, ascending* and *Show hierarchy* is off (both by hand).
 
@@ -483,7 +502,7 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] The preflight reports no problems, the tests pass, the dry-run finalize looks right, and a throwaway
       commit shows the hooks working.
-- [ ] After the first merge: the heading is `V0.1.0`, the Version ticket lists the tickets, and the tickets
-      show Delivery *Merged*.
+- [ ] After the first merge: the heading is `V0.1.0`, and the tickets show Delivery *Merged* and the
+      Version `V000.001.000`.
 
 **In one line:** structure, automation, settings, token, labels, board, roles, proof.

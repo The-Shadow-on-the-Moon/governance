@@ -72,7 +72,7 @@ Branches and tags are read from the local clone: run `git fetch` first to includ
 | `git.branch.main` | Convert | 4 | Admin | With care | No branch is called `main`. Rename the integration branch to `main` and make it the default (guide 11, section 5.1). |
 | `git.branch.single-line` | Convert | 4 | Owner | With care | A long-lived `develop`, `staging` or `release` branch exists. Merge it into `main` with a merge commit and retire it as *archived* (guide 11, section 5.1). |
 | `git.branch.no-slash` | Convert | 4 | Dev | With care | A branch name contains `/`. Create the branch again with hyphens, push it, move its pull request, and retire the old name. |
-| `git.branch.kebab-case` | Convert | 4 | Dev | With care | A branch is not in lowercase words with hyphens (or the hotfix form). Rename it as above; branches nobody will resume are retired instead (guide on releases, hotfixes and retiring branches, section 3). |
+| `git.branch.kebab-case` | Convert | 4 | Dev | With care | A branch is not in lowercase words with hyphens (or the hotfix form). Rename it as above (the old name is retired with the outcome *renamed*, which makes no tag); branches nobody will resume are retired instead, and their tag spells the old name in kebab-case (guide on releases, hotfixes and retiring branches, section 3). |
 | `git.tag.names` | Convert / History | 4 | Dev | With care | A tag is not in the standard form. For a tag that marks a real release, add `released/V<major>.<sub>.<mod>` on the same commit and keep the old tag until everybody has moved. A tag with no use is left alone and recorded as history. Never move a tag. |
 | `git.tag.released-on-main` | History | 4 | Dev | No | A `released/` tag is on a commit that `main` does not contain. If it is a mistake, add the right tag; otherwise record it as history. |
 | `git.history.merge-commits` | History | 6 | Owner | No | Commits on `main` are not merges (direct, squashed or rebased). History cannot be rewritten: record it as history, and use the audit's judging from the cut-over when the tools offer it. After the cut-over, every change lands by pull request and a merge commit. |
@@ -110,7 +110,7 @@ secrets need administration access. A refused read is *not-checkable*, not a fai
 | `github.labels.exact` | Convert | 1 | Admin | With care | The repository's labels are not exactly the 14 Area labels and `dummy`. Move the issues from each extra label to the Area label that replaces it, then delete it, because deleting a label removes it from its issues. Create the missing ones. |
 | `github.labels.descriptions` | Fix | 1 | Admin | Yes | A label has no description. Give each its meaning from Appendix C. |
 | `github.labels.colors` | Fix | 1 | Admin | Yes | A label has another color than the standard. Use the colors of Appendix C. |
-| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the eight types (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert). Not needed, and passed, when the Type is kept in the field Kind. Not-checkable when the types cannot be read. |
+| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the seven types (Feature, Enhancement, Change, Bug, Refactor, Task, Alert). Not needed, and passed, when the Type is kept in the field Kind. Not-checkable when the types cannot be read. |
 | `github.issue-types.descriptions` | Fix | 1 | Admin | Yes | A type has no description. Give it the definition of Appendix C. |
 | `github.issue-types.colors` | Fix | 1 | Admin | Yes | A type has another color than the standard. Use the colors of Appendix C. |
 
@@ -139,10 +139,9 @@ project`). Tickets labeled `dummy` and pull requests are skipped.
 | `board.ticket.size` | Fix | 5 | Owner | Yes | A work ticket has no Size. Estimate it and set the Size. |
 | `board.ticket.closed-status` | Convert | 5 | Owner | Yes | A closed work ticket is not *Completed* or *Abandoned*. Set the Status to match (or reopen the ticket if it is not done). |
 | `board.ticket.open-status` | Convert | 5 | Owner | Yes | An open work ticket is *Completed* or *Abandoned*. Close the issue or move the Status back. |
-| `board.ticket.resolution` | Convert | 5 | Owner | Yes | Resolution is not set exactly when the ticket is *Completed* or *Abandoned*. Set it on finished tickets (*Done* for finished work) and clear it on open ones. |
+| `board.ticket.resolution` | Convert | 5 | Owner | Yes | Resolution is not set exactly when the ticket is *Completed* or *Abandoned*. Set it on finished tickets (*Done* for a Completed one, which the refresh also fills in; a reason for an Abandoned one) and clear it on open ones. |
 | `board.ticket.backfilled-ref` | Fix | 5 | Owner | Yes | A ticket with Origin *Backfilled* has no REF. Set the REF to the token of the placeholder it replaced, or change the Origin to *Backdated* if it documents older work. |
 | `board.ticket.version-form` | Fix | 5 | Owner | Yes | A Version value is not in the board form (`V000.010.001`). The scheduled run rewrites it, or type the three-digit form. |
-| `board.ticket.version-title` | Fix | 5 | Owner | Yes | A Version ticket is not titled `Version 000.010.001`. Retitle it in the board form. |
 | `board.ticket.alert-priority` | Fix | 5 | Owner | Yes | An Alert does not have Priority *Critical*. Set it. |
 | `board.ticket.area` | Fix | 5 | Owner | Yes | A work ticket has no Area label. Add one. |
 

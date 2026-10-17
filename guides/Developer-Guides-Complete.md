@@ -275,10 +275,9 @@ Four words that are easy to confuse. Each answers a different question.
 - A recorded test result names the build, and the compile stamp where there is one, of what was tested
   (the guide on working and committing, section 4.3, sets this out).
 - **Rule:** the `V` is part of a version wherever it is written as a version: the changelog heading, the
-  Version field and the release tag (`V2.4.1`, `released/V2.4.1`). A Version ticket's title is the one
-  exception and has no `V` (`Version 2.4.1`).
-- **Rule:** on the board, the Version field and the title of a Version ticket write the version with three
-  digits for each of V, s and m (`V002.004.001`, `Version 002.004.001`; a hotfix `V002.004.001-HF1`), because the
+  Version field and the release tag (`V2.4.1`, `released/V2.4.1`).
+- **Rule:** on the board, the Version field writes the version with three
+  digits for each of V, s and m (`V002.004.001`; a hotfix `V002.004.001-HF1`), because the
   board sorts and groups by text and `V2.10.0` would come before `V2.4.0`. The changelog, the tags and the
   branch names keep the short form (`V2.4.1`).
 - A *release* is a version that has been declared one, and the tag marks it; a version that was not declared a
@@ -388,9 +387,11 @@ design of a ticket as a whole. Nothing here is new: it collects what the other g
 | **Priority, Size, Risk** | How urgent, how big in effort, and how likely to go wrong. | fields reference |
 | **Version, Build** | The version and build a ticket belongs to. On the board a version is written with three digits for each of V, s and m (`V000.010.001`), so that it sorts as text; everywhere else it keeps the short form (`V0.10.1`). | fields reference |
 | **Start date, End date** | The dates the automation noticed the work start and end. | fields reference |
-| **Version ticket** | A bookkeeping record for one version, created by the automation and closed at finalize. | project structure, section 5 |
+| **Plan** | A Version on a ticket that is open and has not shipped. It is advisory: the version a merge gets is decided at the merge, and finalize overwrites the plan with the real version. | issues and the board, section 6 |
+| **Stale plan** | A plan at or below the highest finalized version, which can no longer happen. The refresh lists it in the Fix field. | issues and the board, section 6 |
+| **Legacy Version ticket** | A bookkeeping ticket (type *Version*) that earlier versions of the standard made for each version. It is no longer made; where one still exists it is left alone, and it may be converted into an abandoned ticket. | project structure, section 5.2 |
+| **Umbrella ticket** | A work ticket that groups the tickets of one piece of work as its sub-issues. | project structure, section 5.5 |
 | **Alert** | A ticket the automation raises when a person must review something, such as a bypass. | project structure, section 5 |
-| **Sub-issue** | A ticket attached to another. The automation attaches a version's tickets to its Version ticket. | project structure, section 5 |
 | **Triage** | Looking at a new ticket, completing it, setting its priority and deciding where it goes. | issues and the board, section 1 |
 
 
@@ -444,7 +445,7 @@ Nothing here is new: it collects what the other guides define.
 | **Scheduled run** | The workflow's runs on a timer (three a day) and on request. It sweeps the board for what no event announces: dates, stale and waiting tickets, broken field rules, the form of Version and *Implemented* tickets. A small workflow switches the schedule back on if GitHub turns it off for inactivity. | project structure, section 2.3 |
 | **Hook** | A small script git runs at a set moment, such as before a commit. The hooks stamp the build, draft the message and warn. | working and committing, section 5 |
 | **Workflow** | The hosting service's automation. It finalizes versions, tags, updates the board and raises Alerts. | new-project bootstrap, section 2 |
-| **Finalize** | The automation's step at merge: it renames the open version to the real one, updates the tickets and creates the Version ticket. | syncing and merging, section 5 |
+| **Finalize** | The automation's step at merge: it renames the open version to the real one, updates the tickets' Delivery, Version and Build, and settles the Implemented tickets. | syncing and merging, section 5 |
 | **Preflight** | The automation's first step: it checks it can reach the repository and the board, identifies the board, and checks the settings and fields. | new-project bootstrap, section 2.3 |
 | **Advisory** | A check or warning that tells you something and never blocks you. | branching and merging, section 6 |
 | **Fail open** | When a check cannot run or hits an error, work continues and the check says so. | branching and merging, section 6 |
@@ -526,9 +527,9 @@ other guides define.
 | **Organization** | The account that owns the repository and the board. Issue types are an organization feature, so a project owned by an organization keeps the Type in the issue type, and one owned by a personal account keeps it in the board field Kind. | new-project bootstrap, section 5 |
 | **Issue** | A ticket. | project structure, section 3 |
 | **Issue type** | The native single value on an issue that says what sort of ticket it is. It carries the Type. | fields reference |
-| **Kind** | The board field that carries the Type in a project owned by a personal account, where there are no issue types. It has the same eight values. | new-project bootstrap, section 5 |
+| **Kind** | The board field that carries the Type in a project owned by a personal account, where there are no issue types. It has the same seven values. | new-project bootstrap, section 5 |
 | **Label** | A tag on an issue. The only labels are the 14 Area labels and the marker label `dummy`. | fields reference |
-| **Sub-issue** | An issue attached to another, which has one parent. | project structure, section 5 |
+| **Sub-issue** | An issue attached to another, which is its parent. An issue has one parent. | project structure, section 5.5 |
 | **Closing keyword** | A word such as *Closes*, *Fixes* or *Resolves* followed by a ticket number, which closes the ticket automatically when the pull request merges. The process never uses one. | syncing and merging, section 3 |
 | **Pull request** | The proposal to merge a branch into `main`. | project structure, section 6 |
 | **Check** | A status shown on a pull request. The advisory check says whether the branch is behind `main`. | syncing and merging, section 4 |
@@ -643,6 +644,11 @@ are three outcomes, each with its own tag namespace (section 2.2):
 | **abandoned** | The work is discarded and not expected to return. | No |
 
 - **Rule:** tag first, delete second. The tag is what keeps the branch's history reachable.
+- **Rule:** renaming a branch is not an outcome and makes no tag. The new name is made at the same commit (or
+  carries the old work on), any pull request moves to it, and the old name is deleted by the retire step with the
+  outcome *renamed*, giving the new name as the comment: the new branch already keeps the history, so a tag
+  would only state something untrue (that the work was suspended or dropped). Everyone who has the old name
+  follows with `git fetch --prune`, `git branch -m <old> <new>` and `git branch -u origin/<new>`.
 - **Recommendation:** do not wait too long to retire a branch once its work is merged. What counts
   as too long depends on the team's pace; for a small team that does not work on the project full
   time, anything from a week or two up to about a month is reasonable. Keeping it longer is a
@@ -696,7 +702,8 @@ version would break pure kebab-case, hence the hyphens.
 Where:
 
 - `<yyyy-mm-dd>` is the UTC date of the **last commit on the branch** at the moment it is tagged.
-- `<branch>` is the branch's name in kebab-case.
+- `<branch>` is the branch's name in kebab-case. A name that is not (`boot_process`, made before the standard)
+  is written as `boot-process`: the retire step does it, and the branch itself is deleted by its own name.
 - `<comment>` is optional and kebab-case. Keep it very short. For a longer note, make the tag an
   annotated tag and put the note in its message.
 - Versions are written without padding: `V2.0.0`, not `V02.00.00`.
@@ -784,7 +791,7 @@ is defined in *Concepts*.)
   |---|---|
   | Feature, Enhancement | sub |
   | Change, Bug, Refactor, Task | mod |
-  | Version, Alert | none (ignored) |
+  | Alert | none (ignored) |
 
 - **Rule (override):** the developer can force the result with a marker written after
   `WIP-Version` in the heading:
@@ -1144,7 +1151,7 @@ The links that matter:
 - A changelog entry names its ticket (`#123`), or a `REF` placeholder if there is no ticket yet.
 - A pull request lists the tickets it covers.
 - A ticket's *Version* field names the version it shipped in.
-- A *Version ticket* groups the tickets of one version.
+- The tickets of a version are found by their *Version* field. No ticket stands for a version.
 - A tag names a branch (when it is retired) or a version (when it is released).
 - The automation reads the changelog and the tickets, and writes the changelog and the board.
 
@@ -1229,12 +1236,13 @@ request. Each run sweeps the board and does the following, and the other guides 
 - sets the Start and End dates of tickets that have started or ended;
 - raises *Watch* on tickets that have gone quiet or have waited too long (section 4.3);
 - puts the Version of every ticket that has one in the board form, including one that is only aimed at a version;
-- attaches the tickets with Delivery *Implemented* to their Version tickets (section 5.2);
-- refreshes the Fix field of every ticket (section 4.3), always after the attaching, so that an *Implemented*
+- settles the tickets with Delivery *Implemented*: a blank Version gets the version being finalized (at a scheduled
+  run, the latest finalized version) and a finalized one is put in the board form (section 4.3);
+- refreshes the Fix field of every ticket (section 4.3), always after the settling, so that an *Implemented*
   ticket that is waiting for its Version is not shown as broken.
 
 - **Rule:** the project keeps the schedule enabled.
-- **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing attaches the
+- **Rule:** the step that runs after a merge into `main` makes the same sweeps (finalizing settles the
   *Implemented* tickets), so a version that has just been finalized does not wait for the next run, and the
   two never run at the same time: the second waits for the first.
 - **Rule:** the Fix field is also refreshed, for the whole board, when someone with write access closes,
@@ -1268,7 +1276,7 @@ asking a person to remember, and without a person's edit having to trigger anyth
 | **Description** | What and why: the problem or purpose, the expected result, and how to tell it is done. |
 | **Comments** | The running record: decisions, findings, questions, and verification results. |
 | **Assignee** | Who owns the ticket. |
-| **Links** | The pull requests that carry its work, the Version ticket that groups it, and related tickets, mostly through plain `#123` mentions. |
+| **Links** | The pull requests that carry its work, the umbrella ticket that groups it (section 5.5), and related tickets, mostly through plain `#123` mentions. |
 | **Fields** | The board fields (section 4). |
 
 #### 3.2 Creating a ticket
@@ -1411,7 +1419,7 @@ More examples, covering every Type, are in appendix D (*Ticket examples*).
 > **In GitHub.** The number appears as `#123`. The title is used in the changelog heading
 > (`#### #123 — <title>`) and in the drafted commit message. A pull request that mentions `#123` shows up
 > in the ticket's linked pull requests, and a plain mention creates a link without closing the ticket.
-> A Version ticket groups a version's tickets as sub-issues. Comments are the issue comments; the
+> An umbrella ticket groups related tickets as sub-issues. Comments are the issue comments; the
 > assignee is the issue's assignee.
 
 ---
@@ -1439,7 +1447,7 @@ whether the code has shipped, and "closed" cannot also say whether the work was 
 | **Waiting** | Is it waiting for someone's input? | one | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | one | the automation raises *Watch*, *Caution* and *AtRisk*; a person ticks *Fine* or *Handled elsewhere* in its comment, which sets *Fine* or *Acknowledged* |
 | **Resolution** | How did it end? | one | a person |
-| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker, *Implemented*, and *Dropped* on a planned Version ticket, which a person sets) |
+| **Delivery** | Where is the delivered work? | one | the automation (apart from the optional *Committed* marker and *Implemented*, which a person sets) |
 | **Priority**, **Size**, **Risk** | How urgent, how big, how risky? | one each | a person |
 | **Version**, **Build** | Which version and build? | text, text | a person may aim it; the automation sets the real values |
 | **Start date**, **End date** | When did the work actually start and end? | dates | the automation |
@@ -1491,8 +1499,8 @@ automation set the ticket's Version and Delivery from where the placeholder appe
   *Completed*, *Abandoned* or *Suspended*: when something looks wrong there, it raises Attention (below)
   and a person decides.
 - **Rule:** the GitHub issue of a work ticket is closed only when the ticket is *Completed* or
-  *Abandoned*, by a person, never by a closing keyword. (A Version ticket has no Progress: the automation
-  closes it at finalize, section 5.2.)
+  *Abandoned*, by a person, never by a closing keyword. (A legacy Version ticket has no Progress and is left
+  alone, section 5.2.)
 
 *Why.* Progress is a judgment, so people make it. Only the developer knows whether work is finished: a
 ticket may be committed, pushed or even merged in several steps, and the board may be updated later. The
@@ -1564,10 +1572,16 @@ own ticket and an assignee. Attention says that a ticket's own state needs a loo
 
 **Resolution.**
 
-- **Rule:** blank while a ticket is open. *Done* when it becomes *Completed*. One of the reasons
-  (*Duplicate*, *Invalid*, *WontFix*, *Superseded*, *Obsolete*) when it becomes *Abandoned*, together
-  with a comment linking any related ticket.
-- **Rule:** cleared when a ticket leaves *Completed* or *Abandoned* and becomes open again.
+- **Rule:** blank while a ticket is open. *Done* when it becomes *Completed*: the person sets the Progress,
+  and the automation sets *Done* at its next refresh (when the issue is closed, or at the next scheduled or
+  on-demand run). One of the reasons (*Duplicate*, *Invalid*, *WontFix*, *Superseded*, *Obsolete*) when it
+  becomes *Abandoned*, set by the person together with a comment linking any related ticket.
+- **Rule:** cleared when a ticket leaves *Completed* or *Abandoned* and becomes open again: the automation
+  clears *Done*; the person clears the reason of an Abandoned ticket.
+
+*Why.* *Done* is the same fact as *Completed*: the rules never allow one without the other, so the reviewer's
+single decision (Completed, back to work, Suspended or Abandoned) is the Progress, and the field that only
+repeats it is filled in for them. A reason is a decision, so it stays with the person.
 
 *Why.* "How did it end" is a different question from "where is it", and the reasons for dropping work
 are worth keeping: they answer later questions such as "did we already decide not to do this".
@@ -1576,13 +1590,14 @@ are worth keeping: they answer later questions such as "did we already decide no
 
 - **Rule:** Delivery says where a ticket's delivered work is: *Committed* (an optional personal marker, set by
   hand), *Pushed*, *Merged*, *Implemented* (the work is in effect and involved no file change, set by a
-  person), *Released*, or *Dropped*. Apart from *Committed*, *Implemented* and *Dropped* on a planned Version
-  ticket (which a person marks, section 5.2) it is set by the automation, and people only correct a mistake.
+  person), *Released*, or *Dropped*. Apart from *Committed* and *Implemented* (which a person marks) it is set
+  by the automation, and people only correct a mistake.
 - **Rule:** *Implemented* is for a ticket that changed no file (a setting, a secret, a check that was run). A
   person sets it, together with Version, when the work is in effect. A ticket with changelog entries never
   needs it, because the automation sets *Merged*.
 - **Rule:** Delivery depends only on the work, never on Progress or Resolution. It can move back: new work
-  pushed on a ticket that is already *Merged*, *Implemented*, *Released* or *Dropped* returns it to *Pushed*.
+  pushed on a ticket that is already *Merged*, *Implemented*, *Released* or *Dropped* returns it to *Pushed* and clears its
+  Version, because that number belongs to the work that shipped; the finalize step writes the real one when the new work ships.
 - **Rule:** *Committed* is never required, and the next push overwrites it with *Pushed*; nobody else can
   see a local commit, so the team cannot rely on it. A suspended branch is not dropped, because its code is
   kept: *Pushed* stays, and only an abandoned branch sets *Dropped*.
@@ -1608,7 +1623,7 @@ nothing in the repository shows that a secret was stored or a setting changed.
   the real version. Build holds the ticket's latest build (the most recent build stamp among the build blocks that
   mention it). On the board a version is written with three digits for each of V, s and m (`V000.010.001`, and
   `V001.025.000-HF1` for a hotfix), so that the text sorts in version order in a plain table, in a group and in
-  the hierarchy; a Version ticket's title uses the same form (`Version 000.010.001`). The changelog, tags and branch
+  the hierarchy. The changelog, tags and branch
   names keep the short form. A person may type either form; the automation writes the board form when it
   finalizes and on every scheduled run, for any ticket that has a Version, so a ticket that is only aimed at a
   version sorts among the others.
@@ -1643,21 +1658,22 @@ to forget to close.
 
 | When | Then |
 |---|---|
-| Progress is *Completed* | Resolution is *Done*; both are set together by the person. |
+| Progress is *Completed* | Resolution is *Done*: the person sets the Progress, the automation sets the Resolution. |
 | Progress is *Abandoned* | Resolution is one of the reasons; both are set together by the person. |
-| Progress is *ToDo*, *OnDeck*, *InProgress*, *Review* or *Suspended* | Resolution and End date are blank. |
+| Progress is *ToDo*, *OnDeck*, *InProgress*, *Review* or *Suspended* | Resolution and End date are blank (the automation clears a *Done* left on an open ticket). |
 | A ticket becomes *Completed* or *Abandoned* | Waiting is cleared. |
-| A ticket leaves *Completed* or *Abandoned* | The person clears Resolution; the automation clears the End date. |
+| A ticket leaves *Completed* or *Abandoned* | The automation clears *Done* and the End date; the person clears the reason of an Abandoned ticket. |
 | Origin is *Backfilled* | REF names the placeholder it replaced. |
 | Code is merged or released | Delivery says so, whatever Progress and Resolution are. |
 | A ticket has no file change and its work is in effect | Delivery is *Implemented* and Version names the version it belongs to. Pure analysis, a setting or a check that was run counts: the Delivery is never left blank. |
 | A work ticket is *Completed* | Delivery is set: *Merged* if files changed, *Implemented* if none did. (A ticket that came to nothing is *Abandoned*, not *Completed*. Version and Alert tickets are not work tickets.) |
 | Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the attaching that runs before every refresh for *Implemented*); a ticket still without one after that is a step that failed, and Fix shows it. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
-| A ticket is a Version ticket | Only the version and Delivery fields apply (see the special tickets section). |
+| A ticket is an Alert, or a legacy Version ticket | Only some fields apply (see the special tickets section). |
+| A ticket is open, not shipped, and has a Version | The Version is a plan, and an advisory one: finalize overwrites it when the work ships, and the bump is never derived from it. A plan at or below the highest finalized version can no longer happen: the ticket is listed in Fix, and the person sets a Version above it or clears it. |
 | A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
-> **In GitHub.** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values). Area is a set of labels. The other fields are board
+> **In GitHub.** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same seven values). Area is a set of labels. The other fields are board
 > fields: Progress is the board's *Status* field, Delivery is a single-select field, and Start
 > date and End date are date fields. The automation reads Type from the issue and writes the other fields
 > to the board.
@@ -1669,55 +1685,38 @@ to forget to close.
 
 #### 5.1 What makes them special
 
-Version and Alert tickets are created by the automation, not planned by people. They do not follow the
-work-ticket rules: they are exempt from the rule that every ticket gets a Size at creation, and only
-some fields apply to them (the *Ticket fields reference* appendix has the table).
+Alert tickets are created by the automation, not planned by people, and a legacy Version ticket was too
+(section 5.2). They do not follow the work-ticket rules: they are exempt from the rule that every ticket gets
+a Size at creation, and only some fields apply to them (the *Ticket fields reference* appendix has the table).
 
-#### 5.2 Version tickets
+#### 5.2 Legacy Version tickets
 
-A Version ticket is a bookkeeping record for one version, titled `Version X.Y.Z` (without the `V`), or
-`Version X.Y.Z-HFn` for a hotfix. The work tickets of the version point to it through their Version
-field, and the automation attaches them as sub-issues of the Version ticket, so the board shows how many
-of them are complete. A Version ticket does no work and is never verified.
+Earlier versions of the standard made a *Version ticket* for every finalized version: a bookkeeping record,
+titled `Version X.Y.Z`, with the version's tickets attached to it as sub-issues. They are no longer made. The
+changelog entry of a version, the *Version* field of its tickets (the *Versions* view groups by it) and, for a
+release, its tag are the record, and a ticket's one place as a sub-issue is free for an umbrella ticket
+(section 5.5).
 
-| Stage | What happens | Delivery | Issue |
-|---|---|---|---|
-| **Planned** (optional, not recommended) | A person creates it ahead of time for a future version. | blank | open |
-| **Finalized** | The automation creates it, or reuses the planned one with the same title, when the version is finalized. | Merged | closed by the automation |
-| **Released** | A release is cut on that version. The automation posts a comment with the date and the tag name. | Released | stays closed |
-| **Planned, then dropped** | The version never happened under that number. A person marks it. | Dropped | closed, with a comment saying what replaced it |
+- **Rule:** nothing creates, reuses, closes or attaches to a Version ticket. The finalize step and the release
+  and hotfix steps do not read one.
+- **Rule:** a Version ticket that is still on a board is a legacy ticket (type *Version*, which is not one of
+  the seven types of a new board). It is left alone: it has no Progress, the work-ticket rules and the Fix
+  rules do not apply to it, and the audit does not judge its title or its fields.
+- **Rule:** a legacy ticket may stay as history. If it is converted, the result is a Task titled
+  `Legacy Version 001.025.004`, with the Area `process`, Progress *Abandoned*, Resolution *Superseded*, Size
+  *XS*, Delivery and Version cleared (the old values in a comment), the dates it had, and its sub-issues
+  detached after checking that each one has the Version the ticket named.
+- **Recommendation:** convert them once the project has moved to the new files, so that the sub-issue of every
+  ticket is free and the board lists no ticket of a type that is no longer made.
 
-- **Rule:** the automation writes the description at finalize: the date (UTC), the bump and why (the
-  tickets whose Type gave a sub bump, the marker that forced it, or that it is the first version), the pull
-  request, and the tickets with their Type.
-  Build holds the last build of the version.
-- **Rule:** at every finalize, and on a manual run, the automation also attaches the tickets with Delivery
-  *Implemented* that are not yet sub-issues of any Version ticket, by their Version: a blank Version gets
-  the version being finalized (at a scheduled run, the latest finalized version), an already finalized version is kept and the ticket is attached to that
-  version's ticket, and a later version makes the ticket wait. Such a ticket keeps Delivery *Implemented*
-  and gets no Build. A comment on the Version ticket says which tickets were added, because its description
-  is written once.
-- **Rule:** a hotfix version goes straight from planned or created to *Released* when the hotfix is
-  finished, because a hotfix is never merged into `main`.
-- **Rule:** when a version is finalized, any planned Version ticket with a lower number can no longer
-  happen under that number. The automation raises one Alert listing them (section 5.3). Hotfix versions
-  do not run this check.
-- **Recommendation:** do not create Version tickets ahead of time. Aim tickets at a version with their
-  Version field instead (the guide on issues and the board in practice, section 6): the automation creates the
-  Version ticket when the version is finalized, so the Version tickets are in the order the versions shipped,
-  which the *Versions* view relies on. If you do plan one and the number turns out wrong, the alert above is
-  how the mismatch is cleaned up.
-
-*Why.* Delivery already describes a version's life (planned, merged, released, dropped), so a Version
-ticket needs no Progress. One ticket per version gives a single place to see what shipped in it and how
-much of it has been verified. Closing it at finalize keeps bookkeeping records from crowding the open
-tickets that need attention.
+*Why.* A ticket per version needed its own rules, its own fields and its own checks, and it took the only
+parent slot of every ticket it grouped. The Version field says the same thing and sorts and groups by itself.
 
 #### 5.3 Alert tickets
 
 An Alert is a real check that a person must do. The automation raises one when something needs a person
 to review it: a detected bypass, a merge that landed without changelog entries, a changelog it cannot read
-(so no version was finalized), or planned versions that can no longer happen. It is not the same as the Attention flag: an Alert is about a rule that was bypassed
+(so no version was finalized). It is not the same as the Attention flag: an Alert is about a rule that was bypassed
 and is a ticket of its own, while Attention is a flag on a work ticket whose own state needs a look.
 
 - **Rule:** an Alert has Priority *Critical*, Area `process` and Progress *ToDo* when it is created. Size
@@ -1726,8 +1725,7 @@ and is a ticket of its own, while Attention is a flag on a work ticket whose own
   when they believe it is handled, *Completed* when a human verifies it. Shipping a version never moves
   it. A person closes it.
 - **Rule:** an Alert for a bypass, for a merge without changelog entries or for a changelog that could not
-  be read is assigned to the person who pushed, because they know the context. An Alert for stale planned
-  versions is unassigned until someone takes it.
+  be read is assigned to the person who pushed, because they know the context.
 - For a bypass, the changelog also gets an entry that points at the Alert. What the person does with it
   is described in the guide on branching and merging, in the section on enforcement.
 
@@ -1738,27 +1736,6 @@ instead of a note someone has to remember.
 #### 5.4 Examples
 
 The automation generates these texts. The names, numbers and dates are invented for illustration.
-
-##### Version ticket: "Version 002.004.001"
-
-| Field | Value |
-|---|---|
-| **Title** | Version 002.004.001 |
-| **Type** | Version |
-| **Delivery** | Merged |
-| **Version** | V002.004.001 |
-| **Build** | 20261005143045 |
-| **Sub-issues** | #204 |
-| **Progress, Priority, Size, Risk, Area** | none |
-
-> Finalized 2026-10-05 16:41 UTC from pull request #186. Bump: mod, from the ticket Types (no Feature or
-> Enhancement). Last build: 20261005143045.
->
-> Tickets:
-> - #204 Report totals ignore the last day of the month (Bug)
-
-When a release is cut on this version, the automation sets Delivery to *Released* and adds a comment:
-"Released 2026-10-12 09:15 UTC. Tag: `released/V2.4.1`."
 
 ##### Alert ticket for a bypass: "Merge to main not identical to its branch (V2.4.1)"
 
@@ -1783,24 +1760,6 @@ When a release is cut on this version, the automation sets Delivery to *Released
 > **To do.** Confirm that the merged result was built and tested, and document anything that changed in
 > the changelog (in the entry that points at this ticket, or in a new block in the current version).
 
-##### Alert ticket for stale planned versions: "Stale planned Version tickets after V2.4.1"
-
-| Field | Value |
-|---|---|
-| **Title** | Stale planned Version tickets after V2.4.1 |
-| **Type** | Alert |
-| **Area** | process |
-| **Priority** | Critical |
-| **Progress** | ToDo |
-| **Size, Risk** | blank until triaged |
-| **Assignee** | none until someone takes it |
-
-> Version 002.004.001 was finalized. These planned Version tickets have a lower number and cannot happen under
-> it: #130 Version 002.004.000.
->
-> **To do.** For each one, set Delivery to *Dropped* and close it with a comment saying what replaced it,
-> or correct the number if it was a mistake.
-
 A third kind of Alert, for a merge that landed without changelog entries, reads like the bypass Alert: it
 says that file changes reached `main` with no changelog entries, that the automation created the version
 and the changelog entry itself, and asks the person who pushed to document what changed.
@@ -1810,6 +1769,28 @@ version finalized". It names the push and quotes the error (for example two open
 or text after the heading that is not a marker), and asks the person who pushed to correct `CHANGELOG.md`
 by hand and then run the finalize step again.
 
+
+
+#### 5.5 Umbrella tickets
+
+An *umbrella ticket* groups the tickets of one piece of work as its sub-issues, so that the work has one place
+where its progress is seen. It is an ordinary work ticket that happens to have children; nothing in the
+automation treats it specially.
+
+- **Rule:** an umbrella ticket follows the work-ticket rules: a Type, an Area, a Size, a Progress and, when it is
+  completed, a Delivery. It changes no file itself, so its Delivery is *Implemented* when the work is done, with
+  the Version of the last of its tickets to ship (a person sets both, section 4.3).
+- **Rule:** a ticket has one parent. A ticket that belongs to an umbrella has no other parent, and keeps its own
+  Progress, Delivery and Version: the umbrella neither changes them nor is changed by them.
+- **Recommendation:** complete an umbrella only when all its sub-issues are *Completed* or *Abandoned*. The board
+  shows how many are done; no rule checks it.
+- **Recommendation:** use one level. GitHub allows more, but a deeper tree is harder to read on the board, and
+  the hierarchy is turned off in the *All* view so that the list stays flat.
+- An umbrella ticket gives no bump: it has no changelog entry of its own, since it changes no file.
+
+*Why.* People group work in text ("Part of #N") when the tool offers no place for it, and the board cannot read
+text. Now that no ticket takes the parent slot for a version, the slot is free for the grouping people actually
+make.
 
 ---
 
@@ -2109,17 +2090,17 @@ it is a judgment (is the work done, is it verified, how urgent is it), a person 
 
 | Field | Developer | Project owner | Local automation | Remote automation |
 |---|---|---|---|---|
-| Type, Area, Origin, REF, Waiting, Size, Risk | sets | may change | | sets Type on Version and Alert tickets |
+| Type, Area, Origin, REF, Waiting, Size, Risk | sets | may change | | sets Type on Alert tickets |
 | Attention | sets *Fine* or *Acknowledged*, after deciding | sets *Fine* or *Acknowledged*, after deciding | | raises *Watch*, *Caution* and *AtRisk*, with a comment |
 | Priority | proposes | sets | | |
 | Progress up to *Review* | sets | may change | | advances *ToDo* and *OnDeck* to *InProgress* when code for the ticket is pushed |
-| *Completed* and *Done* | sets, after verifying | sets, after verifying | | |
+| *Completed* | sets, after verifying | sets, after verifying | | sets Resolution *Done* at its next refresh |
 | *Abandoned*, *Suspended* and the abandon reasons | proposes | decides | | |
 | Version (the target) | | sets | | overwrites it with the real version |
-| Delivery (except *Committed*, *Implemented* and *Dropped* on a planned Version ticket), Build, Start and End dates | | | | sets |
-| Delivery *Implemented*, with its Version | sets | may change | | attaches the ticket to its Version ticket |
+| Delivery (except *Committed* and *Implemented*), Build, Start and End dates | | | | sets |
+| Delivery *Implemented*, with its Version | sets | may change | | fills a blank Version and puts it in the board form |
 
-*Completed* and *Done* may be set by the developer or the project owner, whoever verified the result. The
+*Completed* may be set by the developer or the project owner, whoever verified the result. The
 developer may also set the optional *Committed* marker in Delivery.
 
 #### 10.3 Everything else
@@ -2128,14 +2109,13 @@ developer may also set the optional *Committed* marker in Delivery.
 |---|---|---|---|---|
 | Branches, pull requests, merges | does | | | |
 | Retiring a branch | does | | | carries it out |
-| Planned Version tickets, and *Dropped* on them | | does | | |
 | Cutting a release | decides | told | | carries it out |
 | Starting and finishing a hotfix | does | told | | carries out the finish |
 | Forcing the version bump (`+V`, `+s`, `+m`) | decides | | | |
 | Changelog entries | writes | | stamps the build time | renames the version, writes `AUTO-REF` entries, adds missing entries as a safety net |
 | Commit message | confirms | | drafts it | |
-| Version and Alert tickets | triages Alerts | | | creates them |
-| Closing a ticket | at *Completed* or *Abandoned* | at *Completed* or *Abandoned* | | closes Version tickets |
+| Alert tickets | triages Alerts | | | creates them |
+| Closing a ticket | at *Completed* or *Abandoned* | at *Completed* or *Abandoned* | | |
 
 #### 10.4 Administration
 
@@ -2753,8 +2733,7 @@ The steps:
    comments, the Alerts.
 4. **Close it down.** Close the ticket as *Abandoned* with Resolution *Invalid* and a comment saying what
    was proved. Close any pull request. Retire the branch as abandoned with the input **trial** ticked,
-   tagging it first (a short comment in the tag such as `dummy-test`). Mark any Version ticket the trial
-   made as *Dropped*, and delete any release tag it made.
+   tagging it first (a short comment in the tag such as `dummy-test`). Delete any release tag the trial made.
 
 - **Rule:** a trial uses throwaway tickets, branches and tags only, and never merges into `main`.
 - **Rule:** every release, hotfix-finish and retire run that is a trial is started with the input
@@ -3298,25 +3277,24 @@ After a merge to `main`, the automation:
 - for each ticket in the version: advances it to *InProgress* if it was somehow still *ToDo* or *OnDeck* (the
   push normally did that already), sets Delivery to *Merged*, and sets Version (in the board form) and Build. It never moves a ticket out of *Completed*:
   a ticket verified before the merge stays *Completed*;
-- creates the Version ticket, or reuses a planned one, with a generated description, the last build and
-  the tickets as sub-issues, and closes it;
-- attaches the tickets with Delivery *Implemented* that no Version ticket has yet (section 5.2, item 6);
-- raises an Alert if it detects a bypass or finds stale planned versions.
+- settles the tickets with Delivery *Implemented* (section 5.2, item 6): a blank Version gets this version, and
+  a finalized one is put in the board form;
+- raises an Alert if it detects a bypass.
 
 #### 5.2 What to check
 
 1. **Pull `main`** and see that the heading was renamed to the version you expected.
-2. **See that the Version ticket exists** and lists your tickets.
-3. **See that your tickets show Delivery *Merged*** and the right Version.
+2. **See that your tickets show Delivery *Merged*** and the right Version.
+3. **See the bump the run gave:** its log line says which Types or marker decided it.
 4. **If an Alert was raised for your merge,** triage it. It is assigned to you (see the guide on issues
    and the board, section 5.2).
 5. **If the board was not updated,** the version is still finalized. The board step is skipped when the
    project token is missing or the hosting service reports an error. Re-run the finalize step, which is safe to
    repeat and skips what is already done, or correct the fields by hand.
 6. **If you did work with no file change** (a setting, a secret, a check that was run), set its Delivery
-   to *Implemented* and its Version to the version it belongs to. The next finalize attaches it to that
-   version's ticket. To attach it at once, for example for a version that is already finalized, run the
-   workflow by hand with the dry run off.
+   to *Implemented* and its Version to the version it belongs to. A blank Version is filled with the version
+   being finalized by the next finalize or scheduled run, and a finalized one is put in the board form. To do
+   it at once, run the workflow by hand with the dry run off.
 
 #### 5.3 What next
 
@@ -3328,7 +3306,7 @@ After a merge to `main`, the automation:
 
 - **Recommendation:** check the result after the merge, as above.
 - **Rule:** a version number is never changed after it is finalized. If the bump was not what you
-  intended, note it in a comment on the Version ticket and fix the ticket's Type. The next version
+  intended, note it in a comment on the tickets and fix the ticket's Type. The next version
   proceeds normally.
 - **Rule:** if you continue on the branch, sync `main` into it first, which brings in the automation's
   commit, and only then open a new `WIP-Version` heading.
@@ -3435,8 +3413,8 @@ description.
 
 **After the merge** (sections 5 and 7)
 
-- [ ] I pulled `main`: the heading is renamed to the expected version, the Version ticket lists my
-      tickets, and they show Delivery *Merged* and the right Version.
+- [ ] I pulled `main`: the heading is renamed to the expected version, and my
+      tickets show Delivery *Merged* and the right Version.
 - [ ] Any Alert raised for my merge is triaged.
 - [ ] I decided whether to continue the branch (syncing `main` first, then a new `WIP-Version`) or retire
       it.
@@ -3527,22 +3505,25 @@ and 2), *Follow up* (items 3 and 4) and *Fix* (item 5).
 
 #### 2.2 Saved views
 
-The board has seven saved views, in this order:
+The board has eight saved views, in this order:
 
 - **All:** every item on the board, test tickets and pull requests included, with all its fields and in
   ticket-number order, with no gap in the numbers, for finding anything and for audit.
 - **Backlog:** a board of the tickets at *ToDo*, *OnDeck* and *Suspended*, the most urgent first.
 - **Board:** the active work, with the columns *OnDeck*, *InProgress* and *Review* and a row for each Version,
   so you see what each version holds and where each ticket is.
+- **Plan:** the open tickets that are aimed at a version and have not shipped, grouped by that version, with
+  their Status, Priority, Size and Risk: what is intended, in version order (section 6). A plan is advisory, and
+  one at or below the highest finalized version is listed in *Fix*.
 - **Decide:** what the automation noticed and a person must judge: tickets with an open Attention flag
   (*Watch*, *Caution* or *AtRisk*) and open Alerts. Start a work session here.
 - **Follow up:** the ordinary queues: tickets marked *Needs input*, and tickets at *Review* awaiting
   verification.
 - **Fix:** tickets whose fields contradict each other. The refresh lists the broken rules in each ticket's
   Fix field and this view shows every ticket that has any (section 2.5).
-- **Versions:** the work tickets grouped by their Version ticket (the group reads "Version 000.007.000"), with Delivery,
-  Build and Resolution, to see what each version holds and whether it shipped. Tickets only aimed at a version,
-  which have no Version ticket yet, are in a group of their own, ordered by version.
+- **Versions:** every ticket with a Version, grouped by it (the group reads "V000.007.000") and ordered by version,
+  with Delivery, Build and Resolution, to see what each version holds and whether it shipped. The tickets that
+  have not shipped yet are the plan for a later version.
 
 Every view except All leaves out pull requests and test tickets by ending its filter with `is:issue AND -label:dummy`
 (see *Ticket fields reference*; the automation puts each pull request on the board so that All has no gaps).
@@ -3638,6 +3619,7 @@ there.
 | `backfilled-without-ref` | Backfilled without a REF | Fix | nobody: it goes when the fields agree again |
 | `completed-without-delivery` | Completed without a Delivery | Fix | nobody: it goes when the fields agree again |
 | `shipped-without-version` | Shipped without a Version | Fix | nobody: it goes when the fields agree again |
+| `stale-plan` | Stale plan | Fix | nobody: it goes when the fields agree again |
 | `issue-open` | Issue still open | Fix | nobody: it goes when the fields agree again |
 | `issue-closed` | Issue closed too soon | Fix | nobody: it goes when the fields agree again |
 
@@ -3667,8 +3649,9 @@ The steps:
    Name the build you verified (the build, and the compile stamp where there is one). Check that the
    changelog entries match what was done, and, where test results were recorded, that they name the build.
 3. **Decide the outcome.**
-   - **It passes:** set Resolution to *Done* and Progress to *Completed* together, and close the issue.
-     Add a comment saying what was verified and on which build.
+   - **It passes:** set Progress to *Completed* and close the issue (the board's own workflow may do it). The
+     automation sets Resolution to *Done* at its next refresh. Add a comment saying what was verified and on
+     which build.
    - **Its own work is wrong or incomplete:** send it back to *InProgress* with a comment saying what
      failed (see the guide on project structure, section 3.4). Its Delivery stays *Merged*, because the
      code is on `main`; it changes when new work is pushed.
@@ -3680,7 +3663,8 @@ The steps:
 
 - **Rule:** *Completed* is set only by a human who verified the result (see the guide on project
   structure, section 10).
-- **Rule:** set Resolution *Done* together with *Completed*, and close the issue then.
+- **Rule:** set *Completed* and close the issue; Resolution *Done* follows from it and is set by the automation,
+  so it is never set by hand.
 - **Recommendation:** have someone other than the author verify, when that is possible. The author
   verifying their own work is acceptable.
 - **Recommendation:** write a verification comment naming the build, at least when a real review took
@@ -3726,7 +3710,8 @@ Use it when the work is not going ahead.
 A *Completed* or *Abandoned* ticket needs more work.
 
 1. **Set Progress back** to *InProgress*, or to *ToDo* or *OnDeck* if it is not started.
-2. **Clear Resolution,** and reopen the issue. The automation clears the End date at its next sweep. If
+2. **Reopen the issue.** The automation clears Resolution *Done* and the End date at its next refresh. For an
+   Abandoned ticket, clear the reason yourself. If
    the automation raised an Attention flag for the new work, set it to *Acknowledged* and say the ticket
    was reopened (section 2.4).
 3. **Add a comment** saying why.
@@ -3734,8 +3719,8 @@ A *Completed* or *Abandoned* ticket needs more work.
 #### 4.4 Rules
 
 - **Rule:** suspending needs a comment, and abandoning needs a Resolution and a comment.
-- **Rule:** reopening clears Resolution, which you do, and the End date, which the automation does (see the
-  guide on project structure, section 4.4).
+- **Rule:** reopening clears Resolution and the End date: the automation does it for *Done* and for the End
+  date, and you clear the reason of an Abandoned ticket (see the guide on project structure, section 4.4).
 - **Recommendation:** reopen a ticket only if its own scope is still unmet. For new work related to it,
   create a new ticket and link the two.
 
@@ -3756,8 +3741,6 @@ covers who takes it and what to do with it.
 
 - **A bypass, a merge that landed without changelog entries, or a changelog that could not be read:** the
   Alert is assigned to the person who pushed, who triages it.
-- **Stale planned versions:** the Alert starts unassigned. Planned Version tickets belong to the project
-  owner role (see the guide on project structure, section 10), so someone holding that role takes it.
 
 #### 5.2 Triage
 
@@ -3769,16 +3752,13 @@ covers who takes it and what to do with it.
 - **A changelog that could not be read:** no version was finalized. Correct `CHANGELOG.md` by hand (one
   open `WIP-Version` heading, with at most one marker and no other text), run the finalize step again,
   comment on the Alert with what was wrong, and move it to *Review*.
-- **Stale planned versions:** for each Version ticket the Alert lists, either set its Delivery to
-  *Dropped* and close it with a comment saying what replaced it, or correct the number if it was a
-  mistake. Then move the Alert to *Review*.
 - **An Alert raised in error** (a false positive): abandon it with Resolution *Invalid* and a comment
   saying why.
 
 #### 5.3 Moves
 
 An Alert is *Critical* and starts at *ToDo*. Every move is manual: *InProgress* when someone starts,
-*Review* when they believe it is handled, *Completed* with Resolution *Done* when a human has verified it.
+*Review* when they believe it is handled, *Completed* when a human has verified it (Resolution *Done* follows).
 Shipping a version never moves it. The person who takes it sets its Size and Risk when triaging.
 
 *Done* means that something was done beyond analyzing the Alert, for example documenting the change. An
@@ -3812,7 +3792,7 @@ coming back.
 - A ticket with no target version is fine. It gets its version when it ships.
 - A ticket with no file change has nothing for the automation to find in the changelog. When its work is in
   effect, the person sets its Delivery to *Implemented* and its Version to the version it belongs to. The
-  automation attaches it to that version's ticket and does not change the field. Leave the Version blank until the
+  automation keeps that Version (in the board form). Leave the Version blank until the
   version is finalized, unless the version already exists: a blank Version gets the version being finalized (or,
   at a scheduled run between two merges, the latest finalized version, which is the version the work was done
   under), and a number you only expect may never exist (the bump is decided at merge). Pure analysis counts
@@ -3820,37 +3800,29 @@ coming back.
   aimed at a version that was passed (not finalized while a higher version is), the automation raises
   *Caution* on it: set its Version to the version it belongs to, or clear it.
 
-#### 6.2 Planned Version tickets
+#### 6.2 Aiming tickets at a version
 
-- **Aim tickets with their Version field and nothing else.** The automation creates the Version ticket
-  itself when the version is finalized, so the Version tickets exist in the order the versions shipped.
-  Aimed tickets show on the *Board* view (a row for each Version), in the *Backlog*, and in the *Versions*
-  view's group of tickets with no Version ticket yet, ordered by version.
-- **Creating a Version ticket ahead of time is allowed but not recommended.** It would be titled exactly
-  `Version 002.005.000` (the automation also finds `Version 2.5.0` and renames it when the version ships),
-  with Type *Version*, Delivery blank and the issue open, as a place to record what you plan. The *Versions*
-  view orders its groups by the text of the titles, which is the order of the versions, so a ticket made early
-  does not jump the queue. A planned number is a guess (the bump is decided at merge), so a planned ticket
-  tends to go stale.
-- Before the version is finalized a planned ticket is only a plan. Tickets are not attached to it as
-  sub-issues ahead of time; the target Version field on each ticket says which version it is aimed at, and
-  the automation attaches the tickets when it finalizes the version.
-- When a version ships under that number, the automation reuses a planned ticket (it matches by the exact
-  title). Otherwise it creates one.
-- **If the planned version will not happen** under that number, mark it *Dropped*, close it, and comment
-  what replaced it. Move its tickets' target Version to the new one.
-- The automation's stale-versions Alert tells you when a planned number has been passed (section 5).
+- **Aim a ticket with its Version field and nothing else.** There is no ticket for a version, planned or
+  otherwise. A ticket with a Version that has not shipped is a plan; the *Plan* view lists the plans grouped by
+  version, the *Board* view has a row for each version, and the *Backlog* shows the Version on each card.
+- **A plan is advisory.** The version a merge gets is decided at the merge, from the tickets' Types and any
+  marker, never from a plan. When the work ships, the automation overwrites the field with the version that
+  really shipped, so a ticket aimed at one version that ships in another corrects itself.
+- **A plan that is passed is listed in *Fix*** (the rule `stale-plan`): its Version is at or below the highest
+  finalized version, so that number can no longer happen. Set a Version above it, or clear the Version if the
+  work is not planned for one. The rule makes no comment; the Fix view is where to look.
+- **Work that ships is not a plan.** A ticket that is *Merged*, *Implemented* or *Released* keeps the version it
+  shipped in. When new work is pushed on it, the automation returns it to *Pushed* and clears the Version,
+  because that number belongs to the work that shipped.
+- **To see what a version holds,** open the *Versions* view, or read the changelog entry of the version; a
+  version that was released also has its tag `released/V…`.
 
 #### 6.3 Rules
 
-- **Rule:** target versions and planned Version tickets are set by someone holding the project owner role.
-- **Recommendation:** aim tickets with the Version field, and do not create Version tickets ahead of time
-  (section 6.2).
-- **Rule:** a planned Version ticket, if you create one, is titled exactly `Version X.Y.Z`, so that the
-  automation can reuse it.
-- **Rule:** tickets are not attached to a Version ticket as sub-issues before it is finalized.
-- **Rule:** a planned version that will not happen is marked *Dropped* and closed with a comment saying
-  what replaced it.
+- **Rule:** target versions are set by someone holding the project owner role.
+- **Recommendation:** aim tickets with the Version field. No ticket stands for a version.
+- **Rule:** a plan that is passed (listed in *Fix* as `stale-plan`) is put right, by a Version above the highest
+  finalized version or by clearing it.
 - **Recommendation:** plan ahead where you can. It is the ideal and not a requirement, so a ticket without a
   target version, or a version that was never planned, is normal.
 - **Recommendation:** name a version number only when you are confident of it, and otherwise aim at "the
@@ -3858,10 +3830,9 @@ coming back.
 
 **Why.** Planning ahead gives the team a shared picture of what is coming. But the number is a guess: the
 bump is decided at merge from the tickets' Types and any marker, so a version planned as 2.5.0 may ship as
-2.4.2 or 3.0.0, and every planned number is something to clean up if it turns out wrong. Keeping the
-tickets unattached until finalize means a plan never has to be undone, and the Version field on each ticket
-already carries the aim. The Version tickets are left to the automation, because the *Versions* view lists them
-in creation order, which is then the order the versions shipped.
+2.4.2 or 3.0.0. Keeping the plan in the Version field of each ticket means a plan never has to be undone and
+no separate record of it can go stale: finalize overwrites the field with the truth, and a plan that was passed
+shows up in *Fix* instead of waiting unnoticed.
 
 
 ---
@@ -3884,7 +3855,8 @@ was closed without a decision.
    *Fix* view lists the tickets that break them, and each ticket's Fix field names the rules (section 2.5).
    There should be none: correct each.
 5. **Labels:** the Area list and `dummy` are fixed. Remove strays and duplicates.
-6. **Planned Version tickets:** closed if dropped, and none left behind for versions already passed.
+6. **Plans:** the *Fix* view lists the plans that were passed (a Version at or below the highest finalized
+   version); set a Version above it or clear it.
 7. **Branches:** merged branches not yet retired (a week or two up to about a month), and parked branches
    about a month old (suspend or abandon them).
 8. **Placeholders:** search the changelog for `REF` entries that have not been backfilled, and backfill
@@ -3935,8 +3907,8 @@ A one-page summary of the guide. It adds no new rules.
 **Verify a ticket** (section 3)
 
 - [ ] I verified on a named build, before or after the merge.
-- [ ] It passes: Resolution *Done* and Progress *Completed* set together, the issue closed, and a comment
-      naming the build.
+- [ ] It passes: Progress *Completed* set, the issue closed, and a comment naming the build (Resolution *Done*
+      follows from the automation).
 - [ ] Before I set *Completed*, the Delivery is set (*Merged* if files changed, *Implemented* if none did, even for
       pure analysis).
 - [ ] It fails: back to *InProgress* with a comment, or a new *Bug* linked as "introduced by #123".
@@ -3946,14 +3918,13 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] Suspend: a comment, Progress *Suspended*, and the branch suspended too if there is one.
 - [ ] Abandon: a Resolution and a comment, Progress *Abandoned*, the issue closed, Waiting cleared, and
       the branch abandoned too if there is one.
-- [ ] Reopen: Progress set back, Resolution cleared, the issue reopened, and a comment.
+- [ ] Reopen: Progress set back, the issue reopened, and a comment (the reason of an Abandoned ticket cleared by you; *Done* by the automation).
 
 **Alerts and planning** (sections 5 and 6)
 
 - [ ] An Alert assigned to me is triaged before other work. A false positive is abandoned with *Invalid*.
-- [ ] Tickets are aimed with their Version field. If I did create a planned Version ticket, it is titled
-      exactly `Version X.Y.Z`, has no tickets attached before it is finalized, and is marked *Dropped* and
-      closed if it will not happen.
+- [ ] Tickets are aimed with their Version field. A plan that was passed is listed in *Fix*, and I set a
+      Version above it or cleared it.
 
 **Housekeeping** (section 7)
 
@@ -3968,7 +3939,7 @@ A one-page summary of the guide. It adds no new rules.
 This guide covers the steps that end or branch off the normal flow: declaring a version a release, fixing a
 version that has already been released, and retiring a branch. It is a procedure: each step says what to do
 and why, and the commands are in the "In GitHub" blocks. The rules and their reasons are in the guide on
-branching and merging; the pieces it refers to (tickets, tags, the Version ticket) are defined in the guide
+branching and merging; the pieces it refers to (tickets, tags, versions) are defined in the guide
 on project structure.
 
 **How to read it.** Each step states what to do and why. Statements are marked:
@@ -3997,9 +3968,9 @@ The steps:
 2. **Verify it** (section 1.1).
 3. **Run the release step** with that version. By default it is the latest on `main`.
 4. **Check the result.** The tag `released/V<major>.<sub>.<mod>` exists on the commit where that version was
-   finalized. The Version ticket shows Delivery *Released* and a comment with the date and the tag. Every
-   ticket merged or implemented up to that version shows *Released*, unless newer work on it has been
-   pushed since.
+   finalized. Every ticket merged or implemented up to that version shows *Released*, unless newer work on it
+   has been pushed since. No ticket stands for the version: the tag, the changelog entry and the Version
+   field of its tickets are the record.
 5. **Tell the project owner** that the release was made.
 
 #### 1.1 Rules
@@ -4021,8 +3992,7 @@ The steps:
 - **A mistaken release tag may be deleted and redone.** A release tag is only an indicator that makes a
   version easy to find. Every change that lands on `main` produces its own version, so a version is the
   version whatever any tag says, and a tag on the wrong commit, or on a version that was not meant to be a
-  release, harms nothing once it is removed. After deleting it, put the Version ticket and its tickets
-  back to *Merged*.
+  release, harms nothing once it is removed. After deleting it, put its tickets back to *Merged*.
 - **A release that was declared correctly and later found defective keeps its tag.** The tag records what was
   released, so it is not deleted. The defect is fixed by a hotfix of that release (section 2) or, when `main`
   has moved on and the fix belongs there, by a newer version released from `main`.
@@ -4071,11 +4041,11 @@ own, before the fix.
 
 6. **Verify the hotfix** the same way as any release (section 1.1).
 7. **Run the hotfix-finalize step** with the explicit version, for example `V1.25.0-HF1`. It renames the
-   heading to that version, tags `released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets'
+   heading to that version, tags `released/V1.25.0-HF1`, and sets the tickets'
    Delivery straight to *Released*, because a hotfix is never merged and so skips *Merged*. For a trial,
    tick **trial**: the tag is `test/released/V1.25.0-HF1` and the hotfix must start from
    `test/released/V1.25.0`.
-8. **Check the result:** the heading, the tag, the Version ticket and the tickets.
+8. **Check the result:** the heading, the tag and the tickets.
 9. **Tell the project owner** that the hotfix has been released.
 
 #### 2.3 Forward-port and retire
@@ -4131,25 +4101,34 @@ The steps:
    - **Archived:** the work is done and merged.
    - **Suspended:** the work is set aside and expected to return.
    - **Abandoned:** the work is discarded.
+   - **Renamed:** not a fate but a new name (guide on branching and merging, section 1.5): the branch is
+     only moving to a kebab-case name. Make the new branch at the same commit, push it, and move any pull
+     request to it first.
 2. **Check the branch.**
    - For *archived*, confirm that all its commits are reachable from `main`. If they are not, it is not
      archived: suspend it or abandon it.
    - For *suspended* or *abandoned*, close any open pull request with a comment saying why.
+   - For *renamed*, the new branch is on the remote and contains the old branch's last commit, and no pull
+     request is left on the old name.
 3. **Update the tickets.**
    - *Archived:* nothing to change.
    - *Suspended:* move the tickets to *Suspended* with a comment. The developer proposes, and the project
      owner decides.
    - *Abandoned:* move the tickets to *Abandoned* with a Resolution and a comment. The automation also sets
      their Delivery to *Dropped*.
+   - *Renamed:* nothing to change; the work goes on under the new name.
 4. **Run the retire step** with the branch name and the outcome, and confirm by typing the branch name
-   again. It tags the branch's last commit and then deletes the branch.
+   again (for *renamed*, with the new name as the comment). It tags the branch's last commit and then deletes
+   the branch; for *renamed* it deletes the old name and makes no tag.
 5. **Check the result.** The tag exists, the branch is gone, and the tickets show what you expect. Delete
    your local copy of the branch.
 
 #### 3.1 Rules
 
-- **Rule:** tag first, delete second. The one exception is a finished hotfix branch, whose release tag is
-  already its record (section 2).
+- **Rule:** tag first, delete second. The exceptions are a finished hotfix branch, whose release tag is
+  already its record (section 2), and a renamed branch, whose new name keeps its history.
+- **Rule:** the branch part of the tag is the branch's name in kebab-case, so an old name such as
+  `boot_process` is tagged `boot-process`; the branch itself is deleted by its own name.
 - **Rule:** the tag is named `<outcome>/<yyyy-mm-dd>_<branch>[_<comment>]`, using the UTC date of the
   branch's last commit.
 - **Rule:** if a tag with that name already exists, add a short comment to make it unique. The retire step
@@ -4184,10 +4163,8 @@ A one-page summary of the guide. It adds no new rules.
       strong recommendation).
 - [ ] Its tickets are completed (a recommendation).
 - [ ] The release step is run with that version (with **trial** ticked only for a test), and the project owner is told.
-- [ ] The tag is on the commit where the version was finalized, the Version ticket shows *Released* with
-      its comment, and the tickets show *Released*.
-- [ ] If the release was a mistake: the tag is deleted, and the Version ticket and its tickets are back to
-      *Merged*.
+- [ ] The tag is on the commit where the version was finalized, and the tickets show *Released*.
+- [ ] If the release was a mistake: the tag is deleted, and its tickets are back to *Merged*.
 
 **Hotfix** (section 2)
 
@@ -4200,16 +4177,16 @@ A one-page summary of the guide. It adds no new rules.
 - [ ] I worked as usual, and the project owner is told it started.
 - [ ] The hotfix is verified, and the hotfix-finalize step was run with the explicit version (for example
       `V1.25.0-HF1`).
-- [ ] I checked the heading, the tag, the Version ticket and the tickets, and the project owner is told it
+- [ ] I checked the heading, the tag and the tickets, and the project owner is told it
       is released.
 - [ ] The fix is forward-ported to `main` as its own ticket and pull request, linked to the hotfix ticket.
 - [ ] The hotfix branch is deleted; its release tag keeps its history.
 
 **Retire a branch** (section 3)
 
-- [ ] The outcome is chosen: archived, suspended or abandoned.
+- [ ] The outcome is chosen: archived, suspended, abandoned or renamed.
 - [ ] For *archived*, all commits are reachable from `main`. For *suspended* or *abandoned*, any open pull
-      request is closed with a comment.
+      request is closed with a comment. For *renamed*, the new branch holds the old work and has the pull request.
 - [ ] The tickets are updated: *Suspended*, or *Abandoned* with a Resolution, and a comment.
 - [ ] The retire step is run (tag first, then delete) and confirmed; for a trial, with **trial** ticked.
 - [ ] The tag exists, the branch is gone, and my local copy is deleted.
@@ -4362,7 +4339,7 @@ bypass is a decision the person has to own, because the Alert it creates is in t
 | Field or action | The assistant |
 |---|---|
 | Progress up to *Review* | may set it, for the person it acts for. Sets *Review* when the work is done. |
-| *Completed*, Resolution *Done*, closing a ticket | never. A person verifies (section 1). It may add a comment with its findings, when asked. |
+| *Completed*, closing a ticket | never. A person verifies (section 1); Resolution *Done* follows from *Completed* and the automation sets it. It may add a comment with its findings, when asked. |
 | Delivery, Build, the form of Version, the dates | never by hand. The automation sets them. The one exception is Delivery *Implemented*, with the Version it belongs to, on a ticket with no file change: it may set that for the person it acts for, when the work is in effect. |
 | Size on a ticket it creates | always sets one. |
 | Size on someone else's ticket | says so if it looks wrong, and does not change it. |
@@ -4763,7 +4740,7 @@ The preflight turns a vague failure later ("the board did not update") into a cl
 #### 4.1 What it is and why it is needed
 
 The automation writes to the board: it sets Delivery, Version, Build, the dates and the Attention flags,
-advances a ticket from *ToDo* or *OnDeck* to *InProgress*, and it creates and closes Version tickets. The credential a workflow gets by default cannot write to a project board (an organization's or a person's),
+advances a ticket from *ToDo* or *OnDeck* to *InProgress*. The credential a workflow gets by default cannot write to a project board (an organization's or a person's),
 so the project keeps its own token, stored as a secret. The same token lets the preflight store the board's
 number in a repository variable. Without it the automation still versions, and the board steps are
 skipped, with a clear message; the run then ends red once its other steps are done, so that GitHub sends
@@ -4803,12 +4780,13 @@ the preflight's warning means the board does not stop updating without notice.
 
 #### 5.1 Issue types
 
-- **Rule:** the eight issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
-  *Refactor*, *Task*, *Version* and *Alert*. Each carries its short definition from the *Ticket fields
-  reference* as its description.
+- **Rule:** the seven issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
+  *Refactor*, *Task* and *Alert*. Each carries its short definition from the *Ticket fields
+  reference* as its description. A board made by an earlier version of the standard has an eighth, *Version*:
+  a legacy type that is tolerated and no longer made.
 - **Rule:** the Type has one source, chosen by who owns the repository. A project owned by an organization
-  keeps it in the eight issue types, which need an organization. A project owned by a personal account has
-  no issue types and keeps it in the board field *Kind* (section 6.1), with the same eight values and the
+  keeps it in the seven issue types, which need an organization. A project owned by a personal account has
+  no issue types and keeps it in the board field *Kind* (section 6.1), with the same seven values and the
   same definitions. Everything else in the standard is the same in both.
 - **Rule:** the repository variable `TYPE_SOURCE` names the source, `issue-type` or `field`. When it is not
   set, the source is `issue-type` for an organization and `field` for a personal account.
@@ -4873,7 +4851,7 @@ fields reference*.
 | Build | text | |
 | Start date, End date | date | |
 | Fix | text | |
-| Kind | single select | Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert (only when the Type source is the field) |
+| Kind | single select | Feature, Enhancement, Change, Bug, Refactor, Task, Alert (only when the Type source is the field) |
 
 Area is labels, and Type is the issue type, so neither is a board field; when the Type source is the field, Type is the board field *Kind*. Every field above is a kind that a
 script can create, and `.github/scripts/fields.py` does: it creates each field the board lacks, with its values
@@ -4882,14 +4860,29 @@ It never changes a field that exists: one of the wrong type, or lacking a value,
 administrator to correct by hand, and the values of the built-in Status field are set by hand. Run it before
 the automation is switched on, because the preflight requires every field in the table (Kind only when the Type source is the field).
 
-**Saved views:** All, Backlog, Board, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
+**Saved views:** All, Backlog, Board, Plan, Decide, Follow up, Fix and Versions (see the guide on issues and the board in practice,
 section 2). They are defined in `.github/views.json` and created with `.github/scripts/views.py`, which is a dry
 run until it is given `--apply` and needs the project token; run it once the fields exist.
 
 **Two settings of the *All* view are made by hand, once, when the views are created,** because the API cannot
 reach them: sort it by *Created, ascending* (ticket-number order), and turn off *Show hierarchy*, so that tickets
-are not listed inside their Version ticket and the list is flat. The script prints a reminder of them at the end of
+are not listed inside their parent ticket and the list is flat. The script prints a reminder of them at the end of
 every run, and a view that is created again loses them, so make them again.
+
+The board's own workflows (the *Workflows* page of the project settings) are not part of the standard, and the
+preflight cannot read them. Three matter:
+
+- *Item added to project* stays **off**. It sets a Status on every item that is added, and the standard says that
+  a pull request and some tickets (an Alert, an item added by the automation) do not have one, so the board rules
+  would fail on the first merge.
+- *Auto-close issue* (the issue is closed when the Status becomes *Completed*) may be on. It agrees with the rule
+  that the issue is closed at *Completed*; *Abandoned* has no such workflow, so the person closes the issue then,
+  and the `issue-open` rule in the Fix view reminds them.
+- *Auto-add sub-issues to project* may be on. It puts the sub-issues of an umbrella ticket (guide on project
+  structure, section 5.5) on the board.
+
+Any other built-in workflow is left off unless the project owner decides it, because it would write a field the
+automation also writes.
 
 #### 6.2 Rules
 
@@ -4962,15 +4955,18 @@ clean up. So the setup is proved in two levels, neither of which leaves anything
    about any repository setting it can read that differs from section 3.
 2. **Run the automation's tests.**
 3. **Run the finalize step in dry-run mode.** It prints every write it would make, such as the heading
-   rename, the ticket updates and the Version ticket, without making any.
+   rename and the ticket updates, without making any. Started by hand from the branch that
+   holds a change (the Actions tab, mode *finalize*, the dry run left on), it reads that branch's scripts and
+   changelog and previews that branch's merge, which is how a change to the automation or to the changelog is
+   proved before it is merged.
 4. **Test the hooks with a throwaway commit** on a local branch that is never pushed. Check that the build
    is stamped, that the message is drafted, and that the warnings appear. Then delete the branch.
 
 #### 8.2 Level 2: the first real merge
 
 The first real change (the initial structure, by pull request) is the live proof. After it merges, check it
-as in the guide on syncing and merging (section 5.2): the heading is renamed to `V0.1.0`, the Version ticket
-exists and lists the tickets, and the tickets show Delivery *Merged*.
+as in the guide on syncing and merging (section 5.2): the heading is renamed to `V0.1.0`, and the tickets
+show Delivery *Merged* and the Version `V000.001.000`.
 
 #### 8.3 Rules
 
@@ -5026,7 +5022,7 @@ A one-page summary of the guide. It adds no new rules.
 
 **Issue types and labels** (section 5)
 
-- [ ] The eight issue types exist with their descriptions (or, for a personal account, the board field Kind has the eight values and `TYPE_SOURCE` is `field`).
+- [ ] The seven issue types exist with their descriptions (or, for a personal account, the board field Kind has the seven values and `TYPE_SOURCE` is `field`).
 - [ ] The 14 Area labels and `dummy` exist with their descriptions, and the default labels not on the list
       are deleted.
 
@@ -5034,7 +5030,7 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] The fields and values are exactly the standard's (`fields.py` creates a missing one), Build is text,
       and the built-in Status values are replaced.
-- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Decide, Follow up, Fix, Versions) and `views.py`
+- [ ] The saved views of `.github/views.json` exist (All, Backlog, Board, Plan, Decide, Follow up, Fix, Versions) and `views.py`
       reports them up to date.
 - [ ] On the All view, the sort is *Created, ascending* and *Show hierarchy* is off (both by hand).
 
@@ -5048,8 +5044,8 @@ A one-page summary of the guide. It adds no new rules.
 
 - [ ] The preflight reports no problems, the tests pass, the dry-run finalize looks right, and a throwaway
       commit shows the hooks working.
-- [ ] After the first merge: the heading is `V0.1.0`, the Version ticket lists the tickets, and the tickets
-      show Delivery *Merged*.
+- [ ] After the first merge: the heading is `V0.1.0`, and the tickets show Delivery *Merged* and the
+      Version `V000.001.000`.
 
 **In one line:** structure, automation, settings, token, labels, board, roles, proof.
 
@@ -5204,7 +5200,7 @@ Administrator. These settings do not change the code, and most can be undone, so
    redirected by the host, but clones should update their remote), or keep it and let the Type live in the
    board field Kind (guide on new-project bootstrap, section 5.1); the audit then judges the field and not the
    issue types.
-2. **Issue types and labels.** Create the eight issue types (not for a project that keeps the Type in the
+2. **Issue types and labels.** Create the seven issue types (not for a project that keeps the Type in the
    field Kind) and the 14 Area labels and `dummy`
    (guide on new-project bootstrap, section 5). Before deleting a label that is not on the list, move its
    issues to the Area label that replaces it, because deleting a label removes it from every issue that has
@@ -5280,8 +5276,10 @@ announced.
    - one that is merged: retire it as *archived*;
    - one nobody will resume: retire it as *abandoned*;
    - one that is set aside: retire it as *suspended*;
-   - one that is still active: rename it to kebab-case (create the new name, push it, move any pull request,
-     then retire the old name).
+   - one that is still active: rename it to kebab-case (create the new name at the same commit, push it, move any
+     pull request, then retire the old name with the outcome *renamed*, giving the new name as the comment: it
+     makes no tag, because the new branch keeps the history). Tell the team to follow with `git fetch --prune`,
+     `git branch -m <old> <new>` and `git branch -u origin/<new>`.
 
    Retiring means tag first and delete second (guide on releases, hotfixes and retiring branches, section 3).
 2. **Tags.** Give each existing tag a name in the standard form. A tag that marks a real release becomes
@@ -5341,12 +5339,13 @@ documented work visible.
 Developer and administrator.
 
 1. **Run level 1 of the proof** (guide on new-project bootstrap, section 8.1): the preflight, the tests, the
-   finalize step in dry-run mode, and a throwaway commit to see the hooks.
+   finalize step in dry-run mode (started from the adoption branch, it previews that branch's merge), and a
+   throwaway commit to see the hooks.
 2. **Open the pull request** for the adoption branch and land it as any pull request is landed (guide on
    syncing and merging, sections 2 to 5). Its merge is the **cut-over**, and the version it produces continues
    from the baseline of stage 2.
 3. **Check the result** as for a first merge (guide on syncing and merging, section 5.2): the heading is
-   renamed, the Version ticket lists the tickets, and the tickets show Delivery *Merged*.
+   renamed, and the tickets show Delivery *Merged* and their Version.
 4. **Turn on protection** of `main` where the plan offers it, with the administrator bypass left open.
 5. **Re-audit.** Run the audit tools again. Every failed rule is fixed, or recorded as accepted or not
    applicable, and nothing the project still does wrong is among them.
@@ -5493,12 +5492,12 @@ explains it. It adds no new rules.
 
 ### After
 
-13. **Pull `main` and check:** the heading is renamed to the expected version, the Version ticket lists your
-    tickets, and they show Delivery *Merged* (*Syncing and merging*, section 5).
+13. **Pull `main` and check:** the heading is renamed to the expected version, and your
+    tickets show Delivery *Merged* and the right Version (*Syncing and merging*, section 5).
 14. **Triage any Alert** assigned to you (*Issues and the board in practice*, section 5.2), and decide any
     Attention flag on your tickets (*Issues and the board in practice*, section 2.4).
-15. **Verify** (a person), before or after the merge: set Resolution *Done* and Progress *Completed*
-    together, and close the issue
+15. **Verify** (a person), before or after the merge: set Progress *Completed* and close the issue (Resolution
+    *Done* follows from the automation)
     (*Issues and the board in practice*, section 3).
 16. **Continue the branch or retire it** (*Syncing and merging*, section 7; *Releases, hotfixes and retiring
     branches*, section 3).
@@ -5545,7 +5544,7 @@ branching and merging.
 | I want to force a different version bump | Add `+V`, `+s` or `+m` after `WIP-Version` (never on a hotfix). | Branching, section 3.3 |
 | the advisory check is red | Sync again before merging. | Syncing and merging, section 4 |
 | I need to bypass a rule | Do it deliberately, say why, expect the Alert, then pull `main` and build and test it. | Syncing and merging, section 6 |
-| the version came out wrong | Note it on the Version ticket and fix the ticket's Type. The number is never changed. | Syncing and merging, section 5.4 |
+| the version came out wrong | Note it on the tickets and fix the ticket's Type. The number is never changed. | Syncing and merging, section 5.4 |
 | the board was not updated after the merge | Re-run the finalize step or correct the fields by hand. | Syncing and merging, section 5.2 |
 
 ### Tickets
@@ -5560,7 +5559,7 @@ branching and merging.
 | an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5.2 |
 | the automation flagged my ticket (*Watch*, *Caution* or *AtRisk*) | Read its comment, decide, act, and tick *Fine*, or *Handled elsewhere* if it is handled elsewhere. | Issues and the board in practice, section 2.4 |
 | an Alert was raised in error | Abandon it with Resolution *Invalid* and a comment, and raise a Bug against the automation. | Issues and the board in practice, section 5 |
-| a planned version will not happen | Mark it *Dropped*, close it, and comment what replaced it. | Issues and the board in practice, section 6 |
+| a plan was passed (a ticket listed in Fix as `stale-plan`) | Set a Version above the highest finalized version, or clear it. | Issues and the board in practice, section 6 |
 
 ### Branches and releases
 
@@ -5574,7 +5573,7 @@ branching and merging.
 | the released version is from before the adoption | Start the hotfix from its tag; the first commit is the overlay (automation and a baseline changelog). | Releases, hotfixes and retiring branches, section 2.1 |
 | I want to declare a version a release | Verify it, run the release step, and tell the project owner. | Releases, hotfixes and retiring branches, section 1 |
 | a release turns out to be defective | Keep its tag. Fix it with a hotfix of that release, or release a newer version from `main`. | Releases, hotfixes and retiring branches, section 1.1 |
-| a release was declared by mistake | Delete the tag and put the Version ticket and its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
+| a release was declared by mistake | Delete the tag and put its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
 
 ### Assistants and new projects
 
@@ -5594,7 +5593,7 @@ Every ticket field with its values, what they mean, who sets them and when. The 
 and the rules that tie the fields together, are in section 4 of *Project structure*. How the fields work
 together over a ticket's life is in *Appendix E: Ticket model*.
 
-**Where each field lives (GitHub).** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same eight values), Area is a set of labels, and every
+**Where each field lives (GitHub).** Type is the native issue type (in a project owned by a personal account, the board field Kind with the same seven values), Area is a set of labels, and every
 other field is a board field.
 
 **Colors.** The Color column of each table is the standard's color for that option, so that a ticket reads
@@ -5620,10 +5619,9 @@ personal account the values are the options of the board field Kind.
 | **Bug** | PINK | Something that behaves differently from what was intended, and the fix for it. | mod |
 | **Refactor** | ORANGE | Internal restructuring with no change in what the product does. | mod |
 | **Task** | YELLOW | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
-| **Version** | GRAY | Bookkeeping ticket for one version. It does no work and never counts toward a bump. | none |
-| **Alert** | RED | An automatic check that needs a person to review something, such as a detected bypass or a stale planned version. It never counts toward a bump. | none |
+| **Alert** | RED | An automatic check that needs a person to review something, such as a detected bypass. It never counts toward a bump. | none |
 
-Set by a person when the ticket is created; the automation sets it on Version and Alert tickets.
+Set by a person when the ticket is created; the automation sets it on Alert tickets. *Version* was a type of earlier versions of the standard (a bookkeeping ticket for one version, which never counted toward a bump): it is no longer made, and boards that still have such tickets are tolerated.
 
 ### Area
 
@@ -5652,7 +5650,7 @@ project does on its own. Set by a person.
 
 ### The `dummy` label
 
-Not an Area. A marker for a throwaway ticket or Version ticket made to test the automation (a trial of a
+Not an Area. A marker for a throwaway ticket made to test the automation (a trial of a
 new step, a test of a rule). It is the only label besides the 14 Area labels.
 
 | Label | Hex | Meaning |
@@ -5740,8 +5738,8 @@ How a ticket ended. Blank while the ticket is open.
 | **Superseded** | BLUE | Replaced by a different approach or ticket: the work was real, but something else took its place. | *Abandoned* |
 | **Obsolete** | PURPLE | No longer relevant because the thing it was about changed or was removed. | *Abandoned* |
 
-Set by the person making the move to *Completed* or *Abandoned*. When it is set and cleared is in *Project
-structure*, section 4.3.
+*Done* is set by the automation when the Progress is *Completed* and cleared when it is not; a reason is set by the person
+making the move to *Abandoned*. When it is set and cleared is in *Project structure*, section 4.3.
 
 ### Delivery
 
@@ -5753,13 +5751,13 @@ Where the ticket's delivered work is: a fact about the work, independent of Prog
 | **Committed** | BLUE | Optional personal marker: the work is committed locally and not yet pushed. | the developer, by hand only |
 | **Pushed** | GREEN | Code for the ticket is on a branch on the hosting service, not yet merged. | the automation, when a push contains a changelog entry for the ticket |
 | **Merged** | PURPLE | The work is on `main`, in a finalized version. | the automation, at finalize |
-| **Implemented** | GREEN | The work is in effect and involved no file change (a setting, a secret, a check that was run). | a person, with the Version it belongs to; the automation then attaches the ticket to that version's ticket |
+| **Implemented** | GREEN | The work is in effect and involved no file change (a setting, a secret, a check that was run). | a person, with the Version it belongs to; the automation then puts the Version in the board form (a blank one gets the version being finalized) |
 | **Released** | RED | The version containing it has been declared a release. | the automation, when a release is cut |
-| **Dropped** | GRAY | The code or version was planned or pushed but will never be delivered. | the automation when a branch is abandoned; a person for a planned version |
+| **Dropped** | GRAY | The code was pushed but will never be delivered: its branch was retired as abandoned. | the automation when a branch is abandoned |
 
 The rules for Delivery (when it moves back, what *Committed* and *Implemented* are for, and the two
 Delivery and Version rules a *Completed* ticket must meet) are in *Project structure*, sections 4.3 and 4.4.
-How *Implemented* tickets are attached to their Version tickets is in section 5.2 of the same guide, and
+How *Implemented* tickets are settled is in section 4.3 of the same guide, and
 what a release does to Delivery is in *Releases, hotfixes and retiring branches*, section 1.1.
 
 ### Priority
@@ -5837,23 +5835,26 @@ ticket has none.
 
 ### Which fields apply to which tickets
 
-| Field | Work ticket | Version ticket | Alert ticket |
-|---|---|---|---|
-| Type | the work Type | Version | Alert |
-| Area | suggested | none | `process` |
-| Origin, REF | as needed | none (Origin may stay Backdated on old ones) | blank |
-| Progress | yes | none | yes, all moves manual |
-| Waiting | yes | none | as for any ticket |
-| Attention | yes | none | none |
-| Resolution | yes | none | as for any ticket |
-| Delivery | yes | *Merged*, *Released* or *Dropped* | none |
-| Priority | Normal by default | none | Critical, always |
-| Size | required at creation | none | set by the person who takes it |
-| Risk | proposed by the creator | none | set by the person who takes it |
-| Version, Build | yes | its own version; its last build | the version in which it was raised |
-| Start date, End date | yes | none | none |
-| Fix | yes | none | yes (the Delivery rules do not apply) |
-| Assignee | assigned to the person who starts the work | none | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog; none for stale planned versions |
+| Field | Work ticket | Alert ticket |
+|---|---|---|
+| Type | the work Type | Alert |
+| Area | suggested | `process` |
+| Origin, REF | as needed | blank |
+| Progress | yes | yes, all moves manual |
+| Waiting | yes | as for any ticket |
+| Attention | yes | none |
+| Resolution | yes | as for any ticket |
+| Delivery | yes | none |
+| Priority | Normal by default | Critical, always |
+| Size | required at creation | set by the person who takes it |
+| Risk | proposed by the creator | set by the person who takes it |
+| Version, Build | yes | the version in which it was raised |
+| Start date, End date | yes | none |
+| Fix | yes | yes (the Delivery rules do not apply) |
+| Assignee | assigned to the person who starts the work | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog |
+
+A legacy Version ticket (type *Version*, made by earlier versions of the standard) has none of these fields in
+play: it has no Progress, and the work-ticket rules, the Fix rules and the audit leave it alone.
 
 ---
 
@@ -6217,8 +6218,8 @@ code has shipped).
 | **Progress** | Where is the work? | the board's Status field | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
 | **Waiting** | Is it waiting for someone's input? | board field | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
-| **Resolution** | How did it end? | board field | a person |
-| **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
+| **Resolution** | How did it end? | board field | a person (the automation fills *Done* with *Completed*) |
+| **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed* and *Implemented*, which a person sets) |
 | **Fix** | Which of the rules that span fields do its fields break? | board field | the automation |
 | **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, the real Version and the dates |
 
@@ -6259,7 +6260,7 @@ The path of an ordinary ticket, with what changes at each step and who changes i
 | **First push** | *InProgress* (advanced by the automation if still *ToDo* or *OnDeck*) | *Pushed* | Build | the automation |
 | **Work done** | *Review* | *Pushed* | Risk revised by the developer | a person, never the automation |
 | **Merged** | unchanged | *Merged* | Version and Build set to the real values | the automation, at finalize |
-| **Verified** | *Completed* | *Merged* | Resolution *Done*, Waiting cleared, End date at the next sweep, issue closed | a human only |
+| **Verified** | *Completed* | *Merged* | Waiting cleared, issue closed; Resolution *Done* and the End date at the next refresh and sweep | a human sets the Progress and closes the issue |
 | **Released** | unchanged | *Released* | | the automation, when a release is cut |
 
 Side paths:
@@ -6273,12 +6274,14 @@ Side paths:
   with a comment linking any related ticket; Waiting is cleared and the issue is closed. If the branch is
   retired as abandoned, the automation sets Delivery to *Dropped*.
 - **New work after the fact.** Pushing again on a ticket that is *Merged*, *Implemented*, *Released* or
-  *Dropped* returns Delivery to *Pushed*. If the ticket looked finished (*Completed*, *Abandoned*, *Review* or
+  *Dropped* returns Delivery to *Pushed* and clears its Version (the number belongs to the work that shipped, and
+  the changelog keeps it; the automation says so in a comment, and the finalize step writes the real Version when
+  the new work ships). If the ticket looked finished (*Completed*, *Abandoned*, *Review* or
   *Suspended*), the automation raises Attention rather than changing Progress, and a person decides (the
   conditions are in *Project structure*, section 4.3).
 - **No file change.** A ticket whose work is a setting, a secret or a check that was run has no changelog
   entries. When its work is in effect a person sets Delivery *Implemented* and its Version, and the
-  automation attaches it to that version's Version ticket.
+  automation keeps the Version in the board form (a blank one gets the version being finalized).
 - **Late tickets.** A ticket created after the work has Origin *Backfilled* (with REF) or, for history from
   before the process, *Backdated*.
 
@@ -6295,8 +6298,7 @@ Delivery depends only on the work (guide on project structure, section 4.3). The
 | *Merged* or *Implemented* | *Released* | a release is cut at or above its version | the automation |
 | *Pushed*, on a hotfix branch | *Released* | the hotfix is finished (it skips *Merged*) | the automation |
 | *Pushed* | *Dropped* | the branch is retired as abandoned | the automation |
-| planned Version ticket | *Dropped* | the version will never be delivered | a person |
-| *Merged*, *Implemented*, *Released* or *Dropped* | *Pushed* | new work is pushed on the ticket | the automation |
+| *Merged*, *Implemented*, *Released* or *Dropped* | *Pushed*, and the Version is cleared | new work is pushed on the ticket | the automation |
 
 A suspended branch moves nothing: its ticket keeps *Pushed*. A ticket with newer work pushed than the version
 being released keeps *Pushed* at the release.
@@ -6317,17 +6319,19 @@ full table is in *Project structure*, section 4.4, and the automation flags a ti
 
 ### 5. Special tickets
 
-Version and Alert tickets are created by the automation. They are exempt from the rule that every ticket
+Alert tickets are created by the automation. They are exempt from the rule that every ticket
 gets a Size, and only some fields apply to them (the table is at the end of Appendix C).
 
-- **A Version ticket** is the bookkeeping record of one version, titled `Version X.Y.Z`. It has no Progress:
-  its Delivery describes its life (planned, *Merged*, *Released* or *Dropped*), and the version's tickets
-  are its sub-issues. Aiming a ticket at a future version needs no planned Version ticket, only the
-  Version field.
+- **A legacy Version ticket** was the bookkeeping record of one version, made by earlier versions of the
+  standard. It is no longer made; where one still exists it is left alone. A version has no ticket: its
+  changelog entry, the Version field of its tickets and, for a release, its tag are the record, and aiming
+  a ticket at a future version needs only the Version field.
+- **An umbrella ticket** is an ordinary work ticket that groups the tickets of one piece of work as its
+  sub-issues (*Project structure*, section 5.5).
 - **An Alert ticket** is a real check that a person must do. It is created *Critical*, in *ToDo*, with the
   Area `process`, and every later move is manual.
 
-The stages, the rules and the causes of each are in *Project structure*, sections 5.2 and 5.3.
+The rules and the causes of each are in *Project structure*, sections 5.2, 5.3 and 5.5.
 
 ### 6. How the model drives the automation
 
@@ -6367,31 +6371,31 @@ in the wiki page Board views.
 
 The number is the position of the column in the view; "·" means the view does not show it.
 
-| Field | All | Decide | Follow up | Fix | Versions |
-|---|---|---|---|---|---|
-| Title | 1 | 1 | 1 | 1 | 1 |
-| Assignees | 2 | 2 | 2 | 2 | 5 |
-| Status | 3 | 3 | 3 | 4 | 2 |
-| Type | 4 | 4 | 4 | 5 | 3 |
-| Labels | 5 | 5 | 5 | 6 | 4 |
-| Priority | 6 | 7 | 7 | 7 | 6 |
-| Size | 7 | · | 8 | · | 7 |
-| Risk | 8 | · | 9 | · | · |
-| Waiting | 9 | 8 | 6 | · | · |
-| Attention | 10 | 6 | · | · | · |
-| Fix | 11 | · | · | 3 | · |
-| Resolution | 12 | · | 10 | 8 | 9 |
-| Delivery | 13 | 9 | 11 | 9 | 8 |
-| Origin | 14 | · | · | · | · |
-| REF | 15 | · | · | 13 | · |
-| Version | 16 | 10 | 12 | 10 | 10 |
-| Build | 17 | · | · | 11 | 11 |
-| Start date | 18 | · | · | · | · |
-| End date | 19 | · | · | 12 | · |
-| **Sort** | Created, ascending | Priority, ascending | Priority, ascending | Priority, ascending | Version, ascending, then Priority, ascending |
-| **Group** | none | none | none | none | Parent issue (the Version ticket) |
+| Field | All | Plan | Decide | Follow up | Fix | Versions |
+|---|---|---|---|---|---|---|
+| Title | 1 | 1 | 1 | 1 | 1 | 1 |
+| Assignees | 2 | 4 | 2 | 2 | 2 | 5 |
+| Status | 3 | 2 | 3 | 3 | 4 | 2 |
+| Type | 4 | 3 | 4 | 4 | 5 | 3 |
+| Labels | 5 | · | 5 | 5 | 6 | 4 |
+| Priority | 6 | 5 | 7 | 7 | 7 | 6 |
+| Size | 7 | 6 | · | 8 | · | 7 |
+| Risk | 8 | 7 | · | 9 | · | · |
+| Waiting | 9 | · | 8 | 6 | · | · |
+| Attention | 10 | · | 6 | · | · | · |
+| Fix | 11 | · | · | · | 3 | · |
+| Resolution | 12 | · | · | 10 | 8 | 9 |
+| Delivery | 13 | 8 | 9 | 11 | 9 | 8 |
+| Origin | 14 | · | · | · | · | · |
+| REF | 15 | · | · | · | 13 | · |
+| Version | 16 | 9 | 10 | 12 | 10 | 10 |
+| Build | 17 | · | · | · | 11 | 11 |
+| Start date | 18 | · | · | · | · | · |
+| End date | 19 | · | · | · | 12 | · |
+| **Sort** | Created, ascending | Version, ascending, then Priority, ascending | Priority, ascending | Priority, ascending | Priority, ascending | Version, ascending, then Priority, ascending |
+| **Group** | none | Version | none | none | none | Version |
 
-Version is written in the board form (`V000.010.001`), which sorts as text in version order, so the Versions view sorts by it and its groups (the Version tickets, titled `Version 000.010.001`) come out in version order.
+Version is written in the board form (`V000.010.001`), which sorts as text in version order, so the Plan and Versions views sort by it and their groups come out in version order. A ticket with no Version is in the group "No Version" of the Versions view.
 
 ### 2. Board views
 
@@ -6498,7 +6502,7 @@ Branches and tags are read from the local clone: run `git fetch` first to includ
 | `git.branch.main` | Convert | 4 | Admin | With care | No branch is called `main`. Rename the integration branch to `main` and make it the default (guide 11, section 5.1). |
 | `git.branch.single-line` | Convert | 4 | Owner | With care | A long-lived `develop`, `staging` or `release` branch exists. Merge it into `main` with a merge commit and retire it as *archived* (guide 11, section 5.1). |
 | `git.branch.no-slash` | Convert | 4 | Dev | With care | A branch name contains `/`. Create the branch again with hyphens, push it, move its pull request, and retire the old name. |
-| `git.branch.kebab-case` | Convert | 4 | Dev | With care | A branch is not in lowercase words with hyphens (or the hotfix form). Rename it as above; branches nobody will resume are retired instead (guide on releases, hotfixes and retiring branches, section 3). |
+| `git.branch.kebab-case` | Convert | 4 | Dev | With care | A branch is not in lowercase words with hyphens (or the hotfix form). Rename it as above (the old name is retired with the outcome *renamed*, which makes no tag); branches nobody will resume are retired instead, and their tag spells the old name in kebab-case (guide on releases, hotfixes and retiring branches, section 3). |
 | `git.tag.names` | Convert / History | 4 | Dev | With care | A tag is not in the standard form. For a tag that marks a real release, add `released/V<major>.<sub>.<mod>` on the same commit and keep the old tag until everybody has moved. A tag with no use is left alone and recorded as history. Never move a tag. |
 | `git.tag.released-on-main` | History | 4 | Dev | No | A `released/` tag is on a commit that `main` does not contain. If it is a mistake, add the right tag; otherwise record it as history. |
 | `git.history.merge-commits` | History | 6 | Owner | No | Commits on `main` are not merges (direct, squashed or rebased). History cannot be rewritten: record it as history, and use the audit's judging from the cut-over when the tools offer it. After the cut-over, every change lands by pull request and a merge commit. |
@@ -6536,7 +6540,7 @@ secrets need administration access. A refused read is *not-checkable*, not a fai
 | `github.labels.exact` | Convert | 1 | Admin | With care | The repository's labels are not exactly the 14 Area labels and `dummy`. Move the issues from each extra label to the Area label that replaces it, then delete it, because deleting a label removes it from its issues. Create the missing ones. |
 | `github.labels.descriptions` | Fix | 1 | Admin | Yes | A label has no description. Give each its meaning from Appendix C. |
 | `github.labels.colors` | Fix | 1 | Admin | Yes | A label has another color than the standard. Use the colors of Appendix C. |
-| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the eight types (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert). Not needed, and passed, when the Type is kept in the field Kind. Not-checkable when the types cannot be read. |
+| `github.issue-types.exact` | Fix | 1 | Admin | Yes | An issue type is missing in the organization. Create the seven types (Feature, Enhancement, Change, Bug, Refactor, Task, Alert). Not needed, and passed, when the Type is kept in the field Kind. Not-checkable when the types cannot be read. |
 | `github.issue-types.descriptions` | Fix | 1 | Admin | Yes | A type has no description. Give it the definition of Appendix C. |
 | `github.issue-types.colors` | Fix | 1 | Admin | Yes | A type has another color than the standard. Use the colors of Appendix C. |
 
@@ -6565,10 +6569,9 @@ project`). Tickets labeled `dummy` and pull requests are skipped.
 | `board.ticket.size` | Fix | 5 | Owner | Yes | A work ticket has no Size. Estimate it and set the Size. |
 | `board.ticket.closed-status` | Convert | 5 | Owner | Yes | A closed work ticket is not *Completed* or *Abandoned*. Set the Status to match (or reopen the ticket if it is not done). |
 | `board.ticket.open-status` | Convert | 5 | Owner | Yes | An open work ticket is *Completed* or *Abandoned*. Close the issue or move the Status back. |
-| `board.ticket.resolution` | Convert | 5 | Owner | Yes | Resolution is not set exactly when the ticket is *Completed* or *Abandoned*. Set it on finished tickets (*Done* for finished work) and clear it on open ones. |
+| `board.ticket.resolution` | Convert | 5 | Owner | Yes | Resolution is not set exactly when the ticket is *Completed* or *Abandoned*. Set it on finished tickets (*Done* for a Completed one, which the refresh also fills in; a reason for an Abandoned one) and clear it on open ones. |
 | `board.ticket.backfilled-ref` | Fix | 5 | Owner | Yes | A ticket with Origin *Backfilled* has no REF. Set the REF to the token of the placeholder it replaced, or change the Origin to *Backdated* if it documents older work. |
 | `board.ticket.version-form` | Fix | 5 | Owner | Yes | A Version value is not in the board form (`V000.010.001`). The scheduled run rewrites it, or type the three-digit form. |
-| `board.ticket.version-title` | Fix | 5 | Owner | Yes | A Version ticket is not titled `Version 000.010.001`. Retitle it in the board form. |
 | `board.ticket.alert-priority` | Fix | 5 | Owner | Yes | An Alert does not have Priority *Critical*. Set it. |
 | `board.ticket.area` | Fix | 5 | Owner | Yes | A work ticket has no Area label. Add one. |
 

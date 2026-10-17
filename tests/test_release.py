@@ -51,8 +51,8 @@ class FakeProject:
 class FakeRepo:
     repo = "owner/repo"
 
-    def __init__(self, tickets, tags=()):
-        self.tickets, self.tags, self.created, self.comments = tickets, set(tags), [], []
+    def __init__(self, tags=()):
+        self.tags, self.created, self.comments = set(tags), [], []
 
     def repo_path(self, path):
         return path
@@ -62,7 +62,7 @@ class FakeRepo:
             if path.split("/git/ref/tags/")[1] in self.tags:
                 return {"ref": "x"}
             raise GitHubError(404, "Not Found")
-        return self.tickets
+        return []
 
     def create_tag(self, name, sha):
         self.created.append((name, sha))
@@ -75,9 +75,6 @@ def board():
     fields = {name: {"id": f"F-{name}", "type": kind, "options": {v: f"{name}-{v}" for v in (values or [])}}
               for name, (kind, values) in preflight.REQUIRED_FIELDS.items()}
     return preflight.Board("P7", 7, "Governance", fields)
-
-
-TICKETS = [{"title": "Version 0.5.0", "state": "closed", "number": 31}, {"title": "Version 0.4.0", "state": "open", "number": 30}]
 
 
 class Folder(unittest.TestCase):
@@ -93,17 +90,17 @@ class Folder(unittest.TestCase):
 
 
 class ReleaseTests(Folder):
-    def run_release(self, nodes, version=None, tickets=TICKETS, tags=(), dry_run=False, root_text=LOG):
-        repo, project = FakeRepo(tickets, tags), FakeProject(nodes)
+    def run_release(self, nodes, version=None, tags=(), dry_run=False, root_text=LOG):
+        repo, project = FakeRepo(tags), FakeProject(nodes)
         run = release.release(self.folder(root_text), repo, project, board(), version, NOW, dry_run)
         return run, repo, project
 
     def test_releases_the_latest_version_by_default(self):
         run, repo, project = self.run_release([node(1, "Merged", "V0.5.0")])
         self.assertEqual(repo.created, [("released/V0.5.0", "a" * 40)])
-        self.assertEqual(repo.comments, [(31, "Released 2026-10-07 09:30 UTC. Tag: `released/V0.5.0`.")])
-        self.assertIn(("I31", "F-Delivery", "Delivery-Released"), project.sets)  # the Version ticket
-        self.assertIn(("I1", "F-Delivery", "Delivery-Released"), project.sets)
+        self.assertEqual(repo.comments, [])  # no ticket stands for the version
+        self.assertIn("V0.5.0 released 2026-10-07 09:30 UTC as released/V0.5.0", run.log)
+        self.assertEqual(project.sets, [("I1", "F-Delivery", "Delivery-Released")])
 
     def test_merged_and_implemented_tickets_at_or_below_the_version_are_released(self):
         _, _, project = self.run_release([node(1, "Merged", "V0.5.0"), node(2, "Implemented", "V0.3.1"), node(3, "Merged", "V0.1.0")])
@@ -115,13 +112,12 @@ class ReleaseTests(Folder):
                  node(5, "Merged", "V0.4.0", kind="Version"), node(6, "Merged", "V0.4.0", kind="Alert"), node(7, "Merged", "soon"),
                  node(8, "Dropped", "V0.4.0")]
         _, _, project = self.run_release(nodes)
-        self.assertEqual({item for item, _, _ in project.sets}, {"I31"})
+        self.assertEqual(project.sets, [])  # a legacy Version ticket (node 5) is left alone, like an Alert
 
     def test_an_earlier_version_can_be_released(self):
-        tickets = [{"title": "Version 0.4.0", "state": "closed", "number": 30}]
-        run, repo, project = self.run_release([node(1, "Merged", "V0.5.0"), node(2, "Merged", "V0.4.0")], V("V0.4.0"), tickets)
+        run, repo, project = self.run_release([node(1, "Merged", "V0.5.0"), node(2, "Merged", "V0.4.0")], V("V0.4.0"))
         self.assertEqual(repo.created[0][0], "released/V0.4.0")
-        self.assertEqual({item for item, _, _ in project.sets}, {"I30", "I2"})  # V0.5.0 work is not in it
+        self.assertEqual({item for item, _, _ in project.sets}, {"I2"})  # V0.5.0 work is not in it
 
     def test_a_version_that_is_not_finalized_cannot_be_released(self):
         with self.assertRaises(release.ReleaseError) as caught:
@@ -129,13 +125,13 @@ class ReleaseTests(Folder):
         self.assertIn("not a finalized version", str(caught.exception))
 
     def test_a_trial_makes_its_tag_under_test_and_leaves_the_real_one_alone(self):
-        repo, project = FakeRepo(TICKETS, ["released/V0.5.0"]), FakeProject([node(1, "Merged", "V0.5.0")])
+        repo, project = FakeRepo(["released/V0.5.0"]), FakeProject([node(1, "Merged", "V0.5.0")])
         run = release.release(self.folder(LOG), repo, project, board(), None, NOW, False, trial=True)
         self.assertEqual([name for name, _ in repo.created], ["test/released/V0.5.0"])  # a real tag of the version does not block it
-        self.assertIn("Tag: `test/released/V0.5.0`", repo.comments[0][1])
+        self.assertIn("as test/released/V0.5.0", run.log[-1])
 
     def test_a_run_without_the_trial_input_makes_the_real_tag_even_for_a_trial_version(self):
-        repo, project = FakeRepo(TICKETS, ["test/released/V0.5.0"]), FakeProject([node(1, "Merged", "V0.5.0")])
+        repo, project = FakeRepo(["test/released/V0.5.0"]), FakeProject([node(1, "Merged", "V0.5.0")])
         release.release(self.folder(LOG), repo, project, board(), None, NOW, False)
         self.assertEqual([name for name, _ in repo.created], ["released/V0.5.0"])
 
@@ -149,10 +145,15 @@ class ReleaseTests(Folder):
             self.run_release([], tags=["released/V0.5.0"])
         self.assertIn("already has the release tag", str(caught.exception))
 
-    def test_the_version_needs_a_finalized_version_ticket(self):
-        for tickets in ([], [{"title": "Version 0.5.0", "state": "open", "number": 31}]):
-            with self.assertRaises(release.ReleaseError):
-                self.run_release([], tickets=tickets)
+    def test_a_version_ticket_is_neither_needed_nor_read(self):
+        class NoLookup(FakeRepo):
+            def request(self, method, path, body=None):
+                assert "/issues" not in path, path  # the old lookup of the Version ticket
+                return super().request(method, path, body)
+
+        repo = NoLookup()
+        release.release(self.folder(), repo, FakeProject([node(1, "Merged", "V0.5.0")]), board(), None, NOW)
+        self.assertEqual(len(repo.created), 1)
 
     def test_no_changelog_version_and_no_finalize_commit(self):
         with self.assertRaises(release.ReleaseError):
@@ -160,19 +161,19 @@ class ReleaseTests(Folder):
         folder = self.folder()
         release.finalize_commit = lambda root, version: None
         with self.assertRaises(release.ReleaseError):
-            release.release(folder, FakeRepo(TICKETS), FakeProject([]), board(), None, NOW)
+            release.release(folder, FakeRepo(), FakeProject([]), board(), None, NOW)
 
     def test_dry_run_changes_nothing(self):
         run, repo, project = self.run_release([node(1, "Merged", "V0.5.0")], dry_run=True)
         self.assertEqual((repo.created, repo.comments, project.sets), ([], [], []))
         self.assertTrue(any("tag aaaaaaa" in line for line in run.log))
 
-    def test_no_board_still_tags_and_comments(self):
-        repo = FakeRepo(TICKETS)
+    def test_no_board_still_tags(self):
+        repo = FakeRepo()
         run = release.release(self.folder(), repo, None, None, None, NOW)
         self.assertEqual(len(repo.created), 1)
         self.assertTrue(any("board steps skipped" in line for line in run.log))
-        self.assertEqual(len(repo.comments), 1)
+        self.assertEqual(repo.comments, [])
 
     def test_every_page_of_the_board_is_read(self):
         nodes = [node(n, "ToDo", "V0.5.0") for n in range(1, 230)] + [node(500, "Merged", "V0.5.0")]

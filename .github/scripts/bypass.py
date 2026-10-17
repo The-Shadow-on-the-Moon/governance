@@ -6,8 +6,7 @@ Alert ticket and one AUTO-REF changelog entry per push, listing every flagged co
 changelog entries at all also gets the missing version heading, so the finalize step still gives it a
 version. See the guide on branching and merging (section 6.3).
 
-Run it before the finalize step. `--dry-run` only reports what it would do. `stale` checks for
-planned Version tickets that a finalized version has passed.
+Run it before the finalize step. `--dry-run` only reports what it would do.
 """
 import os
 import subprocess
@@ -78,40 +77,10 @@ def handle_push(root, repo_client, project_client, board, before, after, pusher,
     return run
 
 
-def raise_stale_alert(repo_client, project_client, board, version, dry_run=False):
-    """After a version is finalized: one Alert listing planned Version tickets that cannot happen any more."""
-    run = finalize.Runner(dry_run)
-    planned = alerts.stale_planned(repo_client, version)
-    if planned:
-        title, body = alerts.stale_alert(version, planned)
-        alerts.create_alert(run, repo_client, project_client, board, title, body)
-    return run
-
-
-def stale_command(root, repo_client, project_client, board, dry_run=False):
-    """The `stale` command: check the topmost finalized version for planned tickets it has passed."""
-    with open(os.path.join(root, CHANGELOG), encoding="utf-8") as handle:
-        latest = changelog.latest_final(changelog.parse(handle.read()))
-    if latest is None:
-        run = finalize.Runner(dry_run)
-        run.log.append("no finalized version")
-        return run
-    return raise_stale_alert(repo_client, project_client, board, latest.version, dry_run)
-
-
 def main(argv=None):
     sys.stdout.reconfigure(encoding="utf-8")
     args = argv if argv is not None else sys.argv[1:]
     repo = os.environ.get("GITHUB_REPOSITORY", "")
-    if "stale" in args:
-        repo_client = Client(os.environ.get("GITHUB_TOKEN", ""), repo)
-        project_client = Client(os.environ.get("PROJECT_TOKEN", ""), repo)
-        report = preflight.run(repo_client, project_client, store=False)
-        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-        run = stale_command(root, repo_client, project_client, report.board, "--dry-run" in args)
-        for line in run.log or ["no stale planned versions"]:
-            print(("would: " if run.dry_run else "did: ") + line)
-        return 0
     before, after = os.environ.get("BEFORE_SHA", checks.ZEROS), os.environ.get("AFTER_SHA", os.environ.get("GITHUB_SHA", ""))
     if not repo or not after:
         print("GITHUB_REPOSITORY and AFTER_SHA (or GITHUB_SHA) must be set")

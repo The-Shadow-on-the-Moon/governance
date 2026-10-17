@@ -8,10 +8,15 @@ and each has its own view (guide on issues and the board, section 2.2):
   `implemented.py` and `bypass.py`; the registry only describes them.
 - **follow-up**: an ordinary queue, set and cleared by people (Waiting, Review).
 - **fix**: the fields of a ticket contradict each other (the rules of the guide on project structure, section
-  4.4). These are derived: their state is a pure function of the ticket's other fields, so nobody sets or
-  clears them. `refresh` recomputes the set of broken rules of every ticket and writes it to the board's
+  4.4). These are derived: their state is a pure function of the ticket's other fields (and, for the stale
+  plan, of the highest finalized version of the changelog), so nobody sets or clears them. `refresh` recomputes the set of broken rules of every ticket and writes it to the board's
   "Fix" field (the ids, separated by spaces; empty when nothing is broken), only when it changed. A person
   fixes the cause, and the id disappears at the next refresh.
+
+One value follows from another instead of being a rule: Resolution *Done* goes with Status *Completed*, and
+nothing else. `refresh` sets it on a Completed ticket whose Resolution is blank and clears it from a ticket that is not
+Completed, before the rules are evaluated, so the reviewer's one decision is the Status. The reasons of an Abandoned
+ticket are a person's decision and are never filled or cleared.
 
 A new condition is one new entry in `CONDITIONS` (and, for a fix rule, its detector function). The views, the
 field and the guides' tables read the registry, so nothing else has to change.
@@ -27,6 +32,7 @@ from typing import Callable
 import condition_comments as cc
 import failures
 import finalize
+import changelog
 import preflight
 import versions
 import ticket_type
@@ -40,7 +46,7 @@ OPEN = ("ToDo", "OnDeck", "InProgress", "Review", "Suspended")
 CLOSED = ("Completed", "Abandoned")
 SHIPPED = ("Merged", "Implemented", "Released")
 REASONS = ("Duplicate", "Invalid", "WontFix", "Superseded", "Obsolete")
-NOT_WORK = ("Version", "Alert")  # bookkeeping tickets: no Delivery, no Attention
+NOT_WORK = ("Version", "Alert")  # bookkeeping tickets: no Delivery, no Attention. Version is a legacy type, no longer made
 
 
 @dataclass(frozen=True)
@@ -53,6 +59,8 @@ class Condition:
     cleared_by: str
     level: str = ""  # the Attention level of a decide condition
     detect: Callable = None  # a fix rule: ticket -> the explanation when it is broken, else None
+    with_context: bool = False  # the detector also takes the highest finalized version: (ticket, highest)
+    comment: bool = True  # a broken rule gets a comment after FIX_COMMENT_AFTER; False: only the Fix field and view show it
 
 
 # --- the fix rules: pure functions of the ticket (see board_tickets for its keys) -------------------------
@@ -99,6 +107,25 @@ def shipped_without_version(t):
                 "finalize step should have set it: set the Version of the version it belongs to)")
 
 
+def stale_plan(t, highest):
+    """An open ticket not yet shipped whose Version (an advisory plan) has already been reached by the finalized versions.
+
+    `highest` is the highest finalized Version of the changelog, or None when it could not be read (the rule is then
+    skipped). A Version at or below it can no longer happen; the correction is a Version above it, or none."""
+    if highest is None or t["type"] in NOT_WORK or t["status"] not in OPEN or t["delivery"] in SHIPPED:
+        return None
+    text = t["version"].strip()
+    if not text:
+        return None
+    try:
+        planned = versions.Version.parse(text)
+    except ValueError:
+        return None  # a Version that is not a version is the audit's finding, not a stale plan
+    if planned.number() <= highest.number():
+        return (f"it is open and not shipped, but its Version {planned.board()} is at or below {highest.board()}, the highest finalized "
+                "version, so that plan can no longer happen: set a Version above it, or clear the Version if the work is not planned for one")
+
+
 def issue_open(t):
     if t["status"] in CLOSED and t["state"] == "OPEN":
         return f"it is {t['status']} but its issue is still open"
@@ -124,7 +151,7 @@ CONDITIONS = (
     Condition("passed-version", "Aimed at a passed version", DECIDE,
               "An Implemented ticket is aimed at a version that was passed, so it can never be attached.",
               "implemented.py", "a person ticks a box (Fine or Handled elsewhere)", level="Caution"),
-    Condition("open-alert", "Open Alert", DECIDE, "A bypass, a merge without changelog entries, an unreadable changelog or stale planned versions.",
+    Condition("open-alert", "Open Alert", DECIDE, "A bypass, a merge without changelog entries or an unreadable changelog.",
               "bypass.py", "a person, through InProgress, Review and Completed"),
     # follow-up
     Condition("waiting", "Waiting", FOLLOW_UP, "Someone owes an answer (Waiting is Needs input).",
@@ -150,6 +177,8 @@ CONDITIONS = (
     Condition("shipped-without-version", "Shipped without a Version", FIX,
               "Shipped work (Delivery Merged, Implemented or Released) has a Version; an Abandoned ticket is left out.",
               _AUTOMATION, _FIXES, detect=shipped_without_version),
+    Condition("stale-plan", "Stale plan", FIX, "An open ticket that is not shipped has no Version at or below the highest finalized version.",
+              _AUTOMATION, _FIXES, detect=stale_plan, with_context=True, comment=False),
     Condition("issue-open", "Issue still open", FIX, "A Completed or Abandoned ticket has its issue closed.",
               _AUTOMATION, _FIXES, detect=issue_open),
     Condition("issue-closed", "Issue closed too soon", FIX, "An issue is closed only at Completed or Abandoned.",
@@ -159,15 +188,28 @@ CONDITIONS = (
 BY_ID = {c.id: c for c in CONDITIONS}
 FIX_RULES = tuple(c for c in CONDITIONS if c.nature == FIX)
 DECIDE_LEVELS = {c.id: c.level for c in CONDITIONS if c.nature == DECIDE and c.level}
+COMMENTED_RULES = {c.id for c in FIX_RULES if c.comment}
 
 
-def broken_rules(ticket):
-    """The fix rules a ticket breaks, as {rule id: explanation}, in the registry's order."""
+def highest_finalized(root):
+    """The highest finalized Version of the changelog in `root`, or None when it cannot be read or has none (hotfix
+    versions are finished on their own branches and are not in it)."""
+    try:
+        with open(os.path.join(root, "CHANGELOG.md"), encoding="utf-8") as handle:
+            finals = [s.version for s in changelog.parse(handle.read()) if s.kind == "final"]
+    except (OSError, ValueError):
+        return None
+    return max(finals, key=lambda v: v.number()) if finals else None
+
+
+def broken_rules(ticket, highest=None):
+    """The fix rules a ticket breaks, as {rule id: explanation}, in the registry's order. `highest` is the highest
+    finalized Version, for the rules that need it."""
     if not ticket["status"]:
         return {}  # a Version ticket has no Progress
     broken = {}
     for rule in FIX_RULES:
-        why = rule.detect(ticket)
+        why = rule.detect(ticket, highest) if rule.with_context else rule.detect(ticket)
         if why:
             broken[rule.id] = why
     return broken
@@ -249,7 +291,7 @@ def sync_comments(run, repo_client, ticket, broken, now):
     for rule in FIX_RULES:
         open_comments = [c for c, i in ours if i == rule.id and cc.is_fix_comment(c["body"]) and not cc.is_fixed(c["body"])]
         if rule.id in broken:
-            if not open_comments and quiet >= FIX_COMMENT_AFTER:
+            if rule.comment and not open_comments and quiet >= FIX_COMMENT_AFTER:
                 run.do(f"#{number}: comment on the broken rule {rule.id}", repo_client.comment, number, cc.fix_comment(rule.id, broken[rule.id]))
         else:
             for comment in open_comments:
@@ -260,16 +302,41 @@ def sync_comments(run, repo_client, ticket, broken, now):
 
 def needs_comments(ticket, broken):
     """Whether the ticket's comments must be read: it has a flag the boxes can clear, or a rule broken now or before."""
-    return bool(broken) or bool(ticket["fix"]) or ticket["attention"] in ("Watch", "Caution")
+    now_or_before = set(broken) | set(ticket["fix"].split())
+    return bool(now_or_before & COMMENTED_RULES) or ticket["attention"] in ("Watch", "Caution")
 
 
-def refresh(run, project_client, board, repo_client=None, now=None):
-    """Write the Fix field of every ticket whose set of broken rules changed, and keep the comments in step.
-    Returns the numbers changed.
+def settle_resolution(run, project_client, board, ticket):
+    """Resolution Done follows Status Completed. Returns the ticket as it is after the writes (what the rules then judge).
+
+    - Completed with a blank Resolution: set Done.
+    - Not Completed, with Done: clear it (it went back to work, or was set by hand on an open ticket).
+    A reason of an Abandoned ticket, another value on a Completed one, a ticket without Status and a board that has no
+    Resolution field or no option Done are left to the rules."""
+    field = board.fields.get("Resolution")
+    done = ((field or {}).get("options") or {}).get("Done")
+    status, number = ticket["status"], ticket["number"]
+    if not status or done is None:
+        return ticket
+    if status == "Completed" and not ticket["resolution"]:
+        run.do(f"#{number}: set Resolution to Done (it is Completed)", project_client.set_project_field,
+               board.id, ticket["item"], field["id"], {"singleSelectOptionId": done})
+        return dict(ticket, resolution="Done")
+    if status != "Completed" and ticket["resolution"] == "Done":
+        run.do(f"#{number}: clear Resolution (Done goes only with Completed, and it is {status})", project_client.clear_project_field,
+               board.id, ticket["item"], field["id"])
+        return dict(ticket, resolution=None)
+    return ticket
+
+
+def refresh(run, project_client, board, repo_client=None, now=None, highest=None):
+    """Settle Resolution Done (it follows Completed), write the Fix field of every ticket whose set of broken rules
+    changed, and keep the comments in step. Returns the numbers whose Fix field changed.
 
     There is no wait for the field: it is live, so a ticket in the middle of an edit shows and then clears at the
     next refresh. A comment about a broken rule does wait (FIX_COMMENT_AFTER). Without `repo_client` no comment is
-    read or written.
+    read or written. `highest` is the highest finalized Version of the changelog; without it the stale-plan rule is
+    skipped.
     """
     field = board.fields.get(FIX_FIELD)
     if field is None:
@@ -279,7 +346,8 @@ def refresh(run, project_client, board, repo_client=None, now=None):
     attention = board.fields.get("Attention")
     changed = []
     for ticket in board_tickets(project_client, board):
-        broken = broken_rules(ticket)
+        ticket = settle_resolution(run, project_client, board, ticket)
+        broken = broken_rules(ticket, highest)
         wanted = fix_value(broken)
         number = ticket["number"]
         if wanted != ticket["fix"]:
@@ -314,8 +382,12 @@ def main(argv=None):
         print("conditions skipped: no board (the preflight did not identify one)")
         return 0
     run = finalize.Runner("--dry-run" in args)
+    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+    highest = highest_finalized(root)
+    if highest is None:
+        run.log.append("the changelog gave no finalized version, so the stale plans are not checked in this run")
     try:
-        refresh(run, project_client, report.board, repo_client)
+        refresh(run, project_client, report.board, repo_client, highest=highest)
     except GitHubError as error:
         run.log.append(f"the refresh of the conditions stopped: {error}")
         failures.record(f"the refresh of the conditions stopped: {error}")
