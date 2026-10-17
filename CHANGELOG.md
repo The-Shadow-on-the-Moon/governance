@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.15.0 — 2026-10-17 03:01 UTC
 ### Build 20261017025557 (branch foundation-fixes)
 #### #226 — Manifest standard in an adopting project is the project's version, not the standard's
 - .github/scripts/check_manifest.py: `--update` keeps the standard the manifest names (the version of the files a project holds); `--update --pending` writes the placeholder `WIP-Version` and is only for this repository; `--update --standard <version>` states a version; the two flags exclude each other, a `--standard` followed by another flag, or `--update` with no manifest and no flag, is refused; `main` takes a `root`, so the rewrite can be tested
