@@ -60,7 +60,9 @@ is the honest description of a project's first version: something exists, and no
   section 2.3).
 - **The schedule re-enabler,** `.github/workflows/reenable-schedule.yml` and its script: GitHub switches a
   scheduled workflow off after 60 days without activity in the repository, and this one, which has no
-  schedule of its own, switches it back on at the next push or on request.
+  schedule of its own, switches it back on at the next push or on request. GitHub does this only in a public
+  repository, so in a private one the re-enabler has nothing to do: disable it in the Actions tab (the files
+  stay, so the manifest check and the audit stay clean) and enable it again if the repository becomes public.
 - **The saved views,** `.github/views.json` and the script `.github/scripts/views.py` that creates them
   (section 6).
 - **The board's fields,** the script `.github/scripts/fields.py` that creates the ones a board lacks
@@ -78,7 +80,7 @@ is the honest description of a project's first version: something exists, and no
 4. **Run the automation's tests** locally.
 5. **Confirm the workflow is enabled,** with its schedule, and declares the permissions it needs in its
    own file: write access to contents, issues and pull requests. The re-enabler declares its own, narrower
-   permission (write access to actions).
+   permissions (read access to contents, to check out its script, and write access to actions).
 6. **Run the preflight** (section 2.3) once the project token (section 4) and the board (section 6) exist.
 
 ### 2.3 The preflight
@@ -105,9 +107,12 @@ or more than one, it stops at step 3 and asks the administrator to say which.
 ### 2.4 Keeping in step with the standard
 
 - A **manifest file** in the project names the version of the standard it follows, and lists a hash (a
-  fingerprint) of each automation file as it is in that version. A manifest written before the merge that
-  ships the files names the placeholder `WIP-Version`, which the finalize step replaces with that merge's
-  version.
+  fingerprint) of each automation file as it is in that version. A project that uses the standard gets the
+  manifest with the files, so it names the version of the standard they were taken from; rewriting it
+  (`check_manifest.py --update`) keeps that version, and a version is stated only with `--standard`. The
+  placeholder `WIP-Version` (`--update --pending`) is for the standard's own repository alone, where the
+  project is the standard and the version is known only at the merge: the finalize step replaces it with
+  that merge's version. In any other project the placeholder would end up naming the project's own version.
 - A **check script** compares the project's files with the manifest and reports each as unchanged, edited
   locally, or from an older version.
 - To update a project, copy the new files from the standard, replace the manifest, and run the check.
@@ -438,8 +443,8 @@ A one-page summary of the guide. It adds no new rules.
 **Automation** (section 2)
 
 - [ ] The files are copied unchanged, the hook scripts are executable and activated, the tests pass, the
-      workflow is enabled with its schedule and its permissions, the schedule re-enabler is in place, and
-      the manifest is in place and the check passes.
+      workflow is enabled with its schedule and its permissions, the schedule re-enabler is in place (in a private
+      repository: disabled in the Actions tab), and the manifest is in place and the check passes.
 
 **Repository settings** (section 3)
 

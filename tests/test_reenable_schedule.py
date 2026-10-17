@@ -73,8 +73,9 @@ class WorkflowFileTests(unittest.TestCase):
     def test_runs_on_every_push(self):
         self.assertRegex(self.text, r"push:\n    branches:\n      - '\*\*'")
 
-    def test_asks_only_for_the_actions_right(self):
-        self.assertRegex(self.text, r"(?m)^permissions:\n  actions: write\n\njobs:")
+    def test_asks_only_for_reading_the_contents_and_the_actions_right(self):
+        """Checkout needs `contents: read`: a permissions block removes the default, and a private repository fails without it."""
+        self.assertRegex(self.text, r"(?m)^permissions:\n  contents: read\n  actions: write\n\njobs:")
 
     def test_the_script_it_runs_exists(self):
         for script in re.findall(r"python3 (\.github/scripts/\w+\.py)", self.text):

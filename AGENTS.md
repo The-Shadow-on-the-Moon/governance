@@ -11,9 +11,10 @@ This project
 - Hooks: activate them once per clone with `git config core.hooksPath .githooks`.
 - Automation files (hooks, `.github/scripts/`, the versioning and re-enabling workflows, the saved views file, the pull
   request template and the automation's tests) are listed in `.github/automation-manifest.json`. After a change to one, run
-  `python .github/scripts/check_manifest.py --update`, then the tests. The manifest then names the standard `WIP-Version`
-  (a placeholder, never a guessed version): the finalize step replaces it with the version it gives the merge, in its own
-  commit. A manifest that names a real version is left as it is.
+  `python .github/scripts/check_manifest.py --update --pending`, then the tests. The manifest then names the standard
+  `WIP-Version` (a placeholder, never a guessed version): the finalize step replaces it with the version it gives the merge,
+  in its own commit. A manifest that names a real version is left as it is. `--pending` is only for this repository, where
+  the project is the standard; in a project that uses the standard, `--update` keeps the version of the files it holds.
 - A release, a hotfix finish and a branch retirement are done only by the workflow's manual runs (see the wiki page
   on the automation), never by hand with git, and only when the administrator or developer asks: run the dry run
   first and say what it would do. When the run is a test of the automation, tick its input `trial`, so the

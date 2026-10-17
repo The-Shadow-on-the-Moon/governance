@@ -169,14 +169,21 @@ class ChangelogTests(unittest.TestCase):
             changelog.parse(SAMPLE.replace("#### #1 — Initial structure of the project", "#### ticket one"))
 
     def test_the_repository_changelog_parses(self):
-        with open(os.path.join(ROOT, "CHANGELOG.md"), encoding="utf-8") as handle:
+        """The changelog of whichever project holds this test reads with the parser of the automation."""
+        path = os.path.join(ROOT, "CHANGELOG.md")
+        if not os.path.isfile(path):
+            self.skipTest("the project has no CHANGELOG.md")
+        with open(path, encoding="utf-8") as handle:
             sections = changelog.parse(handle.read())
-        final = {str(s.version): s for s in sections if s.kind == "final"}
-        self.assertEqual(final["V0.1.0"].version.number(), 10000)
-        self.assertEqual(final["V0.2.0"].version.number(), 20000)
-        self.assertEqual(final["V0.2.0"].ticket_numbers(), [4, 5, 7, 6, 8, 9])
-        self.assertEqual(final["V0.2.0"].last_build(), "20261005211638")
-        self.assertEqual(final["V0.1.0"].ticket_numbers(), [1])
+        final = [str(s.version) for s in sections if s.kind == "final"]
+        self.assertEqual(len(final), len(set(final)), "a finalized version appears twice")
+
+    def test_ticket_numbers_keep_the_order_they_are_written_in(self):
+        text = ("# Changelog\n\n## V0.2.0 — 2026-10-05 21:24 UTC\n### Build 20261005211638 (branch a)\n"
+                "#### #4 — Four\n- x.\n#### #7 — Seven\n- x.\n#### #6 — Six\n- x.\n")
+        section = changelog.parse(text)[0]
+        self.assertEqual(section.ticket_numbers(), [4, 7, 6])
+        self.assertEqual(section.version.number(), 20000)
 
 
 class FakeTransport:
