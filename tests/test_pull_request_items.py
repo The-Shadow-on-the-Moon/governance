@@ -46,7 +46,7 @@ class SweepsSkipItemsThatAreNotIssues(unittest.TestCase):
         self.assertEqual(conditions.board_tickets(FakeProject(), board()), [])
 
     def test_the_implemented_sweep(self):
-        self.assertEqual(implemented.unattached(FakeProject(), board()), [])
+        self.assertEqual(implemented.implemented_tickets(FakeProject(), board()), [])
 
     def test_the_version_number_sweep(self):
         self.assertEqual(version_format.board_items(FakeProject(), board()), [])

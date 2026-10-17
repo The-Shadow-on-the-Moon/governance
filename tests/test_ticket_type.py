@@ -324,21 +324,6 @@ class WritingTests(unittest.TestCase):
                    for name, (kind, values) in preflight.required_fields("field").items()}
         return preflight.Board("P7", 7, "Governance", fields_)
 
-    def version_ticket(self, repo, project):
-        return finalize.record_version_ticket(self.Run(), repo, project, self.board(), finalize.versions.Version(2, 5, 0),
-                                              "2026-10-07 16:20", "sub", None, "20261006091200", [])
-
-    def test_the_version_ticket_gets_its_issue_type_without_the_field(self):
-        repo, project = self.Repo(), self.Project()
-        self.version_ticket(repo, project)
-        self.assertEqual(repo.created, ["Version"])
-        self.assertNotIn(("ITEM", "F-Kind", {"singleSelectOptionId": "Kind-Version"}), project.set)
-
-    def test_the_version_ticket_gets_its_kind_with_the_field(self):
-        repo, project = self.Repo(kind_reader=lambda n: None), self.Project()
-        self.version_ticket(repo, project)
-        self.assertIn(("ITEM", "F-Kind", {"singleSelectOptionId": "Kind-Version"}), project.set)
-
     def test_the_alert_gets_its_kind_with_the_field(self):
         import alerts
 
@@ -359,52 +344,6 @@ class WritingTests(unittest.TestCase):
         client.create_issue("T", "B", "Alert")
         self.assertIn(b'"type"', sent[0])
         self.assertNotIn(b'"type"', sent[1])
-
-
-class LookupTests(unittest.TestCase):
-    """The Version tickets are listed without the issue-type filter when there are no issue types."""
-
-    class Repo:
-        repo = "owner/repo"
-
-        def __init__(self, kind_reader=None):
-            self.kind_reader, self.paths = kind_reader, []
-
-        def repo_path(self, path):
-            return path
-
-        def request(self, method, path, body=None):
-            self.paths.append(path)
-            return [{"number": 1, "title": "Not a version"}, {"number": 2, "title": "Version 000.002.000", "pull_request": {}},
-                    {"number": 3, "title": "Version 000.002.000", "state": "closed"}]
-
-    def test_the_filter_is_sent_with_issue_types_only(self):
-        self.assertEqual(ticket_type.type_filter(self.Repo(), "Version"), "&type=Version")
-        self.assertEqual(ticket_type.type_filter(self.Repo(kind_reader=lambda n: None), "Version"), "")
-        self.assertEqual(ticket_type.type_filter(object(), "Version"), "&type=Version")
-
-    def test_a_version_ticket_is_found_by_its_title_without_the_filter(self):
-        import implemented
-
-        repo = self.Repo(kind_reader=lambda n: None)
-        found = implemented.version_ticket(repo, implemented.Version.parse("V0.2.0"))
-        self.assertEqual(found["number"], 3)  # the pull request with the same title is skipped
-        self.assertNotIn("type=", repo.paths[0])
-        issue_repo = self.Repo()
-        implemented.version_ticket(issue_repo, implemented.Version.parse("V0.2.0"))
-        self.assertIn("type=Version", issue_repo.paths[0])
-
-    def test_the_stale_planned_versions_are_listed_without_the_filter(self):
-        import alerts
-
-        class Open(self.Repo):
-            def request(self, method, path, body=None):
-                self.paths.append(path)
-                return [{"number": 5, "title": "Version 0.1.0"}, {"number": 6, "title": "Version 0.1.0", "pull_request": {}}]
-
-        repo = Open(kind_reader=lambda n: None)
-        self.assertEqual(alerts.stale_planned(repo, alerts.Version.parse("V0.2.0")), [(5, "Version 0.1.0")])
-        self.assertNotIn("type=", repo.paths[0])
 
 
 if __name__ == "__main__":

@@ -1,12 +1,13 @@
 """The finalize step: after a merge to main, number the version and record it.
 
 It decides the bump, renames the open WIP-Version heading in a commit of its own, sets the
-Delivery, Version, Build of each ticket on the board, and creates (or reuses) the
-Version ticket with the tickets as sub-issues, then closes it.
+Delivery, Version, Build of each ticket on the board, and settles the Implemented tickets. It
+creates no ticket for the version: the changelog entry, the Version field of the tickets and,
+for a release, the tag are the record.
 
-Safe to run again: it skips what is already done. A board problem does not stop the version
-from being finalized. `--dry-run` only reports what it would do.
-See the guide on syncing and merging (section 5) and project structure (section 5.2).
+Safe to run again: every step sets a value only when it differs, so a run with no open heading
+checks the last version again. A board problem does not stop the version from being finalized.
+`--dry-run` only reports what it would do. See the guide on syncing and merging (section 5).
 """
 import os
 import subprocess
@@ -19,7 +20,6 @@ import preflight
 import versions
 from versions import Version
 import failures
-import ticket_type
 from github_api import Client, GitHubError
 
 CHANGELOG = "CHANGELOG.md"
@@ -56,13 +56,6 @@ def bump_reason(types_by_ticket, marker, first):
     if drivers:
         return "sub, from the Type of " + ", ".join(f"#{n} ({types_by_ticket[n]})" for n in drivers)
     return "mod, from the ticket Types (no Feature or Enhancement)"
-
-
-def version_description(version, when, bump, pull_request, last_build, tickets, source=None):
-    source = source or (f"pull request #{pull_request}" if pull_request else "the merge to main")
-    lines = [f"Finalized {when} UTC from {source}. Bump: {bump}. Last build: {last_build or 'none'}.", "", "Tickets:"]
-    lines += [f"- #{number} {title} ({kind})" for number, title, kind in tickets]
-    return "\n".join(lines) + "\n"
 
 
 def ticket_builds(section):
@@ -117,41 +110,6 @@ def update_ticket(run, project_client, board, number, version, build, delivery="
         run.do(f"#{number}: set {name} to {shown}", project_client.set_project_field, board.id, item["id"], fields[name]["id"], value)
 
 
-def record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, tickets, delivery="Merged",
-                          source=None):
-    title = version.title()
-    body = version_description(version, when, bump, pull_request, last_build, tickets, source)
-    existing = implemented.version_ticket(repo_client, version)
-    if existing and existing["state"] == "closed":
-        run.do(f"{title}: already recorded as #{existing['number']}")
-        return existing["number"]
-    if existing:
-        number = existing["number"]
-        run.do(f"{title}: reuse the planned ticket #{number}", repo_client.request, "PATCH", repo_client.repo_path(f"/issues/{number}"),
-               {"title": title, "body": body})
-        node_id = existing["node_id"]
-    else:
-        created = run.do(f"{title}: create the Version ticket", repo_client.create_issue, title, body, "Version")
-        number, node_id = (created["number"], created["node_id"]) if created else (0, None)
-    for ticket_number, _, _ in tickets:
-        run.do(f"{title}: attach #{ticket_number} as a sub-issue", repo_client.add_sub_issue, number, ticket_number)
-    if board and project_client:
-        try:
-            item_id = run.do(f"{title}: add to the board", project_client.add_to_project, board.id, node_id)
-            if ticket_type.field_mode(repo_client) and not existing:
-                ticket_type.set_kind(run, project_client, board, item_id, "Version", title)
-            for name, text, value in (("Delivery", delivery, {"singleSelectOptionId": board.fields["Delivery"]["options"][delivery]}),
-                                      ("Version", version.board(), {"text": version.board()}),
-                                      ("Build", last_build, {"text": last_build})):
-                if text:
-                    run.do(f"{title}: set {name} to {text}", project_client.set_project_field, board.id, item_id, board.fields[name]["id"], value)
-        except GitHubError as error:
-            run.log.append(f"{title}: board fields skipped: {error}")
-            failures.record(f"{title}: board fields skipped: {error}")
-    run.do(f"{title}: close", repo_client.close_issue, number)
-    return number
-
-
 def commit_heading(root, version, push, manifest=False):
     def git(*args):
         subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
@@ -174,7 +132,7 @@ def recorded_bump(sections):
     return f"{kind}, from {old} to {new}"
 
 
-def finalize(root, repo_client, project_client=None, board=None, now=None, pull_request=None, dry_run=False, push=True):
+def finalize(root, repo_client, project_client=None, board=None, now=None, dry_run=False, push=True):
     """Finalize the version of the latest merge. Returns the Runner, whose log lists every action."""
     run = Runner(dry_run)
     now = now or versions.utc_now()
@@ -189,15 +147,15 @@ def finalize(root, repo_client, project_client=None, board=None, now=None, pull_
         return run
     if wip is not None:
         target = wip
-        version, types, bump = decide(sections, repo_client)
+        version, _, bump = decide(sections, repo_client)
         tickets = target.ticket_numbers()
         when = versions.heading_time(now)
     else:
         target, version, when = previous, previous.version, previous.time
         tickets = target.ticket_numbers()
-        types = {n: repo_client.issue_type(n) for n in tickets}
         bump = recorded_bump(sections)
         run.log.append(f"no open WIP-Version heading: re-checking {version}")
+    run.log.append(f"{version}: bump {bump}")
     if wip is not None:
         stamp = check_manifest.stamp_pending(root)
 
@@ -209,10 +167,7 @@ def finalize(root, repo_client, project_client=None, board=None, now=None, pull_
             commit_heading(root, version, push, stamp)
         run.do(f"rename the open WIP-Version heading to {version} — {when} UTC" +
                (f", set the manifest standard to {version}" if stamp else "") + " and commit it", rename)
-    last_build = target.last_build()
     builds = ticket_builds(target)
-    titles = {b.number: b.title for b in target.blocks() if b.kind == "ticket"}
-    listing = [(n, titles[n], types[n] or "no Type") for n in tickets]
     if board is None or project_client is None:
         run.log.append("board steps skipped: no board (the preflight did not identify one)")
     else:
@@ -222,11 +177,10 @@ def finalize(root, repo_client, project_client=None, board=None, now=None, pull_
             except GitHubError as error:
                 run.log.append(f"#{number}: board update skipped: {error}")
                 failures.record(f"#{number}: board update skipped: {error}")
-    ticket = record_version_ticket(run, repo_client, project_client, board, version, when, bump, pull_request, last_build, listing)
     if board is not None and project_client is not None:
         try:
             finalized = {s.version for s in sections if s.kind == "final"} | {version}
-            implemented.sweep(run, repo_client, project_client, board, finalized, (version, ticket), now)
+            implemented.sweep(run, repo_client, project_client, board, finalized, version, now)
         except GitHubError as error:
             run.log.append(f"Implemented tickets: sweep skipped: {error}")
             failures.record(f"Implemented tickets: sweep skipped: {error}")
@@ -244,16 +198,8 @@ def main(argv=None):
     project_client = Client(os.environ.get("PROJECT_TOKEN", ""), repo)
     report = preflight.run(repo_client, project_client, store="--dry-run" not in args)
     print(report.render())
-    pull_request = None
-    sha = os.environ.get("GITHUB_SHA")
-    if sha:
-        try:
-            pulls = repo_client.request("GET", repo_client.repo_path(f"/commits/{sha}/pulls"))
-            pull_request = pulls[0]["number"] if pulls else None
-        except GitHubError:
-            pass
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-    run = finalize(root, repo_client, project_client, report.board, pull_request=pull_request,
+    run = finalize(root, repo_client, project_client, report.board,
                    dry_run="--dry-run" in args, push="--no-push" not in args)
     prefix = "would: " if run.dry_run else "did: "
     for line in run.log:

@@ -127,7 +127,7 @@ OPTION_DESCRIPTIONS = {
     "Merged": "The work is on main, in a finalized version.",
     "Implemented": "The work is in effect and involved no file change (a setting, a secret, a check that was run).",
     "Released": "The version containing it has been declared a release.",
-    "Dropped": "The code or version was planned or pushed but will never be delivered.",
+    "Dropped": "The code was pushed but will never be delivered: its branch was retired as abandoned.",
     "Critical": "Act now: a fault in released software, or an unverified bypass. Every Alert ticket is Critical.",
     "Urgent": "Must be in the current or next version; it blocks other work or a release.",
     "High": "Important; planned for the next few versions.",

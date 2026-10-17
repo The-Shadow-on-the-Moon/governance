@@ -142,7 +142,7 @@ bypass is a decision the person has to own, because the Alert it creates is in t
 | Field or action | The assistant |
 |---|---|
 | Progress up to *Review* | may set it, for the person it acts for. Sets *Review* when the work is done. |
-| *Completed*, Resolution *Done*, closing a ticket | never. A person verifies (section 1). It may add a comment with its findings, when asked. |
+| *Completed*, closing a ticket | never. A person verifies (section 1); Resolution *Done* follows from *Completed* and the automation sets it. It may add a comment with its findings, when asked. |
 | Delivery, Build, the form of Version, the dates | never by hand. The automation sets them. The one exception is Delivery *Implemented*, with the Version it belongs to, on a ticket with no file change: it may set that for the person it acts for, when the work is in effect. |
 | Size on a ticket it creates | always sets one. |
 | Size on someone else's ticket | says so if it looks wrong, and does not change it. |

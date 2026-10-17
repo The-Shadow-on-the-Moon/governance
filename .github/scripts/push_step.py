@@ -57,6 +57,9 @@ def new_ticket_builds(root, before, after, base="origin/main"):
     return found
 
 
+SHIPPED_BEFORE = tuple(d for d in DELIVERED if d != "Pushed")  # a ticket that was delivered and now gets new work
+
+
 def has_earlier_work(delivery, recorded_build, stamp):
     """Whether the ticket had work before the build being pushed.
 
@@ -104,13 +107,24 @@ def handle_push(root, repo_client, project_client, board, before, after, dry_run
                 wanted.append(("Attention", "Caution", {"singleSelectOptionId": fields["Attention"]["options"]["Caution"]}))
             for name, shown, value in wanted:
                 run.do(f"#{number}: set {name} to {shown}", project_client.set_project_field, board.id, item["id"], fields[name]["id"], value)
+            # The Version of a ticket that shipped is the number of the shipped work, not a plan for the new work: it is
+            # cleared (the changelog keeps it), and finalize writes the real one when the new work ships.
+            old_version = finalize._value(item, "version", "text") if delivery in SHIPPED_BEFORE else None
+            if old_version:
+                run.do(f"#{number}: clear Version {old_version} (new work on a ticket that was {delivery})",
+                       project_client.clear_project_field, board.id, item["id"], fields["Version"]["id"])
+            cleared = (f" Its Version {old_version} is cleared: that number belongs to the work that shipped, and the finalize step "
+                       "writes the real one when this work ships." if old_version else "")
             if flag:
                 run.do(f"#{number}: comment on the new work",
                        repo_client.comment, number,
                        condition_comments.decorate(
                            f"<!-- attention:caution -->\nAttention: Caution. New work arrived on this ticket, which is {status}: build {stamp} (branch {branch}). "
                            "Decide whether it belongs to this ticket (reopen it), is separate work (create a ticket for it), "
-                           "or was only an adjustment, then tick a box below.", "new-work-on-finished-ticket"))
+                           f"or was only an adjustment, then tick a box below.{cleared}", "new-work-on-finished-ticket"))
+            elif old_version:
+                run.do(f"#{number}: comment on the cleared Version", repo_client.comment, number,
+                       f"New work arrived on this ticket (build {stamp}, branch {branch}), which had been delivered ({delivery}).{cleared}")
         except (GitHubError, KeyError) as error:
             run.log.append(f"#{number}: board update skipped: {error}")
     return run

@@ -124,8 +124,8 @@ scripts (`audit_files.py` and the others) print to the screen only.
 |---|---|---|
 | **Files** (`audit_files.py`) | The places every project has (readme, `CHANGELOG.md`, `doc/wiki/`, `.githooks/`, `.github/`, `AGENTS.md`, `.gitignore`, `.gitattributes`, license); the `* text=auto eol=lf` line; the changelog (Unix line endings, no *Known bugs* or *Planned* sections, one open `WIP-Version` heading on top with a valid marker, version headings and their order, build and ticket headings); the hooks and whether they are active in the clone; the wiki (`Home.md`, page names); the workflow, pull request template, manifest and tests; that `AGENTS.md` points to the guides. | A clone. |
 | **Git** (`audit_git.py`) | `main` exists and is the only integration line; branch names are kebab-case without `/` (or the hotfix form); tag names follow the namespaces; release tags are on `main` and name a changelog version; work reaches `main` through merge commits; no `fix:` or `feat:` subject prefix; no assistant co-author or "generated with" line. | A clone. Run `git fetch` first to include the remote branches. |
-| **GitHub** (`audit_github.py`) | Merge methods, automatic branch deletion, default branch, issues, projects and wiki; that the owner is an organization (or the Type is kept in the field Kind) and the variable `TYPE_SOURCE` is valid; protection of `main` and the administrator bypass; Actions; the secret `PROJECT_TOKEN` and the variable `BOARD_NUMBER`; the labels (the 14 Area labels and `dummy`, described, standard colors); the eight issue types (unless the Type is kept in the field Kind). | `gh`; administration access for protection and secrets. |
-| **Board** (`audit_board.py`) | The board linked to the repository; every field with its kind, values and colors; the saved views against `.github/views.json`; the tickets (Type, that is the issue type or the field Kind, Size, Status against open or closed, Resolution, Origin and REF, the board form of Version, Version tickets, Alerts, Area labels). Throwaway (`dummy`) tickets and pull requests are skipped. | `gh` with the `project` scope (`gh auth refresh -s project`). |
+| **GitHub** (`audit_github.py`) | Merge methods, automatic branch deletion, default branch, issues, projects and wiki; that the owner is an organization (or the Type is kept in the field Kind) and the variable `TYPE_SOURCE` is valid; protection of `main` and the administrator bypass; Actions; the secret `PROJECT_TOKEN` and the variable `BOARD_NUMBER`; the labels (the 14 Area labels and `dummy`, described, standard colors); the seven issue types (unless the Type is kept in the field Kind). | `gh`; administration access for protection and secrets. |
+| **Board** (`audit_board.py`) | The board linked to the repository; every field with its kind, values and colors; the saved views against `.github/views.json`; the tickets (Type, that is the issue type or the field Kind, Size, Status against open or closed, Resolution, Origin and REF, the board form of Version, Alerts, Area labels; a legacy Version ticket is exempt). Throwaway (`dummy`) tickets and pull requests are skipped. | `gh` with the `project` scope (`gh auth refresh -s project`). |
 
 The tables the audits compare with are not copied: the fields, their values and colors come from
 `.github/scripts/preflight.py`, the views from `.github/views.json`, and the labels and issue types from
@@ -247,7 +247,7 @@ If the repository cannot be read, the only check is `github.repository` (R, 10 �
 | `github.labels.exact` | R | 10 §5.2 | The repository's labels are exactly the 14 Area labels and `dummy` of Appendix C: none extra, none missing. |
 | `github.labels.descriptions` | R | 10 §5.2 | Each of those labels has a non-empty description. |
 | `github.labels.colors` | r | 10 §5.2 | Each of those labels has its Appendix C color. |
-| `github.issue-types.exact` | R | 10 §5.1 | The organization has all eight issue types of Appendix C (Feature, Enhancement, Change, Bug, Refactor, Task, Version, Alert), enabled. With the source `field` it is passed as not needed, and the next two checks are not made. |
+| `github.issue-types.exact` | R | 10 §5.1 | The organization has all seven issue types of Appendix C (Feature, Enhancement, Change, Bug, Refactor, Task, Alert), enabled (an older board also has *Version*, which is tolerated). With the source `field` it is passed as not needed, and the next two checks are not made. |
 | `github.issue-types.descriptions` | R | 10 §5.1 | Each issue type has a non-empty description. |
 | `github.issue-types.colors` | r | 10 §5.2 | Each issue type has its Appendix C color. |
 
@@ -263,7 +263,7 @@ become hyphens).
 | Id | Strength | Guide | What is verified |
 |---|---|---|---|
 | `board.linked` | R | 10 §6.2 | A board is linked to the repository (the one given by `--board`, else the first). Nothing else runs without it. |
-| `board.field.<field>` | R | 10 §6.2 | The field exists on the board. With the source `field`, Kind is one of the fields, with the eight values of the Type. |
+| `board.field.<field>` | R | 10 §6.2 | The field exists on the board. With the source `field`, Kind is one of the fields, with the seven values of the Type. |
 | `board.field.<field>.type` | R | 10 §6.2 | The field is of the right kind: single select, text or date (Build and Version must be text, not number). |
 | `board.field.<field>.values` | R | 10 §6.2 | A single-select field has exactly the values of the table: none missing, none extra. |
 | `board.field.<field>.colors` | r | Appendix C | Each value that has a standard color has it. |
@@ -277,7 +277,6 @@ become hyphens).
 | `board.ticket.resolution` | R | 03 §4.3 | Resolution is set exactly when the work ticket is *Completed* or *Abandoned*. |
 | `board.ticket.backfilled-ref` | R | 03 §4.3 | A work ticket with Origin *Backfilled* has its REF filled in. |
 | `board.ticket.version-form` | r | 03 §4.3 | A Version value matches the board form `V000.010.001` (with an optional `-HF<n>`). |
-| `board.ticket.version-title` | R | 03 §5.2 | A ticket of type Version is titled `Version 000.010.001` (optional `-HF<n>`). |
 | `board.ticket.alert-priority` | R | 03 §5.3 | A ticket of type Alert has Priority *Critical*. |
 | `board.ticket.area` | r | 03 §4.3 | A work ticket has at least one label (Area). |
 

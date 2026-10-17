@@ -79,9 +79,25 @@ class ConditionViewsTests(unittest.TestCase):
     def view(self, name):
         return next(entry for entry in self.entries() if entry["name"] == name)
 
-    def test_the_views_are_these_seven_in_this_order(self):
+    def test_the_views_are_these_eight_in_this_order(self):
         self.assertEqual([entry["name"] for entry in self.entries()],
-                         ["All", "Backlog", "Board", "Decide", "Follow up", "Fix", "Versions"])
+                         ["All", "Backlog", "Board", "Plan", "Decide", "Follow up", "Fix", "Versions"])
+
+    def test_plan_lists_the_open_tickets_aimed_at_a_version_that_have_not_shipped_grouped_by_version(self):
+        plan = self.view("Plan")
+        self.assertEqual(plan["filter"], "is:open AND has:version AND -delivery:Merged,Implemented,Released AND -type:Version")
+        self.assertEqual((plan["group_by"], plan["sort_by"]), ("Version", [["Version", "asc"], ["Priority", "asc"]]))
+
+    def test_versions_groups_by_the_version_field_not_by_a_parent_ticket(self):
+        versions = self.view("Versions")
+        self.assertEqual(versions["group_by"], "Version")
+        self.assertEqual(versions["filter"], "has:version AND -type:Version")
+
+    def test_the_plan_filter_clauses_are_forms_the_other_views_already_use(self):
+        # Negated lists of single-select values, has:, is:open and -type: are in the views that exist on the board.
+        others = " ".join(entry.get("filter", "") for entry in self.entries() if entry["name"] != "Plan")
+        for clause in ("is:open", "has:version", "-type:Version", "-status:ToDo,Suspended"):
+            self.assertIn(clause, others, clause)
 
     def test_decide_lists_the_open_attention_flags_and_the_open_alerts(self):
         self.assertEqual(self.view("Decide")["filter"], "attention:Watch,Caution,AtRisk OR (type:Alert AND is:open)")

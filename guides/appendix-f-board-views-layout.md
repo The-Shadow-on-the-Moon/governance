@@ -12,31 +12,31 @@ in the wiki page Board views.
 
 The number is the position of the column in the view; "·" means the view does not show it.
 
-| Field | All | Decide | Follow up | Fix | Versions |
-|---|---|---|---|---|---|
-| Title | 1 | 1 | 1 | 1 | 1 |
-| Assignees | 2 | 2 | 2 | 2 | 5 |
-| Status | 3 | 3 | 3 | 4 | 2 |
-| Type | 4 | 4 | 4 | 5 | 3 |
-| Labels | 5 | 5 | 5 | 6 | 4 |
-| Priority | 6 | 7 | 7 | 7 | 6 |
-| Size | 7 | · | 8 | · | 7 |
-| Risk | 8 | · | 9 | · | · |
-| Waiting | 9 | 8 | 6 | · | · |
-| Attention | 10 | 6 | · | · | · |
-| Fix | 11 | · | · | 3 | · |
-| Resolution | 12 | · | 10 | 8 | 9 |
-| Delivery | 13 | 9 | 11 | 9 | 8 |
-| Origin | 14 | · | · | · | · |
-| REF | 15 | · | · | 13 | · |
-| Version | 16 | 10 | 12 | 10 | 10 |
-| Build | 17 | · | · | 11 | 11 |
-| Start date | 18 | · | · | · | · |
-| End date | 19 | · | · | 12 | · |
-| **Sort** | Created, ascending | Priority, ascending | Priority, ascending | Priority, ascending | Version, ascending, then Priority, ascending |
-| **Group** | none | none | none | none | Parent issue (the Version ticket) |
+| Field | All | Plan | Decide | Follow up | Fix | Versions |
+|---|---|---|---|---|---|---|
+| Title | 1 | 1 | 1 | 1 | 1 | 1 |
+| Assignees | 2 | 4 | 2 | 2 | 2 | 5 |
+| Status | 3 | 2 | 3 | 3 | 4 | 2 |
+| Type | 4 | 3 | 4 | 4 | 5 | 3 |
+| Labels | 5 | · | 5 | 5 | 6 | 4 |
+| Priority | 6 | 5 | 7 | 7 | 7 | 6 |
+| Size | 7 | 6 | · | 8 | · | 7 |
+| Risk | 8 | 7 | · | 9 | · | · |
+| Waiting | 9 | · | 8 | 6 | · | · |
+| Attention | 10 | · | 6 | · | · | · |
+| Fix | 11 | · | · | · | 3 | · |
+| Resolution | 12 | · | · | 10 | 8 | 9 |
+| Delivery | 13 | 8 | 9 | 11 | 9 | 8 |
+| Origin | 14 | · | · | · | · | · |
+| REF | 15 | · | · | · | 13 | · |
+| Version | 16 | 9 | 10 | 12 | 10 | 10 |
+| Build | 17 | · | · | · | 11 | 11 |
+| Start date | 18 | · | · | · | · | · |
+| End date | 19 | · | · | · | 12 | · |
+| **Sort** | Created, ascending | Version, ascending, then Priority, ascending | Priority, ascending | Priority, ascending | Priority, ascending | Version, ascending, then Priority, ascending |
+| **Group** | none | Version | none | none | none | Version |
 
-Version is written in the board form (`V000.010.001`), which sorts as text in version order, so the Versions view sorts by it and its groups (the Version tickets, titled `Version 000.010.001`) come out in version order.
+Version is written in the board form (`V000.010.001`), which sorts as text in version order, so the Plan and Versions views sort by it and their groups come out in version order. A ticket with no Version is in the group "No Version" of the Versions view.
 
 ## 2. Board views
 

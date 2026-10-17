@@ -314,16 +314,15 @@ class GuideValueTests(unittest.TestCase):
         reference = self.guide("appendix-c-ticket-fields-reference.md")
         section = reference.split("## Type", 1)[1].split("## Area", 1)[0]
         listed = dict(re.findall(r"^\| \*\*([A-Za-z]+)\*\* \| .*? \| (sub|mod|none) \|$", section, re.M))
-        self.assertEqual(len(listed), 8)
+        self.assertEqual(len(listed), 7)
         self.assertEqual(listed, bump)
 
     def test_every_alert_kind_is_described_where_alerts_are_listed(self):
         import re
 
         alerts = self.automation("alerts")
-        titles = [alerts.stale_alert("V1.0.0", [(1, "Version 0.9.0")])[0],
-                  alerts.changelog_error_alert("x", "abc1234", "2026-10-05 16:40")[0]]
-        self.assertEqual(len(titles), 2)  # the bypass Alert has two shapes, tested elsewhere
+        titles = [alerts.changelog_error_alert("x", "abc1234", "2026-10-05 16:40")[0]]
+        self.assertEqual(len(titles), 1)  # the bypass Alert has two shapes, tested elsewhere
         unreadable = re.compile(r"cannot read|could not be read|unreadable|could not read")
         for name in ("03-project-structure.md", "07-issues-and-the-board-in-practice.md"):
             text = self.guide(name)
@@ -526,13 +525,13 @@ class GuideValueTests(unittest.TestCase):
         areas = re.findall(r"^\| `(\w+)` \| ([0-9A-F]{6}) \|", text, re.M)
         self.assertEqual(len(areas), 15)  # the 14 Area labels and dummy
 
-    def test_the_registry_and_the_automation_agree_on_the_ten_rules_of_the_guide(self):
+    def test_the_registry_and_the_automation_agree_on_the_eleven_rules_of_the_guide(self):
         import re
 
         conditions = self.automation("conditions")
         section = self.guide("03-project-structure.md").split("### 4.4 Rules that span fields", 1)[1].split("> **In GitHub.**", 1)[0]
         self.assertGreaterEqual(len(re.findall(r"^\| ", section, re.M)), 12)
-        self.assertEqual(len(conditions.FIX_RULES), 10)
+        self.assertEqual(len(conditions.FIX_RULES), 11)
         self.assertIn("Fix field", section)  # the rule table says the broken rule is listed in Fix
 
     def test_the_conditions_table_of_the_guide_is_the_registry(self):
@@ -576,20 +575,17 @@ class GuideValueTests(unittest.TestCase):
     def test_the_texts_the_automation_writes_are_shown_in_the_guides_as_they_are_written(self):
         import re
 
-        alerts, finalize, checks = self.automation("alerts"), self.automation("finalize"), self.automation("checks")
+        alerts, checks, versions = self.automation("alerts"), self.automation("checks"), self.automation("versions")
 
         def flat(text):
             return re.sub(r"\s+", " ", re.sub(r"(?m)^>\s?", "", text)).strip()
 
         structure = flat(self.guide("03-project-structure.md"))
-        version = alerts.Version(2, 4, 1)
+        version = versions.Version(2, 4, 1)
         found = [checks.Finding("abc1234def", checks.NOT_IDENTICAL, "Merge pull request #186 from report-fixes", "Sam")]
         title, body = alerts.bypass_alert(found, False, version, "abc1234def0", "2026-10-05 16:40")
         self.assertIn(title, structure)
         self.assertIn(flat(body), structure)
-        description = finalize.version_description(version, "2026-10-05 16:41", finalize.bump_reason({204: "Bug"}, "", False), 186,
-                                                   "20261005143045", [(204, "Report totals ignore the last day of the month", "Bug")])
-        self.assertIn(flat(description), structure)
         _, explanation = alerts.bypass_headline(found, False)
         entry = alerts.add_autoref("## WIP-Version\n", "20261005164000", 187, explanation, False).splitlines()
         bullet = flat(entry[3])

@@ -6,7 +6,7 @@
       "include_test_tickets": true,
       "include_pull_requests": true,
       "sort_by": [["Created", "asc"]],
-      "manual_steps": ["turn off \"Show hierarchy\", so that tickets are not listed inside their Version ticket and the list is flat"],
+      "manual_steps": ["turn off \"Show hierarchy\", so that tickets are not listed inside their parent ticket and the list is flat"],
       "visible_fields": ["Title", "Assignees", "Status", "Type", "Labels", "Priority", "Size", "Risk", "Waiting", "Attention", "Fix", "Resolution", "Delivery", "Origin", "REF", "Version", "Build", "Start date", "End date"]
     },
     {
@@ -25,6 +25,14 @@
       "vertical_group_by": "Status",
       "sort_by": [["Priority", "asc"]],
       "visible_fields": ["Title", "Priority", "Size", "Assignees", "Waiting", "Attention", "Type"]
+    },
+    {
+      "name": "Plan",
+      "layout": "table",
+      "filter": "is:open AND has:version AND -delivery:Merged,Implemented,Released AND -type:Version",
+      "group_by": "Version",
+      "sort_by": [["Version", "asc"], ["Priority", "asc"]],
+      "visible_fields": ["Title", "Status", "Type", "Assignees", "Priority", "Size", "Risk", "Delivery", "Version"]
     },
     {
       "name": "Decide",
@@ -51,7 +59,7 @@
       "name": "Versions",
       "layout": "table",
       "filter": "has:version AND -type:Version",
-      "group_by": "Parent issue",
+      "group_by": "Version",
       "sort_by": [["Version", "asc"], ["Priority", "asc"]],
       "visible_fields": ["Title", "Status", "Type", "Labels", "Assignees", "Priority", "Size", "Delivery", "Resolution", "Version", "Build"]
     }

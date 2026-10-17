@@ -147,7 +147,7 @@ Administrator. These settings do not change the code, and most can be undone, so
    redirected by the host, but clones should update their remote), or keep it and let the Type live in the
    board field Kind (guide on new-project bootstrap, section 5.1); the audit then judges the field and not the
    issue types.
-2. **Issue types and labels.** Create the eight issue types (not for a project that keeps the Type in the
+2. **Issue types and labels.** Create the seven issue types (not for a project that keeps the Type in the
    field Kind) and the 14 Area labels and `dummy`
    (guide on new-project bootstrap, section 5). Before deleting a label that is not on the list, move its
    issues to the Area label that replaces it, because deleting a label removes it from every issue that has
@@ -223,8 +223,10 @@ announced.
    - one that is merged: retire it as *archived*;
    - one nobody will resume: retire it as *abandoned*;
    - one that is set aside: retire it as *suspended*;
-   - one that is still active: rename it to kebab-case (create the new name, push it, move any pull request,
-     then retire the old name).
+   - one that is still active: rename it to kebab-case (create the new name at the same commit, push it, move any
+     pull request, then retire the old name with the outcome *renamed*, giving the new name as the comment: it
+     makes no tag, because the new branch keeps the history). Tell the team to follow with `git fetch --prune`,
+     `git branch -m <old> <new>` and `git branch -u origin/<new>`.
 
    Retiring means tag first and delete second (guide on releases, hotfixes and retiring branches, section 3).
 2. **Tags.** Give each existing tag a name in the standard form. A tag that marks a real release becomes
@@ -284,12 +286,13 @@ documented work visible.
 Developer and administrator.
 
 1. **Run level 1 of the proof** (guide on new-project bootstrap, section 8.1): the preflight, the tests, the
-   finalize step in dry-run mode, and a throwaway commit to see the hooks.
+   finalize step in dry-run mode (started from the adoption branch, it previews that branch's merge), and a
+   throwaway commit to see the hooks.
 2. **Open the pull request** for the adoption branch and land it as any pull request is landed (guide on
    syncing and merging, sections 2 to 5). Its merge is the **cut-over**, and the version it produces continues
    from the baseline of stage 2.
 3. **Check the result** as for a first merge (guide on syncing and merging, section 5.2): the heading is
-   renamed, the Version ticket lists the tickets, and the tickets show Delivery *Merged*.
+   renamed, and the tickets show Delivery *Merged* and their Version.
 4. **Turn on protection** of `main` where the plan offers it, with the administrator bypass left open.
 5. **Re-audit.** Run the audit tools again. Every failed rule is fixed, or recorded as accepted or not
    applicable, and nothing the project still does wrong is among them.

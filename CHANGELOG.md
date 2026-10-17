@@ -1,5 +1,109 @@
 # Changelog
 
+## WIP-Version +m
+### Build 20261017044822 (branch version-tickets-out)
+#### #204 — Finalize: stop creating Version tickets
+- .github/scripts/finalize.py: finalize creates, reuses and closes no Version ticket and attaches no sub-issue; it renames the heading, sets Delivery, Version and Build on the tickets (each only when it differs, so a run with no open heading checks the last version again, and a run after a partial one completes what is missing) and settles the Implemented tickets; the bump and its reason are in the run log; the `pull_request` argument and the lookup of the merge's pull request are gone (they only served the description of the Version ticket); `record_version_ticket` and `version_description` stay for the hotfix step until it stops using them (#206)
+- .github/scripts/implemented.py: the sweep no longer attaches Implemented tickets to Version tickets or comments on them: a blank Version gets the version being finalized (at a scheduled run, the latest finalized version), a finalized Version is kept and put in the board form, a later Version waits, a passed one raises the Caution as before; it looks at every Implemented ticket whatever its parent, and needs no Version ticket, so the scheduled run works for versions that have none; `unattached` is now `implemented_tickets`; the Caution text no longer promises an attachment; `version_ticket` stays for the release step until #206
+- tests/test_finalize.py, tests/test_implemented.py, tests/test_pull_request_items.py: nothing is created, attached or closed; the bump in the log; a re-run and a run after a partial one; a Version ticket left from before is not touched; the sweep for each case without attaching, for a ticket with a parent, and the scheduled sweep with no Version ticket
+- guides/06-syncing-and-merging.md, doc/wiki/Automation.md: finalize creates no Version ticket and the Implemented tickets are settled, not attached
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #205 — Finalize dry run started by hand from a branch cannot preview that branch's merge
+- .github/workflows/versioning.yml: the `main` job checks out the ref a dry run was started from (so the dry run reads that branch's scripts and changelog) and `main` in every other case, a push and a real run by hand included
+- tests/test_workflow.py: the checkout expression, and that the job no longer forces `main`
+- guides/10-new-project-bootstrap.md, guides/11-adopting-the-standard-in-an-existing-project.md, doc/wiki/Automation.md: a dry run started from a branch previews that branch's merge, which is how a change to the automation or the changelog is proved before the merge
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #206 — Release and hotfix: no Version ticket
+- .github/scripts/release.py: the release step needs no Version ticket: it checks from the changelog that the version is final and finds its finalizing commit, tags `released/V…` and sets Delivery Released on the tickets as before; it no longer reads, sets or comments on a Version ticket (a legacy one is still left alone, like an Alert); the log ends with the version, the time and the tag
+- .github/scripts/hotfix.py: the hotfix finish step creates no Version ticket and no sub-issue; the log says the hotfix is released and that its branch may be deleted without a retirement tag
+- .github/scripts/finalize.py, .github/scripts/implemented.py: `record_version_ticket`, `version_description`, `version_ticket` and its title parser are removed (only the two steps above still used them), with the imports they left
+- tests/test_release.py, tests/test_hotfix.py, tests/test_implemented.py, tests/test_finalize.py: no ticket is looked up, created, attached, closed or commented; a legacy Version ticket is not released; a trial and a second hotfix as before; the tests of the removed functions are gone
+- guides/08-releases-hotfixes-and-retiring-branches.md, doc/wiki/Automation.md: the release and the hotfix steps without the ticket
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #207 — Implemented sweep, alerts and bypass: remove the attach and the stale-planned Alert
+- .github/scripts/alerts.py: `stale_alert` and `stale_planned` are removed, with the imports they left; an Alert is raised for a bypass, a push without changelog entries or an unreadable changelog
+- .github/scripts/bypass.py: `raise_stale_alert`, `stale_command` and the `stale` command are removed
+- .github/scripts/conditions.py: the description of the open-Alert condition no longer lists stale planned versions
+- .github/scripts/ticket_type.py: `type_filter` is removed (only the Version-ticket lookups used it)
+- .github/workflows/versioning.yml: the step "Check for stale planned versions" is removed, the steps "Attach Implemented tickets to their versions" are named "Settle the Implemented tickets", and the header comments follow (the sweep itself was changed in #204)
+- tests/test_checks.py, tests/test_workflow.py, tests/test_ticket_type.py, tests/test_tools.py: the tests of the stale-planned Alert, its command, the type filter and the description of the Version ticket are removed; a test checks that the workflow has no stale step and no attach step, and that the order of the steps follows
+- guides/06-syncing-and-merging.md, doc/wiki/Automation.md: no stale-planned check, and the Implemented tickets are settled, not attached
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #208 — Conditions: stale-plan Fix rule with changelog context; Version kept as a legacy type
+- .github/scripts/conditions.py: the new Fix rule `stale-plan`: an open ticket (ToDo to Suspended) that is not shipped (Delivery not Merged, Implemented or Released, so blank, Committed, Pushed and Dropped count) and has a Version at or below the highest finalized version, compared with `Version.number()`, is listed in Fix with the correction (a Version above it, or none); a blank Version, a text that is not a version, an Alert, a legacy Version ticket and a closed ticket are not flagged; the detector takes the highest finalized version as a second argument (`with_context`), read from `CHANGELOG.md` by `highest_finalized` (the highest heading, none when the file cannot be read, and then the rule is skipped for that run and the log says so); the rule gets no comment (`comment=False`): it shows in the Fix field and the Fix view only, because one finalize can make many plans stale at once and the Version is advisory; comments are read only for rules that can have one; `Version` stays a legacy type in the exemption tuples
+- .github/scripts/ticket_type.py: `Version` is no longer one of the values of the Type (seven for a new board and for the field Kind; an older board with an eighth is tolerated); the description of Alert no longer names a stale planned version
+- .github/scripts/preflight.py: the description of the Delivery option Dropped no longer mentions a planned version
+- tests/test_conditions.py: 14 new cases (equal, below, above, the padded form, a hotfix number, each open status, each Delivery, Alert and legacy Version tickets, text that is not a version, no highest version, a major jump, no comment for the rule and a comment for another, comments read only when one is possible, the highest version from the changelog, the Fix field written and cleared)
+- tests/test_tools.py, tests/test_audit_github.py: seven types and eleven Fix rules
+- guides/02-branching-and-merging-strategy.md, guides/03-project-structure.md, guides/07-issues-and-the-board-in-practice.md, guides/10-new-project-bootstrap.md, guides/01-concepts-and-vocabulary.md, guides/appendix-c-ticket-fields-reference.md, guides/appendix-g-audit-findings-and-fixes.md, doc/wiki/Audit-Tools.md, doc/wiki/Ticket-Model.md: the rule in the table of rules that span fields and in the table of conditions; seven issue types, with *Version* described as a legacy type; the Type table without Version; the description of Dropped and of Alert
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #232 — Resolution Done follows Completed: the automation fills and clears it
+- .github/scripts/conditions.py: `settle_resolution`, run by the refresh before the rules are judged: a Completed ticket whose Resolution is blank gets *Done*, and a ticket that is not Completed loses a *Done* (sent back to work, or set by hand on an open ticket); the reason of an Abandoned ticket, another value on a Completed ticket, a ticket with no Progress, and a board without the field or without the option *Done* are left to the rules; so no transient Fix flag or comment appears, and a Fix left by the old rule clears once the Resolution is filled
+- tests/test_conditions.py: 12 new cases (the fill, the clear for every open status, a Completed ticket that already has *Done*, another value flagged and not replaced, the reason of an Abandoned ticket, *Done* on an Abandoned ticket, no Progress, no field or no option, a dry run, the Fix field)
+- guides/03-project-structure.md, guides/07-issues-and-the-board-in-practice.md, guides/09-working-with-an-ai-assistant.md, guides/appendix-a-cheat-sheet-daily-flow.md, guides/appendix-c-ticket-fields-reference.md, guides/appendix-e-ticket-model.md, guides/appendix-g-audit-findings-and-fixes.md, doc/wiki/Ticket-Model.md, doc/wiki/Automation.md: the reviewer sets the Progress and the automation sets *Done* at its next refresh (when the issue is closed, or at the next scheduled or on-demand run); reopening clears *Done* by the automation and the reason of an Abandoned ticket by the person; the assistant still never sets *Completed* or closes a ticket
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #209 — Push step: clear the Version when new work returns a shipped ticket to Pushed
+- .github/scripts/push_step.py: when a push moves a ticket that was Merged, Implemented, Released or Dropped back to Pushed, its Version is cleared, because that number belongs to the work that shipped (the changelog keeps it) and the stale-plan rule would otherwise flag every reopened ticket; one comment names the cleared Version, and when the Caution for new work on a finished ticket is also due, that comment carries the sentence instead of a second one; a plan on a ticket that has not shipped (Delivery blank, Committed or Pushed) is never cleared
+- tests/test_push_step.py: each shipped Delivery, the plain comment, the shared Caution comment, an unshipped ticket, a shipped ticket with no Version, and a dry run
+- guides/appendix-e-ticket-model.md, guides/03-project-structure.md, doc/wiki/Automation.md: the Version is cleared on that move
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #211 — Views: Versions grouped by Version, a Plan view, hierarchy wording
+- .github/views.json: the Versions view groups by the Version field (not by the Parent issue, which was the Version ticket); the new Plan view lists the open tickets that have a Version and have not shipped (`is:open AND has:version AND -delivery:Merged,Implemented,Released AND -type:Version`), grouped by Version and sorted by Version then Priority, with Status, Type, Assignees, Priority, Size, Risk, Delivery and Version; it stands after Board, so the board has eight views; the manual step of the All view says the hierarchy is turned off so that tickets are not listed inside their parent ticket; `-type:Version` stays in the filters while legacy tickets exist
+- tests/test_views.py: the eight views in order, the Plan filter, group and sort, the grouping of Versions, and that the Plan filter uses only forms the other views already use
+- guides/appendix-f-board-views-layout.md, guides/07-issues-and-the-board-in-practice.md, guides/10-new-project-bootstrap.md, doc/wiki/Board-Views.md: the Plan column, the grouping of Versions, the eight views and their list; section 6 of guide 07 now explains aiming a ticket at a version with the Version field alone, the Plan view, the stale plan in Fix, and that new work on a shipped ticket clears its Version
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #210 — Audit tools: issue types, remove version-title, tolerate legacy Version tickets
+- tools/audit_board.py: the rule `board.ticket.version-title` and its pattern are removed (no tool renames Version tickets any more, and they are converted instead); `Version` stays in the exemption of the work-ticket rules, so a legacy Version ticket breaks no rule whatever its title
+- tools/audit_github.py: the rule `github.issue-types.exact` is titled "the seven issue types exist"; it already checked only for missing types, so a board that still has the legacy type `Version` passes
+- tests/test_audit_board.py: `version-title` is no longer expected, and a legacy Version ticket with an old-form title or none breaks no rule
+- guides/appendix-g-audit-findings-and-fixes.md, doc/wiki/Audit-Tools.md: the finding and the check of `version-title` are gone; seven issue types
+- guides/Developer-Guides-Complete.md: rebuilt
+
+#### #228 — Renaming an active branch: the tag for the old name, and the kebab-case rule for the tag
+- .github/scripts/retire.py: the outcome `renamed`: the comment is the new branch name (required), which must be on the remote and contain the old branch's last commit and differ from the old name; the old name is deleted without a tag, because the new branch keeps the history (a tag would state something untrue), and the log says how the team follows; an open pull request on the old name still refuses; the branch part of every retirement tag is now the name in kebab-case, so `boot_process` gives `archived/…_boot-process` (the branch is still deleted by its own name), and a name with no letter or digit is refused
+- .github/workflows/versioning.yml: the retire mode offers the outcome `renamed`, and the comment input says it is the new name
+- tests/test_retire.py: a rename deletes the old name with no tag and drops no ticket, the new name may have moved on, a rename without a usable new name or with an open pull request is refused, and a non-kebab-case branch gets a kebab-case tag
+- guides/02-branching-and-merging-strategy.md, guides/08-releases-hotfixes-and-retiring-branches.md, guides/11-adopting-the-standard-in-an-existing-project.md, guides/appendix-g-audit-findings-and-fixes.md, doc/wiki/Automation.md: the rule for a rename, what each person does with a local copy of the old name, and the kebab-case branch part of the tag
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update --pending`)
+
+#### #221 — Guides sweep for the new model
+- guides/01-concepts-and-vocabulary.md: the vocabulary of the model: plan, stale plan, legacy Version ticket and umbrella ticket; sub-issue and finalize redefined; the Version form rule without a Version ticket's title
+- guides/03-project-structure.md: no ticket stands for a version (the tickets of a version are found by their Version); the settling of the Implemented tickets; section 5.2 is now "Legacy Version tickets" (nothing creates or reads them, they are left alone, and the form of a converted one); the Alert for stale planned versions and the two examples of Version and stale-planned tickets are gone; new section 5.5 "Umbrella tickets" (G9: an ordinary work ticket whose sub-issues are the tickets of one piece of work, its Delivery *Implemented*, one parent per ticket, completed when its sub-issues are); the ownership tables follow, including that the automation sets Resolution *Done*
+- guides/05-working-and-committing.md, guides/06-syncing-and-merging.md, guides/08-releases-hotfixes-and-retiring-branches.md, guides/11-adopting-the-standard-in-an-existing-project.md, guides/appendix-a-cheat-sheet-daily-flow.md, guides/appendix-b-cheat-sheet-if-then.md: no Version ticket in the checks after a merge, the trial, the version that came out wrong, or a release made by mistake; a passed plan in the if-then table
+- guides/07-issues-and-the-board-in-practice.md: the Alerts section without the stale-planned Alert, the weekly review item and the checklist for plans
+- guides/10-new-project-bootstrap.md: the board's own workflows (G5): *Item added to project* off, *Auto-close issue* and *Auto-add sub-issues to project* may be on, the others left off; the first merge is checked without a Version ticket; seven issue types
+- guides/appendix-c-ticket-fields-reference.md, guides/appendix-e-ticket-model.md: the table of the fields by ticket without the Version column (and a note on the legacy ticket), the umbrella ticket, Implemented settled and not attached
+- guides/Developer-Guides-Complete.md: rebuilt
+
+#### #222 — Wiki and README sweep
+- doc/wiki/Automation.md: finalize creates no ticket for the version, settles the Implemented tickets and logs the bump; a legacy Version ticket is left alone
+- doc/wiki/Ticket-Model.md: no Version tickets (the changelog entry, the Version field and the tag are the record), plans, the umbrella ticket and the three kinds of Alert
+- doc/wiki/Board-Views.md, doc/wiki/Audit-Tools.md: the hierarchy turned off for parent tickets, the legacy ticket exempt, no throwaway Version tickets
+- doc/wiki/Walkthrough-CSV-Export.md: the merge, the release and the hotfix without a Version ticket
+- doc/wiki/Adopting-the-Standard.md: work made before the cut-over is history wherever it lands
+
+#### #223 — Manifest, combined guide, checks and changelog for the release
+- .github/automation-manifest.json: rewritten with `--update --pending` (the standard is the placeholder until the finalize step gives the version; no version is guessed); no new automation test file was added in this merge, so `PATTERNS` of `check_manifest.py` is unchanged
+- guides/Developer-Guides-Complete.md: rebuilt
+- CHANGELOG.md: the open version carries the deliberate `+m` marker (`## WIP-Version +m`, guide 06 section 2.1) so that the finalize step numbers this merge V0.15.1, a mod, although it holds a Feature (#208): the model of the change is the one the plan and the umbrella ticket #203 describe
+
 ## V0.15.0 — 2026-10-17 03:01 UTC
 ### Build 20261017025557 (branch foundation-fixes)
 #### #226 — Manifest standard in an adopting project is the project's version, not the standard's

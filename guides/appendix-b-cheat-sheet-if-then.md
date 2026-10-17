@@ -28,7 +28,7 @@ branching and merging.
 | I want to force a different version bump | Add `+V`, `+s` or `+m` after `WIP-Version` (never on a hotfix). | Branching, section 3.3 |
 | the advisory check is red | Sync again before merging. | Syncing and merging, section 4 |
 | I need to bypass a rule | Do it deliberately, say why, expect the Alert, then pull `main` and build and test it. | Syncing and merging, section 6 |
-| the version came out wrong | Note it on the Version ticket and fix the ticket's Type. The number is never changed. | Syncing and merging, section 5.4 |
+| the version came out wrong | Note it on the tickets and fix the ticket's Type. The number is never changed. | Syncing and merging, section 5.4 |
 | the board was not updated after the merge | Re-run the finalize step or correct the fields by hand. | Syncing and merging, section 5.2 |
 
 ## Tickets
@@ -43,7 +43,7 @@ branching and merging.
 | an Alert is assigned to me | Triage it before other work. | Issues and the board in practice, section 5.2 |
 | the automation flagged my ticket (*Watch*, *Caution* or *AtRisk*) | Read its comment, decide, act, and tick *Fine*, or *Handled elsewhere* if it is handled elsewhere. | Issues and the board in practice, section 2.4 |
 | an Alert was raised in error | Abandon it with Resolution *Invalid* and a comment, and raise a Bug against the automation. | Issues and the board in practice, section 5 |
-| a planned version will not happen | Mark it *Dropped*, close it, and comment what replaced it. | Issues and the board in practice, section 6 |
+| a plan was passed (a ticket listed in Fix as `stale-plan`) | Set a Version above the highest finalized version, or clear it. | Issues and the board in practice, section 6 |
 
 ## Branches and releases
 
@@ -57,7 +57,7 @@ branching and merging.
 | the released version is from before the adoption | Start the hotfix from its tag; the first commit is the overlay (automation and a baseline changelog). | Releases, hotfixes and retiring branches, section 2.1 |
 | I want to declare a version a release | Verify it, run the release step, and tell the project owner. | Releases, hotfixes and retiring branches, section 1 |
 | a release turns out to be defective | Keep its tag. Fix it with a hotfix of that release, or release a newer version from `main`. | Releases, hotfixes and retiring branches, section 1.1 |
-| a release was declared by mistake | Delete the tag and put the Version ticket and its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
+| a release was declared by mistake | Delete the tag and put its tickets back to *Merged*. | Releases, hotfixes and retiring branches, section 1.1 |
 
 ## Assistants and new projects
 

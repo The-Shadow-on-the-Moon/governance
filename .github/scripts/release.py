@@ -1,11 +1,11 @@
 """The release step: declare a finalized version a release.
 
 Given a finalized version (by default the latest), it tags the commit where that version was finalized
-as `released/V<major>.<sub>.<mod>`, sets the Version ticket to Delivery Released with a comment giving the
-date and the tag, and sets to Released every ticket whose Delivery is Merged or Implemented and whose
-version is at or below the released one. A ticket with newer work pushed (Delivery Pushed) keeps it.
-A version has at most one release tag, and only a finalized version can be released. Verifying the
-version first is the developer's step (guide 08, section 1.1). `--dry-run` only reports.
+as `released/V<major>.<sub>.<mod>` and sets to Released every ticket whose Delivery is Merged or Implemented
+and whose version is at or below the released one. A ticket with newer work pushed (Delivery Pushed) keeps it.
+A version has at most one release tag, and only a finalized version (one that is in the changelog, with its
+finalizing commit) can be released. No ticket stands for the version: the tag and the changelog are the record.
+Verifying the version first is the developer's step (guide 08, section 1.1). `--dry-run` only reports.
 """
 import os
 import sys
@@ -13,7 +13,6 @@ import sys
 import changelog
 import checks
 import finalize
-import implemented
 import preflight
 import versions
 import ticket_type
@@ -106,9 +105,6 @@ def release(root, repo_client, project_client, board, version=None, now=None, dr
     sha = finalize_commit(root, version)
     if sha is None:
         raise ReleaseError(f"cannot find the commit where {version} was finalized")
-    ticket = implemented.version_ticket(repo_client, version)
-    if ticket is None or ticket["state"] != "closed":
-        raise ReleaseError(f"{version} has no finalized Version ticket")
     run.do(f"tag {sha[:7]} (where {version} was finalized) as {tag}", repo_client.create_tag, tag, sha)
     if board is None or project_client is None:
         run.log.append("board steps skipped: no board (the preflight did not identify one)")
@@ -116,16 +112,11 @@ def release(root, repo_client, project_client, board, version=None, now=None, dr
         released = {"singleSelectOptionId": board.fields["Delivery"]["options"]["Released"]}
         delivery = board.fields["Delivery"]["id"]
         try:
-            _, item = finalize.board_item(project_client, board, ticket["number"])
-            if item is not None:
-                run.do(f"Version ticket #{ticket['number']}: set Delivery to Released", project_client.set_project_field,
-                       board.id, item["id"], delivery, released)
             for number, item_id in releasable_tickets(project_client, board, version):
                 run.do(f"#{number}: set Delivery to Released", project_client.set_project_field, board.id, item_id, delivery, released)
         except GitHubError as error:
             run.log.append(f"board steps stopped: {error}")
-    run.do(f"Version ticket #{ticket['number']}: comment with the date and the tag", repo_client.comment, ticket["number"],
-           f"Released {now:%Y-%m-%d %H:%M} UTC. Tag: `{tag}`.")
+    run.log.append(f"{version} released {now:%Y-%m-%d %H:%M} UTC as {tag}")
     return run
 
 

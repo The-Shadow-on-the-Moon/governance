@@ -161,8 +161,7 @@ class WorkflowTests(unittest.TestCase):
         main = text[text.index("\n  main:"):]
         self.assertLess(main.index("preflight.py"), main.index("bypass.py"))
         self.assertLess(main.index("bypass.py"), main.index("finalize.py"))
-        self.assertLess(main.index("finalize.py"), main.index("bypass.py stale"))
-        self.assertLess(main.index("bypass.py stale"), main.index("version_format.py"))
+        self.assertLess(main.index("finalize.py"), main.index("version_format.py"))
         self.assertLess(main.index("version_format.py"), main.index("dates.py"))
         self.assertLess(main.index("dates.py"), main.index("watch.py"))
         self.assertLess(main.index("watch.py"), main.index("conditions.py"))
@@ -189,6 +188,12 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("github.ref != 'refs/heads/main'", branch)
         self.assertIn("!github.event.deleted", branch)
         self.assertIn("- '**'", text)
+
+    def test_a_dry_run_by_hand_checks_out_the_branch_it_was_started_from_and_every_other_run_main(self):
+        text = workflow()
+        main = text[text.index("  main:"):text.index("\n  scheduled:\n")]
+        self.assertIn("ref: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && github.ref || 'main' }}", main)
+        self.assertNotIn("ref: main\n", main)
 
     def test_the_main_job_only_runs_for_main(self):
         text = workflow()
@@ -300,43 +305,12 @@ class WorkflowTests(unittest.TestCase):
     def test_manual_runs_are_dry_runs_by_default(self):
         self.assertRegex(workflow(), r"dry_run:\n(?:.*\n)*?\s+default: true")
 
-
-class FakeRepo:
-    repo = "owner/repo"
-
-    def __init__(self, planned):
-        self.planned, self.created = planned, []
-
-    def repo_path(self, path):
-        return path
-
-    def request(self, method, path, body=None):
-        return self.planned
-
-    def create_issue(self, title, body, issue_type=None, labels=(), assignees=()):
-        self.created.append(title)
-        return {"number": 1, "node_id": "N"}
-
-
-class StaleCommandTests(unittest.TestCase):
-    def run_command(self, changelog_text, planned):
-        with tempfile.TemporaryDirectory() as folder:
-            with open(os.path.join(folder, "CHANGELOG.md"), "w", encoding="utf-8") as handle:
-                handle.write(changelog_text)
-            repo = FakeRepo(planned)
-            return bypass.stale_command(folder, repo, None, None), repo
-
-    def test_raises_the_alert_for_the_topmost_version(self):
-        _, repo = self.run_command("# Changelog\n\n## V0.2.0 — 2026-10-05 21:24 UTC\n", [{"title": "Version 0.1.5", "number": 9}])
-        self.assertEqual(repo.created, ["Stale planned Version tickets after V0.2.0"])
-
-    def test_nothing_planned(self):
-        _, repo = self.run_command("# Changelog\n\n## V0.2.0 — 2026-10-05 21:24 UTC\n", [])
-        self.assertEqual(repo.created, [])
-
-    def test_no_finalized_version(self):
-        run, repo = self.run_command("# Changelog\n", [])
-        self.assertEqual(run.log, ["no finalized version"])
+    def test_no_step_looks_for_planned_version_tickets_or_attaches_to_them(self):
+        text = workflow()
+        self.assertNotIn("bypass.py stale", text)
+        self.assertNotIn("stale planned", text)
+        self.assertNotIn("Attach Implemented", text)
+        self.assertEqual(text.count("- name: Settle the Implemented tickets"), 2)  # the scheduled job and the conditions job
 
 
 if __name__ == "__main__":

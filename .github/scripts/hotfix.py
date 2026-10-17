@@ -3,8 +3,8 @@
 A hotfix starts from a release tag and is never merged into main, so it has nothing to compute its
 version from. Run on the hotfix branch with the version (for example `V1.25.0-HF1`), it renames the open
 `## WIP-Version` heading to that version in a commit of its own on the branch, tags that commit
-`released/V1.25.0-HF1`, creates the Version ticket, and sets the tickets' Delivery straight to
-Released (a hotfix is never merged, so it skips Merged). It refuses a marker on the heading, a branch
+`released/V1.25.0-HF1`, and sets the tickets' Delivery straight to Released (a hotfix is never
+merged, so it skips Merged). No ticket stands for the version: the tag and the changelog are the record. It refuses a marker on the heading, a branch
 that is not named for the release, a branch that does not contain the release (or the previous
 hotfix's) tag, a hotfix number outside 1 to 9, and a version that already has its tag. The finished
 branch is deleted afterwards without a retirement tag. See the guide on releases and hotfixes
@@ -79,10 +79,7 @@ def finish(root, repo_client, project_client, board, version, branch, now=None, 
     path = os.path.join(root, CHANGELOG)
     tag = release.tag_name(version, trial)
     tickets = wip.ticket_numbers()
-    types = {n: repo_client.issue_type(n) for n in tickets}
-    titles = {b.number: b.title for b in wip.blocks() if b.kind == "ticket"}
     builds = finalize.ticket_builds(wip)
-    last_build = wip.last_build()
     state = {}
 
     def rename_and_push():
@@ -107,12 +104,8 @@ def finish(root, repo_client, project_client, board, version, branch, now=None, 
                 finalize.update_ticket(run, project_client, board, number, version, builds.get(number), delivery="Released")
             except GitHubError as error:
                 run.log.append(f"#{number}: board update skipped: {error}")
-    listing = [(n, titles[n], types[n] or "no Type") for n in tickets]
-    bump = f"hotfix of {Version(version.major, version.sub, version.mod)}, with the version stated explicitly"
-    number = finalize.record_version_ticket(run, repo_client, project_client, board, version, when, bump, None, last_build, listing,
-                                            delivery="Released", source=f"the hotfix branch {branch}")
-    run.do(f"Version ticket #{number}: comment with the date and the tag", repo_client.comment, number,
-           f"Released {now:%Y-%m-%d %H:%M} UTC. Tag: `{tag}`. The hotfix branch {branch} may now be deleted (no retirement tag).")
+    run.log.append(f"{version} released {now:%Y-%m-%d %H:%M} UTC as {tag}, a hotfix of "
+                   f"{Version(version.major, version.sub, version.mod)}; the hotfix branch {branch} may now be deleted (no retirement tag)")
     return run
 
 

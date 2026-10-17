@@ -266,23 +266,10 @@ class AlertTextTests(unittest.TestCase):
         self.assertTrue(title.startswith("Merge to main without changelog entries"))
         self.assertIn("created the version", body)
 
-    def test_stale_alert_text(self):
-        title, body = alerts.stale_alert(Version(2, 4, 1), [(130, "Version 2.4.0")])
-        self.assertEqual(title, "Stale planned Version tickets after V2.4.1")
-        self.assertIn("#130 Version 2.4.0", body)
-
     def test_changelog_error_alert(self):
         title, body = alerts.changelog_error_alert("line 3: unexpected text", "d" * 40, "t")
         self.assertIn("no version finalized", title)
         self.assertIn("line 3: unexpected text", body)
-
-    def test_stale_planned_finds_lower_numbers_only(self):
-        planned = [{"title": "Version 2.4.0", "number": 130}, {"title": "Version 2.4.2", "number": 131},
-                   {"title": "Version 2.3.9", "number": 120}, {"title": "Something else", "number": 5}]
-        found = alerts.stale_planned(FakeRepoClient(planned), Version(2, 4, 1))
-        self.assertEqual(found, [(120, "Version 2.3.9"), (130, "Version 2.4.0")])
-        self.assertEqual(alerts.stale_planned(FakeRepoClient(planned), Version(2, 4, 1, 1)), [])
-
 
 class AutoRefTests(unittest.TestCase):
     def test_goes_in_a_new_build_at_the_top_of_the_open_version(self):
@@ -345,16 +332,6 @@ class HandlePushTests(GitRepo):
         run = bypass.handle_push(self.dir, repo, None, None, self.before, sha, "sam", NOW, push=False)
         self.assertIn("no version finalized", repo.created[0][0])
         self.assertIn("no version can be finalized", run.log[-1])
-
-    def test_stale_planned_versions_raise_an_unassigned_alert(self):
-        repo = FakeRepoClient([{"title": "Version 0.1.5", "number": 12}])
-        bypass.raise_stale_alert(repo, None, None, Version(0, 2, 1))
-        title, body, kind, labels, assignees = repo.created[0]
-        self.assertEqual((title, kind, assignees), ("Stale planned Version tickets after V0.2.1", "Alert", []))
-        quiet = FakeRepoClient([])
-        bypass.raise_stale_alert(quiet, None, None, Version(0, 2, 1))
-        self.assertEqual(quiet.created, [])
-
 
 class AdvisoryTests(GitRepo):
     def test_behind_fails_and_comments_once(self):

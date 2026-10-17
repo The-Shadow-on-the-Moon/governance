@@ -68,49 +68,43 @@ def board():
 
 
 FINALIZED = {V("V0.3.0"), V("V0.3.1"), V("V0.4.0")}
-OLD_TICKETS = [{"title": "Version 0.3.1", "state": "closed", "number": 27},
-               {"title": "Version 0.5.0", "state": "open", "number": 31}]
 
 
-def sweep(nodes, tickets=OLD_TICKETS, finalized=FINALIZED, dry_run=False):
+def sweep(nodes, finalized=FINALIZED, dry_run=False):
     run = finalize.Runner(dry_run)
-    project, repo = FakeProject(nodes), FakeRepo(tickets)
-    added = implemented.sweep(run, repo, project, board(), finalized, (V("V0.4.0"), 30), NOW)
-    return run, repo, project, added
-
-
-class VersionTicketTests(unittest.TestCase):
-    def test_a_version_ticket_is_found_by_the_version_in_either_form(self):
-        for title in ("Version 000.003.001", "Version 0.3.1"):
-            self.assertEqual(implemented.version_ticket(FakeRepo([{"title": title, "number": 9}]), V("V0.3.1"))["number"], 9)
-
-    def test_another_version_or_other_text_is_not_found(self):
-        tickets = [{"title": "Version 000.003.000", "number": 1}, {"title": "Version 3.1", "number": 2}, {"title": "Something", "number": 3}]
-        self.assertIsNone(implemented.version_ticket(FakeRepo(tickets), V("V0.3.1")))
+    project, repo = FakeProject(nodes), FakeRepo([])
+    changed = implemented.sweep(run, repo, project, board(), finalized, V("V0.4.0"), NOW)
+    return run, repo, project, changed
 
 
 class SweepTests(unittest.TestCase):
     def test_a_blank_version_gets_the_version_being_finalized(self):
-        run, repo, project, _ = sweep([node(50)])
-        self.assertEqual(repo.subs, [(30, 50)])
-        sets = {(field): value for _, field, value in project.sets}
+        run, repo, project, changed = sweep([node(50)])
+        sets = {field: value for _, field, value in project.sets}
         self.assertEqual(sets["F-Version"], {"text": "V000.004.000"})
         self.assertNotIn("F-Version#", sets)
+        self.assertEqual(changed, [50])
 
-    def test_the_version_being_finalized_is_attached_and_put_in_the_board_form(self):
-        _, repo, project, _ = sweep([node(50, version="V0.4.0")])
-        self.assertEqual(repo.subs, [(30, 50)])
+    def test_nothing_is_attached_to_anything_and_nothing_is_commented(self):
+        _, repo, project, _ = sweep([node(50), node(51, version="V0.3.1"), node(52, version="V0.4.0")])
+        self.assertEqual((repo.subs, repo.comments), ([], []))
+        self.assertEqual(len(project.sets), 3)
+
+    def test_a_version_being_finalized_is_put_in_the_board_form(self):
+        _, _, project, _ = sweep([node(50, version="V0.4.0")])
         self.assertEqual([(field, value) for _, field, value in project.sets], [("F-Version", {"text": "V000.004.000"})])
 
     def test_a_version_already_in_the_board_form_is_not_set_again(self):
-        _, repo, project, _ = sweep([node(50, version="V000.004.000")])
-        self.assertEqual((repo.subs, project.sets), ([(30, 50)], []))
+        _, _, project, changed = sweep([node(50, version="V000.004.000")])
+        self.assertEqual((project.sets, changed), ([], []))
 
-    def test_an_earlier_finalized_version_is_attached_to_its_own_ticket(self):
-        run, repo, project, _ = sweep([node(50, version="V0.3.1")])
-        self.assertEqual(repo.subs, [(27, 50)])
+    def test_an_earlier_finalized_version_is_kept_and_put_in_the_board_form(self):
+        _, _, project, _ = sweep([node(50, version="V0.3.1")])
         self.assertEqual({field: value for _, field, value in project.sets}["F-Version"], {"text": "V000.003.001"})
-        self.assertEqual(repo.comments[0][0], 27)
+
+    def test_a_ticket_with_a_parent_is_settled_like_any_other(self):
+        _, _, project, changed = sweep([node(50, parent=27, version="V0.4.0")])
+        self.assertEqual(changed, [50])
 
     def test_a_later_version_waits(self):
         run, repo, project, _ = sweep([node(50, version="V0.5.0")])
@@ -119,7 +113,7 @@ class SweepTests(unittest.TestCase):
 
     def test_a_version_that_was_passed_raises_one_caution_and_changes_nothing_else(self):
         # V0.3.5 never existed and V0.4.0 is finalized: the ticket would wait for ever.
-        run, repo, project, added = sweep([node(50, version="V0.3.5")])
+        run, repo, project, changed = sweep([node(50, version="V0.3.5")])
         self.assertEqual(project.sets, [("I50", "F-Attention", {"singleSelectOptionId": "Attention-Caution"})])
         self.assertEqual(len(repo.comments), 1)
         number, text = repo.comments[0]
@@ -128,7 +122,7 @@ class SweepTests(unittest.TestCase):
         self.assertIn("V0.4.0 is already finalized", text)
         self.assertIn("<!-- condition:passed-version -->", text)
         self.assertEqual(condition_comments.state(text), "open")
-        self.assertEqual((repo.subs, added), ([], {}))  # never attached or moved by itself
+        self.assertEqual((repo.subs, changed), ([], []))  # never moved by itself
 
     def test_the_caution_is_not_raised_twice(self):
         marker = "<!-- attention:caution passed=V0.3.5 -->\nAttention: Caution. ..."
@@ -152,46 +146,37 @@ class SweepTests(unittest.TestCase):
         self.assertEqual((project.sets, repo.comments), ([], []))
         self.assertIn("is not finalized yet", run.log[0])
 
+    def test_the_caution_text_no_longer_mentions_attaching(self):
+        _, repo, _, _ = sweep([node(50, version="V0.3.5")])
+        self.assertNotIn("attaches it", repo.comments[0][1])
+        self.assertNotIn("Version ticket", repo.comments[0][1])
+
     def test_a_dry_run_of_a_passed_version_changes_nothing(self):
         run, repo, project, _ = sweep([node(50, version="V0.3.5")], dry_run=True)
         self.assertEqual((project.sets, repo.comments), ([], []))
         self.assertTrue(any("which was passed" in line for line in run.log))
 
-    def test_an_abandoned_ticket_is_never_attached(self):
-        _, repo, project, _ = sweep([node(50, status="Abandoned"), node(51, status="Review")])
-        self.assertEqual(repo.subs, [(30, 51)])
+    def test_an_abandoned_ticket_is_never_settled(self):
+        _, _, project, changed = sweep([node(50, status="Abandoned"), node(51, status="Review")])
+        self.assertEqual(changed, [51])
 
-    def test_already_attached_and_other_deliveries_are_left_alone(self):
-        _, repo, project, _ = sweep([node(50, parent=27), node(51, delivery="Merged"), node(52, delivery=None)])
+    def test_other_deliveries_are_left_alone(self):
+        _, repo, project, _ = sweep([node(51, delivery="Merged"), node(52, delivery=None)])
         self.assertEqual((repo.subs, project.sets, repo.comments), ([], [], []))
 
-    def test_one_comment_per_version_ticket_lists_the_tickets(self):
-        _, repo, _, _ = sweep([node(50, version="V0.3.1", title="A"), node(51, version="V0.3.1", title="B"), node(52, title="C")])
-        self.assertEqual(sorted(number for number, _ in repo.comments), [27, 30])
-        text = dict(repo.comments)[27]
-        self.assertIn("#50 A; #51 B", text)
-        self.assertIn("2026-10-06 10:00 UTC", text)
-
-    def test_a_missing_or_open_version_ticket_is_left_alone(self):
-        run, repo, _, _ = sweep([node(50, version="V0.3.0")], tickets=[{"title": "Version 0.3.0", "state": "open", "number": 25}])
-        self.assertEqual(repo.subs, [])
-        self.assertIn("no finalized Version ticket for V0.3.0", run.log[0])
-        run, repo, _, _ = sweep([node(50, version="V0.3.0")], tickets=[])
-        self.assertEqual(repo.subs, [])
-
     def test_something_that_is_not_a_version_is_left_alone(self):
-        run, repo, _, _ = sweep([node(50, version="soon")])
-        self.assertEqual(repo.subs, [])
+        run, _, project, _ = sweep([node(50, version="soon")])
+        self.assertEqual(project.sets, [])
         self.assertIn("is not a version", run.log[0])
 
     def test_dry_run_changes_nothing(self):
         run, repo, project, _ = sweep([node(50)], dry_run=True)
         self.assertEqual((repo.subs, project.sets, repo.comments), ([], [], []))
-        self.assertTrue(any("attach to the Version ticket #30" in line for line in run.log))
+        self.assertTrue(any("#50: set Version to V000.004.000" in line for line in run.log))
 
     def test_every_page_of_the_board_is_read(self):
         project = FakeProject([node(n, delivery="Merged") for n in range(1, 230)] + [node(500)], per_page=100)
-        found = implemented.unattached(project, board())
+        found = implemented.implemented_tickets(project, board())
         self.assertEqual([t["number"] for t in found], [500])
         self.assertEqual(project.queries, 3)
 
@@ -208,32 +193,33 @@ class ScheduledSweepTests(unittest.TestCase):
     LOG = ("# Changelog\n\n## V0.4.0 — 2026-10-06 00:47 UTC\n### Build 20261006004523 (branch b)\n"
            "#### #28 — W\n- d.\n\n## V0.3.1 — 2026-10-06 00:04 UTC\n")
 
-    def test_it_attaches_by_the_finalized_versions_without_touching_anything_else(self):
-        repo = FakeRepo(OLD_TICKETS + [{"title": "Version 0.4.0", "state": "closed", "number": 30}])
+    def test_it_settles_by_the_finalized_versions_without_touching_anything_else(self):
+        repo = FakeRepo([])
         project = FakeProject([node(50), node(51, version="V0.3.1"), node(52, version="V0.9.0")])
         run = implemented.scheduled_sweep(self.folder_with(self.LOG), repo, project, board(), NOW)
-        self.assertEqual(sorted(repo.subs), [(27, 51), (30, 50)])
+        sets = {item: value for item, field, value in project.sets if field == "F-Version"}
+        self.assertEqual(sets, {"I50": {"text": "V000.004.000"}, "I51": {"text": "V000.003.001"}})
+        self.assertEqual((repo.subs, repo.comments), ([], []))
         self.assertTrue(any("waits for V0.9.0" in line for line in run.log))
 
+    def test_it_needs_no_ticket_for_the_version(self):
+        project = FakeProject([node(50)])
+        implemented.scheduled_sweep(self.folder_with(self.LOG), FakeRepo([]), project, board(), NOW)
+        self.assertEqual(len(project.sets), 1)
+
     def test_dry_run(self):
-        repo = FakeRepo(OLD_TICKETS + [{"title": "Version 0.4.0", "state": "closed", "number": 30}])
-        run = implemented.scheduled_sweep(self.folder_with(self.LOG), repo, FakeProject([node(50)]), board(), NOW, dry_run=True)
-        self.assertEqual((repo.subs, repo.comments), ([], []))
+        repo, project = FakeRepo([]), FakeProject([node(50)])
+        run = implemented.scheduled_sweep(self.folder_with(self.LOG), repo, project, board(), NOW, dry_run=True)
+        self.assertEqual((repo.subs, repo.comments, project.sets), ([], [], []))
         self.assertTrue(run.log)
 
     def test_no_finalized_version_yet(self):
         run = implemented.scheduled_sweep(self.folder_with("# Changelog\n"), FakeRepo([]), FakeProject([node(50)]), board(), NOW)
-        self.assertEqual(run.log, ["no finalized version yet: nothing to attach to"])
-
-    def test_the_latest_version_has_no_ticket(self):
-        repo = FakeRepo(OLD_TICKETS)
-        run = implemented.scheduled_sweep(self.folder_with(self.LOG), repo, FakeProject([node(50)]), board(), NOW)
-        self.assertEqual(repo.subs, [])
-        self.assertIn("no Version ticket for V0.4.0", run.log[0])
+        self.assertEqual(run.log, ["no finalized version yet: nothing to settle"])
 
 
 class FinalizeIntegrationTests(unittest.TestCase):
-    def test_finalize_runs_the_sweep_after_the_version_ticket(self):
+    def test_finalize_runs_the_sweep_and_creates_no_ticket(self):
         import subprocess
         import tempfile
         with tempfile.TemporaryDirectory() as folder:
@@ -251,7 +237,7 @@ class FinalizeIntegrationTests(unittest.TestCase):
                 def issue_type(self, number):
                     return "Enhancement"
 
-            repo, project = Repo(OLD_TICKETS + [{"title": "Version 0.4.0", "state": "closed", "number": 30, "node_id": "N30"}]), FakeProject([node(50)])
+            repo, project = Repo([]), FakeProject([node(50)])
             project.nodes = [node(50)]
             graphql = project.graphql
 
@@ -262,8 +248,9 @@ class FinalizeIntegrationTests(unittest.TestCase):
             project.graphql = routed
             project.add_to_project = lambda project_id, content_id: "ITEM"
             run = finalize.finalize(folder, repo, project, board(), NOW, push=False)
-            self.assertIn((30, 50), repo.subs)
-            self.assertTrue(any("Version ticket #30: comment" in line for line in run.log))
+            self.assertIn(("I50", "F-Version", {"text": "V000.004.000"}), project.sets)
+            self.assertEqual((repo.subs, repo.comments), ([], []))
+            self.assertFalse(any("Version ticket" in line for line in run.log))
 
 
 if __name__ == "__main__":

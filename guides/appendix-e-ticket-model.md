@@ -22,8 +22,8 @@ code has shipped).
 | **Progress** | Where is the work? | the board's Status field | a person (the automation only advances *ToDo* and *OnDeck* to *InProgress*) |
 | **Waiting** | Is it waiting for someone's input? | board field | a person |
 | **Attention** | Has the ticket's state been looked at, and is it sound? | board field | the automation raises flags; a person closes them |
-| **Resolution** | How did it end? | board field | a person |
-| **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed*, *Implemented* and *Dropped* on a planned Version ticket) |
+| **Resolution** | How did it end? | board field | a person (the automation fills *Done* with *Completed*) |
+| **Delivery** | Where is the delivered work? | board field | the automation (apart from *Committed* and *Implemented*, which a person sets) |
 | **Fix** | Which of the rules that span fields do its fields break? | board field | the automation |
 | **Planning** | How urgent, how big, how risky, which version and build, when? | Priority, Size, Risk, Version, Build, Start date, End date | a person, except Build, the real Version and the dates |
 
@@ -64,7 +64,7 @@ The path of an ordinary ticket, with what changes at each step and who changes i
 | **First push** | *InProgress* (advanced by the automation if still *ToDo* or *OnDeck*) | *Pushed* | Build | the automation |
 | **Work done** | *Review* | *Pushed* | Risk revised by the developer | a person, never the automation |
 | **Merged** | unchanged | *Merged* | Version and Build set to the real values | the automation, at finalize |
-| **Verified** | *Completed* | *Merged* | Resolution *Done*, Waiting cleared, End date at the next sweep, issue closed | a human only |
+| **Verified** | *Completed* | *Merged* | Waiting cleared, issue closed; Resolution *Done* and the End date at the next refresh and sweep | a human sets the Progress and closes the issue |
 | **Released** | unchanged | *Released* | | the automation, when a release is cut |
 
 Side paths:
@@ -78,12 +78,14 @@ Side paths:
   with a comment linking any related ticket; Waiting is cleared and the issue is closed. If the branch is
   retired as abandoned, the automation sets Delivery to *Dropped*.
 - **New work after the fact.** Pushing again on a ticket that is *Merged*, *Implemented*, *Released* or
-  *Dropped* returns Delivery to *Pushed*. If the ticket looked finished (*Completed*, *Abandoned*, *Review* or
+  *Dropped* returns Delivery to *Pushed* and clears its Version (the number belongs to the work that shipped, and
+  the changelog keeps it; the automation says so in a comment, and the finalize step writes the real Version when
+  the new work ships). If the ticket looked finished (*Completed*, *Abandoned*, *Review* or
   *Suspended*), the automation raises Attention rather than changing Progress, and a person decides (the
   conditions are in *Project structure*, section 4.3).
 - **No file change.** A ticket whose work is a setting, a secret or a check that was run has no changelog
   entries. When its work is in effect a person sets Delivery *Implemented* and its Version, and the
-  automation attaches it to that version's Version ticket.
+  automation keeps the Version in the board form (a blank one gets the version being finalized).
 - **Late tickets.** A ticket created after the work has Origin *Backfilled* (with REF) or, for history from
   before the process, *Backdated*.
 
@@ -100,8 +102,7 @@ Delivery depends only on the work (guide on project structure, section 4.3). The
 | *Merged* or *Implemented* | *Released* | a release is cut at or above its version | the automation |
 | *Pushed*, on a hotfix branch | *Released* | the hotfix is finished (it skips *Merged*) | the automation |
 | *Pushed* | *Dropped* | the branch is retired as abandoned | the automation |
-| planned Version ticket | *Dropped* | the version will never be delivered | a person |
-| *Merged*, *Implemented*, *Released* or *Dropped* | *Pushed* | new work is pushed on the ticket | the automation |
+| *Merged*, *Implemented*, *Released* or *Dropped* | *Pushed*, and the Version is cleared | new work is pushed on the ticket | the automation |
 
 A suspended branch moves nothing: its ticket keeps *Pushed*. A ticket with newer work pushed than the version
 being released keeps *Pushed* at the release.
@@ -122,17 +123,19 @@ full table is in *Project structure*, section 4.4, and the automation flags a ti
 
 ## 5. Special tickets
 
-Version and Alert tickets are created by the automation. They are exempt from the rule that every ticket
+Alert tickets are created by the automation. They are exempt from the rule that every ticket
 gets a Size, and only some fields apply to them (the table is at the end of Appendix C).
 
-- **A Version ticket** is the bookkeeping record of one version, titled `Version X.Y.Z`. It has no Progress:
-  its Delivery describes its life (planned, *Merged*, *Released* or *Dropped*), and the version's tickets
-  are its sub-issues. Aiming a ticket at a future version needs no planned Version ticket, only the
-  Version field.
+- **A legacy Version ticket** was the bookkeeping record of one version, made by earlier versions of the
+  standard. It is no longer made; where one still exists it is left alone. A version has no ticket: its
+  changelog entry, the Version field of its tickets and, for a release, its tag are the record, and aiming
+  a ticket at a future version needs only the Version field.
+- **An umbrella ticket** is an ordinary work ticket that groups the tickets of one piece of work as its
+  sub-issues (*Project structure*, section 5.5).
 - **An Alert ticket** is a real check that a person must do. It is created *Critical*, in *ToDo*, with the
   Area `process`, and every later move is manual.
 
-The stages, the rules and the causes of each are in *Project structure*, sections 5.2 and 5.3.
+The rules and the causes of each are in *Project structure*, sections 5.2, 5.3 and 5.5.
 
 ## 6. How the model drives the automation
 
