@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version +m
+## V0.15.1 — 2026-10-17 04:51 UTC
 ### Build 20261017044822 (branch version-tickets-out)
 #### #204 — Finalize: stop creating Version tickets
 - .github/scripts/finalize.py: finalize creates, reuses and closes no Version ticket and attaches no sub-issue; it renames the heading, sets Delivery, Version and Build on the tickets (each only when it differs, so a run with no open heading checks the last version again, and a run after a partial one completes what is missing) and settles the Implemented tickets; the bump and its reason are in the run log; the `pull_request` argument and the lookup of the merge's pull request are gone (they only served the description of the Version ticket); `record_version_ticket` and `version_description` stay for the hotfix step until it stops using them (#206)

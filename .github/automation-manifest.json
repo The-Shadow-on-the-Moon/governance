@@ -62,5 +62,5 @@
     "tests/test_watch.py": "bd66b0017b84182e70da7a44696111003c8ec9c602f45518192bd3e37d4056ee",
     "tests/test_workflow.py": "3c41fb9e5bdcde8d2086e4bd8d13c48ec8fd847b306bc6463d9e2f11befa612e"
   },
-  "standard": "WIP-Version"
+  "standard": "V0.15.1"
 }
