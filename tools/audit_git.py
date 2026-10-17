@@ -5,9 +5,11 @@ integration line, how history reached `main`, the commit messages, and whether t
 changelog. Read-only; it never fetches, so run `git fetch` first to see the remote branches.
 
 With --since the history is judged only from a cut-over: the commits made after a date (`2026-10-01`, or
-`2026-10-01 14:30`, UTC) or after a commit (any revision, such as a hash or a tag). The merge commits, the commit
-messages, and the tags that point at such commits are then checked; older ones are left out. Branch names are
-the current state and are always checked.
+`2026-10-01 14:30`, UTC) or after a commit (any revision, such as a hash or a tag). A commit counts as made when it
+was authored, so work done before the cut-over is history wherever it lands: a branch that was open at the cut-over
+and is merged later keeps its old commits out of scope, and the merge commit that lands it, made after the
+cut-over, is judged. The merge commits, the commit messages, and the tags that point at such commits are then
+checked; older ones are left out. Branch names are the current state and are always checked.
 
 Usage:
     python tools/audit_git.py <project-path> [--verbose] [--since <date or commit>] [--json <file>]
@@ -19,7 +21,7 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -45,24 +47,36 @@ DATE_FORMATS = ("%Y-%m-%d", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S")
 
 def cutover(root, since):
     """The hashes of the commits made after the cut-over `since`, or None when the whole history is judged.
-    `since` is a UTC date (`2026-10-01`, `2026-10-01 14:30`) or a revision; anything else raises ValueError."""
+    `since` is a UTC date (`2026-10-01`, `2026-10-01 14:30`) or a revision; anything else raises ValueError.
+
+    A commit is in scope when it was authored at or after the cut-over and the cut-over commit does not reach it.
+    Work made before the cut-over is history wherever it lands: an old branch merged later keeps its commits out,
+    and the merge commit that lands it, made after the cut-over, is judged. For a date the cut-over is that moment;
+    for a revision it is the moment the revision was committed (when it landed)."""
     if not since:
         return None
 
+    reached = set()
+    moment = None
+
     for form in DATE_FORMATS:
         try:
-            moment = datetime.strptime(since, form)
+            moment = datetime.strptime(since, form).replace(tzinfo=timezone.utc).timestamp()
+            break
         except ValueError:
             continue
 
-        return set(names(root, "rev-list", "--all", "--since=" + moment.strftime("%Y-%m-%d %H:%M:%S") + " +0000"))
+    if moment is None:
+        code, commit = git(root, "rev-parse", "--verify", "-q", since + "^{commit}")
 
-    code, commit = git(root, "rev-parse", "--verify", "-q", since + "^{commit}")
+        if code != 0:
+            raise ValueError("--since is neither a UTC date nor a commit of the project: {}".format(since))
 
-    if code != 0:
-        raise ValueError("--since is neither a UTC date nor a commit of the project: {}".format(since))
+        reached = set(names(root, "rev-list", commit))
+        moment = float(git(root, "log", "-1", "--format=%ct", commit)[1])
 
-    return set(names(root, "rev-list", "--all", "^" + commit))
+    authored = (line.split(" ") for line in names(root, "log", "--all", "--format=%H %at"))
+    return {h for h, at in authored if h not in reached and float(at) >= moment}
 
 
 def scope(since, count):

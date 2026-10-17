@@ -84,6 +84,47 @@ class ManifestTests(unittest.TestCase):
         self.assertFalse(cm.set_standard(self.root, "V0.5.0"))  # a real version is left as it is
         self.assertEqual(cm.load(os.path.join(self.root, cm.MANIFEST))["standard"], "V0.4.0")
 
+    def update(self, *args):
+        return cm.main(["--update", *args], self.root)
+
+    def standard(self):
+        return cm.load(os.path.join(self.root, cm.MANIFEST))["standard"]
+
+    def test_an_update_keeps_the_standard_the_manifest_names(self):
+        cm.write(self.root, cm.build(self.root, "V0.4.0"))
+        write(self.root, ".github/scripts/a.py", "a = 2\n")
+        self.assertEqual(self.update(), 0)
+        self.assertEqual(self.standard(), "V0.4.0")
+        self.assertEqual(cm.check(self.root, cm.load(os.path.join(self.root, cm.MANIFEST)))[".github/scripts/a.py"], cm.UNCHANGED)
+
+    def test_an_update_keeps_the_placeholder_too(self):
+        cm.write(self.root, cm.build(self.root, cm.PLACEHOLDER))
+        self.assertEqual(self.update(), 0)
+        self.assertEqual(self.standard(), cm.PLACEHOLDER)
+
+    def test_an_update_with_no_manifest_needs_the_version_stated(self):
+        self.assertEqual(self.update(), 1)
+        self.assertFalse(os.path.exists(os.path.join(self.root, cm.MANIFEST)))
+        self.assertEqual(self.update("--standard", "V0.4.0"), 0)
+        self.assertEqual(self.standard(), "V0.4.0")
+
+    def test_pending_writes_the_placeholder_over_a_real_version(self):
+        cm.write(self.root, cm.build(self.root, "V0.4.0"))
+        self.assertEqual(self.update("--pending"), 0)
+        self.assertEqual(self.standard(), cm.PLACEHOLDER)
+
+    def test_standard_states_the_version_over_the_current_one(self):
+        cm.write(self.root, cm.build(self.root, "V0.4.0"))
+        self.assertEqual(self.update("--standard", "V0.5.0"), 0)
+        self.assertEqual(self.standard(), "V0.5.0")
+
+    def test_pending_with_a_version_is_refused(self):
+        self.assertEqual(self.update("--pending", "--standard", "V0.4.0"), 1)
+
+    def test_a_standard_flag_followed_by_another_flag_is_refused(self):
+        self.assertEqual(self.update("--standard", "--pending"), 1)
+        self.assertEqual(self.update("--standard"), 1)
+
     def test_no_manifest_means_nothing_to_stamp(self):
         self.assertFalse(cm.stamp_pending(self.root))
         self.assertFalse(cm.set_standard(self.root, "V0.4.0"))

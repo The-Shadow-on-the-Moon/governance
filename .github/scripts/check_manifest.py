@@ -8,11 +8,15 @@ new-project bootstrap (section 2.4).
 
     python .github/scripts/check_manifest.py                       check against the project's manifest
     python .github/scripts/check_manifest.py --against NEW.json     check against a newer manifest
-    python .github/scripts/check_manifest.py --update                     rewrite the manifest, standard WIP-Version
+    python .github/scripts/check_manifest.py --update                     rewrite the hashes, keep the standard as it is
     python .github/scripts/check_manifest.py --update --standard V0.3.0   rewrite the manifest, standard stated
+    python .github/scripts/check_manifest.py --update --pending           rewrite the manifest, standard WIP-Version
 
-A manifest written without a standard names the placeholder WIP-Version. The finalize step replaces
-it with the version it gives the merge, in its own commit, so nobody has to guess the version.
+A project that uses the standard keeps the version of the standard whose files it holds: the manifest
+is copied with them, and `--update` leaves the version alone. Only the standard's own repository, where
+the project is the standard and the version is known only at the merge, writes the placeholder
+WIP-Version (`--pending`). The finalize step replaces it with the version it gives the merge, in its
+own commit, so nobody has to guess the version.
 """
 import fnmatch
 import hashlib
@@ -141,15 +145,37 @@ def render(states, standard, reference_standard=None):
     return "\n".join(lines)
 
 
-def main(argv=None):
+def standard_to_write(root, args):
+    """The standard an --update writes, or None after saying why not: the one stated, the placeholder
+    for --pending, otherwise the one the manifest names now (the version of the files the project holds)."""
+    if "--pending" in args and "--standard" in args:
+        print("--pending and --standard exclude each other: state a version, or leave it to the finalize step")
+        return None
+    if "--standard" in args:
+        index = args.index("--standard") + 1
+        if index >= len(args) or args[index].startswith("--"):
+            print("--standard needs a version, for example --standard V0.3.0")
+            return None
+        return args[index]
+    if "--pending" in args:
+        return PLACEHOLDER
+    path = os.path.join(root, MANIFEST)
+    current = load(path).get("standard") if os.path.isfile(path) else None
+    if not current:
+        print("there is no manifest to keep the standard from: state the version of the standard with --standard V0.3.0 "
+              "(--pending is only for the standard's own repository)")
+    return current or None
+
+
+def main(argv=None, root=None):
     sys.stdout.reconfigure(encoding="utf-8")
     args = argv if argv is not None else sys.argv[1:]
-    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+    root = root or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
     if "--update" in args:
-        if "--standard" in args and args.index("--standard") + 1 >= len(args):
-            print("--standard needs a version, for example --standard V0.3.0")
+        standard = standard_to_write(root, args)
+        if standard is None:
             return 1
-        manifest = build(root, args[args.index("--standard") + 1] if "--standard" in args else PLACEHOLDER)
+        manifest = build(root, standard)
         write(root, manifest)
         print(f"wrote {MANIFEST}: {len(manifest['files'])} files, standard {manifest['standard']}")
         return 0

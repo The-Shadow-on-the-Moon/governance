@@ -56,7 +56,7 @@ the wiki page on the audit tools; the rows here say what to do. Nothing here add
 | `files.wiki.names` | Convert | 2 | Dev | Yes | A wiki file is not a Markdown file named by its title with hyphens. Rename it (for example `Getting-Started.md`) and update the links to it. |
 | `files.automation.workflow` | Fix | 2 | Admin | Yes | There is no workflow in `.github/workflows/`. Copy the workflow and its scripts from the standard unchanged. |
 | `files.automation.pr-template` | Fix | 2 | Dev | Yes | There is no `.github/pull_request_template.md`. Copy it from the standard. |
-| `files.automation.manifest` | Fix | 2 | Dev | Yes | There is no `.github/automation-manifest.json`. Generate it with the manifest script of the standard. |
+| `files.automation.manifest` | Fix | 2 | Dev | Yes | There is no `.github/automation-manifest.json`. Copy it with the files, or generate it with the manifest script, stating the version of the standard (`--update --standard`). |
 | `files.automation.tests` | Fix | 2 | Dev | Yes | The project has its own automation scripts but no `tests/`. Copy the tests that come with the scripts. |
 | `files.agents.guides` | Fix | 2 | Dev | Yes | `AGENTS.md` does not mention the guides. Add the pointer: the assistant follows the guides and works from their checklists. Not-checkable when `AGENTS.md` is missing. |
 

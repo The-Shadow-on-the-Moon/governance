@@ -19,9 +19,10 @@ Usage:
 
     --offline   run only the files and git audits (no `gh`, no network)
     --verbose   also detail the checks that passed, on the screen and in the Markdown and JSON files
-    --since     judge the history only from a cut-over: the commits made after this UTC date (`2026-10-01`) or after
-                this commit (a hash or a tag). Applies to the merge commits on main, the commit messages, and the
-                tags on such commits; the other checks look at the present state
+    --since     judge the history only from a cut-over: the commits authored after this UTC date (`2026-10-01`) or
+                after this commit (a hash or a tag; its commit time is the cut-over), and not reached by it. Work
+                authored before the cut-over is history wherever it lands. Applies to the merge commits on main, the
+                commit messages, and the tags on such commits; the other checks look at the present state
     --baseline  the file of accepted deviations, instead of .github/audit-baseline.json in the project. A failed check
                 that the file accepts is shown as accepted and is not a failure (see audit_baseline.py)
     --repo      the GitHub repository, when the project's origin remote is not it

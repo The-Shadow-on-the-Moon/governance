@@ -3,6 +3,9 @@ name: Re-enable Scheduled Workflow
 # GitHub disables the scheduled workflows of a public repository after 60 days without repository activity, and a
 # disabled workflow runs on no event. This workflow has no schedule, so it is never disabled: on any push it turns
 # versioning.yml back on if (and only if) GitHub switched it off for inactivity. A workflow disabled by a person stays so.
+#
+# GitHub does this only in a public repository. In a private one this workflow has nothing to do: disable it in the Actions
+# tab (the files stay, so the manifest check stays clean) and enable it again if the repository becomes public.
 
 on:
   push:
@@ -16,6 +19,7 @@ on:
         default: true
 
 permissions:
+  contents: read
   actions: write
 
 jobs:

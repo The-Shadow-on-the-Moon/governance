@@ -1,5 +1,41 @@
 # Changelog
 
+## WIP-Version
+### Build 20261017025557 (branch foundation-fixes)
+#### #226 — Manifest standard in an adopting project is the project's version, not the standard's
+- .github/scripts/check_manifest.py: `--update` keeps the standard the manifest names (the version of the files a project holds); `--update --pending` writes the placeholder `WIP-Version` and is only for this repository; `--update --standard <version>` states a version; the two flags exclude each other, a `--standard` followed by another flag, or `--update` with no manifest and no flag, is refused; `main` takes a `root`, so the rewrite can be tested
+- tests/test_manifest.py: the standard is kept (a real version and the placeholder), a missing manifest needs the version stated, `--pending` over a real version, `--standard` over the current one, and the refused combinations
+- .github/automation-manifest.json: rewritten with `--update --pending`
+- AGENTS.md, README.md, guides/10-new-project-bootstrap.md, guides/11-adopting-the-standard-in-an-existing-project.md, guides/appendix-g-audit-findings-and-fixes.md, doc/wiki/Automation.md: the placeholder is for the standard's own repository; a project that uses the standard gets the manifest with the files and keeps their version
+- guides/Developer-Guides-Complete.md: rebuilt
+
+#### #227 — test_the_repository_changelog_parses passes only in the governance repository
+- tests/test_automation_library.py: `test_the_repository_changelog_parses` reads the changelog of whichever project holds the test and checks that it parses and that no finalized version appears twice (skipped when the project has no `CHANGELOG.md`), instead of asserting this repository's V0.1.0 and V0.2.0; the order in which ticket numbers are written is now covered by `test_ticket_numbers_keep_the_order_they_are_written_in`
+- .github/automation-manifest.json: rewritten (`--update`, the standard is kept)
+
+#### #229 — reenable-schedule.yml fails at checkout in private repositories
+- .github/workflows/reenable-schedule.yml: the permissions are `contents: read` and `actions: write` (a permissions block removes the default read access, so `actions/checkout` failed on every push in a private repository); the header comment says that the workflow matters only in a public repository
+- tests/test_reenable_schedule.py: the permissions test expects both rights
+- guides/10-new-project-bootstrap.md, guides/11-adopting-the-standard-in-an-existing-project.md, doc/wiki/Automation.md: the re-enabler is for public repositories; in a private one it is disabled in the Actions tab and nothing is recorded (the files stay, so the manifest check and the audit stay clean); its permissions are stated
+- guides/Developer-Guides-Complete.md: rebuilt
+- .github/automation-manifest.json: rewritten (`--update`, the standard is kept)
+
+#### #230 — History rule for work committed before the adoption (old branches, early commits)
+- tools/audit_git.py: `--since` judges a commit when it was authored at or after the cut-over and the cut-over commit does not reach it, so work made before the cut-over is history wherever it lands (an old branch merged later keeps its commits out of scope, and the merge commit that lands it is judged); the date form compares author dates, not committer dates; for a commit the cut-over moment is the time it was committed
+- tools/audit.py: the help text of `--since` says so
+- tests/test_audit_git.py: an old branch authored in January, committed in July and merged after a June cut-over (its commits are history, its merge and a later direct commit are judged), the date form by author date, and what the cut-over commit reaches
+- guides/11-adopting-the-standard-in-an-existing-project.md: a rule for commits made before the cut-over (section 1), the wording of `--since` (section 3), settle branches before the cut-over (section 4.4), and the Delivery, Build and comment a person gives a ticket whose work is still on an unmerged branch at the cut-over (section 4.5)
+- doc/wiki/Audit-Tools.md: the same rule for `--since`
+- guides/Developer-Guides-Complete.md: rebuilt
+
+#### #215 — Fingerprints of every version of the standard
+- tools/build_fingerprints.py: added; derives from the git history the hash of each automation file at the commit that finalized each version (found by the subject `Finalize V…`; a version finalized by hand by the commit that added its heading to the changelog; a hotfix version once it has its `released/` tag), with line endings normalized as the manifest check does, read through one `git cat-file --batch` process (about 2 seconds for the 23 versions of this repository); records the standard that each old manifest names without trusting it, and reports manifest hashes that disagree with the files and listed files that are missing; `identify` says whether the automation files of a project match one version (or several that changed no automation file), are mixed, modified, or absent; `--cache` reuses the table while HEAD has not moved; a shallow clone is refused
+- tests/test_fingerprints.py: added; 23 tests on temporary repositories (the finds, look-alike subjects, the oldest commit, line endings, the untrusted standard, stale and missing files, no manifest, a version finalized by hand, hotfix and trial hotfix, a shallow clone, the cache, the options, each state of `identify`) and on the real history (every version of the changelog, the 23 files of V0.3.0, no stale manifest)
+- README.md: names the tool and the migration inventory
+
+#### #216 — Migration inventory: V0.1.0 to V0.14.0
+- doc/migration-inventory.md: added; for each of the 22 finalized versions, whether a project must do more than copy files (eight actions: the baseline of V0.3.0, the Delivery option *Implemented*, the label `dummy`, the saved views, the field *Fix* with the new views and settings, the Version form with the removal of *Version#*, the field *Kind* for personal accounts), what the survey reads to tell, how the chain applies it, who does it, whether it can be undone, and the order; derived from the changelog and from the preflight, the workflow and the manifest at each version's `Finalize` commit
+
 ## V0.14.0 — 2026-10-15 05:48 UTC
 ### Build 20261015054620 (branch finalize-manifest-standard)
 #### #196 — Finalize writes the manifest standard

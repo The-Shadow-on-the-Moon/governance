@@ -36,7 +36,10 @@ check that could not be made, never fails the run.
 
 A project that adopts the standard has a past that cannot change: commits on `main` that are not merges, `fix:`
 subjects, old tags. `--since` limits the history checks to what came after a cut-over: a UTC date (`2026-10-01`, or
-`2026-10-01 14:30`) or a commit (a hash, or a tag). It applies to these checks:
+`2026-10-01 14:30`) or a commit (a hash, or a tag). A commit is in scope when it was **authored** at or after the
+cut-over (for a commit, the time it was committed, when it landed) and the cut-over commit does not reach it. Work
+made before the cut-over is history wherever it lands: an old branch merged later keeps its commits out of scope,
+and the merge commit that lands it is judged. It applies to these checks:
 
 - `git.history.merge-commits`: only the commits on `main`'s first-parent line made after the cut-over;
 - `git.message.no-type-prefix` and `git.message.no-assistant-attribution`: only the commits made after it, on any

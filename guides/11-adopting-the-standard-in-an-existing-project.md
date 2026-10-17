@@ -33,6 +33,10 @@ should not try. These rules say how adoption stays honest.
   recorded.
 - **Rule:** the standard applies from a **cut-over**: the commit at which the adoption lands on `main`.
   Before it, deviations are history. After it, a deviation is a failure like any other.
+- **Rule:** a commit made before the cut-over is history wherever it lands. Work on a branch that was open at
+  the cut-over keeps its old commits as history when the branch is merged afterwards; the merge commit that
+  lands it is made after the cut-over and is judged like any other. A commit counts as made when it was
+  authored, so a rebase or a cherry-pick does not turn old work into new work.
 - **Rule:** the adoption goes through the normal flow it introduces: a ticket per piece of work, an adoption
   branch, a changelog entry, a pull request and a merge commit. It is not done by pushing to `main`.
 - **Rule:** the audit is the measure. The project is adopted when a re-audit reports no failed rule after the
@@ -111,7 +115,9 @@ Every finding of the audit falls into one of four classes. The class decides wha
 - **Recommendation:** accept the smallest set. A deviation that can be fixed without rewriting history is
   fixed.
 - **Recommendation:** run the audit with `--since` (the cut-over, as a date or a commit) to judge the history
-  only from there, and keep the baseline file for what is left. The audit shows the recorded deviations as
+  only from there: the commits authored after the cut-over that the cut-over commit does not reach (for a commit,
+  the cut-over moment is the time it was committed, that is when it landed). Keep the baseline file for what is
+  left. The audit shows the recorded deviations as
   accepted, and reports an entry that accepts nothing any more. Both are described in the wiki page on the
   audit tools.
 - **Recommendation:** read the adoption plan at the end of the audit report: it groups the open findings by
@@ -171,8 +177,9 @@ is committed on it.
 2. **Structure.** Add what is missing of the locations in the guide on project structure (section 2.1): the
    readme, `doc/` with `doc/wiki/`, `.githooks/`, `.github/`, `tests/` where there is code, the ignore file
    and `AGENTS.md`, with the roles and the pointer to the guides.
-3. **Automation.** Copy the automation files from the standard unchanged, keep the hook scripts executable,
-   activate the hooks and run the tests (guide on new-project bootstrap, section 2).
+3. **Automation.** Copy the automation files from the standard unchanged, with its manifest (which names the
+   version of the standard they come from; never rewrite it with the placeholder), keep the hook scripts
+   executable, activate the hooks and run the tests (guide on new-project bootstrap, section 2).
 4. **The changelog.** Keep the old changelog as the record of the earlier history, in `doc/` under a name
    that says so (for example `doc/changelog-before-the-standard.md`). Start the new `CHANGELOG.md` with a
    title and **one** finalized heading for the version the project continues from, with a single build and a
@@ -230,6 +237,8 @@ announced.
 
 - **Rule:** no tag is moved to another commit, and no branch is deleted before its tag exists.
 - **Rule:** after the cut-over, every branch and tag is created in the standard form.
+- **Recommendation:** settle every branch before the cut-over. One left open can still land later: its commits
+  made before the cut-over stay history (section 1), and only the merge that lands it is judged.
 - **Recommendation:** do not rename tags other people or other systems depend on without telling them; record
   such a tag as accepted instead.
 
@@ -249,11 +258,20 @@ and closed state of the issues.
    Origin *Backdated*; one written after the work to replace a `REF` is *Backfilled* and keeps the `REF` token
    (guide on project structure, section 4.3).
 4. **Open work.** Open issues continue as they were, on the board, from their Status.
+5. **Work already on a branch.** A ticket whose work was committed on a branch that is still unmerged at the
+   cut-over has a Build but no Delivery, because the automation sets Delivery *Pushed* only for commits it sees
+   after the cut-over. The person sets Delivery *Pushed* by hand, takes the Build from the time of the last
+   commit that holds the work, and writes a comment saying it was set by hand. When the branch is merged, its
+   work must be in the changelog like any other (the entry for the ticket), and the finalize step then sets Delivery,
+   Version and Build as for any ticket.
 
 - **Rule:** every ticket on the board has a Type (an issue type, or Kind), and every work ticket has a Size (guide on project
   structure, section 3).
 - **Rule:** a closed work ticket is *Completed* or *Abandoned*, and Resolution is set exactly when it is.
 - **Rule:** a ticket written after the work is not given dates or builds it never had.
+- **Rule:** a ticket for work still on an unmerged branch at the cut-over gets Delivery *Pushed* by hand, with a
+  Build from the commit time and a comment (item 5). Work already on `main` before the cut-over is not given a
+  Delivery, a Build or dates by hand: it is documented by a ticket marked *Backdated* or *Backfilled*.
 - **Recommendation:** triage the open backlog once, with the project owner (guide on issues and the board in
   practice, section 1), instead of editing the issues one by one.
 
@@ -337,6 +355,10 @@ If the hosting plan does not offer branch protection or a wiki for a private rep
 findings are *not applicable* and are recorded as such. A plan without issue types (a personal account) keeps
 the Type in the field Kind instead (stage 1), and its findings are judged for the field. The finding stays in the report as a reminder
 and is revisited when the plan changes.
+
+The schedule re-enabler is for a public repository only. In a private one, disable it in the Actions tab after
+copying the files: nothing is recorded, because the audit does not check it and the manifest still lists the
+files.
 
 ---
 
