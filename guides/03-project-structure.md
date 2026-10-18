@@ -612,7 +612,10 @@ release, its tag are the record, and a ticket's one place as a sub-issue is free
   *XS*, Delivery and Version cleared (the old values in a comment), the dates it had, and its sub-issues
   detached after checking that each one has the Version the ticket named.
 - **Recommendation:** convert them once the project has moved to the new files, so that the sub-issue of every
-  ticket is free and the board lists no ticket of a type that is no longer made.
+  ticket is free and the board lists no ticket of a type that is no longer made. `tools/convert_legacy.py` does it
+  (a dry run until `--apply`): it checks the sub-issues' Version first, leaves a ticket that fails the check or that is
+  still planned for the person to decide, writes the old values in a comment and a restore file, and skips a ticket
+  already converted.
 
 *Why.* A ticket per version needed its own rules, its own fields and its own checks, and it took the only
 parent slot of every ticket it grouped. The Version field says the same thing and sorts and groups by itself.

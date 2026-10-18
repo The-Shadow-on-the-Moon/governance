@@ -7,6 +7,12 @@ the rules. This one says what is different when the project is not empty: what t
 what can only be accepted, and in what order to do it. The measure is the audit tools (see the wiki page on
 them), and appendix G says what to do about each finding.
 
+**An assistant can do the route.** The tools of the standard read the real state of the project and do the steps
+with a dry run first: `tools/survey.py` (read-only), `tools/install.py` (a project with none of it),
+`tools/upgrade.py` (the migration chain) and `tools/convert_legacy.py`, led by the instruction file
+`adoption/ADOPT-OR-UPDATE-GOVERNANCE.md`, which a person copies into the root of the project. They do not replace the
+decisions below, which stay with the people.
+
 **How to read it.** Each step states what to do and why. Statements are marked:
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
@@ -149,7 +155,7 @@ Administrator. These settings do not change the code, and most can be undone, so
    issue types.
 2. **Issue types and labels.** Create the seven issue types (not for a project that keeps the Type in the
    field Kind) and the 14 Area labels and `dummy`
-   (guide on new-project bootstrap, section 5). Before deleting a label that is not on the list, move its
+   (guide on new-project bootstrap, section 5; `tools/install.py` does it, and the board too, section 4.3). Before deleting a label that is not on the list, move its
    issues to the Area label that replaces it, because deleting a label removes it from every issue that has
    it.
 3. **Merge methods and branches.** Allow only merge commits, turn off automatic deletion of head branches, and

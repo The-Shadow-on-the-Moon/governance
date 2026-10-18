@@ -35,6 +35,7 @@ PATTERNS = [
     ".github/workflows/reenable-schedule.yml",
     ".github/views.json",
     ".github/pull_request_template.md",
+    ".claude/commands/gov-*.md",
     "tests/test_automation_library.py",
     "tests/test_ticket_type.py",
     "tests/test_preflight.py",

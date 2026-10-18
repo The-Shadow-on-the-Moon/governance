@@ -1,5 +1,21 @@
 {
   "files": {
+    ".claude/commands/gov-after-merge.md": "09892f3810d37cda1b90ec01cee96b406716ab00103ed28e7d4fdaa6bcf3b74e",
+    ".claude/commands/gov-audit.md": "bbc66ead35b01de848865c220c9ada2c6fa0eb960e322ffd37ca1ef682a2ac57",
+    ".claude/commands/gov-changelog.md": "5518c6975b76a0158bd61bc481dad2e522abcc98cf02246a51f7b75e129f0b2b",
+    ".claude/commands/gov-commit.md": "546fa01bf1342bd4e4effdaef6e78308b857cff07f55f5e41dd6cae7114744aa",
+    ".claude/commands/gov-fix.md": "f7d85e556742bee8c1d10bcee7edd07394703b5ea329504594ddc88f7cc06760",
+    ".claude/commands/gov-hotfix.md": "7f554ec87790b9e1b14b9d514907e0624a08ea9df11effbde3dbe9841ee7afc8",
+    ".claude/commands/gov-plan.md": "9b3bd6aeb672f2903dc2f90bb17ac659df12000a346b0e3d815b8ba6c62bbb0a",
+    ".claude/commands/gov-pr.md": "158869cf603de4c35fb9feb5076f5839eb84aa9308cfdc1ef5b2ff9be4f64f16",
+    ".claude/commands/gov-release.md": "0b48efbb6a842ae7a6b3a7a037ae795f860444595948b469fcd4302f6c05fed2",
+    ".claude/commands/gov-retire.md": "d733884eb30d37969307a6111a71bb488aaaa423f61babf918c5b6707b568844",
+    ".claude/commands/gov-review.md": "c90d6a5c30d169e3784b179a01cf927a496e5aad7462012f2910fa18306d095b",
+    ".claude/commands/gov-start.md": "3fa78c0d1d3c295814f873e295f1d98fa776262290ddb522412a9223f846d115",
+    ".claude/commands/gov-status.md": "cf6e6a0bf232f14c1b3a0f77e2354db9694feb2a0a621804c60d0abac4be8907",
+    ".claude/commands/gov-sync.md": "8a0d83fa824133bb529ee1be852e8bba39fbd0c28f8005cd91fac1f72799d3f1",
+    ".claude/commands/gov-ticket.md": "66bf24a51d2825e7bb2636d5d503395d0c72883022c03b8e71579704dbdf927d",
+    ".claude/commands/gov-upgrade.md": "dc70429a04d1c1390fd38e50b73704a8b71cccba267dcc05f62d67205e4bdc75",
     ".githooks/hooks.py": "ecb3fea40ec4016cb0745c67bc94db1f6797d8c96e8e3faae221a29f2b62f94b",
     ".githooks/pre-commit": "f86667331650708ee35eafa3d3488f94980d81eb8c5400508a3d4af4c23329b0",
     ".githooks/pre-push": "d412bf26d76779df894f7186892e31d653b026bde10610418d78494f7eff86dc",
@@ -11,7 +27,7 @@
     ".github/scripts/board_status.py": "162a2faa1a4602a3142202b2350829b640c9e949dce71c1c0e3cc16a1abd5c4b",
     ".github/scripts/bypass.py": "ac0c770b030d75130f29d4a8277429807ba2d149e94c60e6f0a46f097b95531c",
     ".github/scripts/changelog.py": "120d520c107ca142554e99dc7a46dd1511ae79399b40423c08fb80a4b569ae9f",
-    ".github/scripts/check_manifest.py": "73e3304d951d660060e42828ad056a87b9900b5793258b978f1934e7fc3a27dd",
+    ".github/scripts/check_manifest.py": "9da100a4275e61c65bfd05d3d07fceabf6e46f564d85a7873f327c572adca82c",
     ".github/scripts/checks.py": "976960edd5ed235aa7deaf83aab704412efab0a3140bb37305e644bd3ce4033f",
     ".github/scripts/condition_comments.py": "65538e076c32a946b3591d67ac56fcc1aa28d62ab5cb3832cf2336e76ea92de2",
     ".github/scripts/conditions.py": "0098182e3eeb306ca9682660517d3f2c2fd75659e1c80449f81958a00a654a43",
@@ -62,5 +78,5 @@
     "tests/test_watch.py": "bd66b0017b84182e70da7a44696111003c8ec9c602f45518192bd3e37d4056ee",
     "tests/test_workflow.py": "3c41fb9e5bdcde8d2086e4bd8d13c48ec8fd847b306bc6463d9e2f11befa612e"
   },
-  "standard": "V0.15.1"
+  "standard": "WIP-Version"
 }

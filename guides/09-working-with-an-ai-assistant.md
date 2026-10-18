@@ -224,6 +224,9 @@ twice.
   `AGENTS.md` and placed at the repository root. It is versioned and changed through the normal flow, like
   any other file. Everyone's assistant reads it.
 - **Recommendation:** personal preferences stay in a personal file that is not committed.
+- **Recommendation:** the standard ships thin commands for the daily operations (`.claude/commands/gov-*.md`, copied
+  with the automation files). Each names the guide section to follow and never commits, pushes, merges or
+  completes a ticket on its own.
 
 ### 6.2 What goes in it
 
