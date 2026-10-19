@@ -302,6 +302,15 @@ class TargetTests(unittest.TestCase):
         ctx = types.SimpleNamespace(survey={"state": {"detected": "version"}})
         self.assertEqual(upgrade.blocking(ctx), [])
 
+    def test_legacy_version_tickets_block_until_the_conversion_is_asked_for(self):
+        survey_ = {"board": {"legacy_version_tickets": {"total": 3}}, "state": {"detected": "version"}}
+        found = upgrade.blocking(types.SimpleNamespace(survey=survey_, flags=set()))
+        self.assertEqual(len(found), 1)
+        self.assertIn("3 legacy Version ticket(s)", found[0])
+        self.assertEqual(upgrade.blocking(types.SimpleNamespace(survey=survey_, flags={"convert_legacy"})), [])
+        none = {"board": {"legacy_version_tickets": {"total": 0}}, "state": {"detected": "version"}}
+        self.assertEqual(upgrade.blocking(types.SimpleNamespace(survey=none, flags=set())), [])
+
     def test_main_needs_a_path(self):
         self.assertEqual(upgrade.main([]), 1)
 

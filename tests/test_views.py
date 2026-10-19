@@ -85,18 +85,18 @@ class ConditionViewsTests(unittest.TestCase):
 
     def test_plan_lists_the_open_tickets_aimed_at_a_version_that_have_not_shipped_grouped_by_version(self):
         plan = self.view("Plan")
-        self.assertEqual(plan["filter"], "is:open AND has:version AND -delivery:Merged,Implemented,Released AND -type:Version")
+        self.assertEqual(plan["filter"], "is:open AND has:version AND -delivery:Merged,Implemented,Released")
         self.assertEqual((plan["group_by"], plan["sort_by"]), ("Version", [["Version", "asc"], ["Priority", "asc"]]))
 
     def test_versions_groups_by_the_version_field_not_by_a_parent_ticket(self):
         versions = self.view("Versions")
         self.assertEqual(versions["group_by"], "Version")
-        self.assertEqual(versions["filter"], "has:version AND -type:Version")
+        self.assertEqual(versions["filter"], "has:version")
 
     def test_the_plan_filter_clauses_are_forms_the_other_views_already_use(self):
-        # Negated lists of single-select values, has:, is:open and -type: are in the views that exist on the board.
+        # Negated lists of single-select values, has: and is:open are in the views that exist on the board.
         others = " ".join(entry.get("filter", "") for entry in self.entries() if entry["name"] != "Plan")
-        for clause in ("is:open", "has:version", "-type:Version", "-status:ToDo,Suspended"):
+        for clause in ("is:open", "has:version", "-status:ToDo,Suspended"):
             self.assertIn(clause, others, clause)
 
     def test_decide_lists_the_open_attention_flags_and_the_open_alerts(self):
@@ -432,7 +432,7 @@ class ClientTests(unittest.TestCase):
 class SourceTests(unittest.TestCase):
     """With the field Kind in place of the issue type, the filters and the column change; the file does not."""
 
-    DEFINITION = [{"name": "Board", "layout": "board", "filter": "is:open AND -type:Version AND -status:ToDo",
+    DEFINITION = [{"name": "Board", "layout": "board", "filter": "is:open AND -type:Alert AND -status:ToDo",
                    "visible_fields": ["Title", "Type", "Priority"]},
                   {"name": "Decide", "layout": "table", "filter": "attention:Watch OR (type:Alert AND is:open)"},
                   {"name": "Fix", "layout": "table", "filter": "has:fix"}]
@@ -442,11 +442,11 @@ class SourceTests(unittest.TestCase):
 
     def test_the_field_source_uses_kind_in_the_filters_and_the_columns(self):
         found = views.for_source(self.DEFINITION, "field")
-        self.assertEqual(found[0]["filter"], "is:open AND -kind:Version AND -status:ToDo")
+        self.assertEqual(found[0]["filter"], "is:open AND -kind:Alert AND -status:ToDo")
         self.assertEqual(found[0]["visible_fields"], ["Title", "Kind", "Priority"])
         self.assertEqual(found[1]["filter"], "attention:Watch OR (kind:Alert AND is:open)")
         self.assertEqual(found[2], self.DEFINITION[2])
-        self.assertEqual(self.DEFINITION[0]["filter"], "is:open AND -type:Version AND -status:ToDo")  # not changed in place
+        self.assertEqual(self.DEFINITION[0]["filter"], "is:open AND -type:Alert AND -status:ToDo")  # not changed in place
 
     def test_the_real_definition_has_no_type_left_with_the_field_source(self):
         found = views.for_source(views.load_definition(), "field")

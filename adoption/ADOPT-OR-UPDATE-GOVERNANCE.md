@@ -11,6 +11,12 @@ The standard lives in its own repository (`The-Shadow-on-the-Moon/governance`). 
 only the order in which to apply them to a project whose real state is **not assumed**. Where this file and the
 guides differ, the guides win.
 
+**Where the standard sits.** A project carries the standard as a git submodule at `doc/governance`, pinned to a
+commit; its automation files are copies at the root of the project (GitHub reads them there). In this file
+`<standard>` is the checkout of the standard the tools run from: `doc/governance` itself (the usual case), or a
+full-history clone outside the project when the person asks for it. The guides, appendices and tools are named by
+their place in the standard (`guides/...`, `tools/...`); inside a project add the prefix `doc/governance/`.
+
 ## Rules that hold in every phase
 
 1. **Nothing is assumed.** The state of the project is what the survey reads, not what anyone remembers. If a fact
@@ -26,8 +32,9 @@ guides differ, the guides win.
    You propose; the person approves. Commits and pull requests carry no assistant attribution.
 6. **Narrowest token.** Say which scope each command needs (`gh auth status`) and use the token of the person's own
    `gh` sign-in. Never print, store or commit a token. The tools read secrets by name, never by value.
-7. **Run the tools from the standard's checkout, never from inside the project**: `python -I <checkout>/tools/<tool>.py <project-path> ...`.
-   Their notes (state, logs, restore files, backups) go to the folder `.upgrade-state/` of the project, which git
+7. **Run the tools from the standard's checkout** with `python -I <standard>/tools/<tool>.py <project-path> ...`; from
+   the project root that is `python -I doc/governance/tools/<tool>.py .`. Never run a tool from a checkout that was
+   not confirmed (phase 0). Their notes (state, logs, restore files, backups) go to the folder `.upgrade-state/` of the project, which git
    ignores through `.git/info/exclude`; do not add it to the repository.
 8. **Resuming starts with a new survey.** Whatever was done before, the survey says what is still to do. The state
    folder is advisory.
@@ -45,19 +52,29 @@ guides differ, the guides win.
   organization's issue types need `read:org`; running a workflow needs `workflow`.
 - No workflow of the project is running; the team is told of a quiet period (nobody merges during the upgrade).
 - The administrator (who can change repository, organization and board settings) is available.
-- **Get the standard**: `git clone https://github.com/The-Shadow-on-the-Moon/governance <folder outside the project>`
-  with its full history (never `--depth`). Check out the version to adopt: the latest `released/` tag or a finalized
+- **Get the standard**, with its full history (never `--depth`, never `shallow = true` in `.gitmodules`):
+  - the project has the submodule: `git submodule update --init doc/governance`, then `git -C doc/governance fetch --tags`
+    (and `git -C doc/governance fetch --unshallow` if it is shallow);
+  - the project has none (a new project, or one that never had the standard): `git submodule add
+    https://github.com/The-Shadow-on-the-Moon/governance doc/governance`;
+  - the person prefers a clone outside the project: `git clone https://github.com/The-Shadow-on-the-Moon/governance <folder outside the project>`;
+    `doc/governance` is then moved to the same commit by the step S1 (phase 5).
+
+  Check out the version to adopt (in the submodule: `git -C doc/governance checkout <tag or commit>`; moving the pointer
+  is a change of the adoption, which the tools expect): the latest `released/` tag or a finalized
   version the person names (`git tag --list "released/*"`; if the newest tag is older than the version the person
   wants, the person names the version or commit). The checkout must be clean (`git status`), at that tag or at the
   commit of a `Finalize` of that version, and not at a placeholder: its `.github/automation-manifest.json` names a real
-  version. A dirty checkout, or one whose working tree names a different version than its commit, is not used. **Show the commit SHA (`git rev-parse HEAD`) and the version
-  and ask the person to confirm them before running anything from it.**
+  version. A dirty checkout, or one whose working tree names a different version than its commit, is not used.
+  **Show the commit SHA (`git -C <standard> rev-parse HEAD`) and the version and ask the person to confirm them before
+  running anything from it.**
 
 ## Phase 1: survey (nothing changes)
 
 `python -I <standard>/tools/survey.py <project-path>` (add `--no-fleet` if the organization has many repositories).
 
-Show the person the summary: the detected state (`none`, a version, `mixed`, `modified`, `unsupported`), the gaps each
+Show the person the summary: the standard the project carries (the pinned commit and its version, from the section
+"The standard in the project"), the detected state (`none`, a version, `mixed`, `modified`, `unsupported`), the gaps each
 tied to the version that introduced it, the blockers, and everything listed as to be checked by hand. For a state
 `none` the survey lists no gaps in the project's files (there are none to compare), which does not mean the project
 passes: the audit does that. Also run
@@ -87,7 +104,8 @@ in the plan. At least:
 - the cut-over: from which date or commit the history is judged (`audit.py --since`, guide 11 section 4.4);
 - the version to continue from, when the project already has releases (guide 11 section 5.2);
 - the roles: who is administrator, project owner and developer (guide 09);
-- what to do with the legacy Version tickets (convert them, or leave them as history);
+- the legacy Version tickets: they are converted (the automation no longer knows the type), and the person decides
+  only about the planned ones that are still open (`--include-open`);
 - whether the wiki is synchronized from `doc/wiki/` (the workflow of guide 10 section 2; it needs the wiki
   initialized once by hand);
 - the policy for the burst of Fix flags and comments after the upgrade (accept it, or fix first);
@@ -104,15 +122,18 @@ proven after phase 5, when the files exist: run the preflight (guide 10, section
 
 On the adoption branch made in phase 2:
 
-1. `python -I <standard>/tools/upgrade.py <project-path> --only F1` (dry run), show it, then with `--apply` on the
+1. When the project carries the submodule: `python -I <standard>/tools/upgrade.py <project-path> --only S1` (dry run),
+   then with `--apply` on the go-ahead. It moves `doc/governance` to the commit of the checkout (nothing to move when
+   you run from it) and stages the pointer.
+2. `python -I <standard>/tools/upgrade.py <project-path> --only F1` (dry run), show it, then with `--apply` on the
    go-ahead. It copies the automation files of the standard, saves each file it replaces, and stops at a file edited
    locally unless `--overwrite-edited` is given (decide with the person; the old file stays in git).
-2. Merge the lines of the standard's `AGENTS.md` (in its checkout) into the project's own `AGENTS.md` without
+3. Merge the lines of the standard's `AGENTS.md` (in its checkout) into the project's own `AGENTS.md` without
    overwriting what the project already says; where they differ, add the sentence that the guides win over personal
    preferences. If the project has none, create one from guide 09, section 6.3 (a starter text).
-3. `python -I <standard>/tools/upgrade.py <project-path> --only M1 --apply`: the manifest names the real version,
+4. `python -I <standard>/tools/upgrade.py <project-path> --only M1 --apply`: the manifest names the real version,
    never the placeholder.
-4. Stage the files, and mark the hook scripts executable in the index (a copy made on Windows loses the bit, and a
+5. Stage the files (the pointer of `doc/governance` included), and mark the hook scripts executable in the index (a copy made on Windows loses the bit, and a
    test of the standard checks it): `git add -A` and then `git add --chmod=+x .githooks/pre-commit
    .githooks/prepare-commit-msg .githooks/pre-push`. Run the project's tests and
    `python .github/scripts/check_manifest.py`. Activate the hooks once per clone: `git config core.hooksPath .githooks`.

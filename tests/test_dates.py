@@ -79,8 +79,8 @@ class SweepTests(unittest.TestCase):
         _, project = run_sweep([node(1, "Completed", start="2026-10-01")])
         self.assertEqual(project.sets, [("I1", "F-End date", TODAY)])
 
-    def test_version_and_alert_tickets_have_no_dates(self):
-        _, project = run_sweep([node(1, "Completed", kind="Version"), node(2, "Review", kind="Alert")])
+    def test_alert_tickets_have_no_dates(self):
+        _, project = run_sweep([node(1, "Review", kind="Alert")])
         self.assertEqual((project.sets, project.cleared), ([], []))
 
     def test_a_ticket_with_no_type_is_treated_as_work(self):

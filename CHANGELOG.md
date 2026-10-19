@@ -1,5 +1,33 @@
 # Changelog
 
+## WIP-Version
+### Build 20261019181405 (branch submodule-layout)
+
+#### #239 — Adopt the standard as a submodule at doc/governance
+- Project action: S1: a project that carries the standard as a submodule at `doc/governance` has the pin moved to the version it follows and the pointer staged with the rest of the change; `python -I doc/governance/tools/upgrade.py . --only S1 --apply` does it
+- tools/survey.py: new fact `embedded` (the submodule at `doc/governance`: pinned commit, the version that commit names, the commit checked out, the URL, shallow or unclean checkout, a plain copy that is not a submodule reported as to check by hand) and a section "The standard in the project" in the report; blockers for a submodule that is not checked out, is shallow (by its clone or `shallow = true` in `.gitmodules`) or has uncommitted changes; the pointer of the submodule does not make the tree dirty
+- tools/upgrade.py: the pointer of `doc/governance` is the chain's own change and does not block the next step
+- tools/migrations/s01_pin.py: added, the first step of the chain; moves the submodule to the commit of the checkout the tool runs from (fetched from that checkout, no network) and stages the pointer; run from the submodule itself it only stages
+- tools/migrations/__init__.py: S1 in the order
+- adoption/ADOPT-OR-UPDATE-GOVERNANCE.md: says where the standard sits and that its paths take the prefix `doc/governance/`; the tools run from the submodule; phase 0 gets the standard as a submodule (initialize, add, or a clone outside), full history; phase 5 starts with S1
+- .claude/commands/gov-*.md: each says the guides and tools are under `doc/governance/` in a project
+- guides/03-project-structure.md, guides/10-new-project-bootstrap.md, guides/11-adopting-the-standard-in-an-existing-project.md: `doc/governance/` in the structure; the standard as a submodule in the bootstrap (section 2.1, step 1 of 2.2) and in keeping in step (2.4)
+- doc/wiki/Upgrading.md, doc/wiki/Adoption-Kit.md, doc/migration-inventory.md: the layout, the step S1
+- tests/test_submodule_layout.py: added; 11 tests on a real throwaway project with a submodule (no submodule, a plain copy, the pin and its version read, the moved pointer not dirty, the blockers, the report, the pin moved from an outside checkout and staged, run from the submodule, a dry run, no step without the submodule, a failing git command)
+- tests/test_adoption_kit.py: the instruction file and the commands say where the standard sits; S1 is a step the file may name
+
+#### #234 — Remove the legacy Version type tolerance
+- Project action: L1: a board that still has tickets of the legacy type Version has them converted before it takes the files of this version, because the automation no longer knows the type; `python -I doc/governance/tools/upgrade.py . --convert-legacy` (and `--include-open` for the planned ones) does it, and without it the upgrade refuses to start
+- .github/scripts/conditions.py, dates.py, watch.py, release.py, versions.py: Version is no longer exempt from the Delivery, date, Attention, release and bump rules; only Alert is
+- tools/audit_board.py: a Version ticket is no longer exempt from the work-ticket rules
+- .github/scripts/ticket_type.py: the comments no longer mention the tolerated eighth type
+- .github/views.json: the filters of the Board, Plan and Versions views no longer exclude the type Version (a board applies them with `views.py --apply`)
+- tools/upgrade.py: legacy Version tickets on the board block the upgrade until `--convert-legacy` is given
+- tools/survey.py, tools/convert_legacy.py: still find and convert the legacy tickets (that is how a board gets rid of them)
+- guides/03-project-structure.md (section 5.2 and the rules), guides/10-new-project-bootstrap.md, guides/appendix-c-ticket-fields-reference.md, guides/appendix-e-ticket-model.md, doc/wiki/Board-Views.md, Audit-Tools.md, Automation.md, Ticket-Model.md, adoption/ADOPT-OR-UPDATE-GOVERNANCE.md: a legacy Version ticket is converted, not tolerated
+- tests: the exemption tests of the five readers and of the audit now expect a Version ticket to be judged; test_views and test_upgrade follow the new filters and the new blocker
+- guides/Developer-Guides-Complete.md: rebuilt
+
 ## V0.15.2 — 2026-10-19 00:23 UTC
 ### Build 20261018234949 (branch adoption-kit)
 

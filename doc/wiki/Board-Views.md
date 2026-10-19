@@ -10,12 +10,12 @@ Every view except All also ends with `AND is:issue AND -label:dummy`, which the 
 |---|---|---|---|---|
 | All | table | none (neither the test tickets nor the pull requests are left out) | no grouping; in ticket-number order (see the notes) | Every item on the board, test tickets and pull requests included, with all its fields, for finding anything and for audit. |
 | Backlog | board | `status:ToDo,OnDeck,Suspended` | columns by Status; sorted by Priority | The waiting and set-aside work, the most urgent first. |
-| Board | board | `is:open AND -type:Version AND -status:ToDo,Suspended` | columns by Status, rows by Version; sorted by Priority | The active work (OnDeck, InProgress, Review) with a row for each Version. |
-| Plan | table | `is:open AND has:version AND -delivery:Merged,Implemented,Released AND -type:Version` | grouped by Version; sorted by Version, then Priority | What is intended: the open tickets aimed at a version that have not shipped, in version order. A plan is advisory; one that is passed is listed in Fix. |
+| Board | board | `is:open AND -status:ToDo,Suspended` | columns by Status, rows by Version; sorted by Priority | The active work (OnDeck, InProgress, Review) with a row for each Version. |
+| Plan | table | `is:open AND has:version AND -delivery:Merged,Implemented,Released` | grouped by Version; sorted by Version, then Priority | What is intended: the open tickets aimed at a version that have not shipped, in version order. A plan is advisory; one that is passed is listed in Fix. |
 | Decide | table | `attention:Watch,Caution,AtRisk OR (type:Alert AND is:open)` | sorted by Priority | What the automation noticed and a person must judge: an open Attention flag, an open Alert. Start a work session here. |
 | Follow up | table | `has:waiting OR status:Review` | sorted by Priority | The ordinary queues: a ticket marked *Needs input*, and a ticket at *Review* awaiting verification. |
 | Fix | table | `has:fix` | sorted by Priority | Tickets whose fields contradict each other; the Fix column names the broken rules. |
-| Versions | table | `has:version AND -type:Version` | grouped by Version (a group reads "V000.007.000"); sorted by Version, then Priority | What each version holds, with Delivery, Build and Resolution; the tickets that have not shipped are the plan for a later version. |
+| Versions | table | `has:version` | grouped by Version (a group reads "V000.007.000"); sorted by Version, then Priority | What each version holds, with Delivery, Build and Resolution; the tickets that have not shipped are the plan for a later version. |
 
 The columns of each view, in order, and their sorting and grouping are in [Appendix F: board views](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-f-board-views-layout.md).
 

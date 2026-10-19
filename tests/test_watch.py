@@ -137,8 +137,8 @@ class FlagRulesTests(unittest.TestCase):
         stale = ticket(1, "Review", 10, attention="Acknowledged", build="20260915000000", comments=[raised])
         self.assertEqual(sweep([stale])[3], [1])
 
-    def test_version_and_alert_tickets_have_no_attention(self):
-        self.assertEqual(sweep([ticket(1, "Review", 50, kind="Version"), ticket(2, "Review", 50, kind="Alert")])[3], [])
+    def test_alert_tickets_have_no_attention(self):
+        self.assertEqual(sweep([ticket(2, "Review", 50, kind="Alert")])[3], [])
 
     def test_the_comment_carries_the_marker_and_says_what_to_do(self):
         _, repo, _, _ = sweep([ticket(1, "Review", 10, build="20261001000000", comments=[comment(10)])])

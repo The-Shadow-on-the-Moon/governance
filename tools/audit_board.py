@@ -2,7 +2,7 @@
 
 Reads, through the `gh` command line tool, the board linked to the repository: its fields and their values, its saved
 views (against `.github/views.json`) and every ticket on it (Type, that is the issue type or the field Kind, Size, Status against open or closed, Resolution,
-Origin and REF, the form of Version, the Version and Alert tickets). Read-only. It needs `gh` signed in with the `project`
+Origin and REF, the form of Version, the Alert tickets). Read-only. It needs `gh` signed in with the `project`
 scope; what it cannot read is reported as not-checkable. Throwaway tickets (label `dummy`) and pull requests are skipped.
 
 Usage:
@@ -28,7 +28,7 @@ import preflight  # noqa: E402
 import ticket_type  # noqa: E402
 import views  # noqa: E402
 
-WORK_EXEMPT = ("Version", "Alert")  # Version is a legacy type: tickets that still have it break no work-ticket rule
+WORK_EXEMPT = ("Alert",)
 BOARD_VERSION = re.compile(r"^V\d{3}\.\d{3}\.\d{3}(-HF\d)?$")
 FINISHED = ("Completed", "Abandoned")
 SELECTS = ("Status", "Size", "Resolution", "Delivery", "Origin", "Priority")

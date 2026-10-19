@@ -94,13 +94,18 @@ The push step, the date sweep, the Watch and Caution flags, the schedule (one ru
 - **What.** A project owned by a personal account has no issue types; the Type is a board field *Kind* with the standard values, and the repository variable `TYPE_SOURCE` names the source (`issue-type` or `field`; without the variable the owner of the repository decides). Views use `kind:` filters, translated by `views.py`.
 - **Detect.** The owner type; the variable; the field Kind and its values. **Apply.** `fields.py --apply` creates Kind; set the variable if the default is wrong. **Who.** Administrator. **Reversible.** Yes. An organization project needs nothing.
 
+### S1: the pin of the standard (every version)
+
+- **What.** A project carries the standard as a git submodule at `doc/governance`; the automation files are copies of its files at the root. Moving the project to a version moves the pin to that version's commit.
+- **Detect.** A gitlink (mode 160000) at `doc/governance`; its pinned commit and the version that commit names against the commit of the checkout the tool runs from. **Apply.** `upgrade.py --only S1 --apply` moves the submodule to the commit of the checkout (nothing to move when the tool runs from the submodule) and stages the pointer. **Who.** Developer. **Reversible.** Yes: the pointer is a normal change of the adoption branch.
+
 ### Forecast: the 0.15 series (not part of this inventory)
 
 Views Versions and Plan (A5 again); conversion of the legacy Version tickets (#213); Resolution *Done* filled and cleared by the refresh (#232); the first refresh flags stale plans (#208); in an adopting project the manifest keeps the standard's version (#226). These are the chain's last steps.
 
 ## Order of the steps for a project with files from one version and a board from another
 
-1. A1 (the baseline), then A2, A4.
+1. S1 (the pin of the submodule, when the project has it), then A1 (the baseline), A2, A4.
 2. A6 fields, then the files of the target version, then A5/A6/A7 views (`views.py` reads `views.json` of the target).
 3. A7 in its internal order: files, values, views, then the removal of *Version#*.
 4. A8 anywhere after A1 for a personal account.

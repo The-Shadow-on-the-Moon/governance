@@ -109,10 +109,10 @@ class ReleaseTests(Folder):
 
     def test_newer_versions_pushed_work_and_other_tickets_are_left_alone(self):
         nodes = [node(1, "Merged", "V0.6.0"), node(2, "Pushed", "V0.5.0"), node(3, "Released", "V0.4.0"), node(4, None, "V0.4.0"),
-                 node(5, "Merged", "V0.4.0", kind="Version"), node(6, "Merged", "V0.4.0", kind="Alert"), node(7, "Merged", "soon"),
+                 node(6, "Merged", "V0.4.0", kind="Alert"), node(7, "Merged", "soon"),
                  node(8, "Dropped", "V0.4.0")]
         _, _, project = self.run_release(nodes)
-        self.assertEqual(project.sets, [])  # a legacy Version ticket (node 5) is left alone, like an Alert
+        self.assertEqual(project.sets, [])  # an Alert (node 6) is left alone
 
     def test_an_earlier_version_can_be_released(self):
         run, repo, project = self.run_release([node(1, "Merged", "V0.5.0"), node(2, "Merged", "V0.4.0")], V("V0.4.0"))

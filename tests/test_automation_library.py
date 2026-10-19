@@ -73,7 +73,9 @@ class VersionTests(unittest.TestCase):
     def test_no_typed_tickets_is_a_mod(self):
         latest = Version(1, 4, 2)
         self.assertEqual(str(versions.next_version(latest, [])), "V1.4.3")
-        self.assertEqual(str(versions.next_version(latest, ["Version", "Alert"])), "V1.4.3")
+        self.assertEqual(str(versions.next_version(latest, ["Alert"])), "V1.4.3")
+        with self.assertRaises(versions.VersionError):  # the legacy type is no longer known
+            versions.next_version(latest, ["Version"])
 
     def test_marker_overrides_in_both_directions(self):
         latest = Version(1, 4, 2)

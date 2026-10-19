@@ -1183,6 +1183,7 @@ branch they came through.
 | **`tests/`** | Automated tests, for the product and for the automation scripts, and any recorded test results in `tests/results/`. Present when the project has code or scripts of its own. |
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
+| **`doc/governance/`** | The standard itself, carried by the project as a git submodule pinned to a finalized version (the standard's own repository has no such folder). The automation files are copies at the root, taken from it. |
 | **`.githooks/`** | The local git hooks. |
 | **`.github/`** | Server-side workflows and their scripts, the pull request template, the manifest of the automation files, the saved board views and, in an adopted project, the audit baseline. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
@@ -1499,8 +1500,7 @@ automation set the ticket's Version and Delivery from where the placeholder appe
   *Completed*, *Abandoned* or *Suspended*: when something looks wrong there, it raises Attention (below)
   and a person decides.
 - **Rule:** the GitHub issue of a work ticket is closed only when the ticket is *Completed* or
-  *Abandoned*, by a person, never by a closing keyword. (A legacy Version ticket has no Progress and is left
-  alone, section 5.2.)
+  *Abandoned*, by a person, never by a closing keyword.
 
 *Why.* Progress is a judgment, so people make it. Only the developer knows whether work is finished: a
 ticket may be committed, pushed or even merged in several steps, and the board may be updated later. The
@@ -1669,7 +1669,7 @@ to forget to close.
 | A work ticket is *Completed* | Delivery is set: *Merged* if files changed, *Implemented* if none did. (A ticket that came to nothing is *Abandoned*, not *Completed*. Version and Alert tickets are not work tickets.) |
 | Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the attaching that runs before every refresh for *Implemented*); a ticket still without one after that is a step that failed, and Fix shows it. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
-| A ticket is an Alert, or a legacy Version ticket | Only some fields apply (see the special tickets section). |
+| A ticket is an Alert | Only some fields apply (see the special tickets section). |
 | A ticket is open, not shipped, and has a Version | The Version is a plan, and an advisory one: finalize overwrites it when the work ships, and the bump is never derived from it. A plan at or below the highest finalized version can no longer happen: the ticket is listed in Fix, and the person sets a Version above it or clears it. |
 | A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
@@ -1685,8 +1685,7 @@ to forget to close.
 
 #### 5.1 What makes them special
 
-Alert tickets are created by the automation, not planned by people, and a legacy Version ticket was too
-(section 5.2). They do not follow the work-ticket rules: they are exempt from the rule that every ticket gets
+Alert tickets are created by the automation, not planned by people. They do not follow the work-ticket rules: they are exempt from the rule that every ticket gets
 a Size at creation, and only some fields apply to them (the *Ticket fields reference* appendix has the table).
 
 #### 5.2 Legacy Version tickets
@@ -1700,14 +1699,15 @@ release, its tag are the record, and a ticket's one place as a sub-issue is free
 - **Rule:** nothing creates, reuses, closes or attaches to a Version ticket. The finalize step and the release
   and hotfix steps do not read one.
 - **Rule:** a Version ticket that is still on a board is a legacy ticket (type *Version*, which is not one of
-  the seven types of a new board). It is left alone: it has no Progress, the work-ticket rules and the Fix
-  rules do not apply to it, and the audit does not judge its title or its fields.
-- **Rule:** a legacy ticket may stay as history. If it is converted, the result is a Task titled
+  the seven types of a new board). The automation no longer knows the type and would judge such a ticket as a
+  work ticket, so it is converted into a closed record before the project takes the files of this version (the
+  upgrade refuses to start while one remains).
+- **Rule:** the conversion's result is a Task titled
   `Legacy Version 001.025.004`, with the Area `process`, Progress *Abandoned*, Resolution *Superseded*, Size
   *XS*, Delivery and Version cleared (the old values in a comment), the dates it had, and its sub-issues
   detached after checking that each one has the Version the ticket named.
-- **Recommendation:** convert them once the project has moved to the new files, so that the sub-issue of every
-  ticket is free and the board lists no ticket of a type that is no longer made. `tools/convert_legacy.py` does it
+- **Rule:** convert them with `tools/convert_legacy.py` (or the step L1 of `tools/upgrade.py`), which frees the
+  sub-issue of every ticket and leaves the board with no ticket of a type that is no longer made. The tool does it
   (a dry run until `--apply`): it checks the sub-issues' Version first, leaves a ticket that fails the check or that is
   still planned for the person to decide, writes the old values in a comment and a restore file, and skips a ticket
   already converted.
@@ -4609,6 +4609,10 @@ is the honest description of a project's first version: something exists, and no
 
 #### 2.1 What it is made of
 
+- **The standard itself,** a git submodule at `doc/governance`, pinned to a finalized version of the standard
+  (a `released/` tag or the commit of a `Finalize`), with its full history. The guides, the appendices and the tools
+  (`doc/governance/tools/`) are read and run from there; the automation files below are copies at the root of the
+  project, because GitHub reads workflows only from `.github/`.
 - **The local hooks,** in `.githooks/`: three small entry scripts and one shared script that stamps the
   build, drafts the commit message and warns. They need a runtime (here Python 3).
 - **The remote workflow,** `.github/workflows/versioning.yml`, and its logic in `.github/scripts/`, with
@@ -4629,15 +4633,19 @@ is the honest description of a project's first version: something exists, and no
 
 #### 2.2 The steps
 
-1. **Copy the automation files** from the standard, unchanged.
-2. **Keep the hook scripts executable** (on Linux the executable bit has to be committed, or git ignores
+1. **Add the standard as a submodule:** `git submodule add https://github.com/The-Shadow-on-the-Moon/governance
+   doc/governance`, then check out the version to follow inside it (`git -C doc/governance checkout <tag or
+   commit>`). Never a shallow one: the tools tell the versions of the files apart from its history.
+2. **Copy the automation files** from the standard, unchanged: `python -I doc/governance/tools/upgrade.py . --apply`
+   does it (a dry run without `--apply`), and also stages the pointer of the submodule.
+3. **Keep the hook scripts executable** (on Linux the executable bit has to be committed, or git ignores
    them).
-3. **Activate the hooks** with the one command in the readme.
-4. **Run the automation's tests** locally.
-5. **Confirm the workflow is enabled,** with its schedule, and declares the permissions it needs in its
+4. **Activate the hooks** with the one command in the readme.
+5. **Run the automation's tests** locally.
+6. **Confirm the workflow is enabled,** with its schedule, and declares the permissions it needs in its
    own file: write access to contents, issues and pull requests. The re-enabler declares its own, narrower
    permissions (read access to contents, to check out its script, and write access to actions).
-6. **Run the preflight** (section 2.3) once the project token (section 4) and the board (section 6) exist.
+7. **Run the preflight** (section 2.3) once the project token (section 4) and the board (section 6) exist.
 
 #### 2.3 The preflight
 
@@ -4671,7 +4679,8 @@ or more than one, it stops at step 3 and asks the administrator to say which.
   that merge's version. In any other project the placeholder would end up naming the project's own version.
 - A **check script** compares the project's files with the manifest and reports each as unchanged, edited
   locally, or from an older version.
-- To update a project, copy the new files from the standard, replace the manifest, and run the check. When the
+- To update a project, move the submodule `doc/governance` to the new version, copy the new files from it, replace the
+  manifest, and run the check; `tools/upgrade.py` does all three (the pointer of the submodule is part of the change). When the
   new version also needs something of the board or the repository, the changelog entry says so with a
   `Project action:` line, and `tools/upgrade.py` does the steps (wiki page *Upgrading*).
 
@@ -4799,7 +4808,8 @@ the preflight's warning means the board does not stop updating without notice.
 - **Rule:** the seven issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
   *Refactor*, *Task* and *Alert*. Each carries its short definition from the *Ticket fields
   reference* as its description. A board made by an earlier version of the standard has an eighth, *Version*:
-  a legacy type that is tolerated and no longer made.
+  a legacy type that is no longer made and that the automation does not know (delete it from the organization once
+  no board has a ticket of that type).
 - **Rule:** the Type has one source, chosen by who owns the repository. A project owned by an organization
   keeps it in the seven issue types, which need an organization. A project owned by a personal account has
   no issue types and keeps it in the board field *Kind* (section 6.1), with the same seven values and the
@@ -5082,7 +5092,9 @@ them), and appendix G says what to do about each finding.
 with a dry run first: `tools/survey.py` (read-only), `tools/install.py` (a project with none of it),
 `tools/upgrade.py` (the migration chain) and `tools/convert_legacy.py`, led by the instruction file
 `adoption/ADOPT-OR-UPDATE-GOVERNANCE.md`, which a person copies into the root of the project. They do not replace the
-decisions below, which stay with the people.
+decisions below, which stay with the people. The project carries the standard as a git submodule at `doc/governance`
+(guide on new-project bootstrap, section 2.1), whether it is new, has no governance yet, or has an older version of it:
+the tools run from there (`python -I doc/governance/tools/<tool>.py .`) and the step S1 of the chain moves its pin.
 
 **How to read it.** Each step states what to do and why. Statements are marked:
 
@@ -5645,7 +5657,7 @@ personal account the values are the options of the board field Kind.
 | **Task** | YELLOW | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
 | **Alert** | RED | An automatic check that needs a person to review something, such as a detected bypass. It never counts toward a bump. | none |
 
-Set by a person when the ticket is created; the automation sets it on Alert tickets. *Version* was a type of earlier versions of the standard (a bookkeeping ticket for one version, which never counted toward a bump): it is no longer made, and boards that still have such tickets are tolerated.
+Set by a person when the ticket is created; the automation sets it on Alert tickets. *Version* was a type of earlier versions of the standard (a bookkeeping ticket for one version, which never counted toward a bump): it is no longer made, and the automation no longer knows the type: a board that still has such tickets converts them first (`tools/convert_legacy.py`, the step L1 of `tools/upgrade.py`).
 
 ### Area
 
@@ -5877,8 +5889,9 @@ ticket has none.
 | Fix | yes | yes (the Delivery rules do not apply) |
 | Assignee | assigned to the person who starts the work | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog |
 
-A legacy Version ticket (type *Version*, made by earlier versions of the standard) has none of these fields in
-play: it has no Progress, and the work-ticket rules, the Fix rules and the audit leave it alone.
+A legacy Version ticket (type *Version*, made by earlier versions of the standard) is no longer recognized: the
+rules would treat it as a work ticket. It is converted into a closed record before the upgrade (guide on ticket
+management, section 5.2).
 
 ---
 
@@ -6347,7 +6360,7 @@ Alert tickets are created by the automation. They are exempt from the rule that 
 gets a Size, and only some fields apply to them (the table is at the end of Appendix C).
 
 - **A legacy Version ticket** was the bookkeeping record of one version, made by earlier versions of the
-  standard. It is no longer made; where one still exists it is left alone. A version has no ticket: its
+  standard. It is no longer made and the automation no longer knows the type; where one still exists it is converted into a closed record (guide on ticket management, section 5.2). A version has no ticket: its
   changelog entry, the Version field of its tickets and, for a release, its tag are the record, and aiming
   a ticket at a future version needs only the Version field.
 - **An umbrella ticket** is an ordinary work ticket that groups the tickets of one piece of work as its

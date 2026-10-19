@@ -20,7 +20,7 @@
     {
       "name": "Board",
       "layout": "board",
-      "filter": "is:open AND -type:Version AND -status:ToDo,Suspended",
+      "filter": "is:open AND -status:ToDo,Suspended",
       "group_by": "Version",
       "vertical_group_by": "Status",
       "sort_by": [["Priority", "asc"]],
@@ -29,7 +29,7 @@
     {
       "name": "Plan",
       "layout": "table",
-      "filter": "is:open AND has:version AND -delivery:Merged,Implemented,Released AND -type:Version",
+      "filter": "is:open AND has:version AND -delivery:Merged,Implemented,Released",
       "group_by": "Version",
       "sort_by": [["Version", "asc"], ["Priority", "asc"]],
       "visible_fields": ["Title", "Status", "Type", "Assignees", "Priority", "Size", "Risk", "Delivery", "Version"]
@@ -58,7 +58,7 @@
     {
       "name": "Versions",
       "layout": "table",
-      "filter": "has:version AND -type:Version",
+      "filter": "has:version",
       "group_by": "Version",
       "sort_by": [["Version", "asc"], ["Priority", "asc"]],
       "visible_fields": ["Title", "Status", "Type", "Labels", "Assignees", "Priority", "Size", "Delivery", "Resolution", "Version", "Build"]

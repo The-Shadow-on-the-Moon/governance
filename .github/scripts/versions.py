@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 # Impact of a ticket Type on the bump. Version and Alert tickets are ignored.
 SUB_TYPES = {"Feature", "Enhancement"}
 MOD_TYPES = {"Change", "Bug", "Refactor", "Task"}
-IGNORED_TYPES = {"Version", "Alert"}
+IGNORED_TYPES = {"Alert"}
 MARKERS = {"+V": "major", "+s": "sub", "+m": "mod"}
 
 _VERSION = re.compile(r"^V(\d+)\.(\d+)\.(\d+)(?:-HF(\d+))?$")

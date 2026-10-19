@@ -94,7 +94,7 @@ class RuleTests(unittest.TestCase):
             self.assertEqual(self.broken(delivery=delivery, version=""), ["shipped-without-version"], delivery)
             self.assertEqual(self.broken(delivery=delivery, version="  "), ["shipped-without-version"], delivery)
         self.assertEqual(self.broken(status="Abandoned", delivery="Merged", version=""), [])
-        self.assertEqual(self.broken(delivery="Merged", version="", type="Version"), [])
+        self.assertEqual(self.broken(delivery="Merged", version="", type="Alert"), [])
         self.assertEqual(self.broken(delivery="Pushed", version=""), [])
 
     def test_the_issue_is_closed_only_at_completed_or_abandoned(self):
@@ -138,9 +138,8 @@ class RuleTests(unittest.TestCase):
         for delivery in (None, "Committed", "Pushed", "Dropped"):
             self.assertEqual(self.broken(status="Review", version="V0.1.0", delivery=delivery), ["stale-plan"], delivery)
 
-    def test_an_alert_and_a_legacy_version_ticket_are_not_plans(self):
+    def test_an_alert_is_not_a_plan(self):
         self.assertEqual(self.broken(status="InProgress", type="Alert", version="V0.1.0"), [])
-        self.assertEqual(self.broken(status="InProgress", type="Version", version="V0.1.0"), [])
 
     def test_a_text_that_is_not_a_version_is_not_a_stale_plan(self):
         self.assertEqual(self.broken(status="InProgress", version="soon"), [])

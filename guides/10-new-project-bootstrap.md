@@ -53,6 +53,10 @@ is the honest description of a project's first version: something exists, and no
 
 ### 2.1 What it is made of
 
+- **The standard itself,** a git submodule at `doc/governance`, pinned to a finalized version of the standard
+  (a `released/` tag or the commit of a `Finalize`), with its full history. The guides, the appendices and the tools
+  (`doc/governance/tools/`) are read and run from there; the automation files below are copies at the root of the
+  project, because GitHub reads workflows only from `.github/`.
 - **The local hooks,** in `.githooks/`: three small entry scripts and one shared script that stamps the
   build, drafts the commit message and warns. They need a runtime (here Python 3).
 - **The remote workflow,** `.github/workflows/versioning.yml`, and its logic in `.github/scripts/`, with
@@ -73,15 +77,19 @@ is the honest description of a project's first version: something exists, and no
 
 ### 2.2 The steps
 
-1. **Copy the automation files** from the standard, unchanged.
-2. **Keep the hook scripts executable** (on Linux the executable bit has to be committed, or git ignores
+1. **Add the standard as a submodule:** `git submodule add https://github.com/The-Shadow-on-the-Moon/governance
+   doc/governance`, then check out the version to follow inside it (`git -C doc/governance checkout <tag or
+   commit>`). Never a shallow one: the tools tell the versions of the files apart from its history.
+2. **Copy the automation files** from the standard, unchanged: `python -I doc/governance/tools/upgrade.py . --apply`
+   does it (a dry run without `--apply`), and also stages the pointer of the submodule.
+3. **Keep the hook scripts executable** (on Linux the executable bit has to be committed, or git ignores
    them).
-3. **Activate the hooks** with the one command in the readme.
-4. **Run the automation's tests** locally.
-5. **Confirm the workflow is enabled,** with its schedule, and declares the permissions it needs in its
+4. **Activate the hooks** with the one command in the readme.
+5. **Run the automation's tests** locally.
+6. **Confirm the workflow is enabled,** with its schedule, and declares the permissions it needs in its
    own file: write access to contents, issues and pull requests. The re-enabler declares its own, narrower
    permissions (read access to contents, to check out its script, and write access to actions).
-6. **Run the preflight** (section 2.3) once the project token (section 4) and the board (section 6) exist.
+7. **Run the preflight** (section 2.3) once the project token (section 4) and the board (section 6) exist.
 
 ### 2.3 The preflight
 
@@ -115,7 +123,8 @@ or more than one, it stops at step 3 and asks the administrator to say which.
   that merge's version. In any other project the placeholder would end up naming the project's own version.
 - A **check script** compares the project's files with the manifest and reports each as unchanged, edited
   locally, or from an older version.
-- To update a project, copy the new files from the standard, replace the manifest, and run the check. When the
+- To update a project, move the submodule `doc/governance` to the new version, copy the new files from it, replace the
+  manifest, and run the check; `tools/upgrade.py` does all three (the pointer of the submodule is part of the change). When the
   new version also needs something of the board or the repository, the changelog entry says so with a
   `Project action:` line, and `tools/upgrade.py` does the steps (wiki page *Upgrading*).
 
@@ -243,7 +252,8 @@ the preflight's warning means the board does not stop updating without notice.
 - **Rule:** the seven issue types exist, with these names: *Feature*, *Enhancement*, *Change*, *Bug*,
   *Refactor*, *Task* and *Alert*. Each carries its short definition from the *Ticket fields
   reference* as its description. A board made by an earlier version of the standard has an eighth, *Version*:
-  a legacy type that is tolerated and no longer made.
+  a legacy type that is no longer made and that the automation does not know (delete it from the organization once
+  no board has a ticket of that type).
 - **Rule:** the Type has one source, chosen by who owns the repository. A project owned by an organization
   keeps it in the seven issue types, which need an organization. A project owned by a personal account has
   no issue types and keeps it in the board field *Kind* (section 6.1), with the same seven values and the

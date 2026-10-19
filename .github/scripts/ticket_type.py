@@ -2,7 +2,7 @@
 
 A project owned by an organization keeps the Type in the native issue type. A project owned by a personal
 account has no issue types, and keeps it in a single-select board field named Kind, with the same seven
-values (a board made before has an eighth, `Version`, which is tolerated). The repository variable TYPE_SOURCE says which (`issue-type` or `field`); when it is not set, the
+values. The repository variable TYPE_SOURCE says which (`issue-type` or `field`); when it is not set, the
 source is `issue-type` for an organization and `field` for a personal account (the owner of the repository).
 See the guide on the new-project bootstrap, section 5.1.
 
@@ -16,7 +16,7 @@ VARIABLE = "TYPE_SOURCE"
 FIELD = "Kind"
 ISSUE_TYPE, FIELD_SOURCE = "issue-type", "field"
 SOURCES = (ISSUE_TYPE, FIELD_SOURCE)
-VALUES = ["Feature", "Enhancement", "Change", "Bug", "Refactor", "Task", "Alert"]  # "Version" is a legacy type, no longer made
+VALUES = ["Feature", "Enhancement", "Change", "Bug", "Refactor", "Task", "Alert"]
 # The colors and descriptions of the options of Kind (appendix C, the Type table), for fields.py.
 COLORS = {"Feature": "PURPLE", "Enhancement": "GREEN", "Change": "BLUE", "Bug": "PINK", "Refactor": "ORANGE",
           "Task": "YELLOW", "Alert": "RED"}

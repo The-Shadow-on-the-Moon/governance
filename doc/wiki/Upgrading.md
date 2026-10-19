@@ -5,13 +5,20 @@ version, what the kit does, and what counts as a breaking change.
 
 ## The route
 
-1. Copy `adoption/ADOPT-OR-UPDATE-GOVERNANCE.md` from a checkout of the standard into the root of the project and give
+1. Copy `adoption/ADOPT-OR-UPDATE-GOVERNANCE.md` from the standard (in the project, the submodule `doc/governance`)
+   into the root of the project and give
    it to an assistant with the starter prompt: *Follow ADOPT-OR-UPDATE-GOVERNANCE.md in this folder, phase by phase, and
    stop at every gate.* See [Adoption kit](Adoption-Kit).
 2. The assistant surveys the project (`tools/survey.py`), plans, asks the decisions, and goes through the migration
    chain (`tools/upgrade.py`) one step at a time, each with a dry run first.
-3. By hand, the same tools can be run from the checkout: `python -I <checkout>/tools/upgrade.py <project>` is a dry
-   run; add `--apply` to apply, `--only <ID>` for one step.
+3. By hand, the same tools can be run from the checkout of the standard: `python -I doc/governance/tools/upgrade.py .`
+   in a project that carries it as a submodule is a dry run (`python -I <checkout>/tools/upgrade.py <project>` from a
+   clone outside); add `--apply` to apply, `--only <ID>` for one step.
+
+A project carries the standard as a git submodule at `doc/governance`. Check out the version to follow inside it
+(never a shallow clone: `git -C doc/governance fetch --unshallow`), run the tool from there, and the pointer of the
+submodule moves with the rest of the change (step S1); the survey reports the pinned commit and its version, and a
+working tree whose only change is that pointer is not "dirty".
 
 The state decides, not the version label: a step is needed when the project lacks what it brings. Running the chain
 again resumes it, because the survey is made again.
@@ -20,6 +27,7 @@ again resumes it, because the survey is made again.
 
 | ID | Since | What | Needs a flag |
 |---|---|---|---|
+| S1 | V0.3.0 | The pin of the standard: the submodule `doc/governance` moved to the commit of the checkout, the pointer staged | |
 | A1 | V0.3.0 | The board, the labels and the issue types (the install module) | |
 | A2 | V0.4.0 | The Delivery option *Implemented* (every ticket keeps its value) | |
 | A4 | V0.7.0 | The labels of Appendix C, including `dummy` | |

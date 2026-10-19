@@ -11,6 +11,12 @@ committed there) and gives to an assistant. It has nine standing rules and ten p
 2 plan, 3 decisions, 4 settings, 5 files, 6 board and tickets, 7 land, 8 prove, 9 report), each ending in a gate where
 the assistant stops. Where it differs from the guides, the guides win.
 
+## Where the standard sits
+
+A project carries the standard as a git submodule at `doc/governance`, new or not; the tools and the instruction file
+are in it, and the tools run from there (`python -I doc/governance/tools/<tool>.py .`). The automation files stay
+copies at the root. The standard's own repository is the only one without the submodule.
+
 ## The tools (in `tools/`, run from a checkout of the standard with its full history)
 
 | Tool | What it does |
@@ -21,8 +27,8 @@ the assistant stops. Where it differs from the guides, the guides win.
 | `convert_legacy.py` | Converts the legacy Version tickets of a board into closed records. |
 | `build_fingerprints.py` | Builds, from the standard's own history, the hash of each automation file at each version; the survey uses it to tell which version a file is from. |
 
-All of them are a dry run until `--apply`, run as `python -I <checkout>/tools/<tool>.py <project>` (never from inside
-the project), and keep their notes, restore files and backups in `.upgrade-state/` of the project, which git
+All of them are a dry run until `--apply`, run as `python -I <checkout>/tools/<tool>.py <project>` (from the submodule
+`doc/governance`, or from a clone outside the project), and keep their notes, restore files and backups in `.upgrade-state/` of the project, which git
 ignores through `.git/info/exclude`.
 
 ## The commands (in `.claude/commands/`)
