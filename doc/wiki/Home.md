@@ -51,4 +51,6 @@ The guides and other documentation are under CC BY 4.0. The code (`tools/`, `tes
 - [Board views](Board-Views)
 - [Audit tools](Audit-Tools)
 - [Adopting the standard in an existing project](Adopting-the-Standard)
+- [Adoption kit](Adoption-Kit): the instruction file, the tools and the commands
+- [Upgrading a project to a newer version](Upgrading)
 - [Walkthrough: one change from ticket to release, and a hotfix](Walkthrough-CSV-Export)

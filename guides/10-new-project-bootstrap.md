@@ -115,7 +115,9 @@ or more than one, it stops at step 3 and asks the administrator to say which.
   that merge's version. In any other project the placeholder would end up naming the project's own version.
 - A **check script** compares the project's files with the manifest and reports each as unchanged, edited
   locally, or from an older version.
-- To update a project, copy the new files from the standard, replace the manifest, and run the check.
+- To update a project, copy the new files from the standard, replace the manifest, and run the check. When the
+  new version also needs something of the board or the repository, the changelog entry says so with a
+  `Project action:` line, and `tools/upgrade.py` does the steps (wiki page *Upgrading*).
 
 ### 2.5 Rules
 
@@ -270,7 +272,9 @@ other board fields (section 6.1).
   `enhancement`, `duplicate`, `invalid`, `question`, `wontfix`, `good first issue`, `help wanted` and
   `accessibility`; the set changes over time) are deleted. `documentation` stays, because it is on the list.
   After deleting, check that exactly the 14 Area labels and `dummy` remain.
-- **Recommendation:** create the labels with a script, so that every project gets the same list.
+- **Recommendation:** create the labels with a script, so that every project gets the same list: `tools/install.py`
+  (a dry run until `--apply`) checks first and creates the labels, the issue types and the board with its fields and
+  views, correcting a label that differs and keeping any other label unless `--delete-extra-labels` is given.
 
 **Why.**
 

@@ -150,7 +150,7 @@ def appendix_c():
 
     for line in text.splitlines():
         label = re.match(r"^\| `([a-z]+)` \| ([0-9A-F]{6}) \| (.+) \|$", line)
-        kind = re.match(r"^\| \*\*(Feature|Enhancement|Change|Bug|Refactor|Task|Version|Alert)\*\* \| ([A-Z]+) \| (.+?) \|", line)
+        kind = re.match(r"^\| \*\*(Feature|Enhancement|Change|Bug|Refactor|Task|Alert)\*\* \| ([A-Z]+) \| (.+?) \|", line)
 
         if label:
             labels[label.group(1)] = (label.group(2), label.group(3))

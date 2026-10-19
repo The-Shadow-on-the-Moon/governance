@@ -8,6 +8,10 @@ This project
 - Build: `python tools/combine.py` (rebuilds the combined copy; run it after editing any guide).
 - Tests: `python tools/xref_check.py` (expect `problems: 0`) and `python -m unittest discover -s tests`
   (expect `OK`).
+- The adoption and upgrade kit: `tools/survey.py`, `install.py`, `upgrade.py` (with `tools/migrations/`), `convert_legacy.py`,
+  the instruction file `adoption/ADOPT-OR-UPDATE-GOVERNANCE.md` and the commands `.claude/commands/gov-*.md`. A change
+  that needs something of the projects beyond copying files carries a `Project action:` line in its changelog entry and
+  has its step in `tools/migrations/` (guide 05, section 2.3). The tools are a dry run until `--apply`.
 - Hooks: activate them once per clone with `git config core.hooksPath .githooks`.
 - Automation files (hooks, `.github/scripts/`, the versioning and re-enabling workflows, the saved views file, the pull
   request template and the automation's tests) are listed in `.github/automation-manifest.json`. After a change to one, run

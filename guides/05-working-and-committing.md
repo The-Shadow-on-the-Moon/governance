@@ -64,6 +64,11 @@ the work exists, and the entry says *what changed in the files*.
   what changed.
 - **Rule:** entries of commits already made are not edited, except to replace a placeholder (section 6)
   or to make a critical correction (section 2.5).
+- **Rule:** an entry whose change needs something done in the projects that follow the standard, beyond copying
+  the automation files (a board field or option, a label, a setting, a view, a conversion of data), carries a bullet
+  `Project action: <ID>[, <ID>]: <what the project must do>`, where each ID is a step of the migration chain in
+  `tools/migrations/`. The step is written in the same change, so that `tools/upgrade.py` can do it; a test fails
+  for a marker that names no step.
 - **Recommendation:** write the entry as you make each change, not at commit time.
 - **Recommendation:** list code, tests and documentation as separate bullets.
 - **Recommendation:** include the previous behavior when it helps a reader.

@@ -20,6 +20,7 @@ a committed table would always lag one version. `--cache` keeps the result betwe
 
 Read-only. Exit code 2 for a bad argument or an incomplete history.
 """
+import fnmatch
 import hashlib
 import json
 import os
@@ -236,7 +237,11 @@ def identify(root, table):
     hashes = {p: check_manifest.file_hash(os.path.join(root, p)) for p in paths}
     versions = table["versions"]
     matches = {p: sorted((v for v, e in versions.items() if e["files"].get(p) == hashes[p]), key=version_key) for p in paths}
-    same = [v for v, e in versions.items() if set(e["files"]) == set(paths) and all(e["files"][p] == hashes[p] for p in paths)]
+    inscope = lambda path: any(fnmatch.fnmatch(path, pattern) for pattern in check_manifest.PATTERNS)  # noqa: E731
+    # The files of an old version are compared as far as today's patterns see them: a pattern that did not exist then, or a
+    # file that is no longer an automation file, must not make a project that holds exactly that version look mixed.
+    same = [v for v, e in versions.items() if {p for p in e["files"] if inscope(p)} == set(paths)
+            and all(e["files"][p] == hashes[p] for p in paths)]
     score = {v: sum(1 for p in paths if v in matches[p]) for v in versions}
     best = max(score.values()) if score else 0
     closest = sorted((v for v, s in score.items() if s == best and best), key=version_key)

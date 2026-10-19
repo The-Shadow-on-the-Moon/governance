@@ -155,6 +155,9 @@ longer exist.
 - **Rule:** open the pull request only when the branch is ready to land: committed, pushed, synced, built
   and tested.
 - **Rule:** the developer decides whether to force the bump, including a major bump (`+V`).
+- **Rule:** a change that needs something of the projects that follow the standard is marked in its changelog entry
+  with `Project action:` and has its migration step (guide 05, section 2.3) before the pull request is opened. The
+  wiki page *Upgrading* says what counts as breaking.
 
 **Why.**
 

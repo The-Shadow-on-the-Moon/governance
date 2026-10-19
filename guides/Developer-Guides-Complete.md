@@ -1707,7 +1707,10 @@ release, its tag are the record, and a ticket's one place as a sub-issue is free
   *XS*, Delivery and Version cleared (the old values in a comment), the dates it had, and its sub-issues
   detached after checking that each one has the Version the ticket named.
 - **Recommendation:** convert them once the project has moved to the new files, so that the sub-issue of every
-  ticket is free and the board lists no ticket of a type that is no longer made.
+  ticket is free and the board lists no ticket of a type that is no longer made. `tools/convert_legacy.py` does it
+  (a dry run until `--apply`): it checks the sub-issues' Version first, leaves a ticket that fails the check or that is
+  still planned for the person to decide, writes the old values in a comment and a restore file, and skips a ticket
+  already converted.
 
 *Why.* A ticket per version needed its own rules, its own fields and its own checks, and it took the only
 parent slot of every ticket it grouped. The Version field says the same thing and sorts and groups by itself.
@@ -2540,6 +2543,11 @@ the work exists, and the entry says *what changed in the files*.
   what changed.
 - **Rule:** entries of commits already made are not edited, except to replace a placeholder (section 6)
   or to make a critical correction (section 2.5).
+- **Rule:** an entry whose change needs something done in the projects that follow the standard, beyond copying
+  the automation files (a board field or option, a label, a setting, a view, a conversion of data), carries a bullet
+  `Project action: <ID>[, <ID>]: <what the project must do>`, where each ID is a step of the migration chain in
+  `tools/migrations/`. The step is written in the same change, so that `tools/upgrade.py` can do it; a test fails
+  for a marker that names no step.
 - **Recommendation:** write the entry as you make each change, not at commit time.
 - **Recommendation:** list code, tests and documentation as separate bullets.
 - **Recommendation:** include the previous behavior when it helps a reader.
@@ -3158,6 +3166,9 @@ longer exist.
 - **Rule:** open the pull request only when the branch is ready to land: committed, pushed, synced, built
   and tested.
 - **Rule:** the developer decides whether to force the bump, including a major bump (`+V`).
+- **Rule:** a change that needs something of the projects that follow the standard is marked in its changelog entry
+  with `Project action:` and has its migration step (guide 05, section 2.3) before the pull request is opened. The
+  wiki page *Upgrading* says what counts as breaking.
 
 **Why.**
 
@@ -4421,6 +4432,9 @@ twice.
   `AGENTS.md` and placed at the repository root. It is versioned and changed through the normal flow, like
   any other file. Everyone's assistant reads it.
 - **Recommendation:** personal preferences stay in a personal file that is not committed.
+- **Recommendation:** the standard ships thin commands for the daily operations (`.claude/commands/gov-*.md`, copied
+  with the automation files). Each names the guide section to follow and never commits, pushes, merges or
+  completes a ticket on its own.
 
 #### 6.2 What goes in it
 
@@ -4657,7 +4671,9 @@ or more than one, it stops at step 3 and asks the administrator to say which.
   that merge's version. In any other project the placeholder would end up naming the project's own version.
 - A **check script** compares the project's files with the manifest and reports each as unchanged, edited
   locally, or from an older version.
-- To update a project, copy the new files from the standard, replace the manifest, and run the check.
+- To update a project, copy the new files from the standard, replace the manifest, and run the check. When the
+  new version also needs something of the board or the repository, the changelog entry says so with a
+  `Project action:` line, and `tools/upgrade.py` does the steps (wiki page *Upgrading*).
 
 #### 2.5 Rules
 
@@ -4812,7 +4828,9 @@ other board fields (section 6.1).
   `enhancement`, `duplicate`, `invalid`, `question`, `wontfix`, `good first issue`, `help wanted` and
   `accessibility`; the set changes over time) are deleted. `documentation` stays, because it is on the list.
   After deleting, check that exactly the 14 Area labels and `dummy` remain.
-- **Recommendation:** create the labels with a script, so that every project gets the same list.
+- **Recommendation:** create the labels with a script, so that every project gets the same list: `tools/install.py`
+  (a dry run until `--apply`) checks first and creates the labels, the issue types and the board with its fields and
+  views, correcting a label that differs and keeping any other label unless `--delete-extra-labels` is given.
 
 **Why.**
 
@@ -5060,6 +5078,12 @@ the rules. This one says what is different when the project is not empty: what t
 what can only be accepted, and in what order to do it. The measure is the audit tools (see the wiki page on
 them), and appendix G says what to do about each finding.
 
+**An assistant can do the route.** The tools of the standard read the real state of the project and do the steps
+with a dry run first: `tools/survey.py` (read-only), `tools/install.py` (a project with none of it),
+`tools/upgrade.py` (the migration chain) and `tools/convert_legacy.py`, led by the instruction file
+`adoption/ADOPT-OR-UPDATE-GOVERNANCE.md`, which a person copies into the root of the project. They do not replace the
+decisions below, which stay with the people.
+
 **How to read it.** Each step states what to do and why. Statements are marked:
 
 - **Rule**: followed always. A rule may be checked or enforced by tooling, or only be a convention.
@@ -5202,7 +5226,7 @@ Administrator. These settings do not change the code, and most can be undone, so
    issue types.
 2. **Issue types and labels.** Create the seven issue types (not for a project that keeps the Type in the
    field Kind) and the 14 Area labels and `dummy`
-   (guide on new-project bootstrap, section 5). Before deleting a label that is not on the list, move its
+   (guide on new-project bootstrap, section 5; `tools/install.py` does it, and the board too, section 4.3). Before deleting a label that is not on the list, move its
    issues to the Area label that replaces it, because deleting a label removes it from every issue that has
    it.
 3. **Merge methods and branches.** Allow only merge commits, turn off automatic deletion of head branches, and

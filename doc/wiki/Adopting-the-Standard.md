@@ -5,7 +5,8 @@ branches, tags and issues, to follow the standard. The details are in
 [guide 11](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/11-adopting-the-standard-in-an-existing-project.md)
 and, for each finding the audit can report, in
 [appendix G](https://github.com/The-Shadow-on-the-Moon/governance/blob/main/guides/appendix-g-audit-findings-and-fixes.md).
-This page is the route through them. The measure is the [audit tools](Audit-Tools).
+This page is the route through them. The measure is the [audit tools](Audit-Tools). An assistant can do the route
+for a project from one instruction file and a set of tools: see the [Adoption kit](Adoption-Kit) and [Upgrading](Upgrading).
 
 ## The ideas
 
