@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version +m
+## V0.15.2 — 2026-10-19 00:23 UTC
 ### Build 20261018234949 (branch adoption-kit)
 
 #### #233 — Install module: labels, issue types and board for a project with no governance
