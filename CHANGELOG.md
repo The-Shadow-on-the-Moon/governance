@@ -1,6 +1,6 @@
 # Changelog
 
-## WIP-Version
+## V0.16.0 — 2026-10-19 18:42 UTC
 ### Build 20261019181405 (branch submodule-layout)
 
 #### #239 — Adopt the standard as a submodule at doc/governance
