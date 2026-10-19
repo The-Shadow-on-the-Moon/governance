@@ -40,7 +40,7 @@ Side paths: Waiting (*Needs input*) at any open step, sent back from Review to I
 
 ## Special tickets
 
-- **Version tickets** are gone: a version has no ticket. Its changelog entry, the Version field of its tickets (the Versions view groups by it) and, for a release, its tag are the record. A ticket that still has the legacy type *Version* is left alone.
+- **Version tickets** are gone: a version has no ticket. Its changelog entry, the Version field of its tickets (the Versions view groups by it) and, for a release, its tag are the record. A ticket that still has the legacy type *Version* is converted into a closed record before the upgrade (`tools/convert_legacy.py`): the automation no longer knows the type.
 - **Plans:** a Version on a ticket that is open and has not shipped is a plan, and it is advisory; the Plan view lists them, and one that was passed (at or below the highest finalized version) is listed in Fix.
 - **Umbrella ticket:** an ordinary work ticket that groups the tickets of one piece of work as its sub-issues.
 - **Alert ticket:** a check a person must do, raised for a bypass, a merge without changelog entries, or a changelog the automation could not read. It is Critical and every move is manual.

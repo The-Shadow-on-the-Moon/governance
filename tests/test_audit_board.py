@@ -62,7 +62,6 @@ def item(number, title="A ticket", state="OPEN", issue_type="Feature", labels=("
 GOOD_ITEMS = [
     item(1, Status="InProgress", Size="M"),
     item(2, state="CLOSED", Status="Completed", Resolution="Done", Size="S", Version="V000.001.000"),
-    item(3, title="Version 000.001.000", issue_type="Version", labels=(), Status="Completed", Resolution="Done"),
     item(4, issue_type="Alert", labels=(), Priority="Critical", Status="ToDo"),
 ]
 
@@ -121,8 +120,6 @@ class FieldSourceTests(unittest.TestCase):
                 "sortByFields": {"nodes": [{"field": {"name": f}, "direction": d.upper()} for f, d in state["sort_by"]]},
                 "visibleFields": {"nodes": [{"name": f} for f in state.get("visible_fields", [])]}})
         self.fake.items = [item(1, issue_type=None, kind="Feature", Status="InProgress", Size="M"),
-                           item(3, title="Version 000.001.000", issue_type=None, kind="Version", labels=(),
-                                Status="Completed", Resolution="Done"),
                            item(4, issue_type=None, kind="Alert", labels=(), Priority="Critical", Status="ToDo")]
 
     def audit(self):
@@ -211,7 +208,6 @@ class AuditBoardTests(unittest.TestCase):
             item(14, Size="S", Status="InProgress", Resolution="Done"),
             item(15, Size="S", Status="InProgress", Origin="Backfilled"),
             item(16, Size="S", Status="InProgress", Version="V0.1.0"),
-            item(17, title="Version 0.1.0", issue_type="Version", labels=()),
             item(18, issue_type="Alert", labels=(), Priority="High"),
             item(19, labels=(), Size="S", Status="ToDo"),
         ]
@@ -220,10 +216,10 @@ class AuditBoardTests(unittest.TestCase):
                          {"type", "size", "closed-status", "open-status", "resolution", "backfilled-ref",
                           "version-form", "alert-priority", "area"})
 
-    def test_a_legacy_version_ticket_breaks_no_rule_whatever_its_title(self):
-        self.fake.items += [item(30, title="Version 1.25.4", issue_type="Version", labels=(), Status="Completed", Resolution="Done"),
-                            item(31, title="Version 000.001.001", issue_type="Version", labels=())]
-        self.assertEqual(failed(self.audit()), set())
+    def test_a_legacy_version_ticket_is_judged_like_a_work_ticket(self):
+        self.fake.items += [item(30, title="Version 1.25.4", issue_type="Version", labels=(), Status="Completed", Resolution="Done")]
+        bad = {i[len("board.ticket."):] for i in failed(self.audit())}
+        self.assertTrue({"size", "area"} <= bad, bad)
 
     def test_the_details_list_every_ticket(self):
         self.fake.items += [item(n, "Ticket %d" % n, Status="ToDo") for n in range(11, 19)]

@@ -11,7 +11,9 @@ them), and appendix G says what to do about each finding.
 with a dry run first: `tools/survey.py` (read-only), `tools/install.py` (a project with none of it),
 `tools/upgrade.py` (the migration chain) and `tools/convert_legacy.py`, led by the instruction file
 `adoption/ADOPT-OR-UPDATE-GOVERNANCE.md`, which a person copies into the root of the project. They do not replace the
-decisions below, which stay with the people.
+decisions below, which stay with the people. The project carries the standard as a git submodule at `doc/governance`
+(guide on new-project bootstrap, section 2.1), whether it is new, has no governance yet, or has an older version of it:
+the tools run from there (`python -I doc/governance/tools/<tool>.py .`) and the step S1 of the chain moves its pin.
 
 **How to read it.** Each step states what to do and why. Statements are marked:
 

@@ -29,7 +29,7 @@ THRESHOLDS = {"Review": timedelta(days=7), "OnDeck": timedelta(days=30), "InProg
               "Suspended": timedelta(days=182)}
 WAITING_AFTER = timedelta(days=14)
 OPEN = ("ToDo", "OnDeck", "InProgress", "Review", "Suspended")
-NO_ATTENTION = ("Version", "Alert")
+NO_ATTENTION = ("Alert",)
 FLAG_MARKER = "<!-- attention:"  # every flag comment the automation writes starts with this
 SITUATION = re.compile(r"<!-- attention:watch situation=(\S+) -->")
 

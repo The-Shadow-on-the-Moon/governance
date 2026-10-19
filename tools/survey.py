@@ -47,6 +47,7 @@ import views  # noqa: E402
 from github_api import GitHubError  # noqa: E402
 
 KIT_FILES = ("ADOPT-OR-UPDATE-GOVERNANCE.md", "doc/adoption-plan.md")  # files of the kit itself, never a reason to block
+EMBEDDED = "doc/governance"  # where a project carries the standard: a git submodule (only the standard's own repository does not)
 BOARD_FORM = re.compile(r"^V\d{3}\.\d{3}\.\d{3}(-HF\d)?$")
 SHORT_FORM = re.compile(r"^V\d+\.\d+\.\d+(-HF\d)?$")
 NAMESPACES = ("archived", "suspended", "abandoned", "released", "test")
@@ -64,8 +65,8 @@ def facts_repository(root, repo, gh):
     code, branch = git(root, "rev-parse", "--abbrev-ref", "HEAD")
     facts["current_branch"] = branch if code == 0 else None
     code, status = git(root, "status", "--porcelain", "-uall")
-    changed = [line for line in status.splitlines() if line[3:].strip().strip('"') not in KIT_FILES] if code == 0 else []
-    facts["clean_tree"] = not changed if code == 0 else None  # the instruction file and the plan are the kit's own, not changes
+    changed = [line for line in status.splitlines() if line[3:].strip().strip('"') not in KIT_FILES + (EMBEDDED,)] if code == 0 else []
+    facts["clean_tree"] = not changed if code == 0 else None  # the instruction file, the plan and the pin of the submodule are the kit's own, not changes
     code, shallow = git(root, "rev-parse", "--is-shallow-repository")
     facts["shallow"] = shallow == "true" if code == 0 else None
     code, out = git(root, "for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes")
@@ -102,6 +103,55 @@ def facts_repository(root, repo, gh):
                   "rebase_allowed": info.get("allow_rebase_merge")})
     status, pulls = gh("repos/{}/pulls?state=open&per_page=100".format(repo))
     facts["open_pull_requests"] = len(pulls) if status == 200 and isinstance(pulls, list) else None
+    return facts
+
+
+def facts_embedded(root):
+    """The standard carried by the project as a submodule at `doc/governance`: whether it is there, its pinned commit and
+    version, the commit that is checked out, a shallow or unclean checkout, and whether the pin and the manifest agree."""
+    facts = {"path": EMBEDDED, "present": False, "unknown": []}
+    code, out = git(root, "ls-files", "-s", "--", EMBEDDED)
+    line = out.splitlines()[0] if code == 0 and out else ""
+    folder = os.path.join(root, *EMBEDDED.split("/"))
+
+    if not line.startswith("160000"):
+        if os.path.isdir(os.path.join(folder, "guides")):
+            facts["unknown"].append("{} holds a copy of the standard that is not a git submodule: make it one (git submodule add) so the "
+                                    "pin can be moved".format(EMBEDDED))
+
+        return facts
+
+    facts.update({"present": True, "pinned": line.split()[1]})
+    code, out = git(root, "config", "-f", ".gitmodules", "--get-regexp", r"^submodule\..*\.path$")
+    name = next((entry.split()[0][len("submodule."):-len(".path")] for entry in out.splitlines() if entry.split()[-1:] == [EMBEDDED]), None) if code == 0 else None
+
+    if name:
+        code, url = git(root, "config", "-f", ".gitmodules", "--get", "submodule.{}.url".format(name))
+        facts["url"] = url if code == 0 else None
+        code, shallow = git(root, "config", "-f", ".gitmodules", "--get", "submodule.{}.shallow".format(name))
+        facts["gitmodules_shallow"] = code == 0 and shallow == "true"
+
+    facts["initialized"] = os.path.exists(os.path.join(folder, ".git"))
+
+    if not facts["initialized"]:
+        return facts
+
+    code, out = git(folder, "rev-parse", "HEAD")
+    facts["checked_out"] = out if code == 0 else None
+    code, out = git(folder, "rev-parse", "--is-shallow-repository")
+    facts["shallow"] = out == "true" if code == 0 else None
+    code, out = git(folder, "status", "--porcelain")
+    facts["clean"] = not out if code == 0 else None
+    code, out = git(folder, "show", "{}:{}".format(facts["pinned"], check_manifest.MANIFEST.replace(os.sep, "/")))
+
+    try:
+        facts["pinned_standard"] = json.loads(out).get("standard") if code == 0 else None
+    except ValueError:
+        facts["pinned_standard"] = None
+
+    if facts["pinned_standard"] is None:
+        facts["unknown"].append("the version of the pinned commit {} of {} could not be read (is it fetched?)".format(facts["pinned"][:8], EMBEDDED))
+
     return facts
 
 
@@ -381,8 +431,19 @@ def detect_state(files):
     return {"detected": "unknown"}
 
 
-def blockers(repository, board):
+def blockers(repository, board, embedded=None):
     found = []
+    embedded = embedded or {}
+
+    if embedded.get("present") and not embedded.get("initialized"):
+        found.append("the submodule {} is not checked out: run `git submodule update --init {}`".format(EMBEDDED, EMBEDDED))
+
+    if embedded.get("shallow") or embedded.get("gitmodules_shallow"):
+        found.append("the submodule {} is shallow and the fingerprints need its full history: run `git -C {} fetch --unshallow` and "
+                     "remove `shallow = true` from .gitmodules".format(EMBEDDED, EMBEDDED))
+
+    if embedded.get("clean") is False:
+        found.append("the submodule {} has uncommitted changes: the files copied from it would not be the standard's".format(EMBEDDED))
 
     if repository.get("hotfix_branches"):
         found.append("hotfix branches exist ({}): finish or retire them first".format(", ".join(repository["hotfix_branches"])))
@@ -404,6 +465,7 @@ def survey(root, repo=None, gh=None, board_source=None, table=None, fleet=True, 
     now = now or datetime.now(timezone.utc)
     repository = facts_repository(root, repo, gh)
     files = facts_files(root, table)
+    embedded = facts_embedded(root)
     settings = facts_settings(repo, gh) if repo else {"unknown": ["no GitHub repository: the settings were not read"]}
     organization = facts_organization(repository.get("owner"), repository.get("owner_type"), gh, fleet)
     highest = None
@@ -423,10 +485,10 @@ def survey(root, repo=None, gh=None, board_source=None, table=None, fleet=True, 
 
     detected = detect_state(files)
     result = {"tool": "survey", "when": now.strftime("%Y-%m-%d %H:%M UTC"), "project": os.path.abspath(root), "repo": repo,
-              "repository": repository, "files": files, "settings": settings, "organization": organization, "board": board,
+              "repository": repository, "files": files, "embedded": embedded, "settings": settings, "organization": organization, "board": board,
               "state": detected, "gaps": gaps(files, board, labels_have_dummy, repository.get("owner_type")),
-              "blockers": blockers(repository, board)}
-    result["manual"] = [item for section in (repository, files, settings, organization, board) for item in section.get("unknown", [])]
+              "blockers": blockers(repository, board, embedded)}
+    result["manual"] = [item for section in (repository, files, embedded, settings, organization, board) for item in section.get("unknown", [])]
     return result
 
 
@@ -450,6 +512,14 @@ def render(result):
     lines += ["## Files", "", "- the standard the manifest names: {}".format(files.get("manifest_standard")),
               "- identity of the automation files: {} {}".format(files["identity"]["state"], files["identity"].get("versions") or files["identity"].get("closest")),
               "- hooks path: {}; hook managers: {}".format(files.get("hooks_path"), files.get("hook_managers") or "none"), ""]
+    embedded = result.get("embedded", {})
+
+    if embedded.get("present"):
+        lines += ["## The standard in the project", "", "- submodule {} pinned at {} ({}); checked out {}{}".format(
+            embedded["path"], (embedded.get("pinned") or "")[:8], embedded.get("pinned_standard") or "version unknown",
+            (embedded.get("checked_out") or "not checked out")[:8], "; shallow" if embedded.get("shallow") else ""),
+            "- the manifest of the project names {}".format(files.get("manifest_standard")), ""]
+
     lines += ["## To check by hand", ""] + (["- " + item for item in result["manual"]] or ["- nothing"]) + [""]
     return "\n".join(lines)
 

@@ -88,6 +88,7 @@ branch they came through.
 | **`tests/`** | Automated tests, for the product and for the automation scripts, and any recorded test results in `tests/results/`. Present when the project has code or scripts of its own. |
 | **`doc/`** | Project documentation other than the readme and the changelog. |
 | **`doc/wiki/`** | The wiki pages, one markdown file per page. |
+| **`doc/governance/`** | The standard itself, carried by the project as a git submodule pinned to a finalized version (the standard's own repository has no such folder). The automation files are copies at the root, taken from it. |
 | **`.githooks/`** | The local git hooks. |
 | **`.github/`** | Server-side workflows and their scripts, the pull request template, the manifest of the automation files, the saved board views and, in an adopted project, the audit baseline. |
 | **`AGENTS.md`** (root) | The shared instructions for AI assistants (see the guide on working with an assistant). |
@@ -404,8 +405,7 @@ automation set the ticket's Version and Delivery from where the placeholder appe
   *Completed*, *Abandoned* or *Suspended*: when something looks wrong there, it raises Attention (below)
   and a person decides.
 - **Rule:** the GitHub issue of a work ticket is closed only when the ticket is *Completed* or
-  *Abandoned*, by a person, never by a closing keyword. (A legacy Version ticket has no Progress and is left
-  alone, section 5.2.)
+  *Abandoned*, by a person, never by a closing keyword.
 
 *Why.* Progress is a judgment, so people make it. Only the developer knows whether work is finished: a
 ticket may be committed, pushed or even merged in several steps, and the board may be updated later. The
@@ -574,7 +574,7 @@ to forget to close.
 | A work ticket is *Completed* | Delivery is set: *Merged* if files changed, *Implemented* if none did. (A ticket that came to nothing is *Abandoned*, not *Completed*. Version and Alert tickets are not work tickets.) |
 | Delivery is *Merged*, *Implemented* or *Released* | Version is set. The automation sets it (the finalize step for *Merged*, the attaching that runs before every refresh for *Implemented*); a ticket still without one after that is a step that failed, and Fix shows it. An *Abandoned* ticket is left out, because the sweeps never attach it. |
 | A ticket is *Completed* or *Abandoned* | The GitHub issue is closed, by a person. |
-| A ticket is an Alert, or a legacy Version ticket | Only some fields apply (see the special tickets section). |
+| A ticket is an Alert | Only some fields apply (see the special tickets section). |
 | A ticket is open, not shipped, and has a Version | The Version is a plan, and an advisory one: finalize overwrites it when the work ships, and the bump is never derived from it. A plan at or below the highest finalized version can no longer happen: the ticket is listed in Fix, and the person sets a Version above it or clears it. |
 | A ticket breaks one of these rules | The automation lists the rule in the ticket's Fix field, and it goes when the fields agree again. |
 
@@ -590,8 +590,7 @@ to forget to close.
 
 ### 5.1 What makes them special
 
-Alert tickets are created by the automation, not planned by people, and a legacy Version ticket was too
-(section 5.2). They do not follow the work-ticket rules: they are exempt from the rule that every ticket gets
+Alert tickets are created by the automation, not planned by people. They do not follow the work-ticket rules: they are exempt from the rule that every ticket gets
 a Size at creation, and only some fields apply to them (the *Ticket fields reference* appendix has the table).
 
 ### 5.2 Legacy Version tickets
@@ -605,14 +604,15 @@ release, its tag are the record, and a ticket's one place as a sub-issue is free
 - **Rule:** nothing creates, reuses, closes or attaches to a Version ticket. The finalize step and the release
   and hotfix steps do not read one.
 - **Rule:** a Version ticket that is still on a board is a legacy ticket (type *Version*, which is not one of
-  the seven types of a new board). It is left alone: it has no Progress, the work-ticket rules and the Fix
-  rules do not apply to it, and the audit does not judge its title or its fields.
-- **Rule:** a legacy ticket may stay as history. If it is converted, the result is a Task titled
+  the seven types of a new board). The automation no longer knows the type and would judge such a ticket as a
+  work ticket, so it is converted into a closed record before the project takes the files of this version (the
+  upgrade refuses to start while one remains).
+- **Rule:** the conversion's result is a Task titled
   `Legacy Version 001.025.004`, with the Area `process`, Progress *Abandoned*, Resolution *Superseded*, Size
   *XS*, Delivery and Version cleared (the old values in a comment), the dates it had, and its sub-issues
   detached after checking that each one has the Version the ticket named.
-- **Recommendation:** convert them once the project has moved to the new files, so that the sub-issue of every
-  ticket is free and the board lists no ticket of a type that is no longer made. `tools/convert_legacy.py` does it
+- **Rule:** convert them with `tools/convert_legacy.py` (or the step L1 of `tools/upgrade.py`), which frees the
+  sub-issue of every ticket and leaves the board with no ticket of a type that is no longer made. The tool does it
   (a dry run until `--apply`): it checks the sub-issues' Version first, leaves a ticket that fails the check or that is
   still planned for the person to decide, writes the old values in a comment and a restore file, and skips a ticket
   already converted.

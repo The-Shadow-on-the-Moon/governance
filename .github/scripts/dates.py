@@ -23,7 +23,7 @@ from github_api import Client, GitHubError
 
 STARTED = ("InProgress", "Review", "Completed", "Suspended", "Abandoned")
 ENDED = ("Completed", "Abandoned")
-NO_DATES = ("Version", "Alert")
+NO_DATES = ("Alert",)
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
          "pageInfo{hasNextPage endCursor} nodes{id " + ticket_type.SELECTION + "content{... on Issue{number issueType{name}}} "

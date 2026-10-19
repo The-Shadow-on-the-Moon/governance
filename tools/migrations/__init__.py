@@ -21,7 +21,7 @@ import os
 
 import kit_common
 
-ORDER = ("a01_baseline", "a02_delivery", "a04_label", "a06_fields", "f01_files", "m01_manifest", "a05_views",
+ORDER = ("s01_pin", "a01_baseline", "a02_delivery", "a04_label", "a06_fields", "f01_files", "m01_manifest", "a05_views",
          "a07_version_form", "a07_version_number", "a08_type_source", "l01_legacy")
 
 OPTIONS = ("query($id:ID!,$n:String!){node(id:$id){... on ProjectV2{field(name:$n){"

@@ -127,7 +127,7 @@ Alert tickets are created by the automation. They are exempt from the rule that 
 gets a Size, and only some fields apply to them (the table is at the end of Appendix C).
 
 - **A legacy Version ticket** was the bookkeeping record of one version, made by earlier versions of the
-  standard. It is no longer made; where one still exists it is left alone. A version has no ticket: its
+  standard. It is no longer made and the automation no longer knows the type; where one still exists it is converted into a closed record (guide on ticket management, section 5.2). A version has no ticket: its
   changelog entry, the Version field of its tickets and, for a release, its tag are the record, and aiming
   a ticket at a future version needs only the Version field.
 - **An umbrella ticket** is an ordinary work ticket that groups the tickets of one piece of work as its

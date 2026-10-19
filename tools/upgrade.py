@@ -63,6 +63,7 @@ def dirty_outside_the_chain(ctx):
     for line in (out.splitlines() if code == 0 and out else []):
         paths += [part.strip().strip('"') for part in line[3:].split(" -> ")]  # a rename names both paths
 
+    own.add(survey.EMBEDDED)  # the pin of the standard's submodule is moved by the chain (S1) and is part of the adoption change
     return sorted(p for p in paths if p not in own and p not in survey.KIT_FILES and "__pycache__" not in p and not p.startswith(kit_common.STATE_FOLDER))
 
 
@@ -73,6 +74,12 @@ def blocking(ctx):
 
     if dirty:
         found.append("the working tree has uncommitted changes the chain did not make: {}".format(", ".join(dirty[:8])))
+
+    legacy = (ctx.survey.get("board", {}).get("legacy_version_tickets") or {}).get("total", 0)
+
+    if legacy and "convert_legacy" not in getattr(ctx, "flags", ()):
+        found.append("{} legacy Version ticket(s): the files of this version no longer know the type, so they are converted first "
+                     "(give --convert-legacy, and --include-open for the planned ones)".format(legacy))
 
     state = ctx.survey.get("state", {}).get("detected")
 

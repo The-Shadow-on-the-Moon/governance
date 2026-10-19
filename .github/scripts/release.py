@@ -21,7 +21,7 @@ from versions import Version
 
 CHANGELOG = "CHANGELOG.md"
 RELEASABLE = ("Merged", "Implemented")
-NO_RELEASE = ("Version", "Alert")
+NO_RELEASE = ("Alert",)
 
 ITEMS = ("query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){"
          "pageInfo{hasNextPage endCursor} nodes{id " + ticket_type.SELECTION + "content{... on Issue{number issueType{name}}} "

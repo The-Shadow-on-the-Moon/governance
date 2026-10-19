@@ -32,7 +32,7 @@ personal account the values are the options of the board field Kind.
 | **Task** | YELLOW | Work that does not change the product's behavior: testing, analyzing, building, releasing, writing documentation, and creating a new tool. | mod |
 | **Alert** | RED | An automatic check that needs a person to review something, such as a detected bypass. It never counts toward a bump. | none |
 
-Set by a person when the ticket is created; the automation sets it on Alert tickets. *Version* was a type of earlier versions of the standard (a bookkeeping ticket for one version, which never counted toward a bump): it is no longer made, and boards that still have such tickets are tolerated.
+Set by a person when the ticket is created; the automation sets it on Alert tickets. *Version* was a type of earlier versions of the standard (a bookkeeping ticket for one version, which never counted toward a bump): it is no longer made, and the automation no longer knows the type: a board that still has such tickets converts them first (`tools/convert_legacy.py`, the step L1 of `tools/upgrade.py`).
 
 ## Area
 
@@ -264,5 +264,6 @@ ticket has none.
 | Fix | yes | yes (the Delivery rules do not apply) |
 | Assignee | assigned to the person who starts the work | the person who pushed, for a bypass, a merge without changelog entries or an unreadable changelog |
 
-A legacy Version ticket (type *Version*, made by earlier versions of the standard) has none of these fields in
-play: it has no Progress, and the work-ticket rules, the Fix rules and the audit leave it alone.
+A legacy Version ticket (type *Version*, made by earlier versions of the standard) is no longer recognized: the
+rules would treat it as a work ticket. It is converted into a closed record before the upgrade (guide on ticket
+management, section 5.2).

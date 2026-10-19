@@ -154,8 +154,8 @@ class BoardQueryTests(unittest.TestCase):
     def test_watch_reads_the_kind(self):
         self.assertEqual(watch.board_tickets(self.project(self.page()), self.Board())[0]["type"], "Bug")
 
-    def test_release_skips_version_and_alert_tickets_by_their_kind(self):
-        for kind, skipped in (("Version", True), ("Alert", True), ("Bug", False)):
+    def test_release_skips_alert_tickets_by_their_kind(self):
+        for kind, skipped in (("Alert", True), ("Bug", False)):
             data = self.page(node_extra={"delivery": {"name": "Merged"}, "version": {"text": "V000.001.000"}}, kind=kind)
             found = release.releasable_tickets(self.project(data), self.Board(), release.Version.parse("V0.1.0"))
             self.assertEqual(not found, skipped, kind)

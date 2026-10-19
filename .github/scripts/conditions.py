@@ -46,7 +46,7 @@ OPEN = ("ToDo", "OnDeck", "InProgress", "Review", "Suspended")
 CLOSED = ("Completed", "Abandoned")
 SHIPPED = ("Merged", "Implemented", "Released")
 REASONS = ("Duplicate", "Invalid", "WontFix", "Superseded", "Obsolete")
-NOT_WORK = ("Version", "Alert")  # bookkeeping tickets: no Delivery, no Attention. Version is a legacy type, no longer made
+NOT_WORK = ("Alert",)  # bookkeeping tickets: no Delivery, no Attention
 
 
 @dataclass(frozen=True)

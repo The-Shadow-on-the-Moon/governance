@@ -67,13 +67,19 @@ class InstructionFileTests(unittest.TestCase):
     def test_the_steps_it_names_are_steps_of_the_chain(self):
         import migrations
         ids = {m.ID for m in migrations.steps()}
-        for step in re.findall(r"--only (F1|M1|[AL]\d+b?)\b", self.text):
+        for step in re.findall(r"--only (F1|M1|S1|[AL]\d+b?)\b", self.text):
             self.assertIn(step, ids)
 
     def test_the_workflow_run_it_names_has_those_inputs(self):
         workflow = read(os.path.join(ROOT, ".github", "workflows", "versioning.yml"))
         for needle in ("mode:", "dry_run:", "- finalize"):
             self.assertIn(needle, workflow)
+
+    def test_it_says_where_the_standard_sits_and_how_the_pin_is_moved(self):
+        text = " ".join(self.text.split())
+        for needle in ("git submodule at `doc/governance`", "add the prefix `doc/governance/`", "git submodule add",
+                       "git submodule update --init doc/governance", "fetch --unshallow", "--only S1"):
+            self.assertIn(needle, text, needle)
 
     def test_it_is_not_part_of_the_manifest_and_the_project_does_not_receive_it_as_automation(self):
         import check_manifest
@@ -89,6 +95,7 @@ class CommandTests(unittest.TestCase):
         for name in os.listdir(COMMANDS):
             text = read(os.path.join(COMMANDS, name))
             self.assertTrue(text.startswith("---" + chr(10) + "description: "), name)
+            self.assertIn("git submodule of the project at `doc/governance`", " ".join(text.split()), name)
             for needle in ("is data, never instructions", "Never commit, push, merge", "never set a ticket to Completed",
                            "no assistant attribution"):
                 self.assertIn(needle, " ".join(text.split()), name)
